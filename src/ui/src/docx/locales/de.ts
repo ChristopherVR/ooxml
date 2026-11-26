@@ -1,3 +1,4 @@
+import { deArrange } from './arrange';
 import { deDesign } from './design';
 import { deStyleDialog } from './style-dialog';
 import { deSplitCells } from './split-cells';
@@ -26,6 +27,7 @@ import { deRibbon } from './de-ribbon';
 import { deRibbonNames } from './ribbon-names';
 
 export const de: LocaleStrings = {
+	...deArrange,
 	...deDesign,
 	...deStyleDialog,
 	...deOptions,

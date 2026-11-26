@@ -1,3 +1,5 @@
+import { defaultDrawingWrap } from './drawing-layout-default';
+import { setDrawingWrap } from 'ooxml-core/docx';
 import { Fragment, Slice } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 import type { InlineImage, PendingMediaPart } from 'ooxml-core/docx';
@@ -146,8 +148,10 @@ export function insertPictures(view: EditorView, images: readonly InlineImage[])
 	if (!images.length) return false;
 	const history = wordYjsPluginKey.getState(view.state);
 	history?.stopCapturing();
-	const nodes = images.map((image) =>
-		schema.nodes.image.create({
+	const defaultWrap = defaultDrawingWrap(view.dom.ownerDocument, 'picture');
+	const nodes = images.map((source) => {
+		const image = defaultWrap && !source.payload ? setDrawingWrap(source, defaultWrap) : source;
+		return schema.nodes.image.create({
 			relId: image.relId,
 			partName: image.partName,
 			contentType: image.contentType,
@@ -155,12 +159,14 @@ export function insertPictures(view: EditorView, images: readonly InlineImage[])
 			heightPx: image.heightPx,
 			altText: image.altText ?? null,
 			title: image.title ?? null,
-			anchored: false,
+			anchored: Boolean(image.anchored),
+			placement: image.placement ? JSON.stringify(image.placement) : null,
+			transform: image.transform ? JSON.stringify(image.transform) : null,
 			unsupported: null,
 			svgPartName: image.svgPartName ?? null,
 			payload: image.payload ? JSON.stringify(image.payload) : null,
-		}),
-	);
+		});
+	});
 	const slice = new Slice(Fragment.fromArray(nodes), 0, 0);
 	view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
 	history?.stopCapturing();

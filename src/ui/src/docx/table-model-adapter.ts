@@ -49,6 +49,7 @@ export function tableNode(
 					continueKeys: continues.length ? JSON.stringify(continues.map(cellKey)) : null,
 					widthTwips: attrs.widthTwips,
 					verticalAlign: attrs.verticalAlign,
+					textDirection: cell.textDirection ?? null,
 					shadingFill: attrs.shadingFill,
 					directShadingFill: cell.shadingFill ?? null,
 					borders: attrs.borders,
@@ -150,6 +151,7 @@ export function convertSimpleTable(
 				borders: _borders,
 				margins: _margins,
 				verticalAlign: _verticalAlign,
+				textDirection: _textDirection,
 				contentControl: _control,
 				...properties
 			} = source ?? { paragraphs: [] };
@@ -157,6 +159,11 @@ export function convertSimpleTable(
 			cells.push({
 				...structuredClone(properties),
 				...(direct ? { borders: JSON.parse(direct) as NonNullable<TableCell['borders']> } : {}),
+				...(/^(lrTb|tbRl|btLr|tb|rl|lr|tbV|rlV|lrV|lrTbV|tbLrV|tbRlV)$/.test(
+					String(cell.attrs.textDirection),
+				)
+					? { textDirection: cell.attrs.textDirection }
+					: {}),
 				...(typeof cell.attrs.verticalAlign === 'string'
 					? { verticalAlign: cell.attrs.verticalAlign as NonNullable<TableCell['verticalAlign']> }
 					: {}),

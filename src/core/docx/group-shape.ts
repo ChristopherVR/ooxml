@@ -42,7 +42,8 @@ function childBox(spPr: XmlElement | undefined): {
 	};
 }
 
-function parseGroupNode(wgp: XmlElement): ShapeSpec | undefined {
+function parseGroupNode(wgp: XmlElement, depth = 0): ShapeSpec | undefined {
+	if (depth >= 32) return undefined;
 	const grpSpPr = childNS(wgp, WPG_NS, 'grpSpPr');
 	const xfrm = childNS(grpSpPr, A_NS, 'xfrm');
 	const chOff = childNS(xfrm, A_NS, 'chOff');
@@ -50,11 +51,18 @@ function parseGroupNode(wgp: XmlElement): ShapeSpec | undefined {
 	const off = childNS(xfrm, A_NS, 'off');
 	const ext = childNS(xfrm, A_NS, 'ext');
 	const groupChildren: GroupShapeChild[] = [];
+	let groupCanUngroup = true;
 	for (const node of Array.from(wgp.childNodes)) {
 		if (!isElement(node)) continue;
 		if (node.namespaceURI === WPS_NS && node.localName === 'wsp') {
 			const parsed = parseShapeElement(node, false);
-			if (!parsed) continue;
+			if (!parsed) {
+				groupCanUngroup = false;
+				continue;
+			}
+			groupCanUngroup &&= Boolean(
+				parsed.editable && !parsed.text?.length && !childNS(node, WPS_NS, 'cNvPr'),
+			);
 			const runs = parsed.text?.some(Boolean)
 				? Array.from(node.getElementsByTagNameNS(WORD_NS, 'r'))
 				: [];
@@ -65,11 +73,20 @@ function parseGroupNode(wgp: XmlElement): ShapeSpec | undefined {
 			const shape = sizes.size === 1 && size ? { ...parsed, groupTextSizePt: size / 2 } : parsed;
 			const box = childBox(childNS(node, WPS_NS, 'spPr'));
 			groupChildren.push({ ...box, shape });
-		} else if (node.namespaceURI === WPG_NS && node.localName === 'wgp') {
-			const nested = parseGroupNode(node);
+		} else if (
+			node.namespaceURI === WPG_NS &&
+			(node.localName === 'grpSp' || node.localName === 'wgp')
+		) {
+			groupCanUngroup = false;
+			const nested = parseGroupNode(node, depth + 1);
 			if (!nested) continue;
 			const box = childBox(childNS(node, WPG_NS, 'grpSpPr'));
 			groupChildren.push({ ...box, shape: nested });
+		} else if (
+			node.namespaceURI !== WPG_NS ||
+			!['cNvGrpSpPr', 'grpSpPr'].includes(node.localName)
+		) {
+			groupCanUngroup = false;
 		}
 	}
 	if (!groupChildren.length) return undefined;
@@ -77,14 +94,15 @@ function parseGroupNode(wgp: XmlElement): ShapeSpec | undefined {
 	const chH = emuPx(chExt?.getAttribute('cy') ?? null) || emuPx(ext?.getAttribute('cy') ?? null);
 	const chX = emuPx(chOff?.getAttribute('x') ?? off?.getAttribute('x') ?? null);
 	const chY = emuPx(chOff?.getAttribute('y') ?? off?.getAttribute('y') ?? null);
-	const maxX = Math.max(...groupChildren.map((item) => item.xPx + item.widthPx));
-	const maxY = Math.max(...groupChildren.map((item) => item.yPx + item.heightPx));
+	const maxX = groupChildren.reduce((max, item) => Math.max(max, item.xPx + item.widthPx), chX);
+	const maxY = groupChildren.reduce((max, item) => Math.max(max, item.yPx + item.heightPx), chY);
 	const rot = Number(xfrm?.getAttribute('rot'));
 	return {
 		preset: 'rect',
 		fill: { kind: 'none' },
 		line: { fill: { kind: 'none' } },
 		groupChildren,
+		...(groupCanUngroup ? { groupCanUngroup: true } : {}),
 		groupExtent: {
 			xPx: chX,
 			yPx: chY,

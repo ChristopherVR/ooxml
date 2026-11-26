@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import JSZip from 'jszip';
 import { NodeSelection } from 'prosemirror-state';
 import { undo } from 'prosemirror-history';
@@ -110,6 +110,35 @@ describe('picture Wrap Text and Crop', () => {
 		undo(view.state, view.dispatch);
 		expect(image()).toMatchObject({ widthPx: 100, heightPx: 50 });
 		expect(image().pictureFill?.crop).toBeUndefined();
+	});
+
+	it('saves a picture position, transform and alt text from Picture Format', async () => {
+		const { root, select, image, xml } = await openEditor();
+		select();
+		const panel = root.querySelector<HTMLElement>('[data-ribbon-tab="picture-format"]')!;
+		const choose = (label: string, value: string) => {
+			const control = panel.querySelector<HTMLSelectElement>(`select[aria-label="${label}"]`)!;
+			control.value = value;
+			control.dispatchEvent(new Event('change'));
+		};
+		choose('Position', 'bottom-right');
+		await vi.waitFor(() =>
+			expect(image().placement).toMatchObject({ align: 'right', alignV: 'bottom' }),
+		);
+		choose('Rotate', 'right');
+		await vi.waitFor(() => expect(image().transform).toEqual({ rotation: 90 }));
+		panel.querySelector<HTMLButtonElement>('[aria-label="Alt Text"]')!.click();
+		await vi.waitFor(() =>
+			expect(root.querySelector('.dve-arrange-dialog textarea')).not.toBeNull(),
+		);
+		root.querySelector<HTMLTextAreaElement>('.dve-arrange-dialog textarea')!.value =
+			'A picture caption';
+		const ok = [...root.querySelectorAll<HTMLButtonElement>('.dve-arrange-dialog button')].find(
+			(button) => button.textContent === 'OK',
+		)!;
+		ok.click();
+		expect(image().altText).toBe('A picture caption');
+		expect(await xml()).toMatch(/descr="A picture caption".*<a:xfrm rot="5400000"/);
 	});
 
 	it('refuses a crop that leaves nothing showing', async () => {

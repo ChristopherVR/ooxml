@@ -328,6 +328,7 @@ export const schema = new Schema({
 				continueKeys: { default: null },
 				widthTwips: { default: null },
 				verticalAlign: { default: null },
+				textDirection: { default: null },
 				shadingFill: { default: null },
 				borders: { default: null },
 				/** The cell's own `w:tcBorders` as JSON (`borders` above is the resolved display). */
@@ -346,6 +347,7 @@ export const schema = new Schema({
 					colspan: String(node.attrs.colspan || 1),
 					rowspan: String(node.attrs.rowspan || 1),
 					style: tableCellStyle(node.attrs),
+					'data-text-direction': node.attrs.textDirection,
 					...(node.attrs.contentControl ? cellControlAttributes(node.attrs.contentControl) : {}),
 				},
 				0,

@@ -40,12 +40,17 @@ export function paragraphFloats(
 		floats.push({
 			index: floats.length,
 			sourceOffset: offset,
+			...(placement?.relativeHeight !== undefined
+				? { relativeHeight: placement.relativeHeight }
+				: {}),
 			...(image.chart
 				? {
 						chart: docxChartPaint(image.chart, image.widthPx, image.heightPx, theme, image.altText),
 					}
 				: {}),
 			partName: image.partName,
+			...(image.altText ? { altText: image.altText } : {}),
+			...(image.transform ? { transform: image.transform } : {}),
 			...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
 			...(shadow ? { shadow } : {}),
 			contentType: image.contentType,

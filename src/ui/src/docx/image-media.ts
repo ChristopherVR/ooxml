@@ -201,6 +201,11 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		const unsubscribe = cache.onChange(refresh);
 		const dom = document.createElement('span');
 		dom.className = ['dve-picture', placementClass(node.attrs.placement)].filter(Boolean).join(' ');
+		if (node.attrs.transform)
+			dom.style.setProperty(
+				'--dve-picture-transform',
+				pictureTransformCss(JSON.parse(node.attrs.transform)),
+			);
 		dom.append(content);
 		if (painted) dom.append(painted);
 		dom.addEventListener('click', (event) => {
@@ -239,3 +244,4 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		};
 	};
 }
+import { pictureTransformCss } from './picture-transform';

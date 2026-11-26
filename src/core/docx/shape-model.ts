@@ -20,6 +20,8 @@ export interface ShapeSpec {
 	customGeometryXml?: string;
 	/** Child shapes when this drawing is a `wpg:wgp` group. */
 	groupChildren?: GroupShapeChild[];
+	/** The group contains only supported geometry with no child metadata to discard. */
+	groupCanUngroup?: boolean;
 	/** Group child coordinate space (`a:xfrm/a:chOff`, `a:chExt`) in CSS pixels. */
 	groupExtent?: { xPx: number; yPx: number; widthPx: number; heightPx: number };
 	/** `a:avLst` guide values by name (Word's yellow handles), in the guide's own units. */

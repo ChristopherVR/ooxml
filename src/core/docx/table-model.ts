@@ -1,3 +1,4 @@
+import type { StTextDirection } from './generated/wml-simple-types';
 import type { StyleMetadata } from './style-metadata';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Block, Paragraph } from './model';
@@ -88,6 +89,7 @@ export interface TableCell {
 	/** A percentage `w:tcW` (`type="pct"`) as a fraction of the table width; read-only layout input. */
 	widthPercent?: number;
 	verticalAlign?: StVerticalJc;
+	textDirection?: StTextDirection;
 	/** Layout input from `w:hideMark`: ignore the final cell mark when sizing the row. */
 	hideMark?: boolean;
 	shadingFill?: string;

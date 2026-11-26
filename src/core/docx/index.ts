@@ -90,6 +90,25 @@ export {
 	type FloatOrigin,
 } from './drawing-wrap';
 export {
+	alignDrawingBox,
+	alignDrawingToPage,
+	distributeDrawingBoxes,
+	drawingBounds,
+	drawingMovement,
+	drawingPosition,
+	drawingStackOrder,
+	groupDrawingShapes,
+	placeDrawingBox,
+	rotateDrawing,
+	ungroupDrawingShapes,
+	type DrawingAlignment,
+	type DrawingAlignTarget,
+	type DrawingBox,
+	type DrawingPosition,
+	type DrawingTextDirection,
+	type DrawingTransform,
+} from './drawing-arrange';
+export {
 	isValidPictureCrop,
 	pictureCropOf,
 	setPictureCrop,

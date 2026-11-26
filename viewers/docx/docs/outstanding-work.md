@@ -427,8 +427,13 @@ Still not at parity:
   editing within the document, and legacy OLE activation remain open. The Office suite can open
   native Office packages separately via Embedded documents. Floating/formatted Text Boxes,
   additional WordArt formatting, equation styles, Equation Tools and Signature Line remain incomplete.
-- **Layout and References:** Manual Hyphenation and its options, Position
-  and Wrap Text, Citations, Bibliography, Index and Table of Authorities, and
+- **Layout and References:** Position offers inline and nine margin presets. Wrap Text offers all
+  seven wrap choices, movement with text or fixed page positioning, and a default wrap for new
+  pictures or shapes. Arrange adds editing of stacking, alignment, distribution, rotation and alt
+  text. Selection Pane lists and selects drawings in the active story. Group and Ungroup support
+  simple floating shapes in the same paragraph. Wrap point editing, mixed or formatted groups,
+  vertical table cell layout in Print Layout and PDF, and Manual Hyphenation remain open.
+  References still lacks Citations, Bibliography, Index and Table of Authorities, and
   automatic updating of `REF`, `PAGEREF` and `SEQ` results (Update Fields refreshes them on request; inserting a caption
   also renumbers the label's captions and refreshes `REF` results that quote a caption, in the same undo step; `PAGEREF`, table of contents and
   other results change only through Update Fields).

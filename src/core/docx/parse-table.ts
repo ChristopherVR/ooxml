@@ -9,7 +9,7 @@ import { tableGrid } from './table-grid';
 import { rowRevision } from './parse-revisions';
 import type { ContentControl } from './content-control-model';
 import { flatCellParagraphs, flatCells, flatRows } from './parse-content-control';
-import { isStJcTable, isStVerticalJc } from './generated/wml-simple-types';
+import { isStJcTable, isStTextDirection, isStVerticalJc } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
 import {
 	onOffAttribute,
@@ -77,6 +77,12 @@ function parseCell(
 	if (percent !== undefined) result.widthPercent = percent;
 	const vAlign = enumValue(isStVerticalJc, getW(first(props, 'vAlign'), 'val'), 'w:tcPr/w:vAlign');
 	if (vAlign) result.verticalAlign = vAlign;
+	const direction = enumValue(
+		isStTextDirection,
+		getW(first(props, 'textDirection'), 'val'),
+		'w:tcPr/w:textDirection',
+	);
+	if (direction) result.textDirection = direction;
 	const hideMark = onOffElement(first(props, 'hideMark'));
 	if (hideMark !== undefined) result.hideMark = hideMark;
 	const shd = first(props, 'shd');

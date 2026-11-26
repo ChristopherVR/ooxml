@@ -235,6 +235,8 @@ export function adaptDocumentModel(
 					? {
 							partName: image.partName,
 							...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
+							...(image.altText ? { altText: image.altText } : {}),
+							...(image.transform ? { transform: image.transform } : {}),
 							...(() => {
 								const shadow = drawingOuterShadow(image.effects, theme);
 								return shadow ? { shadow } : {};

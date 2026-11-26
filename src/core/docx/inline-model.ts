@@ -3,6 +3,7 @@
 import type { DocxChart } from './chart';
 import type { DocxDiagram } from './diagram';
 import type { StRelFromH, StRelFromV } from './generated/wml-simple-types';
+import type { DrawingTransform } from './drawing-arrange';
 import type { ShapeSpec } from './shape-model';
 import type { DrawingBodyProperties } from '../drawingml/text-model';
 import type { Block } from './model';
@@ -51,13 +52,15 @@ export interface InlineImage {
 	/** Display size in CSS pixels (96 dpi), derived from the drawing extent in EMU (may be fractional). */
 	widthPx: number;
 	heightPx: number;
+	/** Picture rotation and flips, from its DrawingML transform. */
+	transform?: DrawingTransform;
 	/** From `wp:docPr/@descr`. */
 	altText?: string;
 	/** From `wp:docPr/@title` or `@name`. */
 	title?: string;
-	/** `wp:anchor` (floating) drawings render as sized inline placeholders; wrapping/position is lost. */
+	/** Whether the drawing has a `wp:anchor` and participates in page float layout. */
 	anchored?: boolean;
-	/** Floating (`wp:anchor`) wrapping and horizontal position, read-only; the anchor XML is preserved. */
+	/** Floating wrapping, position and stacking order. */
 	placement?: PicturePlacement;
 	/** Set for non-picture drawings (chart, SmartArt, shape, unresolved legacy VML): rendered as a labeled placeholder with no editable bytes. */
 	unsupported?: string;
@@ -116,6 +119,8 @@ export interface PictureWatermarkSpec {
 }
 /** How a floating picture sits relative to text. */
 export interface PicturePlacement {
+	/** Unsigned relative stacking order within the same text layer. */
+	relativeHeight?: number;
 	wrap: 'square' | 'tight' | 'through' | 'topAndBottom' | 'none';
 	/** `behindDoc`: with `wrap: 'none'`, the picture is behind rather than in front of text. */
 	behindText?: boolean;

@@ -126,7 +126,8 @@ export function positionFloats(
 					);
 				}
 			}
-		if (boxes.length) page.floats = boxes;
+		if (boxes.length)
+			page.floats = boxes.sort((a, b) => (a.relativeHeight ?? 0) - (b.relativeHeight ?? 0));
 	}
 	return true;
 }

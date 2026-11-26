@@ -7,6 +7,7 @@ import {
 	type EditorContext,
 } from 'ooxml-core/xlsx/ui';
 import { selectDrawing, selectedDrawings } from './drawing-selection';
+import { selectionPaneFrame } from '../chrome/selection-pane';
 
 const panes = new WeakMap<EditorContext, () => void>();
 
@@ -21,30 +22,15 @@ function drawingName(ctx: EditorContext, drawing: DrawingObject, index: number):
 
 export function createSelectionPane(ctx: EditorContext) {
 	const doc = ctx.host.ownerDocument;
-	const element = doc.createElement('aside');
+	const {
+		element,
+		heading,
+		close,
+		list,
+		hide: dismiss,
+	} = selectionPaneFrame(doc, () => ctx.grid()?.focus());
 	element.className = 'xve-selection-pane';
-	element.hidden = true;
-	const heading = doc.createElement('h2');
-	const header = doc.createElement('header');
-	const close = doc.createElement('button');
 	close.className = 'xve-icon-button';
-	close.type = 'button';
-	close.textContent = '×';
-	const list = doc.createElement('ul');
-	header.append(heading, close);
-	element.append(header, list);
-
-	const dismiss = () => {
-		element.hidden = true;
-		ctx.grid()?.focus();
-	};
-	close.addEventListener('click', dismiss);
-	element.addEventListener('keydown', (event) => {
-		if (event.key !== 'Escape') return;
-		event.preventDefault();
-		event.stopPropagation();
-		dismiss();
-	});
 
 	let lastSignature = '';
 	const refresh = () => {

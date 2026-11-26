@@ -6,6 +6,7 @@ import { imageContentType as guessContentType } from '../drawingml/image-content
 // Parses w:drawing (wp:inline / wp:anchor pictures) and legacy w:pict (VML) into InlineImage.
 // Adapted layout/EMU-conversion approach from pptx-viewer-new packages/core/src/core (DrawingML
 // picture parsing); reimplemented here against @xmldom/xmldom instead of that package's DOM layer.
+import { readDrawingTransform } from './drawing-transform';
 import type { Block, InlineImage, PicturePlacement, TextBoxContent } from './model';
 import { parseDrawingBodyProperties } from '../drawingml/read-text-body';
 import {
@@ -188,12 +189,14 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 		const pic = descendantNS(graphicData, PICTURE_GRAPHIC_URI, 'pic');
 		const picSpPr = firstNS(pic, PICTURE_GRAPHIC_URI, 'spPr');
 		const effects = parseDrawingEffects(firstNS(picSpPr, A_NS, 'effectLst'));
+		const transform = readDrawingTransform(firstNS(picSpPr, A_NS, 'xfrm'));
 		return {
 			...picture,
 			...(blip?.parentNode
 				? { pictureFill: parseDrawingPictureFill(blip.parentNode as XmlElement) }
 				: {}),
 			...(effects ? { effects } : {}),
+			...(transform ? { transform } : {}),
 			widthPx,
 			heightPx,
 			...definedProps({ altText, title, anchored }),
@@ -278,7 +281,10 @@ function parsePlacement(anchor: XmlElement): PicturePlacement {
 		wrapText === 'largest'
 	)
 		placement.wrapText = wrapText;
-	if (anchor.getAttribute('behindDoc') === '1') placement.behindText = true;
+	const height = anchor.getAttribute('relativeHeight');
+	if (height && /^\d{1,10}$/.test(height) && Number(height) <= 0xffffffff)
+		placement.relativeHeight = Number(height);
+	if (/^(1|true|on)$/.test(anchor.getAttribute('behindDoc') ?? '')) placement.behindText = true;
 	if (/^(0|false|off)$/.test(anchor.getAttribute('layoutInCell') ?? ''))
 		placement.layoutInCell = false;
 	const positionH = firstNS(anchor, WP_NS, 'positionH');

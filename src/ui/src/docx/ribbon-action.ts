@@ -174,6 +174,7 @@ export type RibbonAction =
 	  }
 	| { type: 'formatPicture' }
 	/** Picture Format: Wrap Text (a `DrawingWrap`) or Crop (the Format Picture crop fields). */
+	| { type: 'arrange'; key: string; value: string }
 	| { type: 'picture'; key: 'wrap'; value: string }
 	| { type: 'picture'; key: 'crop' }
 	| { type: 'picture'; key: 'graphicsFill' }

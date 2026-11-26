@@ -233,6 +233,9 @@ export interface LayoutFootnoteBox {
 }
 
 export interface LayoutFloatBox {
+	relativeHeight?: number;
+	altText?: string;
+	transform?: import('../drawing-arrange').DrawingTransform;
 	blockId: string;
 	/** Which of the anchor paragraph's floating pictures this is, in run order. */
 	index: number;

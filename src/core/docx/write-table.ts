@@ -5,6 +5,7 @@ import {
 	patchCellBorders,
 	patchCellShading,
 	patchCellMargins,
+	patchCellTextDirection,
 	patchCellVerticalAlignment,
 	patchRowProperties,
 	patchTableMargins,
@@ -204,6 +205,7 @@ export function writeTable(
 			patchCellShading(doc, tc, cell, source?.model);
 			patchCellMargins(doc, tc, cell.margins, source?.model.margins);
 			patchCellVerticalAlignment(doc, tc, cell.verticalAlign, source?.model.verticalAlign);
+			patchCellTextDirection(doc, tc, cell.textDirection, source?.model.textDirection);
 			const flatParagraphs = flatCellParagraphs(tc);
 			const oldParagraphs = flatParagraphs.map((entry) => entry.element);
 			const nextParagraphs = cell.paragraphs.map((paragraph) => {

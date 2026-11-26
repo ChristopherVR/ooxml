@@ -97,7 +97,7 @@ function applyPicture(view: EditorView, pos: number, image: InlineImage): boolea
 }
 
 /** Where an inline picture sits in its paragraph, so it starts floating in the same place. */
-function floatOrigin(view: EditorView, pos: number): FloatOrigin {
+export function floatOrigin(view: EditorView, pos: number): FloatOrigin {
 	try {
 		const picture = view.nodeDOM(pos);
 		const $pos = view.state.doc.resolve(pos);

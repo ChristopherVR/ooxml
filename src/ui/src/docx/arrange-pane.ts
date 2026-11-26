@@ -1,0 +1,121 @@
+import { NodeSelection } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
+import { selectionPaneFrame } from '../chrome/selection-pane';
+import { drawingPositions, isArrangeDrawing, rememberDrawingPositions } from './arrange-selection';
+import type { EditorCore } from './editor-core';
+import { translate, translateTemplate } from './localization';
+import { parsePlacement } from './print-float-locate';
+import { focusView } from './focus-view';
+
+export function storyDrawings(view: EditorView) {
+	const drawings: { pos: number; title: string; height: number; behind: boolean }[] = [];
+	view.state.doc.descendants((node, pos) => {
+		if (!isArrangeDrawing(node)) return true;
+		const placement = parsePlacement(node.attrs.placement);
+		drawings.push({
+			pos,
+			title: String(node.attrs.title || node.attrs.altText || ''),
+			height: placement?.relativeHeight ?? 251658240 + drawings.length,
+			behind: Boolean(placement?.behindText),
+		});
+		return false;
+	});
+	return drawings;
+}
+
+const panes = new WeakMap<EditorCore, (view: EditorView) => void>();
+
+export function toggleArrangePane(core: EditorCore, view: EditorView): void {
+	const pane = panes.get(core);
+	if (pane) return pane(view);
+	const canvas = core.shell.canvas;
+	if (!canvas) return;
+	let target = view;
+	const frame = selectionPaneFrame(canvas.ownerDocument, () => {
+		if (!target.isDestroyed) focusView(target);
+	});
+	const { element, heading, close, list, hide } = frame;
+	element.className = 'dve-selection-pane';
+	canvas.append(element);
+	let lastDoc: EditorView['state']['doc'] | undefined;
+	let drawings: ReturnType<typeof storyDrawings> = [];
+	let signature = '';
+	let pending: ReturnType<typeof setTimeout> | undefined;
+	function refresh() {
+		if (element.hidden) return;
+		if (!element.isConnected) return;
+		const live = core.targetView();
+		if (!live || live.isDestroyed) return hide();
+		target = live;
+		if (live.state.doc !== lastDoc) {
+			lastDoc = live.state.doc;
+			drawings = storyDrawings(live);
+			signature = '';
+		}
+		const selected = drawingPositions(live.state);
+		const next = JSON.stringify([core.locale, selected]);
+		if (signature === next) return;
+		signature = next;
+		const title = translate(core.locale, 'Selection Pane');
+		heading.textContent = title;
+		element.setAttribute('aria-label', title);
+		close.setAttribute('aria-label', translate(core.locale, 'Close'));
+		const focused = core.element.shadowRoot?.activeElement;
+		const active =
+			focused instanceof HTMLButtonElement ? focused.dataset.drawingPosition : undefined;
+		list.replaceChildren(
+			...drawings
+				.slice(0, 1000)
+				.sort((a, b) => Number(a.behind) - Number(b.behind) || b.height - a.height)
+				.map(({ pos, title }, index) => {
+					const row = element.ownerDocument.createElement('li');
+					const button = element.ownerDocument.createElement('button');
+					button.type = 'button';
+					button.dataset.drawingPosition = String(pos);
+					button.textContent =
+						title || translateTemplate(core.locale, 'Drawing {number}', { number: index + 1 });
+					button.setAttribute('aria-pressed', String(selected.includes(pos)));
+					button.addEventListener('click', (event) => {
+						if (live.state.doc !== lastDoc || live !== core.targetView()) return;
+						const multiple = event.ctrlKey || event.metaKey || event.shiftKey;
+						const existing = drawingPositions(live.state);
+						const positions = multiple
+							? existing.includes(pos)
+								? existing.filter((item) => item !== pos)
+								: [...existing, pos]
+							: [pos];
+						const primary = positions.includes(pos) ? pos : (positions[0] ?? pos);
+						rememberDrawingPositions(
+							live.state.doc,
+							primary,
+							positions.length ? positions : [primary],
+						);
+						live.dispatch(
+							live.state.tr
+								.setSelection(NodeSelection.create(live.state.doc, primary))
+								.scrollIntoView(),
+						);
+						refresh();
+					});
+					row.append(button);
+					return row;
+				}),
+		);
+		if (active !== undefined)
+			list.querySelector<HTMLElement>(`[data-drawing-position="${active}"]`)?.focus();
+	}
+	core.element.addEventListener('editor-state-change', () => {
+		if (element.hidden || !element.isConnected) return;
+		clearTimeout(pending);
+		pending = setTimeout(refresh, 120);
+	});
+	const toggle = (next: EditorView) => {
+		if (!element.hidden) return hide();
+		target = next;
+		element.hidden = false;
+		refresh();
+		close.focus();
+	};
+	panes.set(core, toggle);
+	toggle(view);
+}

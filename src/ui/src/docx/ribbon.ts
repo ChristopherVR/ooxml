@@ -17,6 +17,8 @@ import { attachRibbonBehavior } from './ribbon-behavior';
 import { attachRibbonOverflow, refitRibbon } from './ribbon-overflow';
 import { buildOtherPanels } from './ribbon-tabs';
 import { buildHeaderFooterPanel } from './header-footer-ribbon';
+import { buildArrangeGroup, textDirectionMenu } from './arrange-ribbon';
+import { group } from './ribbon-parts';
 import { buildShapeFormatPanel } from './shape-format-ribbon';
 import { buildPictureFormatPanel } from './picture-format-ribbon';
 import { buildSmartArtDesignPanel } from './smartart-design-ribbon';
@@ -79,6 +81,8 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	buildHomePanel(panels);
 	buildOtherPanels(panels);
 	buildNativeTabs(panels);
+	panels.get('Layout')!.append(buildArrangeGroup(), group('Text', textDirectionMenu()));
+	panels.get('Table')!.append(group('Text', textDirectionMenu()));
 	buildHeaderFooterPanel(panels.get('Header & Footer')!);
 	buildShapeFormatPanel(panels.get('Shape Format')!);
 	buildPictureFormatPanel(panels.get('Picture Format')!);

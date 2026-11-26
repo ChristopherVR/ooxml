@@ -70,6 +70,7 @@ export const imageNodeSpec: NodeSpec = {
 		/** SVG original shown instead of the PNG fallback in `partName`. */
 		svgPartName: { default: null },
 		pictureFill: { default: null },
+		transform: { default: null },
 		unsupported: { default: null },
 		/** A text box's paragraphs as a JSON string array; shown read-only inside its placeholder. */
 		textBoxText: { default: null },

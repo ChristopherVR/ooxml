@@ -1,10 +1,10 @@
 // The Picture Format tab: Word's contextual tab for a selected picture (Arrange > Wrap Text and
 // Size > Crop). It appears while a picture is selected and reads the wrapping back from it.
 import type { EditorState } from 'prosemirror-state';
-import { group, menuSelect, tool } from './ribbon-parts';
+import { group, tool } from './ribbon-parts';
 import { isTabHidden, panelOf, selectTab, setTabHidden } from './ribbon-tab-api';
 import { pictureWrapOf, selectedPicturePos } from './picture-format-commands';
-import { WRAPS } from './shape-format-ribbon';
+import { buildArrangeGroup } from './arrange-ribbon';
 
 export function buildPictureFormatPanel(panel: HTMLElement): void {
 	const graphicsFill = tool(
@@ -16,16 +16,7 @@ export function buildPictureFormatPanel(panel: HTMLElement): void {
 	graphicsFill.dataset.graphicsFill = '';
 	panel.append(
 		group('Graphics Styles', graphicsFill),
-		group(
-			'Arrange',
-			menuSelect(
-				'Wrap text',
-				'columns',
-				WRAPS,
-				(value) => ({ type: 'picture', key: 'wrap', value }),
-				{ momentary: true },
-			),
-		),
+		buildArrangeGroup('picture'),
 		group(
 			'Size',
 			tool('Crop', 'formatPicture', { type: 'picture', key: 'crop' }, { large: true }),

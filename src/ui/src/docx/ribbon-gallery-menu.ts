@@ -19,7 +19,8 @@ export type GalleryKind =
 	| 'verticalAlign'
 	| 'borders'
 	| 'pageNumber'
-	| 'lineSpacing';
+	| 'lineSpacing'
+	| 'drawingPosition';
 
 /** A command listed under a gallery's entries, such as Line Spacing Options. */
 export interface GalleryCommand {
@@ -133,6 +134,20 @@ export function galleryLook(
 	value: string,
 	say: (text: string) => string = (text) => text,
 ): GalleryLook {
+	if (kind === 'drawingPosition') {
+		const [v, h] = value.split('-');
+		const x = h === 'left' ? 5 : h === 'right' ? 21 : 13;
+		const y = v === 'top' ? 5 : v === 'bottom' ? 28 : 16;
+		return {
+			thumb: page(
+				32,
+				40,
+				...lines(5, 5, 24, 32, 9),
+				shape('rect', { x, y, width: 8, height: 8, class: 'thumb-page thumb-edge-on' }),
+			),
+			detail: value === 'inline' ? say('In Line with Text') : say('With Text Wrapping'),
+		};
+	}
 	if (kind === 'margins') {
 		const [top, side] = MARGIN_INCHES[value] ?? [1, 1];
 		const k = 4;

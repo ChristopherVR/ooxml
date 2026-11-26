@@ -15,6 +15,7 @@ import { syncSpellingButton } from './spelling';
 import { syncIndentInputs } from './indent-commands';
 import { syncParagraphToggles } from './paragraph-toggle-sync';
 import { syncContextualTabs } from './contextual-tabs';
+import { syncArrange } from './arrange-ribbon';
 import { syncShapeFormat } from './shape-format-ribbon';
 import { syncPictureFormat } from './picture-format-ribbon';
 import { syncChartDesign } from './chart-design-ribbon';
@@ -95,6 +96,7 @@ export function refreshEditorControls(
 		syncContextualTabs(toolbar, state);
 		syncShapeFormat(toolbar, state, view.editable && !readOnly);
 		syncPictureFormat(toolbar, state, view.editable && !readOnly);
+		syncArrange(toolbar, state, view.editable && !readOnly, locale);
 		syncChartDesign(toolbar, state, view.editable && !readOnly);
 		syncRuler(toolbar, view, model);
 		const trackButton = findLocalizedControl<HTMLButtonElement>(toolbar, 'Track changes');

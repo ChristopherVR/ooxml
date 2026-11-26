@@ -46,6 +46,7 @@ export function emptyCell(
 	if (span > 1) cell.gridSpan = span;
 	if (width !== undefined) cell.widthTwips = width;
 	if (like) {
+		if (like.textDirection) cell.textDirection = like.textDirection;
 		if (like.verticalAlign) cell.verticalAlign = like.verticalAlign;
 		if (like.shadingFill) cell.shadingFill = like.shadingFill;
 		if (like.shadingThemeFill) cell.shadingThemeFill = structuredClone(like.shadingThemeFill);

@@ -1,3 +1,4 @@
+import { defaultDrawingWrap } from './drawing-layout-default';
 // Drawing shapes in the editor: placing a drawn shape, and changing the selected one.
 import { closeHistory } from 'prosemirror-history';
 import { NodeSelection, type EditorState } from 'prosemirror-state';
@@ -69,7 +70,8 @@ interface Change {
 
 function apply(view: EditorView, selected: SelectedShape, change: Change): boolean {
 	const node = view.state.doc.nodeAt(selected.pos);
-	if (!view.editable || !node || !selected.spec.editable) return false;
+	if (!view.editable || !node || (!selected.spec.editable && change.anchored === undefined))
+		return false;
 	const attrs = {
 		...node.attrs,
 		...(change.spec ? { shape: JSON.stringify(change.spec) } : {}),
@@ -197,19 +199,20 @@ export function insertDrawnShape(
 		...(rect.flipH ? { flipH: true } : {}),
 		...(rect.flipV ? { flipV: true } : {}),
 	};
-	const placement: PicturePlacement = {
-		wrap: 'none',
-		relativeFrom: 'column',
-		offsetXPx: Math.round(rect.x),
-		relativeFromV: 'paragraph',
-		offsetYPx: Math.round(rect.y),
-	};
+	const wrap = defaultDrawingWrap(view.dom.ownerDocument, 'shape') ?? 'front';
+	const placement =
+		wrap === 'inline'
+			? undefined
+			: placementForWrap(undefined, wrap, {
+					offsetXPx: rect.x,
+					offsetYPx: rect.y,
+				});
 	const node = schema.nodes.image!.create({
 		unsupported: 'Shape',
 		widthPx,
 		heightPx,
-		anchored: true,
-		placement: JSON.stringify(placement),
+		anchored: Boolean(placement),
+		placement: placement ? JSON.stringify(placement) : null,
 		shape: JSON.stringify(spec),
 	});
 	const tr = view.state.tr.insert(insertAt, node);

@@ -46,6 +46,17 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 		return;
 	}
 	core.mailings?.stopPreview();
+	if (action.type === 'arrange') {
+		const target = core.targetView();
+		const state = target?.state;
+		void import('./arrange-controller')
+			.then(({ runArrange }) => {
+				if (target && target === core.targetView() && target.state === state)
+					runArrange(core, target, action);
+			})
+			.catch(core.host.reportError);
+		return;
+	}
 	const { inserts, pages, parts, shell } = core;
 	if (action.type === 'documentDesign') {
 		void openDesignMenu(core, action.menu).catch(core.host.reportError);

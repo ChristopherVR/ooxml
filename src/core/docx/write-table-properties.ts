@@ -135,17 +135,36 @@ export function patchCellVerticalAlignment(
 	next: TableCell['verticalAlign'],
 	base: TableCell['verticalAlign'],
 ): void {
-	if (next === base) return;
 	if (next !== undefined && !isStVerticalJc(next))
 		throw new Error('Cell vertical alignment must be a valid ST_VerticalJc value.');
+	patchCellChoice(doc, tc, 'vAlign', next, base);
+}
+
+export function patchCellTextDirection(
+	doc: XmlDocument,
+	tc: XmlElement,
+	next: TableCell['textDirection'],
+	base: TableCell['textDirection'],
+): void {
+	patchCellChoice(doc, tc, 'textDirection', next, base);
+}
+
+function patchCellChoice(
+	doc: XmlDocument,
+	tc: XmlElement,
+	name: 'vAlign' | 'textDirection',
+	next: string | undefined,
+	base: string | undefined,
+): void {
+	if (next === base) return;
 	let props = first(tc, 'tcPr');
 	if (!props) {
 		if (next === undefined) return;
 		props = makeW(doc, 'tcPr');
 		tc.insertBefore(props, tc.firstChild);
 	}
-	const alignment = first(props, 'vAlign') ?? makeW(doc, 'vAlign');
-	for (const old of children(props, 'vAlign')) props.removeChild(old);
+	const alignment = first(props, name) ?? makeW(doc, name);
+	for (const old of children(props, name)) props.removeChild(old);
 	if (next !== undefined) {
 		alignment.setAttributeNS(WORD_NS, 'w:val', next);
 		props.appendChild(alignment);

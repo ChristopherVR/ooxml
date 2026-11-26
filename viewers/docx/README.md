@@ -191,6 +191,8 @@ Saving writes an edited chart part with the shared chart writer and updates only
 
 ## Privacy and network use
 
+Word loads bundled Arrange commands on demand from the app's origin. Wrap Text > Set as Default Layout keeps the chosen wrap mode for new pictures or shapes in this browser. Clear the site's data to reset the defaults. The preference contains only the wrap mode.
+
 Word's Design > Set as Default uses the host's optional `wordDesignPreferences` store. It writes theme colours, font names, an effect preset and paragraph spacing when the user confirms, then reads them for new blank documents. Clear the property to disable the store.
 
 Rendering or editing an equation can load bundled equation code from the app's origin.

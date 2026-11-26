@@ -133,7 +133,7 @@ function inlineToAnchor(
 		relativeHeight: String(relativeHeight),
 		behindDoc: '0',
 		locked: '0',
-		layoutInCell: '1',
+		layoutInCell: placement.layoutInCell === false ? '0' : '1',
 		allowOverlap: '1',
 	});
 	anchor.appendChild(attrs(el(doc, 'wp:simplePos'), { x: '0', y: '0' }));
@@ -226,8 +226,20 @@ export function patchDrawingWrap(
 		doc,
 		Boolean(image.anchored),
 		image.placement,
-		newRelativeHeight(drawing),
+		image.placement?.relativeHeight ?? newRelativeHeight(drawing),
 	);
+}
+
+/** Edits the top-level anchor's relative stacking order. */
+export function patchDrawingOrder(
+	drawing: XmlElement,
+	next: PicturePlacement | undefined,
+	base?: PicturePlacement,
+): void {
+	if (next?.relativeHeight === undefined || next.relativeHeight === base?.relativeHeight) return;
+	wpChildren(drawing)
+		.find((child) => child.localName === 'anchor')
+		?.setAttribute('relativeHeight', String(next.relativeHeight));
 }
 
 const POSITION_KEYS = [

@@ -63,6 +63,8 @@ export interface LayoutRun {
 
 /** A picture's package part and size in CSS pixels; the engine never loads its bytes. */
 export interface LayoutObject {
+	altText?: string;
+	transform?: import('../drawing-arrange').DrawingTransform;
 	pictureFill?: Extract<import('../../drawingml/types').DrawingFill, { kind: 'picture' }>;
 	shadow?: import('../../drawingml/drawing-shadow').DrawingSvgShadow;
 	partName: string;
@@ -88,6 +90,7 @@ export interface LayoutObject {
 
 /** A floating picture anchored to a paragraph (`wp:anchor`), positioned on the page. */
 export interface LayoutFloat extends LayoutObject {
+	relativeHeight?: number;
 	/** Which of the paragraph's floating pictures this is, in run order. */
 	index?: number;
 	/** `wp:positionH/@relativeFrom`: page, margin, column, leftMargin, rightMargin, character… */

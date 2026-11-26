@@ -3,6 +3,8 @@
 // its model while keeping the identity (`wp:docPr`), style, text-body properties and any text the
 // model cannot edit from the drawing it replaces.
 import { drawingColorXml, drawingFillXml } from '../drawingml/index';
+import { WPG_NS } from './group-shape';
+import { writeDrawingTransform } from './drawing-transform';
 import type { DrawingFill } from '../drawingml/index';
 import { drawingLineXml } from '../drawingml/write-line';
 import { parseXml } from '../xml/index';
@@ -150,10 +152,10 @@ export function buildShapeDrawing(
 			distL: '114300',
 			distR: '114300',
 			simplePos: '0',
-			relativeHeight: String(relativeHeight),
+			relativeHeight: String(placement?.relativeHeight ?? relativeHeight),
 			behindDoc: placement?.behindText ? '1' : '0',
 			locked: '0',
-			layoutInCell: '1',
+			layoutInCell: placement?.layoutInCell === false ? '0' : '1',
 			allowOverlap: '1',
 		});
 		add(
@@ -187,13 +189,37 @@ export function buildShapeDrawing(
 	});
 	if (identity.descr) docPr.setAttribute('descr', identity.descr);
 	if (identity.title) docPr.setAttribute('title', identity.title);
-	const xfrm = attrs(el(doc, A_NS, 'a:xfrm'), {});
-	if (spec.rotation) xfrm.setAttribute('rot', String(Math.round(spec.rotation * 60000)));
-	if (spec.flipH) xfrm.setAttribute('flipH', '1');
-	if (spec.flipV) xfrm.setAttribute('flipV', '1');
+	const graphicData = attrs(el(doc, A_NS, 'a:graphicData'), {
+		uri: spec.groupChildren ? WPG_NS : WPS_NS,
+	});
+	add(
+		graphicData,
+		spec.groupChildren ? groupElement(doc, image, spec) : shapeElement(doc, image, spec),
+	);
+	add(
+		holder,
+		docPr,
+		el(doc, WP_NS, 'wp:cNvGraphicFramePr'),
+		add(el(doc, A_NS, 'a:graphic'), graphicData),
+	);
+	return add(drawing, holder);
+}
+
+function shapeElement(
+	doc: XmlDocument,
+	image: Pick<InlineImage, 'widthPx' | 'heightPx' | 'textBoxContent'>,
+	spec: ShapeSpec,
+	x = 0,
+	y = 0,
+): XmlElement {
+	const xfrm = el(doc, A_NS, 'a:xfrm');
+	writeDrawingTransform(xfrm, spec);
 	add(
 		xfrm,
-		attrs(el(doc, A_NS, 'a:off'), { x: '0', y: '0' }),
+		attrs(el(doc, A_NS, 'a:off'), {
+			x: String(Math.round(x * EMU_PER_PIXEL)),
+			y: String(Math.round(y * EMU_PER_PIXEL)),
+		}),
 		attrs(el(doc, A_NS, 'a:ext'), { cx: emu(image.widthPx), cy: emu(image.heightPx) }),
 	);
 	const spPr = add(el(doc, WPS_NS, 'wps:spPr'), xfrm, ...geometry(doc, spec));
@@ -212,7 +238,7 @@ export function buildShapeDrawing(
 	}
 	const body = attrs(el(doc, WPS_NS, 'wps:bodyPr'), {
 		rot: '0',
-		vert: 'horz',
+		vert: image.textBoxContent?.vertical ?? 'horz',
 		wrap: 'square',
 		lIns: '91440',
 		tIns: '45720',
@@ -222,14 +248,33 @@ export function buildShapeDrawing(
 		anchorCtr: '0',
 	});
 	add(wsp, add(body, el(doc, A_NS, 'a:noAutofit')));
-	const graphicData = attrs(el(doc, A_NS, 'a:graphicData'), { uri: WPS_NS });
-	add(
-		holder,
-		docPr,
-		el(doc, WP_NS, 'wp:cNvGraphicFramePr'),
-		add(el(doc, A_NS, 'a:graphic'), add(graphicData, wsp)),
+	return wsp;
+}
+
+function groupElement(doc: XmlDocument, image: InlineImage, spec: ShapeSpec): XmlElement {
+	const child = spec.groupExtent;
+	const xfrm = add(
+		el(doc, A_NS, 'a:xfrm'),
+		attrs(el(doc, A_NS, 'a:off'), { x: '0', y: '0' }),
+		attrs(el(doc, A_NS, 'a:ext'), { cx: emu(image.widthPx), cy: emu(image.heightPx) }),
+		attrs(el(doc, A_NS, 'a:chOff'), {
+			x: String(Math.round((child?.xPx ?? 0) * EMU_PER_PIXEL)),
+			y: String(Math.round((child?.yPx ?? 0) * EMU_PER_PIXEL)),
+		}),
+		attrs(el(doc, A_NS, 'a:chExt'), {
+			cx: emu(child?.widthPx ?? image.widthPx),
+			cy: emu(child?.heightPx ?? image.heightPx),
+		}),
 	);
-	return add(drawing, holder);
+	writeDrawingTransform(xfrm, spec);
+	return add(
+		el(doc, WPG_NS, 'wpg:wgp'),
+		el(doc, WPG_NS, 'wpg:cNvGrpSpPr'),
+		add(el(doc, WPG_NS, 'wpg:grpSpPr'), xfrm),
+		...(spec.groupChildren ?? []).map(({ shape, xPx, yPx, widthPx, heightPx }) =>
+			shapeElement(doc, { widthPx, heightPx }, shape, xPx, yPx),
+		),
+	);
 }
 
 const firstNs = (root: XmlElement, ns: string, local: string) =>

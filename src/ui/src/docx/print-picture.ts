@@ -79,6 +79,8 @@ function pictureShadowCss(shadow: DrawingSvgShadow): string {
 
 export function pictureElement(
 	object: {
+		altText?: string;
+		transform?: import('ooxml-core/docx').DrawingTransform;
 		pictureFill?: Extract<DrawingFill, { kind: 'picture' }>;
 		shadow?: DrawingSvgShadow;
 		partName: string;
@@ -109,6 +111,7 @@ export function pictureElement(
 	}
 	if (object.chart) {
 		const element = chartElement(object.chart);
+		if (object.altText) element.setAttribute('aria-label', object.altText);
 		element.classList.add('dve-print-picture');
 		element.style.position = 'absolute';
 		element.style.width = `${object.widthPx}px`;
@@ -136,6 +139,11 @@ export function pictureElement(
 		element.style.position = 'absolute';
 		element.style.width = `${object.widthPx}px`;
 		element.style.height = `${object.heightPx}px`;
+		if (object.altText) {
+			element.setAttribute('role', 'img');
+			element.setAttribute('aria-label', object.altText);
+		}
+		element.style.transform = pictureTransformCss(object.transform);
 		if (object.shadow) element.style.filter = pictureShadowCss(object.shadow);
 		element.append(pictureSvg(document, object.pictureFill, url, object.widthPx, object.heightPx));
 		return element;
@@ -143,12 +151,14 @@ export function pictureElement(
 	const element = document.createElement(url ? 'img' : 'div');
 	if (url) {
 		(element as HTMLImageElement).src = url;
-		(element as HTMLImageElement).alt = '';
+		(element as HTMLImageElement).alt = object.altText ?? '';
 	} else element.classList.add('dve-print-picture-missing');
 	element.classList.add('dve-print-picture');
 	element.style.position = 'absolute';
 	element.style.width = `${object.widthPx}px`;
 	element.style.height = `${object.heightPx}px`;
+	element.style.transform = pictureTransformCss(object.transform);
 	if (object.shadow) element.style.filter = pictureShadowCss(object.shadow);
 	return element;
 }
+import { pictureTransformCss } from './picture-transform';

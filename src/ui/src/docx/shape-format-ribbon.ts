@@ -5,15 +5,8 @@ import { colorSplit, group, menuSelect, spinner, stack, tool } from './ribbon-pa
 import { panelOf, selectTab, setTabHidden, isTabHidden } from './ribbon-tab-api';
 import { selectedShape, shapeWrapOf } from './shape-commands';
 
-export const WRAPS: Array<[string, string]> = [
-	['inline', 'In Line with Text'],
-	['square', 'Square'],
-	['tight', 'Tight'],
-	['through', 'Through'],
-	['topAndBottom', 'Top and Bottom'],
-	['behind', 'Behind Text'],
-	['front', 'In Front of Text'],
-];
+import { buildArrangeGroup, textDirectionMenu } from './arrange-ribbon';
+
 const WEIGHTS: Array<[string, string]> = [
 	['0.25', '0.25 pt'],
 	['0.5', '0.5 pt'],
@@ -63,17 +56,9 @@ export function buildShapeFormatPanel(panel: HTMLElement): void {
 				{ type: 'formatDialog', kind: 'shapeText' },
 				{ large: true, caption: 'Add Text' },
 			),
+			textDirectionMenu(),
 		),
-		group(
-			'Arrange',
-			menuSelect(
-				'Wrap text',
-				'columns',
-				WRAPS,
-				(value) => ({ type: 'shape', key: 'wrap', value }),
-				{ momentary: true },
-			),
-		),
+		buildArrangeGroup('shape'),
 		group(
 			'Size',
 			stack(

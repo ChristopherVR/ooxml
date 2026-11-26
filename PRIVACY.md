@@ -389,6 +389,13 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
   `ooxml-suite-word-design-<profile id>` in localStorage. Saving requires the explicit command,
   and Word reads the values when creating a blank document. In suite Settings > General, turn
   off Remember my default Word design to stop reading and writing this preference. Nothing is sent.
+- **Word drawing layout:** Wrap Text > Set as Default Layout stores one wrap choice per drawing
+  kind under `ooxml-word-drawing-wrap.picture` and `ooxml-word-drawing-wrap.shape` in localStorage.
+  Word reads the choice when inserting pictures or drawing shapes. The device stores only the
+  explicitly selected wrap choice. Clear these keys to reset the defaults. If the host blocks
+  localStorage, the choice lasts until the page closes.
+  Arrange commands may load bundled editor code from the app's origin when invoked. These asset
+  requests carry no drawing or document data.
 - **Suite:** the document library, attachments, versions and chat history in IndexedDB per
   profile; profiles, favourites, theme (`ooxml-suite-theme`), fonts (`ooxml-suite-fonts`), the
   other Settings (`ooxml-suite-settings`) and AI preferences in localStorage; AI keys in session

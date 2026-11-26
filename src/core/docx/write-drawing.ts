@@ -19,10 +19,16 @@ import {
 	updateDocPr,
 	updateExtent,
 	updatePlacement,
+	updateDrawingTransform,
+	updateTextBoxDirection,
 } from './write-drawing-patch';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { patchFallbackSize } from './write-fallback';
-import { patchDrawingWrap, placementPositionChanged } from './write-drawing-wrap';
+import {
+	patchDrawingOrder,
+	patchDrawingWrap,
+	placementPositionChanged,
+} from './write-drawing-wrap';
 import { diagramRun } from './write-diagram-drawing';
 import { isOleDrawing } from './drawing-payload';
 import {
@@ -169,6 +175,41 @@ function buildInlineDrawing(
  * minimal, valid `wp:inline` drawing for a newly inserted picture. Refuses to swap one picture's
  * relationship for another in place rather than silently dropping the original XML.
  */
+function patchArrangement(
+	doc: XmlDocument,
+	drawing: XmlElement,
+	image: InlineImage,
+	base?: InlineImage,
+): void {
+	if (image.altText !== base?.altText || image.title !== base?.title)
+		updateDocPr(drawing, image.altText, image.title);
+	patchDrawingWrap(drawing, doc, image, base);
+	if (
+		image.anchored &&
+		image.placement &&
+		base?.anchored &&
+		placementPositionChanged(image.placement, base.placement)
+	)
+		updatePlacement(drawing, doc, image.placement, base.placement);
+	patchDrawingOrder(drawing, image.placement, base?.placement);
+	const transform = image.shape ?? image.transform;
+	const previous = base?.shape ?? base?.transform;
+	if (
+		transform?.rotation !== previous?.rotation ||
+		transform?.flipH !== previous?.flipH ||
+		transform?.flipV !== previous?.flipV
+	)
+		updateDrawingTransform(drawing, transform ?? {});
+	if (image.textBoxContent?.vertical !== base?.textBoxContent?.vertical)
+		updateTextBoxDirection(drawing, image.textBoxContent?.vertical);
+}
+
+function shapeArtwork(image: InlineImage): string {
+	if (!image.shape) return '';
+	const { rotation: _rot, flipH: _h, flipV: _v, ...artwork } = image.shape;
+	return JSON.stringify(artwork);
+}
+
 export function createImageRun(
 	doc: XmlDocument,
 	image: InlineImage,
@@ -185,6 +226,7 @@ export function createImageRun(
 		);
 	if (base && oldDrawing && image.textBoxEditable && base.textBoxEditable) {
 		patchTextBox(doc, oldDrawing, image, base);
+		patchArrangement(doc, oldDrawing, image, base);
 		clearNonProperties(node, oldContainer);
 		return node;
 	}
@@ -219,8 +261,36 @@ export function createImageRun(
 		clearNonProperties(node, oldContainer);
 		return node;
 	}
+	if (
+		base?.shape &&
+		oldDrawing &&
+		image.shape &&
+		Boolean(image.shape.groupChildren) !== Boolean(base.shape.groupChildren)
+	) {
+		if (!allocator) throw new Error('Cannot replace a drawing without an id allocator.');
+		clearNonProperties(node);
+		node.appendChild(buildShapeDrawing(doc, image, { id: allocator.docPrIds.next() }));
+		return node;
+	}
+	if (
+		base &&
+		oldDrawing &&
+		image.shape &&
+		base.shape &&
+		shapeArtwork(image) === shapeArtwork(base) &&
+		image.widthPx === base.widthPx &&
+		image.heightPx === base.heightPx
+	) {
+		patchArrangement(doc, oldDrawing, image, base);
+		clearNonProperties(node, oldContainer);
+		return node;
+	}
 	if (base && oldDrawing && image.shape?.editable && base.shape?.editable) {
 		const next = rebuildShapeDrawing(doc, image, oldDrawing);
+		if (image.altText !== base.altText || image.title !== base.title)
+			updateDocPr(next, image.altText, image.title);
+		if (image.textBoxContent?.vertical !== base.textBoxContent?.vertical)
+			updateTextBoxDirection(next, image.textBoxContent?.vertical);
 		const choice = oldDrawing.parentNode as XmlElement | null;
 		if (oldContainer?.localName === 'AlternateContent' && choice) {
 			// Keep the wrapper and its fallback: only the modern drawing is rebuilt.
@@ -233,7 +303,7 @@ export function createImageRun(
 		node.appendChild(next);
 		return node;
 	}
-	if (!base && image.shape?.editable && !image.partName) {
+	if (!base && (image.shape?.editable || image.shape?.groupChildren) && !image.partName) {
 		if (!allocator) throw new Error('Cannot insert a shape without an id allocator.');
 		const id = allocator.docPrIds.next();
 		clearNonProperties(node);
@@ -241,7 +311,11 @@ export function createImageRun(
 			buildShapeDrawing(
 				doc,
 				image,
-				{ id, ...(image.altText ? { descr: image.altText } : {}) },
+				{
+					id,
+					...(image.altText ? { descr: image.altText } : {}),
+					...(image.title ? { title: image.title } : {}),
+				},
 				251658240 + (Number(id) % 4096) * 1024,
 			),
 		);
@@ -272,7 +346,9 @@ export function createImageRun(
 	if (!base && image.textBoxEditable && !image.partName) {
 		if (!allocator) throw new Error('Cannot insert a text box without an id allocator.');
 		clearNonProperties(node);
-		node.appendChild(buildTextBoxDrawing(doc, image, allocator.docPrIds.next()));
+		const drawing = buildTextBoxDrawing(doc, image, allocator.docPrIds.next());
+		patchArrangement(doc, drawing, image);
+		node.appendChild(drawing);
 		return node;
 	}
 	if (base && oldDrawing && sameUnderlyingImage(base, image)) {
@@ -298,15 +374,7 @@ export function createImageRun(
 					image.heightPx,
 				);
 		}
-		if (image.altText !== base.altText || image.title !== base.title)
-			updateDocPr(oldDrawing, image.altText, image.title);
-		patchDrawingWrap(oldDrawing, doc, image, base);
-		if (
-			image.anchored &&
-			image.placement &&
-			placementPositionChanged(image.placement, base.placement)
-		)
-			updatePlacement(oldDrawing, doc, image.placement);
+		patchArrangement(doc, oldDrawing, image, base);
 		clearNonProperties(node, oldContainer);
 		return node;
 	}
@@ -318,7 +386,7 @@ export function createImageRun(
 	const relId = allocator.addImage(image.partName);
 	const svgRelId = image.svgPartName ? allocator.addImage(image.svgPartName) : undefined;
 	const drawing = buildInlineDrawing(doc, image, relId, allocator.docPrIds.next(), svgRelId);
-	patchDrawingWrap(drawing, doc, image);
+	patchArrangement(doc, drawing, image);
 	clearNonProperties(node);
 	node.appendChild(drawing);
 	return node;

@@ -2,6 +2,10 @@
 // In-place patches of an existing drawing's XML when its picture, chart or run keeps its markup:
 // the extent, the docPr alt text and title, a floating picture's position, and clearing a run
 // down to its properties and the drawing it keeps.
+import { writeDrawingTransform } from './drawing-transform';
+import type { DrawingTransform } from './drawing-arrange';
+import { WPG_NS } from './group-shape';
+import { WPS_NS } from './shape-parse';
 import { EMU_PER_PIXEL } from './drawing';
 import type { PicturePlacement } from './model';
 import { isElement, makeNS, named, type XmlDocument, type XmlElement } from './xml';
@@ -42,13 +46,13 @@ export function updateDocPr(
 	altText: string | undefined,
 	title: string | undefined,
 ): void {
-	walk(drawing, (node) => {
-		if (node.namespaceURI !== WP_NS || node.localName !== 'docPr') return;
-		if (altText) node.setAttribute('descr', altText);
-		else node.removeAttribute('descr');
-		if (title) node.setAttribute('title', title);
-		else node.removeAttribute('title');
-	});
+	// The holder's docPr precedes the graphic and any drawings in its text box story.
+	const node = drawing.getElementsByTagNameNS(WP_NS, 'docPr')[0];
+	if (!node) return;
+	if (altText) node.setAttribute('descr', altText);
+	else node.removeAttribute('descr');
+	if (title) node.setAttribute('title', title);
+	else node.removeAttribute('title');
 }
 
 /** Rewrites one `wp:positionH` or `wp:positionV` from the model's alignment or offset. */
@@ -79,26 +83,55 @@ export function updatePlacement(
 	drawing: XmlElement,
 	doc: XmlDocument,
 	placement: PicturePlacement,
+	previous?: PicturePlacement,
 ): void {
 	walk(drawing, (node) => {
-		if (node.namespaceURI !== WP_NS || node.localName !== 'anchor') return;
-		patchPosition(
-			doc,
-			node,
-			'positionH',
-			placement.relativeFrom,
-			placement.align,
-			placement.offsetXPx,
-		);
-		patchPosition(
-			doc,
-			node,
-			'positionV',
-			placement.relativeFromV,
-			placement.alignV,
-			placement.offsetYPx,
-		);
+		if (node.namespaceURI !== WP_NS || node.localName !== 'anchor' || node.parentNode !== drawing)
+			return;
+		node.setAttribute('simplePos', '0');
+		if (
+			!previous ||
+			placement.relativeFrom !== previous.relativeFrom ||
+			placement.align !== previous.align ||
+			placement.offsetXPx !== previous.offsetXPx
+		)
+			patchPosition(
+				doc,
+				node,
+				'positionH',
+				placement.relativeFrom,
+				placement.align,
+				placement.offsetXPx,
+			);
+		if (
+			!previous ||
+			placement.relativeFromV !== previous.relativeFromV ||
+			placement.alignV !== previous.alignV ||
+			placement.offsetYPx !== previous.offsetYPx
+		)
+			patchPosition(
+				doc,
+				node,
+				'positionV',
+				placement.relativeFromV,
+				placement.alignV,
+				placement.offsetYPx,
+			);
 	});
+}
+
+/** Patches only the outer shape or picture, retaining any transforms inside a group. */
+export function updateDrawingTransform(drawing: XmlElement, transform: DrawingTransform): void {
+	const graphic = drawing.getElementsByTagNameNS(A_NS, 'graphicData')[0];
+	const ns = graphic?.getAttribute('uri');
+	if (!graphic || !ns) return;
+	const properties = graphic.getElementsByTagNameNS(ns, ns === WPG_NS ? 'grpSpPr' : 'spPr')[0];
+	const xfrm = properties?.getElementsByTagNameNS(A_NS, 'xfrm')[0];
+	if (xfrm) writeDrawingTransform(xfrm, transform);
+}
+
+export function updateTextBoxDirection(drawing: XmlElement, vertical: string | undefined): void {
+	drawing.getElementsByTagNameNS(WPS_NS, 'bodyPr')[0]?.setAttribute('vert', vertical ?? 'horz');
 }
 
 export function clearNonProperties(node: XmlElement, keep?: XmlElement): void {

@@ -19,6 +19,19 @@ function inheritedCellMargins(json: unknown): TableCellMargins {
 }
 
 /** Only rectangular tables currently expose formatting controls. */
+export function textDirectionCellAvailable(state: EditorState): boolean {
+	const { $from, $to } = state.selection;
+	for (let depth = $from.depth; depth > 0; depth--)
+		if ($from.node(depth).type.name === 'table')
+			return (
+				$from.node(depth).attrs.structureEditable !== false &&
+				$to.depth > depth &&
+				$to.node(depth) === $from.node(depth)
+			);
+	return false;
+}
+
+/** Only rectangular tables currently expose formatting controls. */
 export function tablePropertiesContext(state: EditorState) {
 	const { $from, $to } = state.selection;
 	for (let depth = $from.depth; depth > 0; depth--) {

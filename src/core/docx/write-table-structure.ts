@@ -11,6 +11,7 @@ import {
 	patchCellBorders,
 	patchCellMargins,
 	patchCellShading,
+	patchCellTextDirection,
 	patchCellVerticalAlignment,
 	patchRowProperties,
 	patchTableMargins,
@@ -156,6 +157,7 @@ export function writeRestructuredTable(
 				patchCellShading(doc, tc, cell, reuse.model);
 				patchCellMargins(doc, tc, cell.margins, reuse.model.margins);
 				patchCellVerticalAlignment(doc, tc, cell.verticalAlign, reuse.model.verticalAlign);
+				patchCellTextDirection(doc, tc, cell.textDirection, reuse.model.textDirection);
 			} else {
 				const props = buildCellProperties(doc, cell);
 				if (props) tc.insertBefore(props, tc.firstChild);

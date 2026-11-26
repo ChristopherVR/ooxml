@@ -91,9 +91,10 @@ detail and limits of each feature already built.
    Word catalogue, theme file import/export, and broader DrawingML effect rendering remain open.
    Mailings supports letters and directories with local or host recipients, field authoring,
    preview, validation, and DOCX or print output; email delivery and envelope and label layouts
-   remain open. Other remaining work includes object
-   positioning and wrapping (no Layout > Arrange group, no Picture
-   Format tab), citations/bibliography/index/Table of Authorities, recalculating IF,
+   remain open. Layout, Picture Format and Shape Format offer Arrange commands for pictures and
+   shapes. Wrap point editing, grouping pictures or formatted objects, vertically laid-out
+   table cells in Print Layout and PDF, and more coverage of page-anchored objects remain open.
+   Other remaining work includes citations/bibliography/index/Table of Authorities, recalculating IF,
    `=`, DOCPROPERTY and INCLUDE fields, Read Mode, Web Layout and Outline views,
    wildcard and formatting Find & Replace, and accessibility inspection. Unsupported imported content must remain visible or explicitly
    identified and preserved.
