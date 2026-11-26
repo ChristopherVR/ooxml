@@ -42,6 +42,7 @@ import * as drawings from './drawings';
 import { insertLocalObject } from './local-object';
 import * as sparklines from './sparklines';
 import * as pivots from './pivots';
+import { refreshAllPivotTables, refreshPivotTable } from './pivot-refresh';
 import * as pivotCharts from './pivot-charts';
 import * as slicers from './slicers';
 import * as timelines from './timelines';
@@ -264,7 +265,7 @@ export function createEditSession(
 		return true;
 	};
 
-	return {
+	const session: EditSession = {
 		workbook,
 		calc,
 		setCellInput: (s, r, c, text) => values.setCellInput(ctx, s, r, c, text),
@@ -348,7 +349,9 @@ export function createEditSession(
 		setDrawingAnchor: (s, index, anchor) => drawings.setDrawingAnchor(ctx, s, index, anchor),
 		createPivotTable: (s, destination, options) =>
 			pivots.createPivotTable(ctx, s, destination, options),
-		refreshPivotTable: (s, name, patch) => pivots.refreshPivotTable(ctx, s, name, patch),
+		refreshPivotTable: (s, name, patch) => refreshPivotTable(ctx, s, name, patch),
+		refreshAllPivotTables: () =>
+			session.batch('Refresh All PivotTables', () => refreshAllPivotTables(ctx)),
 		addPivotChart: (s, pivotSheet, name, anchor) =>
 			pivotCharts.addPivotChart(ctx, s, pivotSheet, name, anchor),
 		showPivotChartButtons: (s, index, visible) =>
@@ -484,4 +487,5 @@ export function createEditSession(
 		},
 		applyExternal: (apply) => applyExternal({ calculator, emit, busy: () => !!open }, apply),
 	};
+	return session;
 }

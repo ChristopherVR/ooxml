@@ -22,6 +22,7 @@ import { sheetPictureCommands } from './sheet-picture';
 import { localObjectCommands } from './local-object';
 import { sparklineCommands } from './sparklines';
 import { pivotCommands } from './pivots';
+import { pivotAnalyzeCommands, pivotDesignCommands } from './pivot-context';
 import { slicerCommands } from './slicers';
 import { numberCommands } from 'ooxml-core/xlsx/ui';
 import { pageLayoutCommands } from 'ooxml-core/xlsx/ui';
@@ -51,6 +52,8 @@ export function allCommands(): Command[] {
 		...localObjectCommands(),
 		...sparklineCommands(),
 		...pivotCommands(),
+		...pivotAnalyzeCommands(),
+		...pivotDesignCommands(),
 		...slicerCommands(),
 		...pageLayoutCommands(),
 		...pageBreakCommands(),

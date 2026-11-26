@@ -8,6 +8,7 @@ import {
 	effectiveStyleId,
 	getCell,
 	hasSparklineAt,
+	pivotTableAt,
 	type CellView,
 	type ConditionalFormatEvaluator,
 	type EditSession,
@@ -15,6 +16,7 @@ import {
 	type Worksheet,
 } from '../../index';
 import { isBlankView } from './cell-items';
+import { paintPivotStyle } from './pivot-style';
 
 export interface ViewSource {
 	workbook(): Workbook | undefined;
@@ -56,13 +58,16 @@ export class CellViewCache {
 		let result: CellView | null = null;
 		if (workbook && sheet) {
 			const stored = getCell(sheet, row, col);
+			const pivot = pivotTableAt(sheet, { row, col });
 			const plain =
 				!stored &&
+				!pivot &&
 				effectiveStyleId(sheet, row, col) === 0 &&
 				!cfCovers(sheet, row, col) &&
 				!hasSparklineAt(sheet, row, col);
 			if (!plain) {
 				const view = cellView(workbook, this.#source.sheetIndex(), row, col, this.#evaluator());
+				if (pivot) paintPivotStyle(view, pivot, row, col, workbook.theme);
 				result = isBlankView(view) ? null : view;
 			}
 		}

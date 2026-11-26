@@ -26,6 +26,9 @@ import { readItemNames } from './item-names-read';
 import { assertPageAxisItems } from './page-filter-admission';
 import { readPivotPageFilter } from './page-filter';
 import { supportedPivotAxes, pivotFieldIndex, pivotValueIndex } from './values-axis';
+import { readPivotDisplay } from './display';
+import { readPivotCondition } from './condition';
+import { readPivotCalculatedField } from './calculated';
 
 function value(node: XmlElement, date1904 = false): CellValue {
 	const v = att(node, 'v') ?? '';
@@ -83,10 +86,13 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const recordRoot = parseXml(source.text(recordPart)!).documentElement;
 	assertPivotRecords(recordRoot);
 	const allFields = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x);
-	if (allFields.some((field) => field.hasAttribute('formula')))
-		throw new Error('Calculated cache field');
+	const formulas = allFields.filter((field) => field.hasAttribute('formula'));
+	const formula = formulas[0];
+	if (formulas.length > 1 || (formula && formula !== allFields.at(-1)))
+		throw new Error('Multiple calculated PivotTable fields are preserved.');
+	const groupedFields = formula ? allFields.slice(0, -1) : allFields;
 	// Date groups append derived cache fields that have no records.
-	const databaseCount = databaseFieldCount(allFields);
+	const databaseCount = databaseFieldCount(groupedFields);
 	const fields = allFields.slice(0, databaseCount);
 	const shared = fields.map((field) =>
 		elements(first(field, 'sharedItems', NS.x) ?? parseXml('<root/>').documentElement).map((node) =>
@@ -122,13 +128,18 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		'dataField',
 		NS.x,
 	);
+	const calculated =
+		formula &&
+		dataFields.length > 1 &&
+		att(dataFields.at(-1), 'fld') === String(allFields.length - 1)
+			? readPivotCalculatedField(formula, dataFields.at(-1)!)
+			: undefined;
+	if (formula && !calculated) throw new Error('Unsupported calculated PivotTable field.');
 	if (
 		rowFields.length < 1 ||
 		dataFields.length < 1 ||
 		dataFields.length > 16 ||
-		!supportedPivotAxes(rowFields, colFields, dataFields.length, rowsAxis) ||
-		root.getAttribute('rowGrandTotals') === '0' ||
-		root.getAttribute('colGrandTotals') === '0'
+		!supportedPivotAxes(rowFields, colFields, dataFields.length, rowsAxis)
 	)
 		throw new Error('Unsupported pivot layout');
 	const valueIndex = pivotValueIndex(root, rowsAxis ? rowFields : colFields);
@@ -165,7 +176,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	)
 		throw new Error('Unsupported pivot aggregate');
 	const names = fields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
-	const axisNames = allFields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
+	const axisNames = groupedFields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
 	const realRows = rowsAxis
 		? rowFields.filter((field) => pivotFieldIndex(field) !== -2)
 		: rowFields;
@@ -174,6 +185,16 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const more = realRows.slice(2).map((field) => axisNames[Number(att(field, 'x'))]);
 	const pageFilter = readPivotPageFilter(root, names, shared);
 	const tableFields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
+	if (
+		tableFields.some((field, index) =>
+			['dragToRow', 'dragToCol', 'dragToPage'].some(
+				(option) =>
+					field.hasAttribute(option) &&
+					(!calculated || index !== allFields.length - 1 || att(field, option) !== '0'),
+			),
+		)
+	)
+		throw new Error('Unsupported PivotTable field placement restrictions.');
 	const outer = tableFields[pivotFieldIndex(realRows[0])];
 	const compact = att(outer, 'compact') !== '0';
 	const outline = att(outer, 'outline') !== '0';
@@ -244,7 +265,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 			throw new Error('Unsupported pivot field number format');
 	});
 	const dateGroups = readDateGroups(
-		allFields,
+		groupedFields,
 		databaseCount,
 		names,
 		dateFields,
@@ -257,7 +278,11 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		)
 	)
 		throw new Error('A grouped field cannot be a report filter or date field');
-	const dateFilter = readDateFilter(root, names, dateFields, workbook.date1904);
+	const condition = readPivotCondition(root, pivotFieldIndex(realRows[0]));
+	const dateFilter = condition
+		? undefined
+		: readDateFilter(root, names, dateFields, workbook.date1904);
+	const display = readPivotDisplay(root, tableFields, rowDefinitions, rowsAxis);
 	const onAxis = new Set<string | undefined>([
 		row,
 		second,
@@ -274,6 +299,9 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		...columnSubtotals,
 	];
 	const pivot: PivotTable = {
+		...(calculated ? { calculatedField: calculated } : {}),
+		...(display ? { display } : {}),
+		...(condition ? { condition } : {}),
 		...(pageFilter ? { pageFilter } : {}),
 		...(itemFilters ? { itemFilters } : {}),
 		...(itemNames.length ? { itemNames } : {}),
@@ -310,9 +338,9 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		valueField: data,
 		aggregate,
 		valueCaption: decodeEscapes(att(measure, 'name') ?? data),
-		...(dataFields.length > 1
+		...(dataFields.length > (calculated ? 2 : 1)
 			? {
-					additionalValues: dataFields.slice(1).map((measure) => {
+					additionalValues: dataFields.slice(1, calculated ? -1 : undefined).map((measure) => {
 						const field = names[Number(att(measure, 'fld'))];
 						const aggregate = (att(measure, 'subtotal') ?? 'sum') as PivotTable['aggregate'];
 						if (

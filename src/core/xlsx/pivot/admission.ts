@@ -5,15 +5,15 @@ const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 const LAYOUT = 'http://schemas.microsoft.com/office/spreadsheetml/2016/pivotdefaultlayout';
 const TABLE: Record<string, string> = {
 	pivotTableDefinition:
-		'name cacheId dataCaption grandTotalCaption rowHeaderCaption colHeaderCaption dataOnRows dataPosition updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals chartFormat',
+		'name cacheId dataCaption grandTotalCaption rowHeaderCaption colHeaderCaption dataOnRows dataPosition updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals showHeaders showDrill chartFormat',
 	location: 'ref firstHeaderRow firstDataRow firstDataCol rowPageCount colPageCount',
 	pageFields: 'count',
 	pageField: 'fld item hier',
 	pivotFields: 'count',
 	pivotField:
-		'axis dataField compact outline showAll subtotalTop defaultSubtotal numFmtId sumSubtotal countASubtotal avgSubtotal maxSubtotal minSubtotal productSubtotal countSubtotal stdDevSubtotal stdDevPSubtotal varSubtotal varPSubtotal',
+		'axis dataField compact outline showAll subtotalTop defaultSubtotal numFmtId sumSubtotal countASubtotal avgSubtotal maxSubtotal minSubtotal productSubtotal countSubtotal stdDevSubtotal stdDevPSubtotal varSubtotal varPSubtotal insertBlankRow measureFilter dragToRow dragToCol dragToPage',
 	items: 'count',
-	item: 'x t h n',
+	item: 'x t h n sd',
 	rowFields: 'count',
 	colFields: 'count',
 	field: 'x',
@@ -32,7 +32,7 @@ const TABLE: Record<string, string> = {
 	pivotTableStyleInfo:
 		'name showRowHeaders showColHeaders showRowStripes showColStripes showLastColumn',
 	filters: 'count',
-	filter: 'fld mpFld evalOrder id type name',
+	filter: 'fld mpFld evalOrder id type name stringValue1 iMeasureFld val',
 	autoFilter: 'ref',
 	filterColumn: 'colId',
 	customFilters: 'and',
@@ -51,7 +51,7 @@ const CACHE: Record<string, string> = {
 	cacheSource: 'type',
 	worksheetSource: 'ref sheet name',
 	cacheFields: 'count',
-	cacheField: 'name numFmtId databaseField',
+	cacheField: 'name numFmtId databaseField formula',
 	sharedItems:
 		'count containsString containsNumber containsInteger containsBlank containsMixedTypes containsSemiMixedTypes minValue maxValue containsNonDate containsDate minDate maxDate',
 	s: 'v',
@@ -216,7 +216,11 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 			)
 		)
 			throw new Error('Unsupported PivotTable subtotal');
-		if (node.localName === 'item' && attr.localName === 'h' && !['0', '1'].includes(attr.value))
+		if (
+			node.localName === 'item' &&
+			['h', 'sd'].includes(attr.localName!) &&
+			!['0', '1'].includes(attr.value)
+		)
 			throw new Error('Unsupported PivotTable item visibility');
 		if (
 			node.localName === 'pivotField' &&

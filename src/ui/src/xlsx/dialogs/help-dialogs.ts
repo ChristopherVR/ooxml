@@ -42,6 +42,7 @@ export const SUPPORTED_FEATURES = [
 	'Charts (display and basic editing)',
 	'PivotChart',
 	'Recommended PivotTables',
+	'PivotTable Analyze and Design for editable worksheet PivotTables',
 	'WordArt styles and text transforms',
 	'Worksheet shapes, text boxes and standalone shape groups',
 	'Print scaling, Print Titles, worksheet backgrounds and header and footer editing',
@@ -64,6 +65,7 @@ export const SUPPORTED_FEATURES = [
 export const UNSUPPORTED_FEATURES = [
 	'Unmodeled PivotTable layouts, grouping, slicers and external data sources (preserved)',
 	'Multiple/dynamic report filters and repeated column captions (preserved)',
+	'Shared PivotTable caches, general calculated fields and items, and advanced label, value and date-group filters (preserved)',
 	'AutoFilter on table headers, the date-hierarchy checklist and icon filters from the menu',
 	'Flash Fill, Subtotal and Consolidate',
 	'Opening .xlsb binary workbooks',

@@ -16,11 +16,14 @@ import {
 	type EditorContext,
 } from 'ooxml-core/xlsx/ui';
 
-function selected(ctx: EditorContext) {
+export function selectedPivot(ctx: EditorContext) {
+	if (ctx.selection.get().drawing !== undefined) return;
 	const t = target(ctx);
 	const pivot = t ? pivotTableAt(t.ws, t.active) : undefined;
 	return t && pivot ? { t, pivot } : undefined;
 }
+
+const selected = selectedPivot;
 
 export function pivotCommands(): Command[] {
 	return [
@@ -47,7 +50,8 @@ export function pivotCommands(): Command[] {
 			icon: icon('table'),
 			lock: 'objects',
 			unavailable: 'Select a source range or table in an editable workbook.',
-			enabled: (ctx) => !structureLocked(ctx) && !selected(ctx) && target(ctx)?.ranges.length === 1,
+			enabled: (ctx) =>
+				!structureLocked(ctx) && (!!selected(ctx) || target(ctx)?.ranges.length === 1),
 			run: async (ctx) => (await import('../dialogs/pivot-charts')).openRecommendedPivotTables(ctx),
 		}),
 		editing({

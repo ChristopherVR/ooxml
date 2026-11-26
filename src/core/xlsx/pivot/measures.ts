@@ -10,10 +10,22 @@ import { pivotMeasureName, type CaptionHolder } from './captions';
 import { PIVOT_AGGREGATES } from './data';
 
 export const pivotMeasures = (
-	pivot: Pick<PivotTable, 'valueField' | 'aggregate' | 'valueCaption' | 'additionalValues'>,
+	pivot: Pick<
+		PivotTable,
+		'valueField' | 'aggregate' | 'valueCaption' | 'additionalValues' | 'calculatedField'
+	>,
 ): PivotValueField[] => [
 	{ field: pivot.valueField, aggregate: pivot.aggregate, caption: pivot.valueCaption },
 	...(pivot.additionalValues ?? []),
+	...(pivot.calculatedField
+		? [
+				{
+					field: pivot.calculatedField.name,
+					aggregate: 'sum' as const,
+					caption: pivot.calculatedField.caption,
+				},
+			]
+		: []),
 ];
 export function normalizedPivotMeasures(
 	values: readonly PivotValueFieldOptions[],
@@ -73,9 +85,17 @@ export function aggregateValues(
 	return type === 'average' ? sum / numbers.length : sum;
 }
 export const pivotMeasureNumber = (
-	pivot: Pick<PivotTable, 'fields'>,
+	pivot: Pick<PivotTable, 'fields' | 'calculatedField'>,
 	records: readonly CellValue[][],
 	measure: PivotValueField,
-): CellValue => aggregateValues(records, pivot.fields.indexOf(measure.field), measure.aggregate);
+): CellValue => {
+	const calculated = pivot.calculatedField;
+	if (!calculated || measure.field !== calculated.name)
+		return aggregateValues(records, pivot.fields.indexOf(measure.field), measure.aggregate);
+	const sum = aggregateValues(records, pivot.fields.indexOf(calculated.field), 'sum');
+	if (typeof sum !== 'number') return sum;
+	const result = sum * calculated.factor;
+	return Number.isFinite(result) ? result : { error: '#NUM!' };
+};
 export const pivotNumbers = (pivot: PivotTable, records: readonly CellValue[][]): CellValue[] =>
 	pivotMeasures(pivot).map((measure) => pivotMeasureNumber(pivot, records, measure));

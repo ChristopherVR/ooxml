@@ -38,7 +38,7 @@ export function pivotChartColumns(pivot: PivotTable, grid: PivotGrid) {
 
 export function pivotChartSeries(pivot: PivotTable, grid: PivotGrid, sheet: string): ChartSeries[] {
 	const label = pivotItemLabeler(pivot);
-	const rowFields = pivotRowFields(pivot);
+	const rowFields = pivot.display?.collapsed ? [pivot.rowField] : pivotRowFields(pivot);
 	const columnFields = pivotColumnFields(pivot);
 	const valuesAt = pivotValuesIndex(pivot);
 	const series = pivotChartColumns(pivot, grid);

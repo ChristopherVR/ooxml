@@ -56,7 +56,7 @@ export function addPivotChart(
 		kind: 'chart',
 		anchor,
 		chartType: 'column',
-		showLegend: !!pivot.columnField || !!pivot.additionalValues?.length,
+		showLegend: !!pivot.columnField || !!pivot.additionalValues?.length || !!pivot.calculatedField,
 		series: pivotChartSeries(pivot, pivotGrid(pivot), ws.name),
 	};
 	const space = chartSpaceFromObject(frame);
@@ -71,17 +71,17 @@ export function pivotChartUpdates(
 	sheetName: string,
 	pivot: PivotTable,
 	grid: PivotGrid,
+	previousName = pivot.name,
 ): Map<number, Map<ChartObject, ChartObject>> {
 	const updates = new Map<number, Map<ChartObject, ChartObject>>();
 	let data: ChartObject['series'] | undefined;
 	workbook.sheets.forEach((sheet, index) => {
 		for (const drawing of sheet.drawings) {
-			if (
-				drawing.kind !== 'chart' ||
-				drawing.editBlocked ||
-				!chartUsesPivot(drawing, sheetName, pivot.name)
-			)
+			if (drawing.kind !== 'chart' || !chartUsesPivot(drawing, sheetName, previousName)) continue;
+			if (drawing.editBlocked) {
+				if (previousName !== pivot.name) throw new Error(drawing.editBlocked);
 				continue;
+			}
 			const space = drawing.chartSpace;
 			const group = space?.plotArea.groups[0];
 			if (!space || !group || space.plotArea.groups.length !== 1) continue;
@@ -90,6 +90,9 @@ export function pivotChartUpdates(
 				chartSpaceFromObject({ ...drawing, series: data }).plotArea.groups[0]?.series ?? [];
 			let next: ChartSpace = {
 				...space,
+				...(space.pivotSource && previousName !== pivot.name
+					? { pivotSource: { ...space.pivotSource, name: `[Book.xlsx]${sheetName}!${pivot.name}` } }
+					: {}),
 				plotArea: {
 					...space.plotArea,
 					groups: [{ ...group, series: withNewData(group, fresh, drawing) }],

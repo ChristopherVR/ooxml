@@ -336,6 +336,8 @@ export interface EditSession {
 	createPivotTable(sheet: number, destination: CellAddress, options: PivotTableOptions): string;
 	/** Refreshes cached records and output; an optional patch reconfigures fields. */
 	refreshPivotTable(sheet: number, name: string, patch?: PivotTablePatch): void;
+	/** Refreshes editable PivotTables together in one undo step. */
+	refreshAllPivotTables(): void;
 	/** Inserts a clustered column chart linked to a worksheet PivotTable. */
 	addPivotChart(sheet: number, pivotSheet: number, name: string, anchor: DrawingAnchor): number;
 	showPivotChartButtons(sheet: number, index: number, visible: boolean): void;

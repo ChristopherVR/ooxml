@@ -8,15 +8,9 @@ import {
 	type CellRange,
 } from '../address';
 import { forEachCellInRange, putCell, deleteCell } from '../cells';
-import type { PivotTable, PivotTableOptions, PivotTablePatch, Workbook } from '../model';
+import type { PivotTable, PivotTableOptions, Workbook } from '../model';
 import { pivotGrid } from '../pivot/aggregate';
-import {
-	pivotCaption,
-	pivotColumnFields,
-	pivotRowFields,
-	pivotSourceData,
-	validatePivotFields,
-} from '../pivot/data';
+import { pivotCaption, pivotSourceData, validatePivotFields } from '../pivot/data';
 import { pivotSourceRange } from '../pivot/source';
 import { type EditContext, sheetAt } from './context';
 import { stylePatcher } from './format';
@@ -26,10 +20,8 @@ import { normalizedPivotMeasures } from '../pivot/measures';
 import { pivotDateFieldsOf, roundDateRecords } from '../pivot/dates';
 import { reconcileDateAxes } from '../pivot/date-axes';
 import { normalizedFieldSubtotals } from '../pivot/subtotals';
-import { pruneItemFilters } from '../pivot/item-filters';
 import { applyPivotChartUpdates, detachPivotCharts, pivotChartUpdates } from './pivot-charts';
 import {
-	markDirty,
 	pivotHasSlicers,
 	removeSlicers,
 	removeTimelines,
@@ -37,7 +29,7 @@ import {
 	timelineOnPivot,
 } from '../slicer/book';
 
-function pivotAt(ctx: EditContext, sheet: number, name: string): PivotTable {
+export function pivotAt(ctx: EditContext, sheet: number, name: string): PivotTable {
 	const pivot = sheetAt(ctx.workbook, sheet).pivotTables?.find((entry) => entry.name === name);
 	if (!pivot) throw new Error('The selected PivotTable is not available.');
 	return pivot;
@@ -59,12 +51,13 @@ export function reservedPivotNames(workbook: Workbook): Set<string> {
 	);
 }
 
-function checkName(ctx: EditContext, name: string): void {
+export function checkName(ctx: EditContext, name: string, previous?: string): void {
 	if (
 		!/^[A-Za-z_][A-Za-z0-9_.]*$/.test(name) ||
 		name.length > 255 ||
 		parseAddress(name) ||
-		reservedPivotNames(ctx.workbook).has(name.toLowerCase())
+		(name.toLowerCase() !== previous?.toLowerCase() &&
+			reservedPivotNames(ctx.workbook).has(name.toLowerCase()))
 	)
 		throw new Error('A PivotTable name must be unique and cannot look like a cell reference.');
 }
@@ -119,7 +112,9 @@ export function writePivot(
 	const sheet = sheetAt(ctx.workbook, s);
 	const { grid, location } = plan(ctx, s, pivot, old);
 	const next = { ...pivot, location, dirty: true };
-	const charts = old ? pivotChartUpdates(ctx.workbook, sheet.name, next, grid) : undefined;
+	const charts = old
+		? pivotChartUpdates(ctx.workbook, sheet.name, next, grid, old.name)
+		: undefined;
 	const ranges = [...(old ? [old.location] : []), location];
 	ctx.run(
 		label ?? (old ? 'Refresh PivotTable' : 'Create PivotTable'),
@@ -242,106 +237,6 @@ export function createPivotTable(
 	validatePivotFields(pivot);
 	writePivot(ctx, s, pivot);
 	return name;
-}
-
-export function refreshPivotTable(
-	ctx: EditContext,
-	s: number,
-	name: string,
-	patch: PivotTablePatch = {},
-): void {
-	const old = pivotAt(ctx, s, name);
-	const aggregate = patch.aggregate ?? old.aggregate;
-	const valueField = patch.valueField ?? old.valueField;
-	const next: PivotTable = {
-		...old,
-		...pivotSourceData(ctx.workbook, s, old.source),
-		rowField: patch.rowField ?? old.rowField,
-		valueField,
-		aggregate,
-		valueCaption:
-			aggregate === old.aggregate && valueField === old.valueField
-				? old.valueCaption
-				: pivotCaption(aggregate, valueField, old),
-	};
-	if (patch.columnField !== undefined) {
-		if (patch.columnField) next.columnField = patch.columnField;
-		else delete next.columnField;
-	}
-	if (patch.secondRowField !== undefined) {
-		if (patch.secondRowField) next.secondRowField = patch.secondRowField;
-		else delete next.secondRowField;
-	}
-	if (patch.columnField === '' && patch.moreColumnFields === undefined)
-		delete next.moreColumnFields;
-	if (patch.moreColumnFields !== undefined) {
-		if (patch.moreColumnFields.length) next.moreColumnFields = [...patch.moreColumnFields];
-		else delete next.moreColumnFields;
-	}
-	if (patch.secondRowField === '' && patch.moreRowFields === undefined) delete next.moreRowFields;
-	if (patch.moreRowFields !== undefined) {
-		if (patch.moreRowFields.length) next.moreRowFields = [...patch.moreRowFields];
-		else delete next.moreRowFields;
-	}
-	if (patch.fieldSubtotals !== undefined) {
-		if (patch.fieldSubtotals.length)
-			next.fieldSubtotals = normalizedFieldSubtotals(patch.fieldSubtotals);
-		else delete next.fieldSubtotals;
-	}
-	if (patch.dateGroups !== undefined) {
-		if (patch.dateGroups.length) next.dateGroups = structuredClone(patch.dateGroups);
-		else delete next.dateGroups;
-	}
-	if (ctx.workbook.date1904) next.date1904 = true;
-	else delete next.date1904;
-	if (patch.dateGroups !== undefined || next.dateGroups) reconcileDateAxes(next, old);
-	if (patch.subtotals !== undefined) next.subtotals = patch.subtotals;
-	if (patch.repeatLabels !== undefined) next.repeatLabels = patch.repeatLabels;
-	if (patch.layout !== undefined) next.layout = patch.layout;
-	if (patch.subtotalPosition !== undefined) next.subtotalPosition = patch.subtotalPosition;
-	if (patch.valuesAxis !== undefined) next.valuesAxis = patch.valuesAxis;
-	if (patch.pageFilter !== undefined) {
-		if (patch.pageFilter === null) delete next.pageFilter;
-		else next.pageFilter = structuredClone(patch.pageFilter);
-	}
-	if (patch.fieldGroups !== undefined) {
-		if (patch.fieldGroups.length) next.fieldGroups = structuredClone(patch.fieldGroups);
-		else delete next.fieldGroups;
-	}
-	if (patch.valuesPosition !== undefined) next.valuesPosition = patch.valuesPosition;
-	else if (patch.valuesAxis === 'columns' || patch.secondRowField === '')
-		delete next.valuesPosition;
-	if (patch.additionalValues !== undefined) {
-		const measures = normalizedPivotMeasures(patch.additionalValues, old);
-		if (measures.length) next.additionalValues = measures;
-		else delete next.additionalValues;
-	}
-	const dates = pivotDateFieldsOf(ctx.workbook, s, next);
-	if (dates.length) next.dateFields = dates;
-	else delete next.dateFields;
-	roundDateRecords(next, dates, ctx.workbook.date1904);
-	if (next.dateFilter && !dates.includes(next.dateFilter.field)) delete next.dateFilter;
-	if (patch.fieldSubtotals === undefined && next.fieldSubtotals) {
-		// Moving a field off the axes drops the subtotal setting it had.
-		const onAxes = [...pivotRowFields(next), ...pivotColumnFields(next)];
-		const left = next.fieldSubtotals.filter((entry) => onAxes.includes(entry.field));
-		if (left.length) next.fieldSubtotals = left;
-		else delete next.fieldSubtotals;
-	}
-	if (patch.itemFilters !== undefined) next.itemFilters = structuredClone(patch.itemFilters);
-	const kept = patch.itemFilters ?? pruneItemFilters(next);
-	if (kept) next.itemFilters = kept;
-	else delete next.itemFilters;
-	validatePivotFields(next);
-	const sheetId = sheetAt(ctx.workbook, s).sheetId;
-	writePivot(
-		ctx,
-		s,
-		next,
-		old,
-		undefined,
-		pivotHasSlicers(ctx.workbook, sheetId, old.name) ? () => markDirty(ctx.workbook) : undefined,
-	);
 }
 
 export function deletePivotTable(ctx: EditContext, s: number, name: string): void {

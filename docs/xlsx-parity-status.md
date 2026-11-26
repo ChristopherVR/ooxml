@@ -245,8 +245,11 @@ line/marker swatches and position-authoring controls remain incomplete.
   (`PivotDateGroup.localized`), checked against fixtures relabelled as a German Excel names them
   because only the English Excel is installed. Other captions Excel localizes (Row Labels, Grand
   Total, Values, subtotal names) are English-only, so a fully localized workbook stays preserved.
-  Not supported and kept read-only with warnings (`pivot/admission.ts`): shared caches, label and
-  value filters, filters on date group items, mixed or custom layouts. Native acceptance:
+  Caption equality and value greater-than/less-than conditions can be refreshed for the outer
+  row field of ungrouped row-only reports without other filters. One calculated measure can
+  multiply the sum of a source field by a constant. Shared caches, other label and value
+  conditions, other calculated formulas and items, filters on date group items, and mixed or
+  custom layouts are preserved read-only with warnings (`pivot/admission.ts`). Native acceptance:
   `scripts/xlsx-pivot-acceptance.ps1` and the `xlsx-pivot-*-oracle.ps1` scripts.
 - Slicers and timelines: `src/core/xlsx/slicer/` views, `edit/slicers.ts`,
   `scripts/xlsx-slicer-acceptance.ps1`.
@@ -324,8 +327,9 @@ line/marker swatches and position-authoring controls remain incomplete.
    `sheetView/@view`); still missing there are copy and paste
    inside Page Layout view,
    separate per-view zoom attributes, and native-printer metrics.
-6. Pivots beyond the bounded profiles (label and value filters, shared caches, filters on date
-   group items, report captions in other languages), sparkline style galleries and
+6. Pivots beyond the bounded profiles (advanced label and value filters, shared caches, general
+   calculated formulas and items, filters on date group items, report captions in other
+   languages), sparkline style galleries and
    individual source-range editing, data connections, and the sheet parts the collaboration
    mapping does not share yet (see "Import, print and collaboration").
 7. Wider formula and clipboard differential coverage. VBA execution, Office.js add-in runtime,
@@ -403,9 +407,16 @@ line/marker swatches and position-authoring controls remain incomplete.
     scaling, Print Titles, and local worksheet background pictures. Arrange offers drawing
     stacking, a Selection Pane, alignment, grouping of standalone shapes, and rotation,
     flipping, and visibility controls for shapes and pictures. Grouping pictures or mixed drawings, nested groups, and rotation of other
-    drawing types remain open. Draw, Picture Format, Shape Format, Chart Format, PivotTable Analyze
-    and PivotTable Design tabs, Review spelling and accessibility checks, and the Review Notes menu
-    remain open.
+    drawing types remain open. The PivotTable Analyze and Design tabs appear inside editable
+    worksheet reports. Analyze reuses the grouping, field settings, filter and chart dialogs and
+    adds rename, same-sheet move, source changes, Refresh All, Clear, Select, and the current
+    filter connections list. Field List opens the field configuration dialog. Design edits
+    subtotals, independent grand totals, report layout, repeated labels, uniform blank lines and
+    built-in style flags. The grid uses theme-based previews of built-in styles. Outer-field
+    expand and collapse work with Values on columns. Per-item expansion, grid drill buttons,
+    OLAP drill, a persistent field list, editing shared filter connections and cross-sheet moves
+    remain open. Draw, Picture Format, Shape Format, Chart Format, Review spelling and
+    accessibility checks, and the Review Notes menu remain open.
 
 The Excel 16.0 fixture `excel-equation-native.xlsx` was saved using the documented
 `CommandBars.ExecuteMso("EquationInsertNew")` automation call. Its drawing uses a one-cell

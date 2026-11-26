@@ -100,22 +100,22 @@ export function pivotColumnEntries(pivot: PivotTable): PivotColumns {
 		};
 		visit(root, 0, [], [], []);
 	}
-	entries.push({ kind: 'grand', path: [], key: '', values: [] });
+	if (!names.length || pivot.display?.rowGrandTotals !== false)
+		entries.push({ kind: 'grand', path: [], key: '', values: [] });
 	return { names, items, entries };
 }
 
 /** The shape of the header block and the full width of the report. */
 export function pivotColumnDimensions(
-	pivot: Pick<
-		PivotTable,
-		'valueField' | 'aggregate' | 'valueCaption' | 'additionalValues' | 'pageFilter'
-	>,
+	pivot: Pick<PivotTable, 'additionalValues' | 'pageFilter' | 'calculatedField'>,
 	columns: PivotColumns,
 	labelColumns: number,
 	/** Values on rows put one value in every column. */
 	valuesOnRows = false,
 ): { rows: number; width: number } {
-	const measures = valuesOnRows ? 1 : 1 + (pivot.additionalValues?.length ?? 0);
+	const measures = valuesOnRows
+		? 1
+		: 1 + (pivot.additionalValues?.length ?? 0) + Number(!!pivot.calculatedField);
 	const levels = columns.names.length;
 	return {
 		rows: (levels ? levels + 1 + Number(measures > 1) : 1) + (pivot.pageFilter ? 2 : 0),
@@ -141,7 +141,10 @@ export function pivotColumnHeaders(
 	const levels = columns.names.length;
 	if (!levels)
 		return [
-			[...rowLabels, ...(valuesOnRows ? [null] : measures.map((measure) => measure.caption))],
+			[
+				...rowLabels.map((label) => (pivot.display?.showHeaders === false ? null : label)),
+				...(valuesOnRows ? [null] : measures.map((measure) => measure.caption)),
+			],
 		];
 	const compact = pivot.layout === 'compact';
 	const labelColumns = rowLabels.length;
@@ -154,12 +157,14 @@ export function pivotColumnHeaders(
 	const titles = compact
 		? [caps.columnLabels]
 		: [...columns.names, ...(count > 1 ? [caps.values] : [])];
-	titles.forEach((title, i) => {
-		grid[0]![labelColumns + i] = title;
-	});
-	rowLabels.forEach((text, i) => {
-		grid[rows - 1]![i] = text;
-	});
+	if (pivot.display?.showHeaders !== false) {
+		titles.forEach((title, i) => {
+			grid[0]![labelColumns + i] = title;
+		});
+		rowLabels.forEach((text, i) => {
+			grid[rows - 1]![i] = text;
+		});
+	}
 	let previous: number[] = [];
 	columns.entries.forEach((entry, j) => {
 		const at = labelColumns + j * count;

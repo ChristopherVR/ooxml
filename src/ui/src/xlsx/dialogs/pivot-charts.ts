@@ -71,7 +71,7 @@ export async function openRecommendedPivotTables(ctx: EditorContext): Promise<vo
 	const options = await recommendedPivotTables(
 		t.workbook,
 		t.sheet,
-		selectedPivotSource(t),
+		pivotTableAt(t.ws, t.active)?.source ?? selectedPivotSource(t),
 		ctx.locale(),
 	);
 	if (t.session !== ctx.session() || t.sheet !== ctx.activeSheet()) return;

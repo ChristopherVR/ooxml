@@ -16,6 +16,8 @@ import { pivotMeasures } from './measures';
 import { fieldSubtotalFunctions, PIVOT_SUBTOTALS } from './subtotals';
 import { pivotValueAxisItems, remapPivotRowEntries } from './values-axis';
 import { updatePivotChartFormats } from './chart-formats';
+import { writePivotDisplay } from './display';
+import { pivotConditionXml } from './condition';
 
 const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 
@@ -34,7 +36,7 @@ export function pivotTableXml(
 	const page = pivot.pageFilter ? pivot.fields.indexOf(pivot.pageFilter.field) : -1;
 	const pageItems = page >= 0 ? pivotItems(pivot, pivot.pageFilter!.field) : [];
 	const filtered = filteredFields(pivot);
-	const dateFiltered = pivot.dateFilter !== undefined;
+	const dateFiltered = pivot.dateFilter !== undefined || pivot.condition !== undefined;
 	// Report filters and hidden items keep every cached item in the field's item list.
 	const axisItems = (field: string, visible: typeof grid.rowItems): CellValue[] =>
 		groupLabelsOf(pivot, field) ??
@@ -83,37 +85,45 @@ export function pivotTableXml(
 		const text = pivotItemName(pivot, field, item);
 		return text === undefined ? '' : attrs({ n: encodeEscapes(text) });
 	};
-	const fields = pivot.fields
-		.map((name, index) => {
-			const isDate = pivot.dateFields?.includes(name) ?? false;
-			const at = rowIdx.indexOf(index);
-			const colAt = columnIdx.indexOf(index);
-			const items =
-				index === page
-					? pageItems
-					: at >= 0
-						? rowItemsFull[at]
-						: colAt >= 0
-							? columnItemsFull[colAt]
-							: (groupLabelsOf(pivot, name) ??
-								(filtered.has(name) || isDate ? pivotItems(pivot, name) : undefined));
-			const hidden = hiddenItemKeys(pivot, name);
-			const functions = at >= 0 || colAt >= 0 ? fieldSubtotalFunctions(pivot, name) : 'auto';
-			const automatic = functions === 'auto';
-			const custom = automatic ? [] : functions;
-			const repeated =
-				pivot.repeatLabels && at >= 0
-					? `<extLst><ext uri="{2946ED86-A175-432a-8AC1-64E0C546D7DE}"><x14:pivotField xmlns:x14="${X14}" fillDownLabels="1"/></ext></extLst>`
-					: '';
-			const flags = Object.fromEntries(
-				custom.map((fn) => [PIVOT_SUBTOTALS[fn].attr, true] as const),
-			);
-			const entries = automatic
-				? '<item t="default"/>'
-				: custom.map((fn) => `<item t="${PIVOT_SUBTOTALS[fn].item}"/>`).join('');
-			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : at >= 0 ? 'axisRow' : colAt >= 0 ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: at >= 0 ? top : undefined, numFmtId: isDate ? 14 : undefined, defaultSubtotal: automatic ? undefined : false, ...flags })}>${items ? `<items count="${items.length + (automatic ? 1 : custom.length)}">${items.map((item) => `<item${hidden.has(pivotValueKey(item)) ? ' h="1"' : ''}${named(name, item)} x="${itemX(index, item)}"/>`).join('')}${entries}</items>` : ''}${repeated}</pivotField>`;
-		})
-		.join('');
+	const calculated = pivot.calculatedField;
+	const fieldCount = pivot.fields.length + Number(!!calculated);
+	const measureField = (field: string) =>
+		field === calculated?.name ? pivot.fields.length : pivot.fields.indexOf(field);
+	const fields =
+		pivot.fields
+			.map((name, index) => {
+				const isDate = pivot.dateFields?.includes(name) ?? false;
+				const at = rowIdx.indexOf(index);
+				const colAt = columnIdx.indexOf(index);
+				const items =
+					index === page
+						? pageItems
+						: at >= 0
+							? rowItemsFull[at]
+							: colAt >= 0
+								? columnItemsFull[colAt]
+								: (groupLabelsOf(pivot, name) ??
+									(filtered.has(name) || isDate ? pivotItems(pivot, name) : undefined));
+				const hidden = hiddenItemKeys(pivot, name);
+				const functions = at >= 0 || colAt >= 0 ? fieldSubtotalFunctions(pivot, name) : 'auto';
+				const automatic = functions === 'auto';
+				const custom = automatic ? [] : functions;
+				const repeated =
+					pivot.repeatLabels && at >= 0
+						? `<extLst><ext uri="{2946ED86-A175-432a-8AC1-64E0C546D7DE}"><x14:pivotField xmlns:x14="${X14}" fillDownLabels="1"/></ext></extLst>`
+						: '';
+				const flags = Object.fromEntries(
+					custom.map((fn) => [PIVOT_SUBTOTALS[fn].attr, true] as const),
+				);
+				const entries = automatic
+					? '<item t="default"/>'
+					: custom.map((fn) => `<item t="${PIVOT_SUBTOTALS[fn].item}"/>`).join('');
+				return `<pivotField${attrs({ axis: index === page ? 'axisPage' : at >= 0 ? 'axisRow' : colAt >= 0 ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: at >= 0 ? top : undefined, insertBlankRow: at >= 0 && pivot.display?.blankRows ? true : undefined, measureFilter: at === 0 && pivot.condition && pivot.condition.kind !== 'captionEqual' ? true : undefined, numFmtId: isDate ? 14 : undefined, defaultSubtotal: automatic ? undefined : false, ...flags })}>${items ? `<items count="${items.length + (automatic ? 1 : custom.length)}">${items.map((item) => `<item${hidden.has(pivotValueKey(item)) ? ' h="1"' : ''}${at === 0 && pivot.display?.collapsed ? ' sd="0"' : ''}${named(name, item)} x="${itemX(index, item)}"/>`).join('')}${entries}</items>` : ''}${repeated}</pivotField>`;
+			})
+			.join('') +
+		(calculated
+			? `<pivotField${attrs({ dataField: true, compact, outline, dragToRow: false, dragToCol: false, dragToPage: false, showAll: false, defaultSubtotal: false })}/>`
+			: '');
 	const items = (count: number, indices?: readonly number[]) =>
 		Array.from({ length: count }, (_v, i) => `<i><x v="${indices?.[i] ?? i}"/></i>`).join('') +
 		'<i t="grand"><x/></i>';
@@ -131,7 +141,10 @@ export function pivotTableXml(
 			?.map((entry) => {
 				let prefix = 0;
 				const type =
-					entry.type === undefined || entry.type === 'default' || entry.type === 'grand'
+					entry.type === undefined ||
+					entry.type === 'default' ||
+					entry.type === 'grand' ||
+					entry.type === 'blank'
 						? entry.type
 						: PIVOT_SUBTOTALS[entry.type].item;
 				// Each item repeats the leading indices it shares with the previous one, whatever
@@ -144,7 +157,7 @@ export function pivotTableXml(
 					.join('')}</i>`;
 			})
 			.join('') ?? items(grid.rowItems.length, rowIndicesFull[0]);
-	let body = `<location${attrs({ ref: formatRange({ ...pivot.location, start: { ...pivot.location.start, row: pivot.location.start.row + pageOffset } }), firstHeaderRow: header, firstDataRow: grid.firstDataRow - pageOffset, rowPageCount: page >= 0 ? 1 : undefined, colPageCount: page >= 0 ? 1 : undefined, firstDataCol: grid.rowLabelColumns ?? 1 })}/><pivotFields count="${pivot.fields.length}">${fields}</pivotFields><rowFields count="${rowIndices.length}">${rowIndices.map((index) => `<field x="${index}"/>`).join('')}</rowFields><rowItems count="${grid.rowEntries?.length ?? grid.rowItems.length + 1}">${rowItems}</rowItems>`;
+	let body = `<location${attrs({ ref: formatRange({ ...pivot.location, start: { ...pivot.location.start, row: pivot.location.start.row + pageOffset } }), firstHeaderRow: header, firstDataRow: grid.firstDataRow - pageOffset, rowPageCount: page >= 0 ? 1 : undefined, colPageCount: page >= 0 ? 1 : undefined, firstDataCol: grid.rowLabelColumns ?? 1 })}/><pivotFields count="${fieldCount}">${fields}</pivotFields><rowFields count="${rowIndices.length}">${rowIndices.map((index) => `<field x="${index}"/>`).join('')}</rowFields><rowItems count="${grid.rowEntries?.length ?? grid.rowItems.length + 1}">${rowItems}</rowItems>`;
 	if (col >= 0 && grid.columnEntries) {
 		const fieldsOnColumns = [...columnIdx, ...(multiple && !rowsAxis ? [-2] : [])];
 		body += `<colFields count="${fieldsOnColumns.length}">${fieldsOnColumns.map((index) => `<field x="${index}"/>`).join('')}</colFields>${pivotColumnItemsXml(grid.columnEntries, rowsAxis ? 1 : measures.length, (level, index) => columnIndicesFull[level]![index]!)}`;
@@ -153,7 +166,7 @@ export function pivotTableXml(
 	else body += '<colItems count="1"><i/></colItems>';
 	if (page >= 0)
 		body += `<pageFields count="1"><pageField${attrs({ fld: page, hier: -1, item: pivot.pageFilter!.item !== undefined ? pageItems.findIndex((item) => pivotValueKey(item) === pivotValueKey(pivot.pageFilter!.item!)) : undefined })}/></pageFields>`;
-	body += `<dataFields count="${measures.length}">${measures.map((measure) => `<dataField${attrs({ name: encodeEscapes(measure.caption), fld: pivot.fields.indexOf(measure.field), subtotal: measure.aggregate, baseField: 0, baseItem: 0 })}/>`).join('')}</dataFields>`;
+	body += `<dataFields count="${measures.length}">${measures.map((measure) => `<dataField${attrs({ name: encodeEscapes(measure.caption), fld: measureField(measure.field), subtotal: measure.aggregate, baseField: 0, baseItem: 0 })}/>`).join('')}</dataFields>`;
 	const doc = parseXml(
 		pivot.sourceXml ??
 			`<pivotTableDefinition xmlns="${NS.x}" dataCaption="Values" updatedVersion="6" minRefreshableVersion="3" createdVersion="6"><pivotTableStyleInfo name="PivotStyleLight16" showRowHeaders="1" showColHeaders="1" showRowStripes="0" showColStripes="0" showLastColumn="1"/></pivotTableDefinition>`,
@@ -200,8 +213,7 @@ export function pivotTableXml(
 		).documentElement;
 		list.appendChild(doc.importNode(extension, true));
 	}
-	root.setAttribute('rowGrandTotals', '1');
-	root.setAttribute('colGrandTotals', '1');
+	writePivotDisplay(root, pivot.display);
 	for (const extension of elements(
 		first(root, 'extLst', NS.x) ?? parseXml('<root/>').documentElement,
 	)) {
@@ -230,10 +242,10 @@ export function pivotTableXml(
 	const before = root.firstChild;
 	for (const child of elements(replacement)) root.insertBefore(doc.importNode(child, true), before);
 	if (charts) updatePivotChartFormats(root, pivot, grid, columnIdx, columnIndicesFull, charts);
-	if (pivot.dateFilter) {
+	if (pivot.dateFilter || pivot.condition) {
 		// `filters` follows the table style and precedes the extension list.
 		const filters = parseXml(
-			`<root xmlns="${NS.x}">${dateFilterXml(pivot, pivot.dateFilter)}</root>`,
+			`<root xmlns="${NS.x}">${pivot.condition ? pivotConditionXml(pivot, pivot.condition) : dateFilterXml(pivot, pivot.dateFilter!)}</root>`,
 		).documentElement;
 		root.insertBefore(
 			doc.importNode(elements(filters)[0]!, true),

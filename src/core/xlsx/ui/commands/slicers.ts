@@ -43,12 +43,14 @@ export function slicerSourceAt(ctx: EditorContext): SlicerSourceAt | undefined {
 	const t = target(ctx);
 	if (!t) return undefined;
 	const pivot = pivotTableAt(t.ws, t.active);
-	if (pivot)
+	if (pivot) {
+		if (pivot.condition) return undefined;
 		return {
 			kind: 'pivot',
 			pivot,
 			fields: pivot.fields.filter((field) => field !== pivot.pageFilter?.field),
 		};
+	}
 	const table = activeTable(ctx);
 	if (table?.headerRow && !table.filterNotModeled)
 		return { kind: 'table', table, fields: table.columns.map((column) => column.name) };
@@ -81,5 +83,7 @@ export function timelineSourceAt(
 ): { pivot: PivotTable; fields: string[] } | undefined {
 	const t = target(ctx);
 	const pivot = t ? pivotTableAt(t.ws, t.active) : undefined;
-	return pivot?.dateFields?.length ? { pivot, fields: [...pivot.dateFields] } : undefined;
+	return pivot?.dateFields?.length && !pivot.condition
+		? { pivot, fields: [...pivot.dateFields] }
+		: undefined;
 }

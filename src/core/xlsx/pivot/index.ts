@@ -1,5 +1,8 @@
 export { PIVOT_AGGREGATES, pivotSourceData } from './data';
 export { pivotGrid, pivotTableAt } from './aggregate';
+export { supportsPivotCondition } from './condition';
+export { supportsPivotCalculatedField } from './calculated';
+export { pivotHasSlicers } from '../slicer/book';
 
 export { pivotPageItems } from './page-filter';
 

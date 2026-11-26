@@ -40,7 +40,11 @@ const positionOf = (value: string): PivotValuesPosition =>
 
 export type PivotDialogMode =
 	| { kind: 'table' }
-	| { kind: 'settings'; binding?: { sheet: number; pivot: PivotTable; role: PivotChartButton } }
+	| {
+			kind: 'settings';
+			fieldList?: boolean;
+			binding?: { sheet: number; pivot: PivotTable; role: PivotChartButton };
+	  }
 	| { kind: 'chart'; source: string; create(at: CellAddress, options: PivotTableOptions): void };
 
 export function openPivotTable(
@@ -265,7 +269,13 @@ export function openPivotTable(
 	updateRows();
 	return showDialog(ctx, {
 		name: settings ? 'pivot-settings' : chart ? 'create-pivot-chart' : 'create-pivot-table',
-		heading: settings ? 'PivotTable Settings' : chart ? 'PivotChart' : 'Create PivotTable',
+		heading: settings
+			? mode.fieldList
+				? 'Field List'
+				: 'PivotTable Settings'
+			: chart
+				? 'PivotChart'
+				: 'Create PivotTable',
 		body: [
 			field(ctx, 'Source Range:', source),
 			field(ctx, 'Destination Cell:', destination),

@@ -179,6 +179,8 @@ export function insertSlicer(ctx: EditContext, s: number, ref: SlicerSourceRef):
 	} else {
 		pivot = sheet.pivotTables?.find((entry) => entry.name === ref.pivot);
 		if (!pivot) throw new Error('Choose a PivotTable that can be refreshed.');
+		if (pivot.condition)
+			throw new Error('Clear the PivotTable condition before inserting a slicer.');
 		field = ref.field;
 		if (!pivot.fields.includes(field) || pivot.pageFilter?.field === field)
 			throw new Error('Choose a PivotTable field that is not the report filter.');

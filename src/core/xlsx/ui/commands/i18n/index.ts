@@ -15,6 +15,7 @@ import { TOOLS_STRINGS } from './tools';
 import { WHAT_IF_STRINGS } from './what-if';
 import { SPARKLINE_STRINGS } from './sparklines';
 import { PIVOT_STRINGS } from './pivots';
+import { PIVOT_CONTEXT_STRINGS } from './pivot-context';
 import { SLICER_STRINGS } from './slicers';
 import { PRINT_LAYOUT_STRINGS } from './print-layout';
 import { SMARTART_STRINGS } from './smartart';
@@ -34,6 +35,7 @@ export const COMMAND_TABLES: readonly Translations[] = [
 	CHART_SERIES_STRINGS,
 	SPARKLINE_STRINGS,
 	PIVOT_STRINGS,
+	PIVOT_CONTEXT_STRINGS,
 	SLICER_STRINGS,
 	PRINT_LAYOUT_STRINGS,
 	WHAT_IF_STRINGS,

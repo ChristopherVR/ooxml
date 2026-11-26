@@ -4,6 +4,8 @@ import { validatePivotFields } from './data';
 import { pivotPageProjection, prependPivotPage } from './page-filter';
 import type { ColumnEntry } from './columns';
 import { nestedPivotGrid } from './nested';
+import { applyPivotCondition } from './condition';
+import { validatePivotCalculatedField } from './calculated';
 
 /**
  * One row of `rowItems`: the item path (one index per row level, the measure for the Values
@@ -11,7 +13,7 @@ import { nestedPivotGrid } from './nested';
  */
 export interface PivotRowEntry {
 	indices: number[];
-	type?: 'default' | 'grand' | PivotAggregate;
+	type?: 'default' | 'grand' | 'blank' | PivotAggregate;
 	measure?: number;
 }
 export interface PivotGrid {
@@ -35,7 +37,8 @@ export interface PivotGrid {
 /** Pivot output, including grand totals computed from source records (not averages of cells). */
 export function pivotGrid(pivot: PivotTable): PivotGrid {
 	validatePivotFields(pivot);
-	return prependPivotPage(nestedPivotGrid(pivotPageProjection(pivot)), pivot);
+	validatePivotCalculatedField(pivot);
+	return prependPivotPage(nestedPivotGrid(applyPivotCondition(pivotPageProjection(pivot))), pivot);
 }
 
 export function pivotTableAt(sheet: Worksheet, at: CellAddress): PivotTable | undefined {

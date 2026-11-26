@@ -205,7 +205,7 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 				firsts: [...path.firsts, position === 0],
 			};
 			const text = labelOf(names[field]!, child.value);
-			if (last)
+			if (last || (level === 0 && pivot.display?.collapsed))
 				return push(level, () => [
 					labelCells(path, leafShown(here.firsts), level, text),
 					cells(child, undefined, measure),
@@ -226,27 +226,33 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 					cells(child, fn, one),
 					entryOf(here.indices, one, fn ?? 'default'),
 				]);
-			if (own === 'auto') {
-				if (showsValue) return;
+			if (own === 'auto' && !showsValue) {
 				if (valuesAbove) subtotal(fillCaption(caps.subtotal, caption), undefined, measure);
 				else measures.forEach((one, m) => subtotal(`${caption} ${one.caption}`, undefined, m));
-			} else
+			} else if (own !== 'auto')
 				for (const fn of own)
 					if (valuesAbove) subtotal(`${caption} ${caps.functions[fn]}`, fn, measure);
 					else
 						measures.forEach((one, m) =>
 							subtotal(`${caption} ${caps.functions[fn]} of ${one.field}`, fn, m),
 						);
+			if (pivot.display?.blankRows)
+				push(level, () => [
+					Array<CellValue>(labelColumns).fill(null),
+					blanks(),
+					entryOf(here.indices, measure, 'blank'),
+				]);
 		});
 	};
 	const grand = (text: CellValue, measure?: number) =>
 		push(0, () => [
 			compact ? [text] : [text, ...Array<CellValue>(levels - 1).fill(null)],
-			cells(root, undefined, measure),
+			pivot.condition && !root.records.length ? blanks() : cells(root, undefined, measure),
 			entryOf([0], measure, 'grand'),
 		]);
 	const build = () => {
 		walk(0, root, undefined, { labels: [], indices: [], firsts: [] });
+		if (pivot.display?.colGrandTotals === false) return;
 		if (onRows) measures.forEach((one, m) => grand(fillCaption(caps.measureTotal, one.caption), m));
 		else grand(caps.grandTotal);
 	};

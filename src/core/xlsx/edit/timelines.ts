@@ -117,6 +117,8 @@ export function insertTimeline(
 	const { workbook } = ctx;
 	const sheet = sheetAt(workbook, s);
 	const pivot = sheet.pivotTables?.find((entry) => entry.name === ref.pivot);
+	if (pivot?.condition)
+		throw new Error('Clear the PivotTable condition before inserting a timeline.');
 	if (!pivot || !pivot.dateFields?.includes(ref.field))
 		throw new Error('Choose a PivotTable with a date field.');
 	// The earliest and latest dates in a loop: a spread passes one argument per record and overflows.

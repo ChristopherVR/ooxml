@@ -13,6 +13,7 @@ import { dataTab, formulasTab } from './formulas-data';
 import { homeTab } from './home';
 import { insertTab, pageLayoutTab } from './insert-layout';
 import { helpTab, reviewTab, viewTab } from 'ooxml-core/xlsx/ui';
+import { pivotAnalyzeTab, pivotDesignTab } from './pivot';
 
 export function commandTabs(): RibbonTab[] {
 	return [
@@ -31,5 +32,7 @@ export function commandTabs(): RibbonTab[] {
 		smartArtDesignTab(),
 		slicerTab(),
 		timelineTab(),
+		pivotAnalyzeTab(),
+		pivotDesignTab(),
 	];
 }

@@ -146,7 +146,10 @@ export function assertPageAxisItems(
 		const xs = children(item, 'x', NS.x).map((x) => integer(x.getAttribute('v'), 0)),
 			prefix = integer(item.getAttribute('r'), 0);
 		const type =
-			expected.type === undefined || expected.type === 'default' || expected.type === 'grand'
+			expected.type === undefined ||
+			expected.type === 'default' ||
+			expected.type === 'grand' ||
+			expected.type === 'blank'
 				? expected.type
 				: PIVOT_SUBTOTALS[expected.type].item;
 		if (
@@ -170,7 +173,10 @@ export function assertPageAxisItems(
 			for (let m = 0; m < measures; m++) expected.push(measures > 1 ? [col, m] : [col]);
 	else for (let m = 0; m < measures; m++) expected.push([m]);
 	const colItems = read('colItems');
-	if (colItems.length !== expected.length + (columns ? measures : 0))
+	if (
+		colItems.length !==
+		expected.length + (columns && pivot.display?.rowGrandTotals !== false ? measures : 0)
+	)
 		throw new Error('Invalid page column items');
 	let previous: number[] = [];
 	colItems.forEach((item, i) => {

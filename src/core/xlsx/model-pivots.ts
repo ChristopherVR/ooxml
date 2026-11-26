@@ -1,4 +1,4 @@
-import type { CellRange } from './address';
+import type { CellAddress, CellRange } from './address';
 import type { CellValue } from './model';
 
 /**
@@ -129,9 +129,43 @@ export interface PivotDateFilter {
 	end: number;
 }
 
+export interface PivotStyleOptions {
+	name?: string;
+	showRowHeaders?: boolean;
+	showColHeaders?: boolean;
+	showRowStripes?: boolean;
+	showColStripes?: boolean;
+}
+
+export interface PivotDisplayOptions {
+	rowGrandTotals?: boolean;
+	colGrandTotals?: boolean;
+	showHeaders?: boolean;
+	showDrill?: boolean;
+	blankRows?: boolean;
+	collapsed?: boolean;
+	style?: PivotStyleOptions;
+}
+
+/** A single caption or measure condition on the outer row field. */
+export type PivotCondition =
+	| { kind: 'captionEqual'; value: string }
+	| { kind: 'valueGreaterThan' | 'valueLessThan'; measure: number; value: number };
+
+/** A calculated Values field evaluating SUM(source field) times a constant in each group. */
+export interface PivotCalculatedField {
+	name: string;
+	field: string;
+	factor: number;
+	caption: string;
+}
+
 /** A worksheet-range pivot with any number of row and column fields and sixteen measures. */
 export interface PivotTable {
 	name: string;
+	display?: PivotDisplayOptions;
+	condition?: PivotCondition;
+	calculatedField?: PivotCalculatedField;
 	/** Qualified A1 source range, rewritten with the workbook's other references. */
 	source: string;
 	rowField: string;
@@ -242,6 +276,12 @@ export type PivotTablePatch = Partial<
 		| 'valuesPosition'
 	>
 > & {
+	name?: string;
+	source?: string;
+	destination?: CellAddress;
+	display?: PivotDisplayOptions;
+	condition?: PivotCondition | null;
+	calculatedField?: Omit<PivotCalculatedField, 'caption'> | null;
 	/** Replaces the third and following row fields (an empty list removes them). */
 	moreRowFields?: string[];
 	/** Replaces the second and following column fields (an empty list removes them). */

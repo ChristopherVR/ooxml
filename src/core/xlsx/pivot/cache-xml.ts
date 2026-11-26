@@ -76,10 +76,19 @@ export function pivotCacheDefinitionXml(
 		})
 		.join('');
 	const extra = derived.map((entry) => derivedFieldXml(pivot, entry, workbook.date1904)).join('');
+	const calculated = pivot.calculatedField;
+	const computed = calculated
+		? `<cacheField${attrs({
+				name: calculated.name,
+				numFmtId: 0,
+				formula: `${calculated.field}*${calculated.factor}`,
+				databaseField: false,
+			})}/>`
+		: '';
 	const reference = source.tableName
 		? { name: source.tableName }
 		: { ref: formatRange(source.range), sheet: workbook.sheets[source.sheet]!.name };
-	return `${XML_HEADER}<pivotCacheDefinition xmlns="${NS.x}" xmlns:r="${NS.r}" r:id="${recordRel}" createdVersion="6" refreshedVersion="6" minRefreshableVersion="3" recordCount="${pivot.records.length}"><cacheSource type="worksheet"><worksheetSource${attrs(reference)}/></cacheSource><cacheFields count="${pivot.fields.length + derived.length}">${fields}${extra}</cacheFields>${slicerExt(pivot)}</pivotCacheDefinition>`;
+	return `${XML_HEADER}<pivotCacheDefinition xmlns="${NS.x}" xmlns:r="${NS.r}" r:id="${recordRel}" createdVersion="6" refreshedVersion="6" minRefreshableVersion="3" recordCount="${pivot.records.length}"><cacheSource type="worksheet"><worksheetSource${attrs(reference)}/></cacheSource><cacheFields count="${pivot.fields.length + derived.length + Number(!!calculated)}">${fields}${extra}${computed}</cacheFields>${slicerExt(pivot)}</pivotCacheDefinition>`;
 }
 
 interface DerivedCacheField extends DerivedDateField {

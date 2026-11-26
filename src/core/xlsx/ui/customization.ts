@@ -82,6 +82,8 @@ export const EXCEL_RIBBON_TAB_IDS = [
 	'smartart-design',
 	'slicer',
 	'timeline',
+	'pivot-analyze',
+	'pivot-design',
 ] as const;
 
 /** One native Excel ribbon tab. */
