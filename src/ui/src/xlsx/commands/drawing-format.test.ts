@@ -55,3 +55,42 @@ it('reuses native WordArt editing for style and text effects', async () => {
 	expect(drawing()).not.toHaveProperty('shape.wordArt.shadow');
 	ctx.host.remove();
 });
+
+it('formats two selected shapes in one undo step for each command', async () => {
+	const ctx = createTestContext();
+	try {
+		ctx.commands.registerAll(drawingFormatCommands());
+		const session = ctx.session()!;
+		const anchor = pictureAnchorAt({ row: 1, col: 1 }, 100, 50);
+		const first = session.addShape(0, anchor, { kind: 'preset', preset: 'rect', name: 'Box' });
+		const second = session.addShape(0, anchor, { kind: 'preset', preset: 'ellipse', name: 'Oval' });
+		ctx.selection.set({ drawing: second, drawings: [first, second] });
+		expect(ctx.commands.isEnabled('drawing.alt-text')).toBe(false);
+		expect(await ctx.commands.run('drawing.shape-style', '2')).toBe(true);
+		const drawings = () => session.workbook.sheets[0]?.drawings;
+		expect(drawings()).toMatchObject([
+			{ shape: { fill: { color: { value: 'accent2' } } } },
+			{ shape: { fill: { color: { value: 'accent2' } } } },
+		]);
+		expect(await ctx.commands.run('drawing.shape-effects', true)).toBe(true);
+		expect(drawings()).toMatchObject([
+			{ shape: { shadow: { kind: 'outerShadow' } } },
+			{ shape: { shadow: { kind: 'outerShadow' } } },
+		]);
+		expect(session.undo()).toBe(true);
+		expect(drawings()?.[first]).not.toHaveProperty('shape.shadow');
+		expect(drawings()?.[second]).not.toHaveProperty('shape.shadow');
+		expect(session.undo()).toBe(true);
+		expect(drawings()).toMatchObject([
+			{ shape: { fill: { color: { value: 'accent1' } } } },
+			{ shape: { fill: { color: { value: 'accent1' } } } },
+		]);
+		expect(session.redo()).toBe(true);
+		expect(drawings()).toMatchObject([
+			{ shape: { fill: { color: { value: 'accent2' } } } },
+			{ shape: { fill: { color: { value: 'accent2' } } } },
+		]);
+	} finally {
+		ctx.host.remove();
+	}
+});

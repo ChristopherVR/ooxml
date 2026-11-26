@@ -153,3 +153,64 @@ test('reports a lazy gallery failure and ignores clicks while it loads', async (
 	await expect(host.getByRole('menu', { name: 'Shape Styles' })).toHaveCount(0);
 	expect(errors).toEqual([]);
 });
+
+test('formats multiple shapes and undoes a size change for both together', async ({ page }) => {
+	const book = createWorkbook();
+	const edit = createEditSession(book);
+	edit.addShape(0, pictureAnchorAt({ row: 2, col: 1 }, 120, 60), {
+		kind: 'preset',
+		preset: 'rect',
+		name: 'Box',
+	});
+	edit.addShape(0, pictureAnchorAt({ row: 8, col: 1 }, 180, 80), {
+		kind: 'preset',
+		preset: 'ellipse',
+		name: 'Oval',
+	});
+	await page.setViewportSize({ width: 1800, height: 900 });
+	await openLanding(page, 'vanilla');
+	await page.locator('#landing-file').setInputFiles({
+		name: 'drawings.xlsx',
+		mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		buffer: Buffer.from(await saveXlsx(book)),
+	});
+	const host = editor(page);
+	await host.locator('.xg-shape[aria-label="Box"]').first().click();
+	await host
+		.locator('.xg-shape[aria-label="Oval"]')
+		.first()
+		.click({ modifiers: ['Control'] });
+	await host.getByRole('tab', { name: 'Shape Format' }).click();
+	for (const [command, color] of [
+		['Shape Fill', '#cc0000'],
+		['Shape Outline', '#0000cc'],
+	] as const) {
+		await host.getByRole('button', { name: command, exact: true }).click();
+		const dialog = host.locator('[data-dialog=drawing-color]');
+		await dialog.locator('input[type=color]').fill(color);
+		await dialog.getByRole('button', { name: 'OK' }).click();
+	}
+	await host.getByRole('button', { name: 'Size', exact: true }).click();
+	const size = host.locator('[data-dialog=drawing-size]');
+	await size.getByRole('spinbutton', { name: 'Width (px)' }).fill('150');
+	await size.getByRole('spinbutton', { name: 'Height (px)' }).fill('72');
+	await size.getByRole('button', { name: 'OK' }).click();
+
+	const read = async () => {
+		const bytes = await host.evaluate(async (element) => {
+			const blob = await (element as unknown as { save(): Promise<Blob> }).save();
+			return Array.from(new Uint8Array(await blob.arrayBuffer()));
+		});
+		return (await loadXlsx(Buffer.from(bytes))).sheets[0]?.drawings;
+	};
+	const formatted = {
+		anchor: { ext: { cx: 1428750, cy: 685800 } },
+		shape: { fill: { color: { value: 'CC0000' } }, line: { fill: { color: { value: '0000CC' } } } },
+	};
+	expect(await read()).toMatchObject([formatted, formatted]);
+	await host.getByRole('button', { name: 'Undo', exact: true }).click();
+	expect(await read()).toMatchObject([
+		{ ...formatted, anchor: { ext: { cx: 1143000, cy: 571500 } } },
+		{ ...formatted, anchor: { ext: { cx: 1714500, cy: 762000 } } },
+	]);
+});

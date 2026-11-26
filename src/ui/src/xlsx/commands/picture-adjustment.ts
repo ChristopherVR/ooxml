@@ -4,8 +4,8 @@ import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { field, numberInput } from '../dialogs/fields';
 import { showDialog } from '../dialogs/frame';
 import { pickImage } from './insert';
-import { bounded, type FormatApply, type FormatGuard } from './drawing-format-actions';
-import type { DrawingFormatAction, FormatSelection } from './drawing-format';
+import { bounded, type FormatGuard } from './drawing-format-actions';
+import type { DrawingFormatAction, FormatApply, FormatSelection } from './drawing-format';
 
 const sides = [
 	['cropLeft', 'Left (%)'],

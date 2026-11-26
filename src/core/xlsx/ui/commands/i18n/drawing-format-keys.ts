@@ -45,6 +45,7 @@ export const DRAWING_FORMAT_KEYS = [
 	'Picture and shape formatting, sizing and alternative text',
 	'Authoring artistic picture effects and removing picture backgrounds',
 	'Select one picture or shape on an editable sheet.',
+	'Select pictures or shapes on an editable sheet.',
 	'Select a shape that supports this formatting.',
 	'Select a supported WordArt text box.',
 	'Select a supported raster picture without an artistic cache.',

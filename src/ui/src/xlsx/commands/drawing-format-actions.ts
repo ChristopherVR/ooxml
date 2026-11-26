@@ -4,11 +4,8 @@ import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, numberInput, textArea } from '../dialogs/fields';
 import { showDialog } from '../dialogs/frame';
 import { shapeFormatStyles, pictureFormatStyles } from './drawing-format-styles';
-import type { DrawingFormatAction, FormatSelection } from './drawing-format';
+import type { DrawingFormatAction, FormatApply, FormatSelection } from './drawing-format';
 
-export type FormatApply = (
-	intent: Parameters<FormatSelection['current']['session']['formatDrawing']>[2],
-) => boolean;
 export type FormatGuard = () => boolean;
 
 export function bounded(input: HTMLInputElement): number | undefined {
@@ -45,6 +42,7 @@ export async function runDrawingFormat(
 	ctx: EditorContext,
 	selected: FormatSelection,
 	live: FormatGuard,
+	apply: FormatApply,
 	id: DrawingFormatAction,
 	arg: unknown,
 ): Promise<void> {
@@ -53,7 +51,6 @@ export async function runDrawingFormat(
 		drawing,
 		index,
 	} = selected;
-	const apply: FormatApply = (intent) => live() && session.formatDrawing(sheet, index, intent);
 	const model = selected.kind === 'shape' ? selected.shape : selected.drawing;
 	const label = ctx.commands.get(id)?.label ?? '';
 	switch (id) {

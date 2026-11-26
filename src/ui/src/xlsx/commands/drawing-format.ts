@@ -1,11 +1,7 @@
 import { editing, target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { selectedDrawings } from '../drawing-selection';
 
-export function formatSelection(ctx: EditorContext) {
-	const current = target(ctx);
-	const indices = selectedDrawings(ctx);
-	const [index] = indices;
-	if (!current || index === undefined || indices.length !== 1) return;
+function formatSelection(current: NonNullable<ReturnType<typeof target>>, index: number) {
 	const drawing = current.ws.drawings[index];
 	if (drawing?.kind === 'image' && !drawing.svgPartName)
 		return { kind: 'picture' as const, current, index, drawing };
@@ -23,8 +19,37 @@ export function formatTabContext(ctx: EditorContext, kind: 'picture' | 'shape'):
 }
 
 export type FormatSelection = NonNullable<ReturnType<typeof formatSelection>>;
+export type FormatApply = (
+	intent: Parameters<FormatSelection['current']['session']['formatDrawing']>[2],
+) => boolean;
+
+const multiFormatActions = new Set<DrawingFormatAction>([
+	'drawing.size',
+	'drawing.shape-style',
+	'drawing.shape-fill',
+	'drawing.shape-outline',
+	'drawing.shape-effects',
+	'picture.style',
+	'picture.border',
+	'picture.effects',
+	'picture.reset',
+]);
+
+function formatTargets(ctx: EditorContext, id: DrawingFormatAction): FormatSelection[] {
+	const current = target(ctx);
+	const indices = selectedDrawings(ctx);
+	if (!current || (indices.length !== 1 && !multiFormatActions.has(id))) return [];
+	const targets: FormatSelection[] = [];
+	for (const index of indices) {
+		const selected = formatSelection(current, index);
+		if (!selected || !canFormat(id, selected)) return [];
+		targets.push(selected);
+	}
+	return targets;
+}
 
 const single = 'Select one picture or shape on an editable sheet.';
+const multiple = 'Select pictures or shapes on an editable sheet.';
 const shape = 'Select a shape that supports this formatting.';
 const wordArt = 'Select a supported WordArt text box.';
 const raster = 'Select a supported raster picture without an artistic cache.';
@@ -33,7 +58,7 @@ const shadow = 'Select a picture or shape with editable frame effects.';
 
 export const drawingFormatActions = {
 	'drawing.alt-text': ['Alt Text', single],
-	'drawing.size': ['Size', single],
+	'drawing.size': ['Size', multiple],
 	'drawing.edit-shape': ['Edit Shape', shape],
 	'drawing.shape-style': ['Shape Styles', shape],
 	'drawing.shape-fill': ['Shape Fill', shape],
@@ -53,7 +78,7 @@ export const drawingFormatActions = {
 	'picture.change': ['Change Picture', raster],
 	'picture.reset': ['Reset Picture', shadow],
 	'picture.style': ['Picture Styles', shadow],
-	'picture.border': ['Picture Border', single],
+	'picture.border': ['Picture Border', multiple],
 	'picture.effects': ['Picture Effects', shadow],
 	'picture.crop': ['Crop', 'Select a picture with a standard stretch layout.'],
 } as const;
@@ -63,6 +88,8 @@ export type DrawingFormatAction = keyof typeof drawingFormatActions;
 function canFormat(id: DrawingFormatAction, selected: FormatSelection): boolean {
 	if (id === 'drawing.size') return true;
 	if (selected.kind === 'shape') {
+		if (id === 'picture.border') id = 'drawing.shape-outline';
+		if (id === 'picture.effects') id = 'drawing.shape-effects';
 		const shape = selected.shape;
 		if (id.startsWith('picture.') || shape.equationParagraphs) return false;
 		if (id === 'drawing.alt-text') return true;
@@ -101,6 +128,7 @@ function canFormat(id: DrawingFormatAction, selected: FormatSelection): boolean 
 			return true;
 		case 'picture.style':
 		case 'picture.effects':
+		case 'drawing.shape-effects':
 			return !image.effectDag;
 		case 'picture.corrections':
 			return (
@@ -117,6 +145,7 @@ function canFormat(id: DrawingFormatAction, selected: FormatSelection): boolean 
 				!image.layout?.tile && !Object.values(image.layout?.fillRect ?? {}).some((n) => n !== 0)
 			);
 		case 'picture.border':
+		case 'drawing.shape-outline':
 		case 'drawing.alt-text':
 			return true;
 		default:
@@ -132,25 +161,42 @@ export function drawingFormatCommands() {
 			label,
 			unavailable,
 			lock: 'objects',
-			enabled: (ctx) => {
-				const selected = formatSelection(ctx);
-				return !!selected && canFormat(id, selected);
-			},
+			enabled: (ctx) => formatTargets(ctx, id).length > 0,
 			run: async (ctx, arg) => {
-				const selected = formatSelection(ctx);
+				const targets = formatTargets(ctx, id);
+				const selected = targets.at(-1);
 				if (!selected) return;
+				const {
+					current: { session, sheet, ws },
+					index,
+				} = selected;
 				const { runDrawingFormat } = await import('./drawing-format-actions');
 				const live = () => {
-					const next = formatSelection(ctx);
+					const next = formatTargets(ctx, id);
 					return (
-						next?.drawing === selected.drawing &&
-						next.index === selected.index &&
-						next.current.session === selected.current.session &&
-						next.current.ws === selected.current.ws &&
+						next.length === targets.length &&
+						next.every(
+							(item, i) =>
+								item.drawing === targets[i]?.drawing &&
+								item.index === targets[i]?.index &&
+								item.current.session === session &&
+								item.current.ws === ws,
+						) &&
 						ctx.commands.isEnabled(id)
 					);
 				};
-				if (live()) await runDrawingFormat(ctx, selected, live, id, arg);
+				const apply: FormatApply = (intent) => {
+					if (!live()) return false;
+					if (targets.length === 1) return session.formatDrawing(sheet, index, intent);
+					session.batch(ctx.t(label), () => {
+						for (const item of targets) {
+							if (!session.formatDrawing(sheet, item.index, intent))
+								throw new Error(ctx.t(unavailable));
+						}
+					});
+					return true;
+				};
+				if (live()) await runDrawingFormat(ctx, selected, live, apply, id, arg);
 			},
 		});
 	});

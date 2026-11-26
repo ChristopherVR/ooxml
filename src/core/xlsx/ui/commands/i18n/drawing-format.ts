@@ -92,6 +92,12 @@ export const DRAWING_FORMAT_STRINGS = {
 		'Creación de efectos artísticos y eliminación de fondos de imágenes',
 		'创作图片艺术效果和删除图片背景',
 	],
+	'Select pictures or shapes on an editable sheet.': [
+		'Sélectionnez des images ou des formes dans une feuille modifiable.',
+		'Wählen Sie Bilder oder Formen auf einem bearbeitbaren Blatt aus.',
+		'Selecciona imágenes o formas en una hoja editable.',
+		'请在可编辑的工作表中选择图片或形状。',
+	],
 	'Select one picture or shape on an editable sheet.': [
 		'Sélectionnez une image ou une forme sur une feuille modifiable.',
 		'Wählen Sie ein Bild oder eine Form auf einem bearbeitbaren Blatt aus.',
