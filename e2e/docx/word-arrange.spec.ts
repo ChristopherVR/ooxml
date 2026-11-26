@@ -170,6 +170,63 @@ test('Position presets place an ellipse at the top, center and bottom of the pri
 	}
 });
 
+test('pane and Shift-click selections align and distribute three drawings on the canvas', async ({
+	page,
+}) => {
+	const editor = await openShapes(page);
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	const floats = editor.locator('.dve-print-float');
+	await expect(floats).toHaveCount(4);
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
+	const pane = editor.getByRole('complementary', { name: 'Selection Pane' });
+	const drawings = pane.getByRole('listitem').getByRole('button');
+	await drawings.nth(1).click();
+	await drawings.nth(2).click({ modifiers: ['Control'] });
+	await drawings.nth(3).click({ modifiers: ['Control'] });
+	await expect(pane.getByRole('button', { pressed: true })).toHaveCount(3);
+	await expect(editor.locator('.dve-print-float-frame')).toHaveCount(3);
+	const boxes = () =>
+		floats.evaluateAll((elements) =>
+			elements.slice(0, 3).map((element) => {
+				const box = element.getBoundingClientRect();
+				return { x: box.x, y: box.y, width: box.width, height: box.height };
+			}),
+		);
+	const align = async (value: string) => {
+		await unfoldArrange(editor, 'Layout');
+		await editor.getByRole('combobox', { name: 'Align', exact: true }).selectOption(value);
+	};
+	for (const axis of ['x', 'y'] as const) {
+		const size = axis === 'x' ? 'width' : 'height';
+		const gapDelta = async () => {
+			const [a, b, c] = (await boxes()).sort((left, right) => left[axis] - right[axis]);
+			return Math.abs(b![axis] - a![axis] - a![size] - (c![axis] - b![axis] - b![size]));
+		};
+		expect(await gapDelta()).toBeGreaterThan(1);
+		await align(axis);
+		await expect.poll(gapDelta).toBeLessThan(1);
+	}
+	for (const [command, axis] of [
+		['left', 'x'],
+		['top', 'y'],
+	] as const) {
+		await align(command);
+		await expect
+			.poll(async () => {
+				const values = (await boxes()).map((box) => box[axis]);
+				return Math.max(...values) - Math.min(...values);
+			})
+			.toBeLessThan(1);
+	}
+	await expect(pane.getByRole('button', { pressed: true })).toHaveCount(3);
+	await drawings.nth(3).click();
+	await floats.nth(3).click({ force: true, modifiers: ['Shift'] });
+	await expect(pane.getByRole('button', { pressed: true })).toHaveCount(2);
+	await expect(editor.locator('.dve-print-float-frame')).toHaveCount(2);
+});
+
 async function choosePosition(editor: Locator, value: string) {
 	await unfoldArrange(editor, 'Layout');
 	await editor.getByRole('combobox', { name: 'Position', exact: true }).press('Enter');

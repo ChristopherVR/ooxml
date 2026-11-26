@@ -55,7 +55,7 @@ export function locateFloat(
 }
 
 /** The floating object a node selection holds, with its paragraph id and index. */
-export function selectedFloat(state: EditorState): Located | undefined {
+export function selectedFloat(state: Pick<EditorState, 'selection' | 'doc'>): Located | undefined {
 	const { selection } = state;
 	if (!(selection instanceof NodeSelection) || !isFloat(selection.node)) return undefined;
 	const $pos = state.doc.resolve(selection.from);

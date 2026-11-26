@@ -13,6 +13,7 @@ import {
 	shapeSpecOf,
 	type Located,
 } from './print-float-locate';
+import { drawingPositions, isArrangeDrawing, selectDrawing } from './arrange-selection';
 import { editShapeText } from './print-float-text';
 import {
 	FLOAT_HANDLES,
@@ -52,6 +53,7 @@ export interface PrintFloats {
 export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 	const controller = new AbortController();
 	let frame: HTMLElement | undefined;
+	const extraFrames: HTMLElement[] = [];
 	let frameFor: HTMLElement | undefined;
 	let redraw: number | undefined;
 	let closeText: (() => void) | undefined;
@@ -83,6 +85,7 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 
 	function clearFrame(): void {
 		frame?.remove();
+		for (const extra of extraFrames.splice(0)) extra.remove();
 		frame = undefined;
 		frameFor = undefined;
 	}
@@ -109,6 +112,22 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 		place(frame, boxOf(element));
 		frameFor = element;
 		sheet.append(frame);
+		for (const pos of drawingPositions(view.state)) {
+			if (pos === selected?.pos) continue;
+			const other = selectedFloat({
+				selection: NodeSelection.create(view.state.doc, pos),
+				doc: view.state.doc,
+			});
+			const matching = other && floatElement(other.blockId, other.index);
+			const page = matching?.closest('.dve-print-page');
+			if (!matching || !page) continue;
+			const extra = document.createElement('div');
+			extra.className = 'dve-print-float-frame dve-print-float-frame-secondary';
+			extra.setAttribute('aria-hidden', 'true');
+			place(extra, boxOf(matching));
+			page.append(extra);
+			extraFrames.push(extra);
+		}
 	}
 
 	function schedule(): void {
@@ -158,14 +177,19 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 		view.dispatch(tr);
 	}
 
-	function select(element: HTMLElement): Located | undefined {
+	function select(element: HTMLElement, extend = false): Located | undefined {
 		const view = host.view();
 		const blockId = element.dataset.blockId;
 		if (!view || !blockId) return undefined;
 		const located = locateFloat(view.state.doc, blockId, Number(element.dataset.floatIndex));
 		if (!located) return undefined;
 		const current = selectedFloat(view.state);
-		if (current?.pos !== located.pos)
+		if (
+			isArrangeDrawing(located.node) &&
+			(extend || current?.pos !== located.pos || drawingPositions(view.state).length > 1)
+		)
+			selectDrawing(view, located.pos, extend);
+		else if (current?.pos !== located.pos)
 			view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, located.pos)));
 		view.focus();
 		return located;
@@ -221,10 +245,12 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 			closeText?.();
 			const view = host.view();
 			const before = view && selectedFloat(view.state);
-			const located = select(element);
+			const extend = !grip && (event.shiftKey || event.ctrlKey || event.metaKey);
+			const located = select(element, extend);
 			if (!located) return;
 			event.preventDefault();
 			event.stopImmediatePropagation();
+			if (extend) return;
 			drag(
 				event,
 				located,

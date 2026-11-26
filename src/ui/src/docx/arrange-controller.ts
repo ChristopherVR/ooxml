@@ -27,7 +27,7 @@ import { drawingGeometry } from './arrange-geometry';
 import { storyDrawings, toggleArrangePane } from './arrange-pane';
 import { arrangementDialog } from './arrange-dialog';
 import { groupSelectedShapes } from './arrange-group';
-import { drawingPositions, rememberDrawingPositions } from './arrange-selection';
+import { drawingPositions } from './arrange-selection';
 import { isDrawingWrap, saveDrawingWrap } from './drawing-layout-default';
 import type { EditorCore } from './editor-core';
 import { focusView } from './focus-view';
@@ -68,7 +68,7 @@ function applyPlacement(tr: Transaction, pos: number, placement: PicturePlacemen
 	tr.setNodeAttribute(pos, 'placement', placement ? JSON.stringify(placement) : null);
 }
 
-function commit(view: EditorView, tr: Transaction, positions?: readonly number[]) {
+function commit(view: EditorView, tr: Transaction) {
 	if (!tr.docChanged) return;
 	const { selection } = view.state;
 	if (
@@ -76,9 +76,11 @@ function commit(view: EditorView, tr: Transaction, positions?: readonly number[]
 		tr.doc.nodeAt(selection.from)?.type.name === 'image' &&
 		!tr.selectionSet
 	) {
-		tr.setSelection(NodeSelection.create(tr.doc, selection.from));
-		if (positions && positions.length > 1)
-			rememberDrawingPositions(tr.doc, selection.from, [...positions]);
+		tr.setSelection(
+			tr.selection instanceof NodeSelection
+				? tr.selection
+				: NodeSelection.create(tr.doc, selection.from),
+		);
 	}
 	const history = wordYjsPluginKey.getState(view.state);
 	history?.stopCapturing();
@@ -284,6 +286,6 @@ export function runArrange(
 	} else if (key === 'align') align(core, view, tr, positions, value);
 	else if (key === 'order' && placement) order(view, tr, pos, value, placement);
 	else if (key === 'group' && placement) groupSelectedShapes(core, view, tr, positions, pos, value);
-	commit(view, tr, positions);
+	commit(view, tr);
 	focusView(view);
 }

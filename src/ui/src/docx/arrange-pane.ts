@@ -1,7 +1,6 @@
-import { NodeSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { selectionPaneFrame } from '../chrome/selection-pane';
-import { drawingPositions, isArrangeDrawing, rememberDrawingPositions } from './arrange-selection';
+import { drawingPositions, isArrangeDrawing, selectDrawing } from './arrange-selection';
 import type { EditorCore } from './editor-core';
 import { translate, translateTemplate } from './localization';
 import { parsePlacement } from './print-float-locate';
@@ -75,25 +74,12 @@ export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 						title || translateTemplate(core.locale, 'Drawing {number}', { number: index + 1 });
 					button.setAttribute('aria-pressed', String(selected.includes(pos)));
 					button.addEventListener('click', (event) => {
-						if (live.state.doc !== lastDoc || live !== core.targetView()) return;
+						if (live !== core.targetView()) return;
+						// Flush any pending pane refresh before acting on the displayed row.
+						refresh();
+						if (!button.isConnected) return;
 						const multiple = event.ctrlKey || event.metaKey || event.shiftKey;
-						const existing = drawingPositions(live.state);
-						const positions = multiple
-							? existing.includes(pos)
-								? existing.filter((item) => item !== pos)
-								: [...existing, pos]
-							: [pos];
-						const primary = positions.includes(pos) ? pos : (positions[0] ?? pos);
-						rememberDrawingPositions(
-							live.state.doc,
-							primary,
-							positions.length ? positions : [primary],
-						);
-						live.dispatch(
-							live.state.tr
-								.setSelection(NodeSelection.create(live.state.doc, primary))
-								.scrollIntoView(),
-						);
+						selectDrawing(live, pos, multiple);
 						refresh();
 					});
 					row.append(button);

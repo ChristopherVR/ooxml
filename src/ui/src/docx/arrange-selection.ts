@@ -1,5 +1,6 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
-import { NodeSelection, type EditorState } from 'prosemirror-state';
+import { NodeSelection, type EditorState, type Selection } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
 import { isPictureNode } from './picture-format-commands';
 
 export function isArrangeDrawing(
@@ -8,20 +9,59 @@ export function isArrangeDrawing(
 	return Boolean(node?.type.name === 'image' && (node.attrs.shape || isPictureNode(node)));
 }
 
-// Each selection is valid only for the exact version of the story it came from.
-const selections = new WeakMap<ProseMirrorNode, { primary: number; positions: number[] }>();
+/** A node selection with additional drawings, remapped by the same transactions as its primary. */
+class DrawingSelection extends NodeSelection {
+	constructor(
+		doc: ProseMirrorNode,
+		readonly positions: readonly number[],
+		primary: number,
+	) {
+		super(doc.resolve(primary));
+	}
 
-export function drawingPositions(state: EditorState): readonly number[] {
-	const { selection, doc } = state;
-	if (!(selection instanceof NodeSelection) || !isArrangeDrawing(selection.node)) return [];
-	const stored = selections.get(doc);
-	return stored?.primary === selection.from ? stored.positions : [selection.from];
+	override eq(other: Selection): boolean {
+		return (
+			other instanceof DrawingSelection &&
+			this.anchor === other.anchor &&
+			this.positions.length === other.positions.length &&
+			this.positions.every((pos, index) => pos === other.positions[index])
+		);
+	}
+
+	override map(doc: ProseMirrorNode, mapping: Parameters<NodeSelection['map']>[1]): Selection {
+		const positions = this.positions.flatMap((pos) => {
+			const mapped = mapping.mapResult(pos);
+			return !mapped.deleted && isArrangeDrawing(doc.nodeAt(mapped.pos)) ? [mapped.pos] : [];
+		});
+		const primary = mapping.map(this.anchor);
+		const fallback = positions[0];
+		if (fallback === undefined) return super.map(doc, mapping);
+		const anchor = positions.includes(primary) ? primary : fallback;
+		return positions.length === 1
+			? NodeSelection.create(doc, anchor)
+			: new DrawingSelection(doc, positions, anchor);
+	}
 }
 
-export function rememberDrawingPositions(
-	doc: ProseMirrorNode,
-	primary: number,
-	positions: number[],
-): void {
-	selections.set(doc, { primary, positions });
+export function drawingPositions(state: EditorState): readonly number[] {
+	const { selection } = state;
+	if (selection instanceof DrawingSelection) return selection.positions;
+	return selection instanceof NodeSelection && isArrangeDrawing(selection.node)
+		? [selection.from]
+		: [];
+}
+
+export function selectDrawing(view: EditorView, pos: number, extend: boolean): void {
+	const { doc } = view.state;
+	if (!isArrangeDrawing(doc.nodeAt(pos))) return;
+	const previous = drawingPositions(view.state);
+	const next = extend
+		? previous.includes(pos)
+			? previous.filter((item) => item !== pos)
+			: [...previous, pos]
+		: [pos];
+	const primary = next.includes(pos) ? pos : (next[0] ?? pos);
+	const selection =
+		next.length > 1 ? new DrawingSelection(doc, next, primary) : NodeSelection.create(doc, primary);
+	view.dispatch(view.state.tr.setSelection(selection));
 }
