@@ -150,6 +150,13 @@ function renderLine(
 		if (!fragment.text && fragment.widthPx === 0) continue;
 		const span = document.createElement('span');
 		styleFragment(span, fragment);
+		if (fragment.contentControlTag) {
+			span.className = 'dve-print-content-control-tag';
+			span.dataset.tagEdge = fragment.contentControlTag;
+			span.setAttribute('aria-hidden', 'true');
+			span.style.width = `${fragment.widthPx}px`;
+			if (fragment.boxHeightPx !== undefined) span.style.height = `${fragment.boxHeightPx}px`;
+		}
 		span.dataset.sourceStart = String(fragment.sourceStart ?? 0);
 		span.dataset.sourceEnd = String(fragment.sourceEnd ?? 0);
 		lineEl.append(span);

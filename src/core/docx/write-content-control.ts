@@ -6,7 +6,8 @@ import type {
 	ContentControlGlyph,
 	ContentControlListItem,
 } from './content-control-model';
-import { parseContentControl, sdtContent, typeElements } from './content-control';
+import { first as nsFirst } from '../xml/index';
+import { parseContentControl, sdtContent, typeElements, WORD_2012_NS } from './content-control';
 import {
 	NAMED_TYPES,
 	validId,
@@ -199,6 +200,14 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 	}
 	if (control.alias !== current.alias) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== current.tag) setValued(doc, sdtPr, 'tag', control.tag);
+	if (control.appearance && control.appearance !== current.appearance) {
+		const previous = nsFirst(sdtPr, 'appearance', WORD_2012_NS, false);
+		if (previous) sdtPr.removeChild(previous);
+		const prefix = declareIgnorableExtension(doc, WORD_2012_NS, 'w15');
+		const appearance = doc.createElementNS(WORD_2012_NS, `${prefix}:appearance`);
+		appearance.setAttributeNS(WORD_2012_NS, `${prefix}:val`, control.appearance);
+		sdtPr.appendChild(appearance);
+	}
 	const lock = validLock(control.lock);
 	if (lock !== current.lock) setValued(doc, sdtPr, 'lock', lock);
 	if (Boolean(control.showingPlaceholder) !== Boolean(current.showingPlaceholder)) {

@@ -93,6 +93,12 @@ export function parseContentControl(sdt: XmlElement, level: ContentControlLevel)
 	if (alias !== undefined) control.alias = alias;
 	const tag = getW(first(sdtPr, 'tag'), 'val');
 	if (tag !== undefined) control.tag = tag;
+	const appearance = nsFirst(sdtPr, 'appearance', WORD_2012_NS, false)?.getAttributeNS(
+		WORD_2012_NS,
+		'val',
+	);
+	if (appearance === 'tags' || appearance === 'hidden' || appearance === 'boundingBox')
+		control.appearance = appearance;
 	const lock = getW(first(sdtPr, 'lock'), 'val');
 	if (lock === 'sdtLocked' || lock === 'contentLocked' || lock === 'sdtContentLocked')
 		control.lock = lock as ContentControlLock;

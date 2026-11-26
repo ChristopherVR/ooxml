@@ -23,6 +23,16 @@ export function tokenExtent(
 	}
 	const { ascent, descent } = fontMetrics(measurer, fonts[token.runIndex] ?? fontOf({ text: '' }));
 	const size = ptToPx(run?.fontSizePt ?? DEFAULT_FONT_SIZE_PT);
+	if (run?.contentControlTag) {
+		// Approximate the tag box and its leading from the Word PDF screenshot in #349.
+		const clearance = size * 0.45;
+		return {
+			above: ascent + clearance,
+			below: descent + clearance,
+			ascent: ascent + clearance / 2,
+			descent: descent + clearance / 2,
+		};
+	}
 	const scriptShift =
 		run?.script === 'super' ? SUPER_RAISE * size : run?.script === 'sub' ? -SUB_DROP * size : 0;
 	const shift = scriptShift + (run?.positionPx ?? 0);

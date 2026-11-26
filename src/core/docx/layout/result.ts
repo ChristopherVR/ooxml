@@ -12,6 +12,7 @@ export interface LayoutFragment {
 	fontFamily?: string;
 	fontFallback?: import('../font-table').FontFallback;
 	fontSizePt?: number;
+	contentControlTag?: 'start' | 'end';
 	textScalePercent?: number;
 	ligatures?: import('../ligatures').Ligatures;
 	smallCaps?: boolean;

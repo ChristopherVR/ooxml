@@ -129,6 +129,11 @@ export function paintParagraph(
 	for (const line of box.lines) {
 		const lineTop = y + line.yPx;
 		line.fragments.forEach((laid, index) => {
+			if (laid.contentControlTag) {
+				hooks?.decoration();
+				text.draw(page, laid, x + laid.xPx, line, lineTop);
+				return;
+			}
 			const fragment = hooks ? hooks.fragment(box, laid, x + laid.xPx, lineTop, line) : laid;
 			if (fragment.object) {
 				pictures.draw(page, fragment.object, x + fragment.xPx, lineTop + (fragment.topPx ?? 0));

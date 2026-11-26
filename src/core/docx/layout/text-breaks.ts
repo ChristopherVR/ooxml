@@ -12,11 +12,10 @@ import { prohibitedAtLineEnd, prohibitedAtLineStart, type KinsokuSets } from '..
 export { isEastAsianChar };
 
 /**
- * Why a word token may not start a line on its own: `kinsoku` (a prohibited line-start or
- * line-end character at the boundary) or `word` (the boundary is inside a word, split between
- * two differently formatted runs).
+ * Why a token may not start a line on its own: `kinsoku` (a prohibited character at the
+ * boundary), `word` (a word split between formatted runs), or `controlTag` (a tag and its content).
  */
-export type TokenGlue = 'kinsoku' | 'word';
+export type TokenGlue = 'kinsoku' | 'word' | 'controlTag';
 
 /** Resume at a token boundary, or within a word split across lines. */
 export type TokenPosition = number | { index: number; offset: number };
@@ -25,24 +24,22 @@ export function tokenPosition(index: number, offset?: number): TokenPosition {
 	return offset ? { index, offset } : index;
 }
 
-export type BreakToken =
+export type BreakToken = { runIndex: number; sourceStart: number; glue?: TokenGlue } & (
 	| {
 			kind: 'word';
 			text: string;
-			runIndex: number;
-			sourceStart: number;
-			glue?: TokenGlue;
 			/** Automatic East Asian/Western spacing after this word (`w:autoSpaceDE`/`DN`), in px. */
 			spaceAfterPx?: number;
 	  }
-	| { kind: 'space'; text: string; runIndex: number; sourceStart: number }
-	| { kind: 'tab'; runIndex: number; sourceStart: number }
+	| { kind: 'space'; text: string }
+	| { kind: 'tab' }
 	/** An inline picture: an unbreakable box of the run's object size. */
-	| { kind: 'object'; runIndex: number; sourceStart: number }
+	| { kind: 'object' }
 	/** A manual line break (`w:br`/`w:cr`); ends the current line without ending the paragraph. */
-	| { kind: 'lineBreak'; runIndex: number; sourceStart: number }
+	| { kind: 'lineBreak' }
 	/** An explicit page or column break carried on a run (see {@link LayoutRun.breakAfter}). */
-	| { kind: 'pageBreak' | 'columnBreak'; runIndex: number; sourceStart: number };
+	| { kind: 'pageBreak' | 'columnBreak' }
+);
 
 const ZERO_WIDTH_SPACE = '​';
 
@@ -157,7 +154,7 @@ export function gluedCarry(
 	let carry = 0;
 	for (let current = index; ; current--) {
 		const token = tokens[current];
-		if (token?.kind !== 'word' || !token.glue) return carry;
+		if (!token?.glue) return carry;
 		const previous = placed[placed.length - 1 - carry];
 		if (!previous || previous !== tokens[current - 1]) return carry;
 		carry++;

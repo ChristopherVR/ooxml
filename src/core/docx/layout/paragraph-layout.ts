@@ -190,6 +190,9 @@ function measureParagraph(
 		leftPx + (lineIndex === 0 ? firstLineExtraPx : 0) + boxFor(lineIndex).leftInsetPx;
 	const tokenWidth = (token: BreakToken): number => {
 		const run = token.kind === 'word' ? paragraph.runs[token.runIndex] : undefined;
+		const font = fonts[token.runIndex];
+		// Horizontal room for the tag outline, including the unlabelled closing tag.
+		const tagPadding = run?.contentControlTag && font ? font.sizePx * 0.8 : 0;
 		// A picture bullet takes its picture's width, not the fallback glyph's.
 		if (run?.marker?.widthPx !== undefined && token.kind === 'word' && token.sourceStart === 0)
 			if (token.text === run.text.slice(0, run.marker.length)) return run.marker.widthPx;
@@ -198,8 +201,8 @@ function measureParagraph(
 					token.text,
 					expectDefined(paragraph.runs[token.runIndex], 'token run'),
 					measurer,
-					fonts[token.runIndex],
-				)
+					font,
+				) + tagPadding
 			: token.kind === 'object'
 				? (paragraph.runs[token.runIndex]?.object?.widthPx ?? 0)
 				: 0;
@@ -502,11 +505,14 @@ function measureParagraph(
 					continue;
 				}
 			}
-			tokenCursor = tokenIndex;
-			if (token.kind === 'word') tokenCursor = wordPosition(tokenIndex, token);
-			flushLine(false, undefined);
-			tokenIndex--;
-			continue;
+			// On an otherwise unbreakable line, keep the control tag attached even if it overhangs.
+			if (token.glue !== 'controlTag') {
+				tokenCursor = tokenIndex;
+				if (token.kind === 'word') tokenCursor = wordPosition(tokenIndex, token);
+				flushLine(false, undefined);
+				tokenIndex--;
+				continue;
+			}
 		}
 		if (
 			token.kind === 'word' &&

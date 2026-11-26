@@ -110,7 +110,18 @@ export class DocxPdfText {
 			);
 		} else if (text.trim()) {
 			fillWith(page, fragment.color);
-			if (fragment.smallCaps && !fragment.leader)
+			if (fragment.contentControlTag) {
+				const widthPx = Math.min(fragment.widthPx, this.measurer.widthOf(text, font));
+				this.#text(
+					page,
+					text,
+					font,
+					x + (fragment.widthPx - widthPx) / 2,
+					baseline,
+					{ ...fragment, widthPx },
+					0,
+				);
+			} else if (fragment.smallCaps && !fragment.leader)
 				this.#smallCaps(page, text, font, x, baseline, fragment, gapPx);
 			else this.#text(page, text, font, x, baseline, fragment, fragment.leader ? 0 : gapPx);
 		}

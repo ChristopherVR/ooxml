@@ -36,6 +36,8 @@ export interface LayoutRun {
 	object?: LayoutObject;
 	/** Generated text (a list label) that is not part of the paragraph's own characters. */
 	synthetic?: boolean;
+	/** A visible `w15:appearance="tags"` boundary, measured without consuming source text. */
+	contentControlTag?: 'start' | 'end';
 	/** Generated list marker; the remaining characters in this run are its separator. */
 	marker?: {
 		length: number;

@@ -46,6 +46,8 @@ export interface ContentControl {
 	alias?: string;
 	/** `w:tag`. */
 	tag?: string;
+	/** `w15:appearance`; an omitted value uses the bounding box appearance. */
+	appearance?: 'boundingBox' | 'tags' | 'hidden';
 	lock?: ContentControlLock;
 	/** `w:showingPlcHdr`: the content is the placeholder, not a value. */
 	showingPlaceholder?: boolean;

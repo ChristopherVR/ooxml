@@ -41,6 +41,7 @@ import { first, parseXml } from '../xml';
 import { parseDirectRunProperties } from '../run-properties';
 import { fontOf } from './paragraph-tokens';
 import { adaptTable } from './adapt-table';
+import { adaptContentControlTags } from './adapt-content-control-tags';
 import type { TableStyleConditionalFormatting } from '../table-model';
 import {
 	addsParagraphSpacing,
@@ -405,7 +406,7 @@ export function adaptDocumentModel(
 		const indents = levelWins ? paragraph : resolved;
 		const ownFirstLine = indents.firstLineTwips !== undefined || indents.hangingTwips !== undefined;
 		// A symbol that shares its run with text is drawn in its own font, the text in the run's.
-		const runs = paragraph.runs.flatMap((run) =>
+		const runs = adaptContentControlTags(paragraph.runs, (run) =>
 			symbolSegments(run).flatMap((segment) => {
 				const adapted = adaptRun(segment, paragraph.style, markLabel, tableStyleRun);
 				// Fields, note markers and symbol codes have their own display/source rules.

@@ -121,6 +121,24 @@ function glueAcrossRuns(paragraph: LayoutParagraph, tokens: BreakToken[], start:
 		token.glue = 'kinsoku';
 }
 
+/** Keep each tag with its adjacent text or inline object, including intervening spaces. */
+function glueControlTags(tokens: BreakToken[], paragraph: LayoutParagraph): void {
+	const canJoin = (token: BreakToken | undefined) =>
+		token?.kind === 'word' || token?.kind === 'object' || token?.kind === 'tab';
+	for (const [index, token] of tokens.entries()) {
+		const edge = paragraph.runs[token.runIndex]?.contentControlTag;
+		if (!edge) continue;
+		const step = edge === 'start' ? 1 : -1;
+		let neighbor = index + step;
+		while (tokens[neighbor]?.kind === 'space') neighbor += step;
+		if (!canJoin(tokens[neighbor])) continue;
+		for (let join = Math.min(index, neighbor) + 1; join <= Math.max(index, neighbor); join++) {
+			const next = tokens[join];
+			if (next) next.glue = 'controlTag';
+		}
+	}
+}
+
 /**
  * Word's automatic space between East Asian letters and Western letters or digits, a quarter em
  * of the preceding character, recorded on the word before each such boundary.
@@ -170,6 +188,7 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 	const tokens: BreakToken[] = [];
 	const runOffsets: number[] = [];
 	let cursor = 0;
+	let hasTags = false;
 	paragraph.runs.forEach((run, runIndex) => {
 		const start = tokens.length;
 		runOffsets.push(cursor);
@@ -177,7 +196,10 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 			if (!run.synthetic) cursor += sourceLengthOf(run);
 			return;
 		}
-		if (run.object) tokens.push({ kind: 'object', runIndex, sourceStart: 0 });
+		if (run.contentControlTag) {
+			hasTags = true;
+			tokens.push({ kind: 'word', runIndex, sourceStart: 0, text: run.text });
+		} else if (run.object) tokens.push({ kind: 'object', runIndex, sourceStart: 0 });
 		else if (run.marker) {
 			// A marker such as "Chapter 1.2" is indivisible; its separator still acts
 			// as a real tab or space after the aligned glyphs.
@@ -198,6 +220,7 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 			for (const token of tokens) if (token.runIndex === runIndex) token.sourceStart = 0;
 		} else cursor += sourceLengthOf(run);
 	});
+	if (hasTags) glueControlTags(tokens, paragraph);
 	applyAutoSpace(paragraph, tokens);
 	return { tokens, runOffsets };
 }

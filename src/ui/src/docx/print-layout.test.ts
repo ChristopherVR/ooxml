@@ -50,6 +50,45 @@ function sampleResult(): LayoutResult {
 }
 
 describe('renderPrintLayout', () => {
+	it('paints the title and a closing tag in their reserved widths', () => {
+		const result = sampleResult();
+		const block = at(at(at(result.pages, 0).columns, 0).blocks, 0);
+		if (block.kind !== 'paragraph') throw new Error('Expected a paragraph');
+		const line = at(block.lines, 0);
+		line.fragments = [
+			{
+				text: 'Condition',
+				xPx: 0,
+				widthPx: 40,
+				runIndex: 0,
+				contentControlTag: 'start',
+				sourceStart: 0,
+				sourceEnd: 0,
+			},
+			{ text: 'hello', xPx: 40, widthPx: 40, runIndex: 1, sourceStart: 0, sourceEnd: 5 },
+			{
+				text: '',
+				xPx: 80,
+				widthPx: 8,
+				runIndex: 2,
+				contentControlTag: 'end',
+				sourceStart: 5,
+				sourceEnd: 5,
+			},
+		];
+		const rendered = renderPrintLayout(result);
+		const tags = rendered.element.querySelectorAll<HTMLElement>('.dve-print-content-control-tag');
+		expect(
+			Array.from(tags, (tag) => [
+				tag.textContent,
+				tag.style.width,
+				tag.getAttribute('aria-hidden'),
+			]),
+		).toEqual([
+			['Condition', '40px', 'true'],
+			['', '8px', 'true'],
+		]);
+	});
 	it('limits separators to their continuous-section band and numbers each section', () => {
 		const result = sampleResult();
 		const page = result.pages[0]!;

@@ -4,7 +4,9 @@ import JSZip from 'jszip';
 import { loadDocx } from './index';
 import type { ContentControl, Paragraph, TextRun } from './model';
 import { expectParagraph } from './test-support/access';
-import { WORD_NS } from './xml';
+import { parseXml, WORD_NS } from './xml';
+import { parseContentControl, WORD_2012_NS } from './content-control';
+import { createContentControl } from './write-content-control';
 
 const fixturePath = new URL(
 	'./__fixtures__/content-controls/content-controls.docx',
@@ -19,6 +21,26 @@ const controlRuns = (paragraph: Paragraph): TextRun[] =>
 	paragraph.runs.filter((run) => run.contentControl);
 
 describe('content controls (w:sdt) authored by Word', () => {
+	it.each(['tags', 'hidden', 'boundingBox', undefined] as const)(
+		'parses and writes appearance %s',
+		(appearance) => {
+			const value = appearance
+				? `<ext:appearance xmlns:ext="${WORD_2012_NS}" ext:val="${appearance}"/>`
+				: '';
+			const doc = parseXml(
+				`<w:sdt xmlns:w="${WORD_NS}"><w:sdtPr><w:id w:val="5"/>${value}</w:sdtPr></w:sdt>`,
+			);
+			expect(parseContentControl(doc.documentElement, 'inline').appearance).toBe(appearance);
+			const target = parseXml(`<w:document xmlns:w="${WORD_NS}"/>`);
+			const { sdt } = createContentControl(target, {
+				id: '5',
+				level: 'inline',
+				kind: 'richText',
+				...(appearance && { appearance }),
+			});
+			expect(parseContentControl(sdt, 'inline').appearance).toBe(appearance);
+		},
+	);
 	it('reads inline controls of every common type with their properties', async () => {
 		const { model } = await load();
 		const [name, agreed, colour, city, date] = model.blocks

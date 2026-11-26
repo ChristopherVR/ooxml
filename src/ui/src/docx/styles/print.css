@@ -146,6 +146,16 @@
 	position: absolute;
 	top: 0;
 }
+.dve-print-content-control-tag {
+	box-sizing: border-box;
+	border-radius: 4px 0 0 4px;
+	box-shadow: inset 0 0 0 1px #9cb4c9;
+	text-align: center;
+	user-select: none;
+}
+.dve-print-content-control-tag[data-tag-edge='end'] {
+	border-radius: 0 4px 4px 0;
+}
 .dve-print-row {
 	position: absolute;
 	left: 0;

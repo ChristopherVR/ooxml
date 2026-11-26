@@ -34,6 +34,29 @@ function inspect(bytes: Uint8Array) {
 }
 
 describe('exportDocxPdf without a DOM', () => {
+	it('draws content control titles and both tag boxes in the reported PDF layout', async () => {
+		const exported = async (name: string) => {
+			const bytes = readFileSync(
+				new URL(
+					`../../../../core/docx/layout/fixtures/word-layout-reports/issue-349-${name}.docx`,
+					import.meta.url,
+				),
+			);
+			const { model } = await loadDocx(bytes);
+			const { bytes: pdfBytes, report } = await exportDocxPdf(model, { measurer });
+			return { ...inspect(pdfBytes), pages: report.pages };
+		};
+		const tagged = await exported('content-control-tags');
+		const control = await exported('content-control-tags-control');
+		expect(tagged.text.match(/\bCondition\b/g)).toHaveLength(40);
+		expect(
+			tagged.content.match(/0\.909804 0\.941176 0\.972549 rg\n[^\n]+ re\nf/g) ?? [],
+		).toHaveLength(240);
+		expect(tagged.pages).toBe(3);
+		expect(control.text).not.toContain('Condition');
+		expect(control.content).not.toContain('0.909804 0.941176 0.972549 rg');
+		expect(control.pages).toBe(2);
+	});
 	it('runs with no DOM globals', () => {
 		expect(globalThis.DOMParser).toBeUndefined();
 		expect((globalThis as { document?: unknown }).document).toBeUndefined();
