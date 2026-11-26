@@ -164,3 +164,33 @@ test('Insert Illustrations labels Freeform Shape and Curve', async ({ page }) =>
 		await expect(tool).toHaveAttribute('title', label);
 	}
 });
+
+for (const locale of ['en', 'de', 'es', 'fr', 'ja', 'ko', 'zh-CN']) {
+	test(`folded Insert labels stay whole at 800px in ${locale}`, async ({ page }) => {
+		await page.setViewportSize({ width: 800, height: 700 });
+		await loadDeck(page, undefined, `/?locale=${locale}`);
+		await page.locator('pptx-ui-ribbon-tabs:visible [role="tab"][data-tab="insert"]').click();
+		const faces = page.locator('pptx-ui-ribbon-insert [data-collapsed] .face > span');
+		await expect(faces.first()).toBeVisible();
+		expect(
+			await faces.evaluateAll((labels) =>
+				labels.flatMap((label) => {
+					const text = [...label.childNodes].find(
+						(node) => node instanceof Text && node.data.trim(),
+					);
+					if (!(text instanceof Text)) return ['missing caption'];
+					const range = document.createRange();
+					const lines = new Set<number>();
+					for (const word of text.data.matchAll(/\S+/g)) {
+						range.setStart(text, word.index);
+						range.setEnd(text, word.index + word[0].length);
+						const rects = range.getClientRects();
+						if (rects.length !== 1) return [text.data];
+						lines.add(rects[0]!.top);
+					}
+					return lines.size > 2 ? [text.data] : [];
+				}),
+			),
+		).toEqual([]);
+	});
+}

@@ -22,9 +22,13 @@ export const EDITOR_COLLAPSE_CSS = `
   ${R} [data-ribbon-group] > ${FACE} { display: none; }
   ${R} [data-ribbon-group][data-collapsed]${NATIVE} > ${FACE} {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px;
-    box-sizing: border-box; min-width: 56px; height: 66px; margin: 3px 0 0; padding: 3px 6px;
+    box-sizing: border-box; min-width: 56px; min-height: 66px; margin: 3px 0 0; padding: 3px 6px;
     border: 0; border-radius: 4px; background: transparent; color: var(--pptx-foreground);
     font: inherit; font-size: 12px; line-height: 15px; cursor: pointer;
+  }
+  ${R} [data-ribbon-group][data-collapsed]${NATIVE} > ${FACE} .label {
+    min-inline-size: min-content; max-inline-size: 72px; white-space: normal;
+    text-wrap: balance; overflow-wrap: normal; word-break: keep-all;
   }
   ${R} [data-ribbon-group][data-collapsed]${NATIVE} > ${FACE}:hover,
   ${R} [data-ribbon-group][data-open]${NATIVE} > ${FACE} { background: var(--pptx-accent); }
