@@ -1,4 +1,4 @@
-import type { RunFormatting } from 'ooxml-core/docx';
+import { effectiveTextScalePercent, type RunFormatting } from 'ooxml-core/docx';
 import { cssFontStack, tokenizeRun, type TextMeasurer } from 'ooxml-core/docx/layout';
 import { createCanvasMeasurer } from './canvas-measurer';
 
@@ -16,7 +16,7 @@ export function scaledSegments(
 	family: string | undefined,
 	measurer: TextMeasurer,
 ): ScaledSegment[] {
-	const factor = (formatting.textScalePercent ?? 100) / 100;
+	const factor = effectiveTextScalePercent(formatting.textScalePercent) / 100;
 	if (factor === 1) return [];
 	const size = formatting.fontSize ?? 11;
 	const spacing = (formatting.characterSpacingTwips ?? 0) / 15;
@@ -45,7 +45,7 @@ export function scaledSegments(
 		const shapedText = formatting.caps ? token.text.toUpperCase() : token.text;
 		const glyphWidth = measurer.widthOf(shapedText, font);
 		const count = [...graphemes.segment(shapedText)].length;
-		const nativeSpacing = factor === 0 ? 0 : spacing / factor;
+		const nativeSpacing = spacing / factor;
 		const nativeWidth = Math.max(0, glyphWidth + count * nativeSpacing);
 		const advance = Math.max(0, glyphWidth * factor + count * spacing);
 		if (token.kind === 'space')

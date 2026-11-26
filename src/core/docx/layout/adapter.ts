@@ -31,6 +31,7 @@ import { drawingOuterShadow } from '../shape-svg';
 import { pictureBulletSizePt } from '../numbering-picture';
 import { definedProps } from '../defined-props';
 import { defaultStyleId } from '../style-inheritance';
+import { effectiveTextScalePercent } from '../simple-types';
 import { kinsokuLanguage } from '../../text/kinsoku';
 import { resolveEastAsiaLanguage } from '../run-language';
 import { symbolOnly, symbolSegments } from '../special-characters';
@@ -188,6 +189,7 @@ export function adaptDocumentModel(
 		if (isRunHiddenForReview(run, reviewMode))
 			return { text: run.text, hidden: true, sourceLength: reviewSourceLength(run) };
 		const { formatting, family, color } = effective(run, paragraphStyleId, tableStyleRun);
+		const scale = effectiveTextScalePercent(formatting.textScalePercent);
 		const equation = run.equation
 			? equationObject(
 					run.equation.omml,
@@ -289,7 +291,7 @@ export function adaptDocumentModel(
 				italic: formatting.italic,
 				fontFamily: family,
 				fontSizePt: formatting.fontSize,
-				textScalePercent: formatting.textScalePercent,
+				textScalePercent: scale === 100 ? undefined : scale,
 				ligatures: formatting.ligatures,
 				smallCaps: formatting.caps ? undefined : formatting.smallCaps,
 				background,

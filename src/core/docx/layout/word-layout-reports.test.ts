@@ -336,3 +336,43 @@ it('suppresses contextual spacing between implicit Normal paragraphs (#347)', as
 		explicit.paragraphs.map(({ yPx, heightPx }) => [yPx, heightPx]),
 	);
 });
+
+it('lays out zero character scale at natural width and preserves the source value (#348)', async () => {
+	const loaded = await load('issue-348-character-scale-zero');
+	const control = await load('issue-348-character-scale-zero-control');
+	const result = (model: typeof loaded.model) => {
+		const { pages } = layoutDocumentModel(model, measurer);
+		return pages.map((page) =>
+			page.columns.flatMap((column) =>
+				column.blocks.flatMap((block) =>
+					block.kind === 'paragraph'
+						? [
+								block.lines.map((line) =>
+									line.fragments.map(({ text, widthPx }) => [text, widthPx]),
+								),
+							]
+						: [],
+				),
+			),
+		);
+	};
+	const expected = result(control.model);
+	expect(expected).toHaveLength(2);
+	expect(expected.flat().filter((paragraph) => paragraph.length > 1)).toHaveLength(12);
+	const actual = result(loaded.model);
+	expect(actual.map((page) => page.map((paragraph) => paragraph.length))).toEqual(
+		expected.map((page) => page.map((paragraph) => paragraph.length)),
+	);
+	expect(actual).toEqual(expected);
+	const first = at(loaded.model.blocks, 0);
+	if (first.type !== 'paragraph') throw new Error('Expected a paragraph');
+	const edited = {
+		...loaded.model,
+		blocks: [
+			{ ...first, runs: [...first.runs, { text: ' Edit' }] },
+			...loaded.model.blocks.slice(1),
+		],
+	};
+	const xml = await JSZip.loadAsync(await loaded.save(edited));
+	expect(await xml.file('word/document.xml')?.async('string')).toContain('<w:w w:val="0"');
+});

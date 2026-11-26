@@ -8,7 +8,7 @@ import {
 	setTriState,
 } from './dialog-fields';
 import type { FontFormat, FontFormatState } from './font-format';
-import { LIGATURE_VALUES, isLigatures } from 'ooxml-core/docx';
+import { LIGATURE_VALUES, effectiveTextScalePercent, isLigatures } from 'ooxml-core/docx';
 import { ligatureCss } from 'ooxml-core/docx/ui';
 
 /** Word's Advanced character spacing controls. Untouched mixed values stay mixed. */
@@ -130,7 +130,7 @@ export function createFontAdvanced(mark: (...fields: Array<keyof FontFormat>) =>
 			return changes;
 		},
 		previewStyle(size: number) {
-			const factor = scale.value === '' ? 1 : Number(scale.value) / 100;
+			const factor = effectiveTextScalePercent(scale.valueAsNumber) / 100;
 			const spacing =
 				spacingKind.value === 'normal'
 					? 0
@@ -140,7 +140,7 @@ export function createFontAdvanced(mark: (...fields: Array<keyof FontFormat>) =>
 					? ligatureCss(ligatures.value)
 					: 'normal',
 				transform: `scaleX(${factor})`,
-				letterSpacing: `${factor ? spacing / factor : 0}pt`,
+				letterSpacing: `${spacing / factor}pt`,
 				position: 'relative',
 				top: `${positionKind.value === 'normal' ? 0 : Number(positionBy.value) * (positionKind.value === 'raised' ? -1 : 1)}pt`,
 				fontKerning: kerning.input.checked && size >= Number(kerningBy.value) ? 'normal' : 'none',

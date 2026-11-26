@@ -1,4 +1,5 @@
 import { definedProps } from '../defined-props';
+import { effectiveTextScalePercent } from '../simple-types';
 import type { LayoutFontSpec, TextMeasurer } from './measure';
 import type { LayoutFragment } from './result';
 import { hangsAtLineEnd, kinsokuSets, type KinsokuSets } from '../../text/kinsoku';
@@ -56,7 +57,7 @@ export function runTextWidth(
 	}
 	return Math.max(
 		0,
-		(measurer.widthOf(visible, font) * (run.textScalePercent ?? 100)) / 100 +
+		(measurer.widthOf(visible, font) * effectiveTextScalePercent(run.textScalePercent)) / 100 +
 			characters * (run.characterSpacingPx ?? 0),
 	);
 }

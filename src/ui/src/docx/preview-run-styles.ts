@@ -1,4 +1,5 @@
 import {
+	effectiveTextScalePercent,
 	resolveRunFormatting,
 	resolveParagraphFormatting,
 	reviewParagraphFormatting,
@@ -52,11 +53,7 @@ export function stylePreviewRuns(
 				paragraphStyleId: paragraph.style,
 			});
 			const contents = serializer.serializeFragment(Fragment.fromArray(runToInlineNodes(run)));
-			if (
-				run.text &&
-				resolved.textScalePercent !== undefined &&
-				resolved.textScalePercent !== 100
-			) {
+			if (run.text && effectiveTextScalePercent(resolved.textScalePercent) !== 100) {
 				const walker = document.createTreeWalker(contents, NodeFilter.SHOW_TEXT);
 				const texts: Text[] = [];
 				let text: Node | null;

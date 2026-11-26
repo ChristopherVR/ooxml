@@ -3,8 +3,15 @@ import { createDocument, halfPoints } from 'ooxml-core/docx';
 import { EditorState } from 'prosemirror-state';
 import { docToModel, modelToDoc } from './model-adapter';
 import { schema } from './schema';
+import { createFakeMeasurer } from 'ooxml-core/docx/layout';
+import { scaledSegments } from './run-scale';
 
 describe('advanced run editor preservation', () => {
+	it('leaves text at its natural width at zero character scale', () => {
+		expect(
+			scaledSegments('Hello', { textScalePercent: 0 }, undefined, createFakeMeasurer()),
+		).toEqual([]);
+	});
 	it('keeps scale, kerning and baseline position when a text edit splits an imported run', () => {
 		const model = createDocument();
 		const formatting = {

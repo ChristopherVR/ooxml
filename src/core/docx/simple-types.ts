@@ -112,6 +112,11 @@ export function parseTextScale(value: string | null | undefined): number | undef
 	return parsed !== undefined && parsed <= 600 ? parsed : undefined;
 }
 
+/** Word draws a stored zero character scale at natural width. */
+export function effectiveTextScalePercent(value: number | undefined): number {
+	return value && value > 0 ? value : 100;
+}
+
 /** `ST_EighthPointMeasure`: non-negative integer eighths of a point. */
 export function parseEighthPoints(value: string | null | undefined): EighthPoints | undefined {
 	const parsed = parseUnsignedInteger(value?.trim());

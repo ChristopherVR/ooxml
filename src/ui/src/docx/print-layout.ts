@@ -1,4 +1,4 @@
-import type { DocumentModel, PageBorders } from 'ooxml-core/docx';
+import { effectiveTextScalePercent, type DocumentModel, type PageBorders } from 'ooxml-core/docx';
 import {
 	cssFontStack,
 	ligatureCss,
@@ -57,17 +57,15 @@ function leaderElement(fragment: LayoutLine['fragments'][number]): HTMLElement {
 	const el = document.createElement('span');
 	styleFragment(el, { ...fragment, text: '' });
 	el.classList.add('dve-print-leader');
-	const scale = (fragment.textScalePercent ?? 100) / 100;
-	el.style.width = `${scale ? fragment.widthPx / scale : fragment.widthPx}px`;
+	const scale = effectiveTextScalePercent(fragment.textScalePercent) / 100;
+	el.style.width = `${fragment.widthPx / scale}px`;
 	el.style.overflow = 'hidden';
 	el.style.textAlign = 'right';
 	const character = LEADER_CHARACTERS[fragment.leader!];
 	if (character) {
 		// Enough characters to fill the tab; the overflow is clipped on the left.
 		const sizePx = ((fragment.fontSizePt ?? DEFAULT_FONT_SIZE_PT) * 96) / 72;
-		el.textContent = character.repeat(
-			Math.ceil(fragment.widthPx / ((scale || 1) * sizePx * 0.25)) + 1,
-		);
+		el.textContent = character.repeat(Math.ceil(fragment.widthPx / (scale * sizePx * 0.25)) + 1);
 		el.style.direction = 'rtl';
 	} else {
 		el.style.height = '1em';
@@ -85,14 +83,14 @@ function styleFragment(el: HTMLSpanElement, fragment: LayoutLine['fragments'][nu
 	// The same metric-compatible stack the measurer used, so rendered text matches its line breaks.
 	el.style.fontFamily = cssFontStack(fragment.fontFamily, fragment.fontFallback);
 	el.style.fontSize = `${(fragment.fontSizePt ?? DEFAULT_FONT_SIZE_PT) * (fragment.script ? 0.65 : 1)}pt`;
-	const scale = (fragment.textScalePercent ?? 100) / 100;
-	if (!fragment.text) el.style.width = `${scale ? fragment.widthPx / scale : fragment.widthPx}px`;
+	const scale = effectiveTextScalePercent(fragment.textScalePercent) / 100;
+	if (!fragment.text) el.style.width = `${fragment.widthPx / scale}px`;
 	if (scale !== 1) {
 		el.style.transform = `scaleX(${scale})`;
 		el.style.transformOrigin = 'left center';
 	}
 	if (fragment.characterSpacingPx !== undefined)
-		el.style.letterSpacing = `${scale ? fragment.characterSpacingPx / scale : 0}px`;
+		el.style.letterSpacing = `${fragment.characterSpacingPx / scale}px`;
 	if (fragment.kerningThresholdPt !== undefined)
 		el.style.fontKerning =
 			fragment.kerningThresholdPt > 0 &&

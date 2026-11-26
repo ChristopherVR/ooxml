@@ -31,7 +31,10 @@ describe('advanced font line layout', () => {
 				measurer,
 			),
 		).toBe(16);
-		expect(runTextWidth('MMMM', { text: 'MMMM', textScalePercent: 0 }, measurer)).toBe(0);
+	});
+
+	it('uses natural advances for a zero character scale', () => {
+		expect(runTextWidth('MMMM', { text: 'MMMM', textScalePercent: 0 }, measurer)).toBe(40);
 	});
 
 	it('counts spacing by graphemes rather than splitting combining marks or emoji', () => {

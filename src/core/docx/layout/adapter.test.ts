@@ -24,6 +24,30 @@ function baseModel(overrides: Partial<DocumentModel> = {}): DocumentModel {
 }
 
 describe('adaptDocumentModel', () => {
+	it('lays out text with zero character scale inherited from a paragraph style', () => {
+		const model = baseModel({
+			paragraphStyles: {
+				styles: { Body: { id: 'Body', isDefault: true, formatting: {} } },
+				docDefaults: {},
+				warnings: [],
+			},
+			characterStyles: {
+				styles: {
+					Body: {
+						id: 'Body',
+						isDefault: true,
+						type: 'paragraph',
+						formatting: { textScalePercent: 0 },
+					},
+				},
+				docDefaults: {},
+				warnings: [],
+			},
+		});
+		const block = at(at(adaptDocumentModel(model).sections, 0).blocks, 0);
+		if (block.kind !== 'paragraph') throw new Error('Expected a paragraph');
+		expect(at(block.runs, 0).textScalePercent).toBeUndefined();
+	});
 	it('treats explicit and implicit references to the default paragraph style alike', () => {
 		const paragraph = {
 			type: 'paragraph' as const,

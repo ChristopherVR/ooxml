@@ -1,4 +1,5 @@
 import {
+	effectiveTextScalePercent,
 	resolveRunFormatting,
 	isLigatures,
 	type Ligatures,
@@ -117,7 +118,7 @@ function formatOf(
 		caps: Boolean(resolved.caps),
 		hidden: Boolean(resolved.vanish),
 		spacing: (resolved.characterSpacingTwips ?? 0) / 20,
-		scale: resolved.textScalePercent ?? 100,
+		scale: effectiveTextScalePercent(resolved.textScalePercent),
 		position: (resolved.positionHalfPoints ?? 0) / 2,
 		kerning: (resolved.kerningHalfPoints ?? 0) / 2,
 		ligatures: resolved.ligatures ?? 'none',
