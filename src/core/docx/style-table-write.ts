@@ -68,6 +68,7 @@ export function patchTableStyle(
 			style.appendChild(block);
 		}
 		patchStyleRun(block, after.run, before?.run);
+		patchStyleParagraph(block, after.paragraph, before?.paragraph);
 		patchCellBorders(doc, block, after.borders, before?.borders);
 		patchShading(block, 'tcPr', after, before ?? {});
 		orderChildren(block, ['pPr', 'rPr', 'tblPr', 'trPr', 'tcPr']);

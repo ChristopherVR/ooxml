@@ -1,7 +1,7 @@
 import type { StTextDirection } from './generated/wml-simple-types';
 import type { StyleMetadata } from './style-metadata';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Block, Paragraph } from './model';
+import type { Block, Paragraph, ParagraphFormatting } from './model';
 import type { RunFormatting } from './run-style-model';
 import type { ThemeColorReference, ThemeColorToken } from './theme-model';
 import type { StBorder, StVerticalJc } from './generated/wml-simple-types';
@@ -125,6 +125,7 @@ export type TableConditionalRegion =
 	| 'band2Vert';
 /** A conditional-formatting region (`w:tblStylePr`) within a table style. */
 export interface TableStyleConditionalFormatting {
+	paragraph?: ParagraphFormatting;
 	borders?: TableBorders;
 	shadingFill?: string;
 	percentageShading?: import('./percentage-shading').PercentageShading;

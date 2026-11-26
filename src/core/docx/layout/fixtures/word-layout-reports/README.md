@@ -19,6 +19,7 @@ Word 16.0.20625 exported each fixture through `Document.ExportAsFixedFormat`. Th
 | [#346](https://github.com/ChristopherVR/ooxml/issues/346) | Mode 15 retains all three reported final words and uses two pages. Mode 14 wraps them and uses three pages. |
 | [#347](https://github.com/ChristopherVR/ooxml/issues/347) | Implicit and explicit Normal suppress the same gaps, including those beside empty paragraphs. Both samples fit on one page. |
 | [#348](https://github.com/ChristopherVR/ooxml/issues/348) | Zero character scale uses the same text widths and two pages as the unscaled control. |
+| [#353](https://github.com/ChristopherVR/ooxml/issues/353) | TableGrid supplies single spacing with zero after-spacing inside its cell. The table matches the height of the direct-formatting control and fits on one page. |
 
 For #330, Word moved all three lines of a paragraph together when widow and orphan control
 would have left one line on either page. At a 453.5 pt text width, an italic Times New Roman

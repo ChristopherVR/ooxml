@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx, parseParagraphStyleCatalog, resolveParagraphFormatting } from './index';
+import { loadDocx, parseParagraphStyleCatalog, resolveParagraphFormatting, twips } from './index';
 import { at, expectParagraph, must } from './test-support/access';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -24,6 +24,22 @@ async function fixture(styles = stylesXml, documentXml = docXml) {
 }
 
 describe('paragraph style catalog', () => {
+	it('applies table paragraph properties after defaults and before paragraph styles and direct properties', () => {
+		const catalog = parseParagraphStyleCatalog(stylesXml);
+		const table = { spacingAfterTwips: twips(0), lineSpacingTwips: twips(240) };
+		const paragraph = { type: 'paragraph' as const, id: 'p', runs: [] };
+		expect(resolveParagraphFormatting(paragraph, { ...catalog, styles: {} }, table)).toMatchObject({
+			spacingAfterTwips: 0,
+			lineSpacingTwips: 240,
+		});
+		expect(resolveParagraphFormatting(paragraph, catalog, table)).toMatchObject({
+			spacingAfterTwips: 240,
+			lineSpacingTwips: 240,
+		});
+		expect(
+			resolveParagraphFormatting({ ...paragraph, spacingAfterTwips: twips(480) }, catalog, table),
+		).toMatchObject({ spacingAfterTwips: 480, lineSpacingTwips: 240 });
+	});
 	it.each(['start', 'end'] as const)(
 		'resolves inherited %s against final direction after direct or derived bidi overrides',
 		async (justification) => {

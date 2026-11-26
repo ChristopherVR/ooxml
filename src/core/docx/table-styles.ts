@@ -40,6 +40,8 @@ function conditionalFormatting(block: XmlElement): TableStyleConditionalFormatti
 	if (themeFill) result.shadingThemeFill = themeFill;
 	const run = parseRunProperties(first(block, 'rPr'));
 	if (Object.keys(run).length) result.run = run;
+	const paragraph = parseFormatting(first(block, 'pPr'));
+	if (Object.keys(paragraph).length) result.paragraph = paragraph;
 	return result;
 }
 

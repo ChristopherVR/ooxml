@@ -5,6 +5,7 @@ import { loadDocx, twipsToPixels } from '../index';
 import { parseXml } from '../../xml/index';
 import {
 	createPageStories,
+	adaptDocumentModel,
 	cssFontStack,
 	layoutDocumentModel,
 	DEFAULT_FONT_SIZE_PT,
@@ -375,4 +376,33 @@ it('lays out zero character scale at natural width and preserves the source valu
 	};
 	const xml = await JSZip.loadAsync(await loaded.save(edited));
 	expect(await xml.file('word/document.xml')?.async('string')).toContain('<w:w w:val="0"');
+});
+
+it('applies TableGrid paragraph spacing only inside its table (#353)', async () => {
+	const tableMeasurer = createFakeMeasurer({ charWidthFactor: 0.48 });
+	const control = await layout('issue-353-table-direct-spacing-control', tableMeasurer);
+	const styled = await layout('issue-353-table-style-spacing', tableMeasurer);
+	for (const sample of [control, styled]) {
+		const [table, after] = at(adaptDocumentModel(sample.model).sections, 0).blocks;
+		if (table?.kind !== 'table') throw new Error('Expected a table');
+		const paragraphs = at(at(table.rows, 0).cells, 0).paragraphs;
+		expect(paragraphs).toHaveLength(24);
+		for (const paragraph of paragraphs)
+			expect(paragraph).toMatchObject({
+				spacingAfterTwips: 0,
+				lineSpacingTwips: 240,
+				lineSpacingRule: 'auto',
+			});
+		expect(after).toMatchObject({
+			kind: 'paragraph',
+			spacingAfterTwips: 160,
+			lineSpacingTwips: 259,
+		});
+		expect(sample.pages).toHaveLength(1);
+	}
+	const tableHeight = (sample: typeof control) => {
+		const table = sample.blocks.find((block) => block.kind === 'table');
+		return at(table?.rows, 0).heightPx;
+	};
+	expect(tableHeight(styled)).toBeCloseTo(tableHeight(control));
 });

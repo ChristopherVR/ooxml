@@ -6,7 +6,6 @@ import {
 	twipsToPixels,
 	type DocumentModel,
 	type Paragraph,
-	type RunFormatting,
 	type Table,
 	type TableBorderSide,
 } from '../index';
@@ -15,6 +14,7 @@ import { autofitOverhangsCellMargins, compatibilityProfile } from '../compatibil
 import { floatingFrame } from './adapt-table-floating';
 import { resolveTableCellMargins } from '../table-margins';
 import { cellSourceBlocks } from '../cell-blocks';
+import type { TableStyleConditionalFormatting } from '../table-model';
 import type {
 	LayoutBorder,
 	LayoutCellBorders,
@@ -85,7 +85,7 @@ export function adaptTable(
 	adaptParagraph: (
 		paragraph: Paragraph,
 		markLabel?: string,
-		tableStyleRun?: RunFormatting,
+		tableStyle?: TableStyleConditionalFormatting,
 	) => LayoutParagraph,
 	_nested = false,
 ): LayoutTable {
@@ -177,7 +177,7 @@ export function adaptTable(
 				const rowSpan = merges && entry ? rowSpanOf(merges, entry) : 1;
 				const blocks = cellSourceBlocks(cell);
 				const last = blocks.at(-1);
-				const tableStyleRun = resolveTableStyleFormatting(
+				const tableStyle = resolveTableStyleFormatting(
 					table.style,
 					model.tableStyles,
 					table.look,
@@ -185,9 +185,9 @@ export function adaptTable(
 					table.rows.length,
 					start,
 					columnCount,
-				).run;
+				);
 				const adaptCellParagraph = (paragraph: Paragraph): LayoutParagraph => {
-					const adapted = adaptParagraph(paragraph, undefined, tableStyleRun);
+					const adapted = adaptParagraph(paragraph, undefined, tableStyle);
 					return cell.hideMark && last?.id === paragraph.id
 						? { ...adapted, hideCellEndMark: true }
 						: adapted;

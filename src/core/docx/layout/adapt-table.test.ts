@@ -7,6 +7,7 @@ import type { LayoutTable } from './input';
 import type { LayoutTableBox } from './result';
 import type { TextMeasurer } from './measure';
 import { at } from './test-helpers';
+import { parseTableStyleCatalog, resolveTableStyleFormatting } from '../index';
 
 const measurer: TextMeasurer = { widthOf: (text) => text.length * 10, lineHeightOf: () => 20 };
 const cell = (text: string, extra: Partial<Table['rows'][number][number]> = {}) => ({
@@ -43,6 +44,20 @@ const table: Table = {
 };
 
 describe('tables in Print Layout', () => {
+	it('inherits paragraph properties and overlays the applicable conditional region', () => {
+		const catalog =
+			parseTableStyleCatalog(`<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+			<w:style w:type="table" w:styleId="Base"><w:pPr><w:spacing w:after="0" w:line="240"/></w:pPr></w:style>
+			<w:style w:type="table" w:styleId="Grid"><w:basedOn w:val="Base"/>
+				<w:tblStylePr w:type="firstRow"><w:pPr><w:spacing w:before="60" w:line="300"/></w:pPr></w:tblStylePr>
+			</w:style></w:styles>`);
+		const lookup = (row: number) =>
+			resolveTableStyleFormatting('Grid', catalog, { firstRow: true }, row, 2, 0, 1);
+		expect(lookup(0)).toMatchObject({
+			paragraph: { spacingBeforeTwips: 60, spacingAfterTwips: 0, lineSpacingTwips: 300 },
+		});
+		expect(lookup(1)).toMatchObject({ paragraph: { spacingAfterTwips: 0, lineSpacingTwips: 240 } });
+	});
 	it('inherits each margin side and honors zero until the cell override is cleared', () => {
 		const next = structuredClone(table);
 		next.cellMargins = { top: twips(60), left: twips(150), right: twips(300) };

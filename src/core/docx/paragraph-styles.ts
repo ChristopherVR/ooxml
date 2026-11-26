@@ -21,6 +21,7 @@ import {
 	chainResolver,
 	defaultStyleId,
 	inheritanceCycleEntries,
+	mergeDefined,
 } from './style-inheritance';
 import { parseParagraphBorders, parseShadingFill } from './table-borders';
 import { alignFromJustification, parseJustification } from './paragraph-alignment';
@@ -222,11 +223,18 @@ function styleFormatting(
 /** Resolves defaults and style ancestry without modifying paragraph direct properties. */
 export function resolveParagraphFormatting(
 	paragraph: Paragraph,
-	catalog: ParagraphStyleCatalog,
+	catalog: ParagraphStyleCatalog | undefined,
+	tableParagraph?: ParagraphFormatting,
 ): ParagraphFormatting {
-	const result: ParagraphFormatting = { ...catalog.docDefaults };
-	const explicitStyle = paragraph.style;
-	Object.assign(result, styleFormatting(explicitStyle || defaultStyleId(catalog.styles), catalog));
+	const defaults = catalog?.docDefaults ?? {};
+	const result = tableParagraph ? mergeDefined(defaults, tableParagraph) : { ...defaults };
+	if (catalog) {
+		const style = styleFormatting(paragraph.style || defaultStyleId(catalog.styles), catalog);
+		const inheritedFrame = result.frame;
+		Object.assign(result, style);
+		if (tableParagraph && inheritedFrame && style?.frame)
+			result.frame = { ...inheritedFrame, ...style.frame };
+	}
 	const direct: ParagraphFormatting = {};
 	const keys: (keyof ParagraphFormatting)[] = [
 		'align',

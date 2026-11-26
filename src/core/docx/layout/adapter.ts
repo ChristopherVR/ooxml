@@ -41,6 +41,7 @@ import { first, parseXml } from '../xml';
 import { parseDirectRunProperties } from '../run-properties';
 import { fontOf } from './paragraph-tokens';
 import { adaptTable } from './adapt-table';
+import type { TableStyleConditionalFormatting } from '../table-model';
 import {
 	addsParagraphSpacing,
 	attachesFootnotesToBodyColumns,
@@ -365,19 +366,6 @@ export function adaptDocumentModel(
 		};
 	}
 	const betweenBorders = new Map<LayoutParagraph, LayoutParagraphBorders['top']>();
-	function adaptParagraph(
-		paragraph: Paragraph,
-		markLabel?: string,
-		tableStyleRun?: RunFormatting,
-	): LayoutParagraph {
-		const adapted = adaptParagraphOnly(paragraph, markLabel, tableStyleRun);
-		const between = paragraphBox(
-			catalog ? resolveParagraphFormatting(paragraph, catalog) : paragraph,
-			model.theme,
-		).betweenBorder;
-		if (between) betweenBorders.set(adapted, between);
-		return adapted;
-	}
 	/** The saved paragraph mark supplies the font for a line with no visible runs. */
 	function emptyLineFont(paragraph: Paragraph, runs: LayoutRun[], tableStyleRun?: RunFormatting) {
 		if (runs.some((run) => !run.hidden && (run.text || run.object))) return undefined;
@@ -398,12 +386,16 @@ export function adaptDocumentModel(
 		const fallback = run.fontFamily && model.fontFallbacks?.get(run.fontFamily.toLowerCase());
 		return fallback ? { ...run, fontFallback: fallback } : run;
 	}
-	function adaptParagraphOnly(
+	function adaptParagraph(
 		paragraph: Paragraph,
 		markLabel?: string,
-		tableStyleRun?: RunFormatting,
+		tableStyle?: TableStyleConditionalFormatting,
 	): LayoutParagraph {
-		const resolved = catalog ? resolveParagraphFormatting(paragraph, catalog) : paragraph;
+		const resolved =
+			catalog || tableStyle?.paragraph
+				? resolveParagraphFormatting(paragraph, catalog, tableStyle?.paragraph)
+				: paragraph;
+		const tableStyleRun = tableStyle?.run;
 		const label = labels.get(paragraph.id);
 		// Numbering level indents apply unless the paragraph or its style sets its own. A paragraph
 		// numbered directly (`w:numPr`) takes the level's indents over its style's (Word draws the
@@ -428,8 +420,8 @@ export function adaptDocumentModel(
 		);
 		const visible = visibleReviewParagraph(paragraph, reviewMode);
 		const footnotes = paragraphFootnotes(visible, visibleModel, noteLabel, adaptParagraph);
-		const { betweenBorder: _between, ...box } = paragraphBox(resolved, model.theme);
-		return {
+		const { betweenBorder, ...box } = paragraphBox(resolved, model.theme);
+		const adapted: LayoutParagraph = {
 			kind: 'paragraph',
 			id: paragraph.id,
 			...(!squeeze ? { squeezeJustifiedSpaces: false as const } : {}),
@@ -505,6 +497,8 @@ export function adaptDocumentModel(
 				? { textFrame: adaptTextFrame(resolved.frame) }
 				: {}),
 		};
+		if (betweenBorder) betweenBorders.set(adapted, betweenBorder);
+		return adapted;
 	}
 	function adaptBlock(block: Block): LayoutBlock {
 		if (block.type === 'paragraph') return adaptParagraph(block);

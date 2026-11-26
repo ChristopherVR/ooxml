@@ -5,7 +5,7 @@ import type {
 	TableStyleCatalog,
 	TableStyleConditionalFormatting,
 } from './table-model';
-import { chainResolver } from './style-inheritance';
+import { chainResolver, mergeDefined } from './style-inheritance';
 import { DEFAULT_TABLE_LOOK } from './table-defaults';
 
 /** Which conditional regions apply to a cell, in increasing precedence (last wins), per `tblLook`. */
@@ -69,6 +69,7 @@ export function resolveTableStyleFormatting(
 		...resolved,
 		...(resolved.borders ? { borders: { ...resolved.borders } } : {}),
 		...(resolved.run ? { run: { ...resolved.run } } : {}),
+		...(resolved.paragraph ? { paragraph: { ...resolved.paragraph } } : {}),
 	};
 }
 
@@ -76,7 +77,7 @@ type Resolver = (id: string | undefined) => TableStyleConditionalFormatting | un
 /** Resolvers per catalog `styles` record, then per set of applicable regions. */
 const resolvers = new WeakMap<object, Map<string, Resolver>>();
 
-/** Adds one level's formatting over `result`: borders and run properties merge, fills replace. */
+/** Adds one level's formatting over `result`: borders and text properties merge, fills replace. */
 function mergeFormatting(
 	result: TableStyleConditionalFormatting,
 	level: TableStyleConditionalFormatting,
@@ -89,6 +90,7 @@ function mergeFormatting(
 	if (level.shadingThemeFill) next.shadingThemeFill = level.shadingThemeFill;
 	else if (level.shadingFill) delete next.shadingThemeFill;
 	if (level.run) next.run = { ...result.run, ...level.run };
+	if (level.paragraph) next.paragraph = mergeDefined(result.paragraph ?? {}, level.paragraph);
 	return next;
 }
 
@@ -99,6 +101,7 @@ function ownFormatting(
 ): TableStyleConditionalFormatting {
 	let result: TableStyleConditionalFormatting = {};
 	if (style.runFormatting) result.run = { ...style.runFormatting };
+	if (style.paragraphFormatting) result.paragraph = { ...style.paragraphFormatting };
 	if (style.borders) result.borders = { ...style.borders };
 	if (style.shadingFill) result.shadingFill = style.shadingFill;
 	if (style.shadingThemeFill) result.shadingThemeFill = style.shadingThemeFill;
