@@ -6,7 +6,7 @@ import { menuItem } from './shapes-master-list';
 import { ribbonLocale } from './ribbon-localize';
 import { translateRibbonText } from './ribbon-locale';
 
-type Menu = HTMLElement & { openAt?(x: number, y: number): void };
+type Menu = HTMLElement & { openAt?(x: number, y: number, opener?: HTMLElement): void };
 
 export function bindStencilMenus(
 	pane: HTMLElement,
@@ -102,7 +102,7 @@ export function bindStencilMenus(
 			);
 		}
 		masterMenu.replaceChildren(...items);
-		masterMenu.openAt?.(x, y);
+		masterMenu.openAt?.(x, y, button);
 		return true;
 	};
 	pane.addEventListener('contextmenu', (event) => {
@@ -120,6 +120,7 @@ export function bindStencilMenus(
 		event.stopPropagation();
 		const command = (event as CustomEvent<{ command: string }>).detail.command;
 		if (!menuSection) return;
+		if (command === 'save-stencil-file') run({ type: 'save', stencil: menuSection });
 		if (command === 'edit-stencil') {
 			if (editing.has(menuSection)) editing.delete(menuSection);
 			else editing.add(menuSection);
@@ -175,15 +176,13 @@ export function bindStencilMenus(
 					(drawing ? undefined : 'Select one editable 2D shape in a drawing.'))
 				: 'Turn on Edit Stencil to change its masters.';
 			stencilMenu.setAttribute('label', t('Stencil actions'));
-			const save = menuItem(doc, 'save-stencil-file', t('Save Stencil'));
-			save.addEventListener('office-command', () => run({ type: 'save', stencil: id }));
 			stencilMenu.replaceChildren(
 				menuItem(doc, 'edit-stencil', t('Edit Stencil'), editing.has(id)),
 				disabled('add-selection', 'Add Selected Shape', reason),
-				save,
+				menuItem(doc, 'save-stencil-file', t('Save Stencil')),
 			);
 			const box = button.getBoundingClientRect();
-			stencilMenu.openAt?.(box.left, box.bottom);
+			stencilMenu.openAt?.(box.left, box.bottom, button);
 		},
 	};
 }

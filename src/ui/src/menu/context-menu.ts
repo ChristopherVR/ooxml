@@ -135,12 +135,11 @@ export class OfficeUiContextMenu extends OfficeElement {
 	}
 
 	/** Show at client coordinates; focus the first enabled item. */
-	openAt(x: number, y: number): void {
+	openAt(x: number, y: number, opener = this.deepActive()): void {
 		const doc = this.ownerDocument;
 		const panel = this.panel;
 		if (!panel) return;
-		const active = doc.activeElement;
-		this.returnFocus = active instanceof HTMLElement ? active : null;
+		this.returnFocus = opener;
 		if (panel.hasAttribute('popover')) {
 			if (!this.open) panel.showPopover?.();
 		} else {
