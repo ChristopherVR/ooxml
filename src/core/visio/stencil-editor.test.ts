@@ -180,6 +180,48 @@ describe('stencil authoring', () => {
 		expect((await JSZip.loadAsync(copied)).file('visio/vbaProject.bin')).toBeNull();
 	});
 
+	it('removes unreferenced master media and its content types, retaining shared and opaque parts', async () => {
+		const source = await builtIn(await builtIn(await createVisioStencil(), 'rectangle'), 'circle');
+		const zip = await JSZip.loadAsync(source);
+		const typesPath = '[Content_Types].xml';
+		const types = await zip.file(typesPath)!.async('string');
+		zip.file(
+			typesPath,
+			types.replace(
+				'</Types>',
+				'<Default Extension="png" ContentType="image/png"/><Default Extension="gif" ContentType="image/gif"/>' +
+					'<Override PartName="/visio/media/only.gif" ContentType="image/gif"/></Types>',
+			),
+		);
+		const rels = (targets: string[]) =>
+			'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+			targets
+				.map(
+					(target, index) =>
+						`<Relationship Id="rId${index + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/${target}"/>`,
+				)
+				.join('') +
+			'</Relationships>';
+		const rels1 = 'visio/masters/_rels/master1.xml.rels';
+		zip.file(rels1, rels(['shared.png', 'only.gif']));
+		zip.file('visio/masters/_rels/master2.xml.rels', rels(['shared.png']));
+		for (const part of ['shared.png', 'only.gif', 'opaque.png'])
+			zip.file(`visio/media/${part}`, part);
+		const edited = await apply(await zip.generateAsync({ type: 'uint8array' }), {
+			type: 'delete-master',
+			id: '1',
+		});
+		const result = await JSZip.loadAsync(edited);
+		expect((await masters(edited)).map(({ name }) => name)).toEqual(['Circle']);
+		expect(result.file(rels1)).toBeNull();
+		expect(result.file('visio/media/only.gif')).toBeNull();
+		expect(await result.file('visio/media/shared.png')?.async('string')).toBe('shared.png');
+		expect(await result.file('visio/media/opaque.png')?.async('string')).toBe('opaque.png');
+		const savedTypes = await result.file(typesPath)?.async('string');
+		expect(savedTypes).not.toContain('gif');
+		expect(savedTypes).toContain('Extension="png"');
+	});
+
 	it('rejects oversize inputs and hostile XML before publishing a change', async () => {
 		const source = await builtIn(await createVisioStencil(), 'rectangle');
 		const rename = { type: 'rename-master', id: '1', name: 'Box' } satisfies VisioStencilEdit;

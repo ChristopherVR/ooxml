@@ -13,6 +13,7 @@ import { addSelectedStencilShape } from './stencil-from-shape';
 import { ensureStencilIcon } from './stencil-icon';
 import { stencilMasterContents, stencilMasterEntry } from './stencil-master-part';
 import { stencilMasterGuid, visioBuiltInMaster } from './stencil-masters';
+import { removeStencilMasterParts } from './stencil-remove-parts';
 import {
 	openStencil,
 	saveStencilParts,
@@ -141,13 +142,17 @@ export async function editVisioStencil(
 			fail('UNSUPPORTED_EDIT_PACKAGE', 'Another master entry uses this master part.');
 		for (const node of elements(rels))
 			if (attribute(node, 'Id') === relId) node.parentNode?.removeChild(node);
-		parts.delete(path);
-		parts.delete(relationshipsPartFor(path));
 		const typesPath = '[Content_Types].xml';
 		const types = copy(await pkg.readXml(typesPath, 'Types'));
-		for (const node of elements(types))
-			if (node.localName === 'Override' && attribute(node, 'PartName') === `/${path}`)
-				types.removeChild(node);
+		await removeStencilMasterParts({
+			pkg,
+			parts,
+			types,
+			master: path,
+			index: mastersPart,
+			relId,
+			check,
+		});
 		dirty.set(typesPath, types);
 		masters.removeChild(entry);
 		dirty.set(relPart, rels);
