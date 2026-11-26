@@ -1,12 +1,13 @@
 // @vitest-environment happy-dom
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, it } from 'vitest';
 
 import { loadPresentation } from '../dom/load-presentation';
 import { createTranslator } from '../i18n';
 import { createProgressiveSlidePreview } from './progressive-slide-preview';
 
-const SAMPLE_DECK = new URL('../../../../../e2e/pptx/fixtures/sample-deck.pptx', import.meta.url);
+const SAMPLE_DECK = resolve(__dirname, '../../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
 it('keeps previews isolated from the editable deck and releases the preview nodes', async () => {
 	const root = document.createElement('div');
