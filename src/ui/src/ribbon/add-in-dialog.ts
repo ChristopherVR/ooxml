@@ -118,11 +118,14 @@ export function watchOfficeAddIns(
 		runtimeRefresh?.abort();
 		const { signal } = (pending = new AbortController());
 		host[RESTORE] = (async () => {
+			const files = store ? await store.read(product) : [];
+			if (signal.aborted || !host.isConnected) return;
+			if (!changed && !files.length && !localAddIns(host).size) return;
 			const session = await sessionForEditor();
 			if (signal.aborted || !host.isConnected) return;
-			if (changed) session.syncTabs();
-			await session.restore?.(signal);
-			if (!signal.aborted && host.isConnected) session.syncTabs();
+			if (changed) await session.syncTabs();
+			await session.restore?.(signal, files);
+			if (!signal.aborted && host.isConnected) await session.syncTabs();
 		})();
 		// The dialog can report a preference read error if the user opens it.
 		void host[RESTORE].catch(() => {});

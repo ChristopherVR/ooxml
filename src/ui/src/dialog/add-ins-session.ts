@@ -37,8 +37,8 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 	const syncTabs = () => addInManifestTabs(host, installed, launcher, t);
 	const restore =
 		store && product !== 'visio'
-			? async (signal: AbortSignal) => {
-					const files = await store.read(product);
+			? async (signal: AbortSignal, saved?: readonly Uint8Array[]) => {
+					const files = saved ?? (await store.read(product));
 					if (signal.aborted) return;
 					const restored = new Map<string, LocalAddIn>();
 					if (files.length) {
