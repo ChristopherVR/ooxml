@@ -65,6 +65,29 @@ function stylePreview(
 	return table;
 }
 
+function adjacentGalleryRow(
+	options: HTMLButtonElement[],
+	current: HTMLButtonElement,
+	direction: number,
+): number {
+	const origin = current.getBoundingClientRect();
+	const candidates = options.flatMap((option, index) => {
+		const box = option.getBoundingClientRect();
+		const row = direction * (box.top - origin.top);
+		return row > 1 ? [{ index, row, sideways: Math.abs(box.left - origin.left) }] : [];
+	});
+	return (
+		candidates.sort((a, b) => a.row - b.row || a.sideways - b.sideways)[0]?.index ??
+		options.indexOf(current)
+	);
+}
+
+function styleFamily(id: string): LocalizationKey {
+	if (id === 'LightList' || id.startsWith('ListTable')) return 'List Tables';
+	if (id === 'LightGrid' || id === 'TableGrid' || id.startsWith('GridTable')) return 'Grid Tables';
+	return 'Plain Tables';
+}
+
 export function openTableStyles(
 	core: EditorCore,
 	view: EditorView,
@@ -92,19 +115,30 @@ export function openTableStyles(
 		next.focus();
 	};
 	list.addEventListener('keydown', (event) => {
-		const index = options.findIndex((option) => option === event.target);
+		if (!(event.target instanceof HTMLButtonElement)) return;
+		const index = options.indexOf(event.target);
 		if (index < 0) return;
-		const offset = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -3, ArrowDown: 3 };
-		const step = offset[event.key as keyof typeof offset];
-		const next =
-			event.key === 'Home'
-				? 0
-				: event.key === 'End'
-					? options.length - 1
-					: step
-						? index + step
-						: index;
-		if (step === undefined && event.key !== 'Home' && event.key !== 'End') return;
+		let next: number;
+		switch (event.key) {
+			case 'Home':
+				next = 0;
+				break;
+			case 'End':
+				next = options.length - 1;
+				break;
+			case 'ArrowLeft':
+				next = index - 1;
+				break;
+			case 'ArrowRight':
+				next = index + 1;
+				break;
+			case 'ArrowUp':
+			case 'ArrowDown':
+				next = adjacentGalleryRow(options, event.target, event.key === 'ArrowUp' ? -1 : 1);
+				break;
+			default:
+				return;
+		}
 		event.preventDefault();
 		event.stopPropagation();
 		focusOption(Math.max(0, Math.min(options.length - 1, next)));
@@ -147,16 +181,20 @@ export function openTableStyles(
 			tr.setNodeAttribute(active.pos, 'starterGrid', false);
 		if (tr.docChanged) view.dispatch(closeHistory(tr));
 	};
-	const add = (label: string, action: () => void, selected?: boolean, preview?: HTMLElement) => {
+	const add = (
+		label: string,
+		action: () => void,
+		tile?: { group: HTMLElement; selected: boolean; preview: HTMLElement },
+	) => {
 		const button = document.createElement('button');
 		button.type = 'button';
-		if (selected !== undefined) {
+		if (tile) {
 			button.setAttribute('role', 'option');
-			button.setAttribute('aria-selected', String(selected));
+			button.setAttribute('aria-selected', String(tile.selected));
 			button.tabIndex = -1;
 			options.push(button);
 		}
-		if (preview) button.append(preview);
+		if (tile) button.append(tile.preview);
 		button.append(label);
 		button.addEventListener('mousedown', (event) => event.preventDefault());
 		button.addEventListener('click', () => {
@@ -164,28 +202,50 @@ export function openTableStyles(
 			anchor.focus();
 			action();
 		});
-		(selected === undefined ? pop : list).append(button);
+		(tile?.group ?? pop).append(button);
 		return button;
 	};
-	for (const preset of TABLE_STYLE_PRESETS) {
-		const own = catalog?.styles[preset.id];
-		const style = own ?? preset;
-		add(
-			own?.name ?? translate(core.locale, (preset.name ?? preset.id) as LocalizationKey),
-			() => apply(style),
-			table.style === style.id,
-			stylePreview(style, table.look, installTableStylePreset(catalog, style), core.model.theme),
-		);
-	}
-	const builtins = new Set(TABLE_STYLE_PRESETS.map(({ id }) => id));
-	for (const style of documentStyles)
-		if (!builtins.has(style.id))
+	const addFamily = (label: LocalizationKey, styles: readonly TableStyleDefinition[]) => {
+		if (!styles.length) return;
+		const group = document.createElement('div');
+		group.className = 'dve-table-style-family';
+		group.setAttribute('role', 'group');
+		group.setAttribute('aria-label', translate(core.locale, label));
+		const heading = document.createElement('div');
+		heading.className = 'dve-table-style-heading';
+		heading.textContent = translate(core.locale, label);
+		heading.setAttribute('aria-hidden', 'true');
+		group.append(heading);
+		for (const preset of styles) {
+			const own = catalog?.styles[preset.id];
+			const style = own ?? preset;
 			add(
-				style.name ?? style.id,
+				own?.name ?? translate(core.locale, (preset.name ?? preset.id) as LocalizationKey),
 				() => apply(style),
-				table.style === style.id,
-				stylePreview(style, table.look, installTableStylePreset(catalog, style), core.model.theme),
+				{
+					group,
+					selected: table.style === style.id,
+					preview: stylePreview(
+						style,
+						table.look,
+						installTableStylePreset(catalog, style),
+						core.model.theme,
+					),
+				},
 			);
+		}
+		list.append(group);
+	};
+	for (const family of ['Plain Tables', 'Grid Tables', 'List Tables'] as const)
+		addFamily(
+			family,
+			TABLE_STYLE_PRESETS.filter(({ id }) => styleFamily(id) === family),
+		);
+	const builtins = new Set(TABLE_STYLE_PRESETS.map(({ id }) => id));
+	addFamily(
+		'Custom Tables',
+		documentStyles.filter(({ id }) => !builtins.has(id)),
+	);
 	const edit = (modify: boolean) => {
 		const active = contextNow();
 		if (!active) return;

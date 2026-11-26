@@ -78,7 +78,7 @@ test('Table Design and Layout edit a table and save the Word properties', async 
 	).toBeFocused();
 	await expect(stylesList.locator('[tabindex="0"]')).toHaveCount(1);
 	await page.keyboard.press('ArrowDown');
-	await page.keyboard.press('ArrowDown');
+	await page.keyboard.press('ArrowRight');
 	await expect(
 		stylesList.getByRole('option', { name: 'Grid Table 4 - Accent 1', exact: true }),
 	).toBeFocused();

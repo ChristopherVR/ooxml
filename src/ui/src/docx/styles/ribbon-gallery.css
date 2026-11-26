@@ -101,21 +101,33 @@
 		color: HighlightText;
 	}
 }
-.dve-table-style-gallery {
-	display: grid;
+.ribbon-popover.dve-table-style-gallery {
+	grid-template-columns: minmax(0, 1fr);
 	gap: 4px;
-	max-width: min(420px, calc(100vw - 16px));
+	box-sizing: border-box;
+	width: min(420px, calc(100vw - 16px));
 	max-height: 60vh;
 	overflow: auto;
 }
 .dve-table-style-list {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+.dve-table-style-family {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, 92px);
 	gap: 4px;
+}
+.dve-table-style-heading {
+	grid-column: 1 / -1;
+	font-weight: 600;
+	padding: 3px 4px;
+	border-bottom: 1px solid var(--line);
 }
 .dve-table-style-gallery button {
 	display: grid;
 	justify-items: center;
+	align-content: start;
 	gap: 3px;
 	padding: 4px;
 	white-space: normal;
