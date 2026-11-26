@@ -1,8 +1,16 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright API */
 import { readFile } from 'node:fs/promises';
-import { expect, test } from '@playwright/test';
+import { expect, type Locator, test } from '@playwright/test';
 import JSZip from 'jszip';
 import { editor as excel, newWorkbook } from './helpers';
+
+/** Clicks an Add-ins command, opening the group first when the ribbon has collapsed it. */
+async function addInsCommand(editor: Locator, name: 'Get Add-ins' | 'My Add-ins') {
+	const command = editor.getByRole('button', { name, exact: true });
+	if (!(await command.isVisible()))
+		await editor.getByRole('button', { name: 'Add-ins', exact: true }).click();
+	await command.click();
+}
 
 const fixture = (name: string) =>
 	readFile(
@@ -10,12 +18,12 @@ const fixture = (name: string) =>
 		'utf8',
 	);
 
-test('keeps the XML manifest compatibility details in Excel My Add-ins', async ({ page }) => {
+test('lists only Excel compatibility details for a Word command manifest', async ({ page }) => {
 	await page.setViewportSize({ width: 1600, height: 900 });
 	await newWorkbook(page);
 	const editor = excel(page);
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-	await editor.getByRole('button', { name: 'Get Add-ins', exact: true }).click();
+	await addInsCommand(editor, 'Get Add-ins');
 	const dialog = editor.locator('office-ui-dialog[open]');
 	await dialog.getByLabel('Choose a local add-in file').setInputFiles({
 		name: 'notes.xml',
@@ -23,9 +31,11 @@ test('keeps the XML manifest compatibility details in Excel My Add-ins', async (
 		buffer: Buffer.from(await fixture('manifest.xml')),
 	});
 	await dialog.getByRole('button', { name: 'Install Notes', exact: true }).click();
-	await editor.getByRole('button', { name: 'My Add-ins', exact: true }).click();
-	await expect(dialog).toContainText('Unavailable requirement · AddinCommands 1.10');
-	await expect(dialog).toContainText('Unsupported feature · ExecuteFunction');
+	await addInsCommand(editor, 'My Add-ins');
+	await expect(dialog).toContainText('Notes (1.0.0)');
+	// The fixture's commands and their requirement belong to its Document (Word) override.
+	await expect(dialog).not.toContainText('Unsupported feature');
+	await expect(dialog).not.toContainText('Unavailable requirement');
 });
 
 test('reviews and installs a unified package in Excel', async ({ page }) => {
@@ -33,9 +43,7 @@ test('reviews and installs a unified package in Excel', async ({ page }) => {
 	await newWorkbook(page);
 	const editor = excel(page);
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-	const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
-	const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
-	await get.click();
+	await addInsCommand(editor, 'Get Add-ins');
 	const dialog = editor.locator('office-ui-dialog[open]');
 	const manifest = (await fixture('manifest.json')).replace(
 		'"lifetime": "short"',
@@ -68,14 +76,14 @@ test('reviews and installs a unified package in Excel', async ({ page }) => {
 	await expect(dialog).toContainText('Unavailable requirement · AddinCommands 1.10');
 	await expect(dialog).toContainText('Unsupported feature · shared runtime');
 	await consent.getByRole('button', { name: 'Install Notes', exact: true }).click();
-	await mine.click();
+	await addInsCommand(editor, 'My Add-ins');
 	const installed = editor.locator('office-ui-dialog[open]');
 	await expect(installed).toContainText('Running add-ins is unavailable');
 	await expect(installed).toContainText('Unavailable requirement · AddinCommands 1.10');
 	await expect(installed).toContainText('Unsupported feature · shared runtime');
 	await page.keyboard.press('Escape');
 
-	await get.click();
+	await addInsCommand(editor, 'Get Add-ins');
 	await select(
 		manifest.replace('1.0.0', '1.0.1').replace('"short": "Notes"', '"short": "Updated Notes"'),
 	);
@@ -83,7 +91,7 @@ test('reviews and installs a unified package in Excel', async ({ page }) => {
 	await expect(dialog.getByText('Update from 1.0.0 to 1.0.1', { exact: true })).toBeVisible();
 	await dialog.getByRole('button', { name: 'Update Updated Notes', exact: true }).click();
 
-	await mine.click();
+	await addInsCommand(editor, 'My Add-ins');
 	await expect(installed).toContainText('Updated Notes (1.0.1)');
 	await installed.getByRole('button', { name: 'Remove Updated Notes', exact: true }).click();
 });

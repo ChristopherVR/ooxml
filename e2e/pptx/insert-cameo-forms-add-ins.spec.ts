@@ -31,7 +31,7 @@ test('installs a local PowerPoint manifest and lists it as inactive', async ({ p
 		mimeType: 'application/xml',
 		buffer,
 	});
-	await expect(preview).toContainText('Document.ReadWrite.User');
+	await expect(preview).toContainText('Read and change this document');
 	await preview.getByRole('button', { name: 'Install Notes', exact: true }).click();
 	await ribbonTab(page, 'Home').click();
 	await insert.click();
