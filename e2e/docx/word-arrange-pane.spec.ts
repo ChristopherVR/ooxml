@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import JSZip from 'jszip';
 import { openShapes, unfoldArrange } from './word-arrange-support';
 import { savedDocument } from './saved-document';
 
@@ -110,4 +112,38 @@ test('Selection Pane renames with F2 and double-click without forwarding keys', 
 	const { xml } = await savedDocument(page, 'renamed-drawing.docx');
 	expect(xml).toContain('name="Final oval"');
 	expect(xml).not.toContain('title="Final oval"');
+});
+
+test('a Selection Pane row reveals its drawing on a virtualized Print Layout page', async ({
+	page,
+}) => {
+	const fixture = await readFile(new URL('./support/shapes.docx', import.meta.url));
+	const zip = await JSZip.loadAsync(fixture);
+	const path = 'word/document.xml';
+	const xml = await zip.file(path)!.async('string');
+	const filler =
+		'<w:p><w:pPr><w:pageBreakBefore/></w:pPr><w:r><w:t>Filler</w:t></w:r></w:p>'.repeat(13);
+	zip.file(path, xml.replace('<w:body>', `<w:body>${filler}`));
+	const editor = await openShapes(page, await zip.generateAsync({ type: 'nodebuffer' }));
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	await expect.poll(() => editor.locator('.dve-print-page').count()).toBeGreaterThan(10);
+	await expect(editor.locator('.dve-print-float')).toHaveCount(0);
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
+	const pane = editor.getByRole('complementary', { name: 'Selection Pane' });
+	const row = pane.getByRole('button', { name: 'Oval 3' });
+	await row.click();
+	await expect(row).toBeFocused();
+	await expect(row).toHaveAttribute('aria-pressed', 'true');
+	const frame = editor.locator('.dve-print-float-frame');
+	await expect(frame).toBeInViewport();
+	await expect
+		.poll(() =>
+			frame.evaluate((element) => {
+				const drawing = element.getBoundingClientRect();
+				const canvas = element.closest('.dve-canvas')!.getBoundingClientRect();
+				return Math.max(canvas.top - drawing.top, drawing.bottom - canvas.bottom);
+			}),
+		)
+		.toBeLessThan(1);
 });

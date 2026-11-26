@@ -5,7 +5,7 @@ import { selectionPaneFrame } from '../chrome/selection-pane';
 import { drawingPositions, isArrangeDrawing, selectDrawing } from './arrange-selection';
 import type { EditorCore } from './editor-core';
 import { translate, translateTemplate } from './localization';
-import { parsePlacement } from './print-float-locate';
+import { floatAtPosition, parsePlacement } from './print-float-locate';
 import { focusView } from './focus-view';
 
 export function storyDrawings(view: EditorView) {
@@ -25,6 +25,26 @@ export function storyDrawings(view: EditorView) {
 }
 
 const panes = new WeakMap<EditorCore, (view: EditorView) => void>();
+
+function revealDrawing(core: EditorCore, view: EditorView, pos: number): void {
+	if (core.pages.viewMode !== 'print' || view !== core.view) {
+		const node = view.nodeDOM(pos);
+		if (node instanceof Element) node.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+		return;
+	}
+	const float = floatAtPosition(view.state.doc, pos);
+	if (float) {
+		core.shell.printLayout?.revealDrawing({ ...float, kind: 'float' });
+		return;
+	}
+	const { parent, parentOffset } = view.state.doc.resolve(pos);
+	if (parent.type.name === 'paragraph')
+		core.shell.printLayout?.revealDrawing({
+			blockId: String(parent.attrs.id),
+			kind: 'inline',
+			offset: parentOffset,
+		});
+}
 
 export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 	const pane = panes.get(core);
@@ -93,6 +113,7 @@ export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 						if (!button.isConnected) return;
 						const multiple = event.ctrlKey || event.metaKey || event.shiftKey;
 						selectDrawing(live, pos, multiple);
+						revealDrawing(core, live, pos);
 						refresh();
 					});
 					const rename = () => {

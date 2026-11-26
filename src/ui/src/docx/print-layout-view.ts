@@ -14,6 +14,10 @@ import { suppressedLineNumberParagraphs } from './print-line-numbers';
 
 const RELAYOUT_DELAY_MS = 32;
 
+type PrintDrawing =
+	| { blockId: string; kind: 'float'; index: number }
+	| { blockId: string; kind: 'inline'; offset: number };
+
 /** Paginated document projection, with native editing supplied by the ProseMirror input bridge. */
 export interface PrintLayoutController {
 	/** Mount this in the DOM alongside the continuous editing surface. */
@@ -32,6 +36,7 @@ export interface PrintLayoutController {
 	pageElements(): HTMLElement[];
 	pageSnapshot(index: number): HTMLElement | undefined;
 	ensureBlock(id: string, offset: number): void;
+	revealDrawing(drawing: PrintDrawing): void;
 	/** Increments on every layout pass so dependants (the page navigator) know when to rebuild. */
 	layoutVersion(): number;
 	/** Scrolls the given 1-based page to the top of the scroll container. */
@@ -220,6 +225,27 @@ export function createPrintLayoutController(
 		ensureBlock(id, offset) {
 			pinnedPage = pageForBlock?.(id, offset);
 			handle?.showPages(currentPage - 1, pins());
+		},
+		revealDrawing(drawing) {
+			const { blockId } = drawing;
+			const page =
+				drawing.kind === 'float'
+					? result?.pages.findIndex((sheet) =>
+							sheet.floats?.some(
+								(float) => float.blockId === blockId && float.index === drawing.index,
+							),
+						)
+					: pageForBlock?.(blockId, drawing.offset);
+			if (page === undefined || page < 0) return;
+			handle?.showPages(currentPage - 1, [...pins(), page]);
+			const block = `[data-block-id="${CSS.escape(blockId)}"]`;
+			const selector =
+				drawing.kind === 'float'
+					? `.dve-print-float${block}[data-float-index="${drawing.index}"]`
+					: `.dve-print-line${block} .dve-print-picture[data-source-start="${drawing.offset}"]`;
+			pageSheets[page]
+				?.querySelector(selector)
+				?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 		},
 		layoutVersion: () => version,
 		scrollToPage(page) {

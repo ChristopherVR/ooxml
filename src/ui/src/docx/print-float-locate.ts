@@ -57,17 +57,24 @@ export function locateFloat(
 /** The floating object a node selection holds, with its paragraph id and index. */
 export function selectedFloat(state: Pick<EditorState, 'selection' | 'doc'>): Located | undefined {
 	const { selection } = state;
-	if (!(selection instanceof NodeSelection) || !isFloat(selection.node)) return undefined;
-	const $pos = state.doc.resolve(selection.from);
+	return selection instanceof NodeSelection
+		? floatAtPosition(state.doc, selection.from)
+		: undefined;
+}
+
+export function floatAtPosition(doc: ProseMirrorNode, pos: number): Located | undefined {
+	const node = doc.nodeAt(pos);
+	if (!node || !isFloat(node)) return undefined;
+	const $pos = doc.resolve(pos);
 	const paragraph = $pos.parent;
 	if (paragraph.type.name !== 'paragraph') return undefined;
 	let index = 0;
 	paragraph.forEach((child, offset) => {
-		if ($pos.start() + offset < selection.from && countsAsFloat(child)) index++;
+		if (offset < $pos.parentOffset && countsAsFloat(child)) index++;
 	});
 	return {
-		pos: selection.from,
-		node: selection.node,
+		pos,
+		node,
 		blockId: String(paragraph.attrs.id),
 		index,
 	};

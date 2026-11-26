@@ -10,7 +10,7 @@ export async function choosePosition(editor: Locator, value: string) {
 
 export async function openShapes(
 	page: Page,
-	fixture = new URL('./support/shapes.docx', import.meta.url),
+	fixture: URL | Buffer = new URL('./support/shapes.docx', import.meta.url),
 ) {
 	await page.setViewportSize({ width: 2600, height: 950 });
 	await page.goto('/?framework=vanilla');
@@ -19,7 +19,7 @@ export async function openShapes(
 	).setInputFiles({
 		name: 'shapes.docx',
 		mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-		buffer: await readFile(fixture),
+		buffer: fixture instanceof URL ? await readFile(fixture) : fixture,
 	});
 	const editor = page.locator('docx-editor');
 	await expect(editor.locator('.ProseMirror .dve-shape').first()).toBeAttached();
