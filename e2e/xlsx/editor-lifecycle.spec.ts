@@ -103,7 +103,7 @@ test('an editor removed with its context menu open is collected', async ({ page 
 });
 
 test('a reconnected editor still folds its ribbon when the window narrows', async ({ page }) => {
-	await page.setViewportSize({ width: 1800, height: 900 });
+	await page.setViewportSize({ width: 2300, height: 900 });
 	await newWorkbook(page);
 	await reconnect(page);
 	const folded = ribbon(page).locator('.ribbon-panel:not([hidden]) .ribbon-group[data-collapsed]');
