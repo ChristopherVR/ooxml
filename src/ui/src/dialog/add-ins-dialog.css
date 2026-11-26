@@ -169,3 +169,8 @@ button.primary:enabled:hover {
 [slot='footer'] {
 	min-width: var(--office-dialog-button-min-width);
 }
+@media (forced-colors: active) {
+	.pivots button[aria-selected='true'] {
+		border-bottom-color: Highlight;
+	}
+}
