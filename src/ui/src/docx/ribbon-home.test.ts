@@ -3,11 +3,11 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { describe, expect, it, vi } from 'vitest';
 import { steppedFontSize, stepFontSize } from './font-step';
-import { applyRibbonVisibility } from './ribbon-visibility';
+import { applyRibbonVisibility, ribbonControlId } from './ribbon-visibility';
 import { createRibbon } from './ribbon';
 import { schema } from './schema';
 
-const HOME_GROUPS = ['Clipboard', 'Font', 'Paragraph', 'Editing'];
+const HOME_GROUPS = ['Clipboard', 'Font', 'Paragraph', 'Editing', 'Add-ins'];
 
 describe('Home tab layout', () => {
 	it('orders groups as Word does and drops the old Alignment group', () => {
@@ -16,6 +16,14 @@ describe('Home tab layout', () => {
 			(group) => group.dataset.label,
 		);
 		expect(labels).toEqual(HOME_GROUPS);
+	});
+
+	it('uses the My Add-ins customization ID on the Home tab', () => {
+		const ribbon = createRibbon();
+		const button = ribbon.querySelector<HTMLElement>('[data-panel="Home"] [aria-label="Add-ins"]')!;
+		expect(ribbonControlId(button)).toBe('my-add-ins');
+		applyRibbonVisibility(ribbon, true, ['my-add-ins']);
+		expect(button.hasAttribute('data-dve-hidden')).toBe(true);
 	});
 
 	it('moves paragraph spacing to the Layout tab', () => {
