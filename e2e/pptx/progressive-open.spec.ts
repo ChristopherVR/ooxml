@@ -73,7 +73,7 @@ for (const size of [PPTX_OPEN_SMALL, PPTX_OPEN_LARGE]) {
 		await upload(page, size);
 		const title = page
 			.locator(CANVAS_ELEMENT)
-			.filter({ hasText: /^Deck slide 1 shape 1$/u })
+			.getByText('Deck slide 1 shape 1', { exact: true })
 			.first();
 		await expect(title).toBeVisible({ timeout: 45_000 });
 		await armPaintMeasurement(page, 'select', 'pointerdown', '[data-pptx-handle-kind="resize"]');
@@ -89,6 +89,12 @@ for (const size of [PPTX_OPEN_SMALL, PPTX_OPEN_LARGE]) {
 		await editor.press('End');
 		await armPaintMeasurement(page, 'type', 'keydown', INLINE_EDITOR, 'shape 1Z');
 		await editor.press('Z');
+		await expect
+			.poll(() => page.evaluate(() => performance.getEntriesByName('type', 'measure').length))
+			.toBe(1);
+		// Commit the edit before measuring navigation, which can rebuild the slide rail on blur.
+		await editor.blur();
+		await expect(editor).toBeHidden();
 		await armPaintMeasurement(
 			page,
 			'switch',
@@ -133,12 +139,24 @@ for (const initialSlide of [0, 3]) {
 		// Observe the transient nodes in the page before the editable deck replaces them.
 		await page.addInitScript(
 			({ preview, editable, title, slideCount }) => {
+				const thumbnailSelector = '[data-pptx-preview-thumbnail]';
+				let firstFrameScheduled = false;
 				const observer = new MutationObserver(() => {
 					const opening = document.querySelector(preview);
 					if (!opening?.getClientRects().length || document.querySelector(editable)) return;
-					const thumbnails = opening.querySelectorAll<HTMLElement>('[data-pptx-preview-thumbnail]');
+					if (!opening.firstElementChild?.textContent?.includes(title)) return;
+					if (!firstFrameScheduled) {
+						firstFrameScheduled = true;
+						requestAnimationFrame(() => {
+							if (opening.getClientRects().length > 0) {
+								document.documentElement.dataset.pptxFirstFrameThumbnailCount = String(
+									opening.querySelectorAll(thumbnailSelector).length,
+								);
+							}
+						});
+					}
+					const thumbnails = opening.querySelectorAll<HTMLElement>(thumbnailSelector);
 					if (
-						opening.firstElementChild?.textContent?.includes(title) &&
 						thumbnails.length === slideCount &&
 						Array.from(thumbnails).every(
 							(thumb, index) =>
@@ -159,6 +177,10 @@ for (const initialSlide of [0, 3]) {
 		await expect(
 			page.locator(CANVAS_ELEMENT).getByText(title, { exact: true }).first(),
 		).toBeVisible();
+		await expect(page.locator('html')).toHaveAttribute(
+			'data-pptx-first-frame-thumbnail-count',
+			'0',
+		);
 		await expect(page.locator('html')).toHaveAttribute('data-pptx-observed-opening', 'true');
 		await expect(page.locator(PREVIEW)).toBeHidden();
 	});

@@ -29,6 +29,14 @@ export function createProgressiveSlidePreview(options: PreviewOptions) {
 		}
 	}
 
+	async function yieldIfNeeded(view: Window): Promise<void> {
+		if (view.performance.now() - sliceStart >= SLICE_MS) {
+			await idleTurn(view);
+			checkCurrent();
+			sliceStart = view.performance.now();
+		}
+	}
+
 	return {
 		async show(handler: PptxHandler, progress: SlideProgress): Promise<void> {
 			checkCurrent();
@@ -50,19 +58,21 @@ export function createProgressiveSlidePreview(options: PreviewOptions) {
 			if (!preview) {
 				preview = await makePreview(host, options.translate, progress);
 				checkCurrent();
-				await preview.addSlide(handler, progress, true, checkCurrent);
+				await preview.addSlide(handler, progress, checkCurrent, async () => {
+					await afterPaint(view);
+					checkCurrent();
+					sliceStart = view.performance.now();
+				});
 				for (const thumbnail of pendingThumbnails) {
-					await preview.addSlide(handler, thumbnail, false, checkCurrent);
+					await yieldIfNeeded(view);
+					await preview.addSlide(handler, thumbnail, checkCurrent);
 				}
 				pendingThumbnails.length = 0;
-				await afterPaint(view);
-				sliceStart = view.performance.now();
 			} else {
-				await preview.addSlide(handler, progress, false, checkCurrent);
-				if (index + 1 < total && view.performance.now() - sliceStart >= SLICE_MS) {
-					await idleTurn(view);
-					sliceStart = view.performance.now();
-				}
+				await preview.addSlide(handler, progress, checkCurrent);
+			}
+			if (index + 1 < total) {
+				await yieldIfNeeded(view);
 			}
 			checkCurrent();
 		},
@@ -128,11 +138,11 @@ async function makePreview(host: HTMLElement, t: Translator, progress: SlideProg
 	async function addSlide(
 		handler: PptxHandler,
 		{ slide, index }: SlideProgress,
-		first: boolean,
 		checkCurrent: () => void,
+		waitForOpeningPaint?: () => Promise<void>,
 	): Promise<void> {
 		const thumb = thumbs[index];
-		if ((!first && !thumb) || size.width <= 0 || size.height <= 0) {
+		if ((!waitForOpeningPaint && !thumb) || size.width <= 0 || size.height <= 0) {
 			return;
 		}
 		const [resolved] = await resolveImageUrls(handler, [slide]);
@@ -159,13 +169,14 @@ async function makePreview(host: HTMLElement, t: Translator, progress: SlideProg
 				}),
 			);
 		};
-		if (first) {
+		if (waitForOpeningPaint) {
 			draw(canvas, Math.min(1, available / size.width, 320 / size.height));
 			for (const slot of thumbs) {
 				slot.style.width = `${size.width * thumbnailScale}px`;
 				slot.style.height = `${size.height * thumbnailScale}px`;
 			}
 			host.append(root);
+			await waitForOpeningPaint();
 		}
 		if (thumb) {
 			draw(thumb, thumbnailScale);

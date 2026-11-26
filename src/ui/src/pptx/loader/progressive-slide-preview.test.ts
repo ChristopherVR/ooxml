@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 
 import { loadPresentation } from '../dom/load-presentation';
 import { createTranslator } from '../i18n';
@@ -16,6 +16,18 @@ it.each([0, 3, 6])(
 		const host = document.createElement('div');
 		host.dataset.pptxLoadPreviewHost = '';
 		document.body.append(root);
+		const requestFrame = window.requestAnimationFrame.bind(window);
+		let firstFrame: { hasSlide: boolean; thumbnailCount: number } | undefined;
+		const frameSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+			const opening = host.querySelector('[data-pptx-opening-preview]');
+			if (opening && !firstFrame) {
+				firstFrame = {
+					hasSlide: Boolean(opening.firstElementChild?.firstElementChild),
+					thumbnailCount: opening.querySelectorAll('[data-pptx-preview-thumbnail]').length,
+				};
+			}
+			return requestFrame(callback);
+		});
 		const preview = createProgressiveSlidePreview({
 			getRoot: () => root,
 			translate: createTranslator(),
@@ -30,6 +42,7 @@ it.each([0, 3, 6])(
 				},
 			});
 			try {
+				expect(firstFrame).toEqual({ hasSlide: true, thumbnailCount: 0 });
 				expect(host.querySelector('[data-pptx-opening-preview]')?.hasAttribute('aria-hidden')).toBe(
 					true,
 				);
@@ -45,6 +58,7 @@ it.each([0, 3, 6])(
 				loaded.handler.dispose();
 			}
 		} finally {
+			frameSpy.mockRestore();
 			preview.dispose();
 			root.remove();
 		}
