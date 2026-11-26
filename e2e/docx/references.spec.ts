@@ -39,6 +39,18 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 		await target.click();
 	};
 
+	const structure = () =>
+		editor.evaluate((element) =>
+			(element as unknown as { view: EditorView }).view.state.doc.toJSON(),
+		);
+	const expectStableUpdate = async (name: string) => {
+		const inserted = await structure();
+		await run(name);
+		expect(await structure()).toEqual(inserted);
+		await run(name);
+		expect(await structure()).toEqual(inserted);
+	};
+
 	await surface.click();
 	await page.keyboard.insertText('Zebra meets Zebra and Doe v. City.');
 	await editor.getByRole('tab', { name: 'References', exact: true }).click();
@@ -85,17 +97,18 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	await dialog.getByRole('spinbutton', { name: 'Columns', exact: true }).fill('2');
 	await button('OK').click();
 	await expect(surface.locator('p').filter({ hasText: /^Zebra\s+1$/ })).toHaveCount(1);
-	await run('Update Index');
+	await expectStableUpdate('Update Index');
 
 	await surface.press('Control+End');
 	await run('Bibliography');
 	await expect(surface).toContainText('Doe, J. (2020). Field studies. Example Press.');
+	await expectStableUpdate('Update Bibliography');
 	await surface.press('Control+End');
 	await page.keyboard.press('Enter');
 	await run('Insert Table of Authorities');
 	await button('OK').click();
 	await expect(surface.locator('p').filter({ hasText: /^Doe v\. City\s+1$/ })).toHaveCount(1);
-	await run('Update Table of Authorities');
+	await expectStableUpdate('Update Table of Authorities');
 
 	await run('Citation Style');
 	await dialog.getByRole('combobox', { name: 'Citation Style' }).selectOption('MLA');

@@ -125,8 +125,7 @@ export function buildReferenceTable(
 	if (!paragraphs.length)
 		paragraphs.push({ type: 'paragraph', id: '', runs: [{ text: options.empty }] });
 	const first = paragraphs[0];
-	const last = paragraphs.at(-1);
-	if (first && last) {
+	if (first) {
 		const markers = referenceFieldRuns(instruction, []);
 		for (const paragraph of paragraphs)
 			paragraph.runs = paragraph.runs.map((run) => ({
@@ -134,7 +133,7 @@ export function buildReferenceTable(
 				field: { instr: instruction.trim() },
 			}));
 		first.runs.unshift(...markers.slice(0, -1));
-		last.runs.push(...markers.slice(-1));
+		paragraphs.push({ type: 'paragraph', id: '', runs: markers.slice(-1) });
 	}
 	return paragraphs;
 }

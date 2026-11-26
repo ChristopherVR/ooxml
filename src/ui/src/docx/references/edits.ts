@@ -195,8 +195,13 @@ export function changeReferenceTables(
 					if (before.bookmarks) first.bookmarks = before.bookmarks;
 				}
 				if (after?.type === 'paragraph') {
-					last.id = after.id;
-					if (after.bookmarks) last.bookmarks = after.bookmarks;
+					// A separate end paragraph can carry a section break and following body text.
+					// Keep its paragraph properties when refreshing the field result.
+					if (after.runs[0]?.fieldChar === 'end') Object.assign(last, after, { runs: last.runs });
+					else {
+						last.id = after.id;
+						if (after.bookmarks) last.bookmarks = after.bookmarks;
+					}
 				}
 			}
 			for (const paragraph of paragraphs) if (!paragraph.id) paragraph.id = newId();

@@ -65,7 +65,15 @@ test('builds indented and run-in indexes with localized grouping, range, and pag
 	]);
 	const options = { empty: 'None', leader: 'hyphen' as const, page: (id: string) => pages.get(id) };
 	const indented = buildReferenceTable(model, index(), options);
-	expect(text(indented)).toEqual(['Z', 'Zebra', 'A:B\t2', 'Å', 'Ål\t3–5', 'Ångström. See Zebra']);
+	expect(text(indented)).toEqual([
+		'Z',
+		'Zebra',
+		'A:B\t2',
+		'Å',
+		'Ål\t3–5',
+		'Ångström. See Zebra',
+		'',
+	]);
 	expect(indented[2]?.runs.find((run) => run.text === '2')).toMatchObject({
 		bold: true,
 		italic: true,
@@ -122,7 +130,7 @@ test('uses the index section width and inserts one column inside a two-column se
 	expect(location?.start).toBe(2);
 	const updated = buildReferenceTable(reopened, location!.instruction, options);
 	expect(updated[1]?.tabStops).toEqual([{ posTwips: 11_400, align: 'right', leader: 'dot' }]);
-	expect(text(updated)).toEqual(['Z', 'Zebra\t2']);
+	expect(text(updated)).toEqual(['Z', 'Zebra\t2', '']);
 });
 
 test('filters authorities by category, joins short citations, and applies passim and original formatting', () => {
@@ -141,12 +149,15 @@ test('filters authorities by category, joins short citations, and applies passim
 	};
 	const options = { empty: 'None', page: (id: string) => String(Number(id) + 1) };
 	const kept = buildReferenceTable(model, authorityCode(1, true, true), options);
-	expect(text(kept)).toEqual([`${long}\tpassim`]);
+	expect(text(kept)).toEqual([`${long}\tpassim`, '']);
 	expect(kept[0]?.runs.find((run) => run.text === long)).toMatchObject({ italic: true });
 	const plain = buildReferenceTable(model, authorityCode(1, false, false), options);
-	expect(text(plain)).toEqual([`${long}\t1, 2, 3, 4, 5`]);
+	expect(text(plain)).toEqual([`${long}\t1, 2, 3, 4, 5`, '']);
 	expect(plain[0]?.runs.find((run) => run.text === long)?.italic).toBeUndefined();
-	expect(text(buildReferenceTable(model, authorityCode(2, true, true), options))).toEqual(['None']);
+	expect(text(buildReferenceTable(model, authorityCode(2, true, true), options))).toEqual([
+		'None',
+		'',
+	]);
 });
 
 const bibliography: Bibliography = {
@@ -245,8 +256,18 @@ test('saves all reference fields, continuous index columns and the Word source p
 	expect(part?.part).toBe('customXml/item1.xml');
 	expect(part && readBibliographyXml(part.xml)).toEqual(bibliography);
 	expect(reopened.model.sections?.map((item) => item.columns.count)).toEqual([1, 2, 1]);
-	for (const name of ['INDEX', 'BIBLIOGRAPHY', 'TOA'] as const)
-		expect(findReferenceTables(reopened.model.blocks, name)).toHaveLength(1);
+	for (const name of ['INDEX', 'BIBLIOGRAPHY', 'TOA'] as const) {
+		const locations = findReferenceTables(reopened.model.blocks, name);
+		expect(locations).toHaveLength(1);
+		expect(reopened.model.blocks[locations[0]!.end]).toMatchObject({
+			type: 'paragraph',
+			runs: [{ fieldChar: 'end' }],
+		});
+		if (name === 'INDEX')
+			expect(reopened.model.sections?.[1]?.endsAtBlockId).toBe(
+				reopened.model.blocks[locations[0]!.end]?.id,
+			);
+	}
 	const zip = await JSZip.loadAsync(bytes);
 	expect(await zip.file('customXml/itemProps1.xml')?.async('string')).toContain('bibliography');
 	expect(await zip.file('word/_rels/document.xml.rels')?.async('string')).toContain(

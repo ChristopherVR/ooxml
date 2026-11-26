@@ -50,14 +50,14 @@ export function indexSection(
 	const previous =
 		start > first ? (preceding?.type === 'paragraph' ? preceding : blank(newId())) : undefined;
 	const following = end >= last && current === sections.length - 1 ? blank(newId()) : undefined;
-	const result = output.at(-1);
-	if (!result) return undefined;
+	const fieldEnd = output.at(-1);
+	if (!fieldEnd) return undefined;
 	const { pageNumbering, ...rest } = section;
 	const { start: _restart, ...continued } = pageNumbering ?? {};
 	const continuation = { ...rest, type: 'continuous' as const, pageNumbering: continued };
 	const index: SectionProperties = {
 		...(!previous ? section : continuation),
-		endsAtBlockId: result.id,
+		endsAtBlockId: fieldEnd.id,
 		columns: { count: columns, spacingTwips: INDEX_COLUMN_GAP, equalWidth: true },
 	};
 	const next = [...sections];
