@@ -72,6 +72,19 @@
 	color: var(--ribbon-accent-orange);
 }
 
+@media (forced-colors: none) {
+	.ribbon-group button[data-table-command='look'][aria-pressed='true'] {
+		background: var(--office-command-active, color-mix(in srgb, var(--blue) 15%, transparent));
+		color: var(
+			--office-accent-ink,
+			light-dark(var(--blue), color-mix(in srgb, var(--blue) 60%, #fff))
+		);
+	}
+}
+.ribbon-group button[data-table-command='look'][aria-pressed='true'] .ribbon-icon {
+	color: currentColor;
+}
+
 /* Icons never shrink to make room for a two-line caption, so every large icon is the same size. */
 .ribbon-menu > .ribbon-icon,
 .ribbon-large > .ribbon-icon {
