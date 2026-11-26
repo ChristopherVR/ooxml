@@ -7,7 +7,7 @@ import css from './menu-item.css?raw';
 
 /**
  * One menu entry: `command`, `label`, `icon`, `disabled`, `checked` (renders a
- * `menuitemcheckbox`), `title`. Activation emits `office-command` `{ command }`.
+ * `menuitemcheckbox`), `description`, `title`. Activation emits `office-command` `{ command }`.
  */
 export class OfficeUiMenuItem extends OfficeElement {
 	static override shadowRootOptions = { ...LitElement.shadowRootOptions, delegatesFocus: true };
@@ -16,12 +16,14 @@ export class OfficeUiMenuItem extends OfficeElement {
 		label: { type: String },
 		icon: { type: String },
 		command: { type: String },
+		description: { type: String },
 		checked: { type: String },
 		disabled: flag,
 	};
 	declare label: string;
 	declare icon: string | null;
 	declare command: string | null;
+	declare description: string | null;
 	declare checked: string | null;
 	declare disabled: boolean;
 
@@ -35,6 +37,7 @@ export class OfficeUiMenuItem extends OfficeElement {
 		this.label = '';
 		this.icon = null;
 		this.command = null;
+		this.description = null;
 		this.checked = null;
 		this.disabled = false;
 	}
@@ -63,13 +66,17 @@ export class OfficeUiMenuItem extends OfficeElement {
 				tabindex="-1"
 				role=${checkable ? 'menuitemcheckbox' : 'menuitem'}
 				aria-checked=${ifDefined(checkable ? String(on) : undefined)}
+				aria-labelledby=${ifDefined(this.description ? 'label' : undefined)}
+				aria-describedby=${ifDefined(this.description ? 'description' : undefined)}
 				title=${this.getAttribute('title') ?? ''}
 				?disabled=${present(this.disabled)}
 				@click=${this.onClick}
 			>
-				<span class="check" aria-hidden="true">${on ? '✓' : ''}</span>${glyph(this.icon)}<span
-					>${this.label}</span
-				>
+				<span class="check" aria-hidden="true">${on ? '✓' : ''}</span>${glyph(this.icon)}<span>
+					<span id="label">${this.label}</span>${
+						this.description ? html`<span id="description">${this.description}</span>` : ''
+					}
+				</span>
 			</button>
 		`;
 	}

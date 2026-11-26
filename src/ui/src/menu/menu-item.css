@@ -27,8 +27,21 @@ button:focus-visible {
 	outline: none;
 }
 button:disabled {
-	opacity: 0.5;
 	cursor: not-allowed;
+}
+button:disabled:not([aria-describedby]),
+button:disabled[aria-describedby] #label,
+button:disabled[aria-describedby] .check,
+button:disabled[aria-describedby] svg {
+	opacity: 0.5;
+}
+#description {
+	display: block;
+	max-inline-size: 32ch;
+	padding-block-end: var(--office-space-1);
+	color: var(--office-muted-foreground);
+	font-size: var(--office-font-size-xs);
+	white-space: normal;
 }
 .check {
 	width: var(--office-icon-size);

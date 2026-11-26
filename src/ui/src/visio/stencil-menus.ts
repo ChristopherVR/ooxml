@@ -49,7 +49,7 @@ export function bindStencilMenus(
 		const item = menuItem(doc, command, t(label));
 		if (reason) {
 			item.setAttribute('disabled', '');
-			item.title = t(reason);
+			item.setAttribute('description', t(reason));
 		}
 		return item;
 	};
@@ -134,8 +134,12 @@ export function bindStencilMenus(
 		if (command === 'save-stencil-file') run({ type: 'save', stencil: menuSection });
 		if (command === 'undo-stencil') run({ type: 'undo', stencil: menuSection });
 		if (command === 'edit-stencil') {
-			if (editing.has(menuSection)) editing.delete(menuSection);
+			const wasEditing = editing.has(menuSection);
+			if (wasEditing) editing.delete(menuSection);
 			else editing.add(menuSection);
+			stencilMenu
+				.querySelector('[command="edit-stencil"]')
+				?.setAttribute('checked', String(!wasEditing));
 		}
 		if (command === 'add-selection' && editing.has(menuSection)) {
 			const drawing = drawingSource();

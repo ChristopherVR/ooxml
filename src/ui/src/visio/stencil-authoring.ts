@@ -5,6 +5,7 @@ import { ViewerDialog } from './viewer-dialog';
 import { MY_SHAPES_ID, MY_SHAPES_NAME, type StencilFiles } from './stencil-files';
 
 type Translate = (text: string) => string;
+let nextNameError = 0;
 
 export type StencilAction =
 	| { type: 'new' }
@@ -131,36 +132,46 @@ function ask(
 	t: Translate,
 ): Promise<string | undefined> {
 	return new Promise((resolve) => {
+		const ok = t('OK');
+		const isText = heading === 'Edit Master';
+		const field = pane.ownerDocument.createElement('label');
+		const input = pane.ownerDocument.createElement(isText ? 'textarea' : 'input');
+		const submit = () => {
+			if (!isText && !input.value.trim()) {
+				input.setAttribute('aria-invalid', 'true');
+				input.setAttribute('aria-describedby', dialog.error.id);
+				dialog.error.textContent = t('Enter a name.');
+				input.focus();
+				return;
+			}
+			resolve(input.value);
+			dialog.close();
+		};
 		const dialog = new ViewerDialog(
 			pane,
 			'stencil-dialog',
 			t(heading),
-			[t('OK'), t('Cancel')],
+			[ok, t('Cancel')],
 			(button) => {
-				if (button === t('OK') && !isText && !input.value.trim()) {
-					dialog.error.textContent = t('Enter a name.');
-					return;
-				}
-				resolve(button === t('OK') ? input.value : undefined);
-				dialog.close();
+				if (button === ok) submit();
+				else dialog.close();
 			},
 		);
-		const field = pane.ownerDocument.createElement('label');
-		const isText = heading === 'Edit Master';
-		const input = pane.ownerDocument.createElement(isText ? 'textarea' : 'input');
+		dialog.error.id = `stencil-name-error-${++nextNameError}`;
 		input.maxLength = isText ? 4096 : 255;
 		input.value = initial;
 		input.setAttribute('aria-label', t(label));
 		input.addEventListener('keydown', (event) => {
 			if (!isText && 'key' in event && event.key === 'Enter') {
 				event.preventDefault();
-				if (!input.value.trim()) {
-					dialog.error.textContent = t('Enter a name.');
-					return;
-				}
-				resolve(input.value);
-				dialog.close();
+				submit();
 			}
+		});
+		input.addEventListener('input', () => {
+			if (!input.value.trim() || !input.hasAttribute('aria-invalid')) return;
+			input.removeAttribute('aria-invalid');
+			input.removeAttribute('aria-describedby');
+			dialog.error.textContent = '';
 		});
 		field.textContent = t(label);
 		field.append(input);

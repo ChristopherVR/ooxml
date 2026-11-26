@@ -106,3 +106,53 @@ test('confirms deletion and undoes the latest edit through the stencil or master
 	await expect(master).toHaveText('Valve');
 	await expect(title).toBeFocused();
 });
+
+test('localizes German stencil labels and exposes menu and input states', async ({ page }) => {
+	test.setTimeout(60_000);
+	const { viewer, more, menu, dialog } = await drawingWithShape(page);
+	await viewer.evaluate((node) => node.setAttribute('locale', 'de-DE'));
+	await more.press('Enter');
+	await menu('more', 'new-stencil').getByRole('menuitem', { name: 'Neue Schablone' }).click();
+	await expect(dialog.getByRole('button', { name: 'Abbrechen' })).toBeVisible();
+	const confirm = dialog.getByRole('button', { name: 'Bestätigen' });
+	const field = dialog.getByRole('textbox', { name: 'Schablonenname' });
+	await field.fill('   ');
+	await confirm.click();
+	await expect(field).toBeFocused();
+	await expect(field).toHaveAttribute('aria-invalid', 'true');
+	await expect(field).toHaveAccessibleDescription('Geben Sie einen Namen ein.');
+	await field.fill('Valves');
+	await expect(field).not.toHaveAttribute('aria-invalid');
+	await confirm.click();
+	const section = viewer.getByRole('region', { name: 'Valves' });
+	await expect(section.getByRole('button', { name: 'Valves schließen' })).toBeVisible();
+	const actions = section.getByRole('button', { name: 'Schablonenaktionen' });
+	await actions.press('Enter');
+	const edit = menu('stencil', 'edit-stencil').getByRole('menuitemcheckbox', {
+		name: 'Schablone bearbeiten',
+		checked: true,
+	});
+	await expect(edit.getByText('✓')).toBeVisible();
+	await edit.click();
+	await actions.press('Enter');
+	await expect(
+		menu('stencil', 'edit-stencil').getByRole('menuitemcheckbox', {
+			name: 'Schablone bearbeiten',
+			checked: false,
+		}),
+	).toBeVisible();
+	const add = menu('stencil', 'add-selection').getByRole('menuitem', {
+		name: 'Ausgewählte Form hinzufügen',
+	});
+	const reason = 'Aktivieren Sie die Schablonenbearbeitung, um Masterformen zu ändern.';
+	await expect(add).toBeDisabled();
+	await expect(add).toHaveAccessibleDescription(reason);
+	await expect(add.getByText(reason)).toBeVisible();
+	await page.keyboard.press('Escape');
+	await viewer.locator('[data-stencil="basic"] [data-master="rectangle"]').press('Shift+F10');
+	await expect(
+		menu('master', 'my-shapes').getByRole('menuitem', {
+			name: 'Zu „Meine Shapes“ hinzufügen',
+		}),
+	).toBeVisible();
+});
