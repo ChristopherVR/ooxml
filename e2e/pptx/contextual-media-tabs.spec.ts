@@ -110,6 +110,30 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	expect(xml).toContain('cmd="playFrom(0.0)"');
 });
 
+test('a media dialog returns focus to its ribbon control inside a shadow root', async ({
+	page,
+}) => {
+	await loadDeck(page, fixture('media-bookmark-trigger-editable.pptx'));
+	await selectElement(page, elementsOfType(page, 'media player').first());
+	await tab(page, 'playback').click();
+	const remove = control(page, 'playback.bookmarks.remove').getByRole('button');
+	await expect(remove).toBeEnabled();
+	await remove.evaluate((button) => {
+		const command = (button.getRootNode() as ShadowRoot).host;
+		const strip = command.parentElement!;
+		const wrapper = document.createElement('div');
+		strip.before(wrapper);
+		wrapper.attachShadow({ mode: 'open' }).append(strip);
+	});
+	await remove.focus();
+	await remove.press('Enter');
+	const dialog = page.locator('[data-media-ribbon-dialog="remove"]');
+	await expect(dialog).toBeVisible();
+	await dialog.getByRole('button', { name: 'Cancel' }).click();
+	await expect(dialog).toHaveCount(0);
+	await expect(remove).toBeFocused();
+});
+
 test('audio shows its own Format tab and media-specific playback options', async ({ page }) => {
 	await loadDeck(page, fixture('audio-embed.pptx'));
 	await selectElement(page, elementsOfType(page, 'media player').first());

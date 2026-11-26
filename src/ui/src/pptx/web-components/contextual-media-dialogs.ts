@@ -1,5 +1,6 @@
 import { MAX_PICTURE_EDIT_BYTES, readPictureRasterHeader } from 'ooxml-core/pptx';
 import type { MediaPptxElement } from 'ooxml-core/pptx';
+import { modalActiveElement } from '../../dialog/focus';
 import { createInsertDialogFrame } from '../../dialog/insert-dialog-frame';
 import { mediaTrimEndAbsoluteMs, mediaTrimEndMsFromAbsoluteMs } from '../render/media-trim-range';
 import { ribbonMediaNode } from './contextual-media-ribbon';
@@ -40,15 +41,15 @@ export function runMediaRibbonCommand(
 		crop: text('pptx.image.crop', 'Crop'),
 	}[kind];
 	let apply = () => {};
+	const focus = modalActiveElement(host.getRootNode() as Document | ShadowRoot);
 	const frame = createInsertDialogFrame(host, body, () => apply(), close);
 	frame.dialog.dataset.mediaRibbonDialog = kind;
-	const focus = host.shadowRoot?.activeElement ?? doc.activeElement;
 	signal.addEventListener(
 		'abort',
 		() => {
 			frame.dialog.close();
 			frame.dialog.remove();
-			if (focus instanceof HTMLElement) queueMicrotask(() => focus.focus());
+			if (focus instanceof HTMLElement) queueMicrotask(() => focus.isConnected && focus.focus());
 		},
 		{ once: true },
 	);

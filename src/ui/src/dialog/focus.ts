@@ -48,8 +48,8 @@ function focusableElements(root: Element | ShadowRoot, found: HTMLElement[] = []
 }
 
 /** The focused element, resolved through nested open shadow roots. */
-function deepActiveElement(doc: Document): Element | null {
-	let active = doc.activeElement;
+function deepActiveElement(root: Document | ShadowRoot): Element | null {
+	let active = root.activeElement;
 	while (active?.shadowRoot?.activeElement) {
 		active = active.shadowRoot.activeElement;
 	}
@@ -67,8 +67,8 @@ export function modalFocusableElements(panel: HTMLElement): HTMLElement[] {
 }
 
 /** The focused element of `doc`, resolved through nested open shadow roots. */
-export function modalActiveElement(doc: Document): Element | null {
-	return deepActiveElement(doc);
+export function modalActiveElement(root: Document | ShadowRoot): Element | null {
+	return deepActiveElement(root);
 }
 
 /** `panel.contains` across shadow boundaries and slots. */
