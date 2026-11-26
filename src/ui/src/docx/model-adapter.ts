@@ -31,8 +31,8 @@ import {
 	tableControl,
 	tableNode,
 	tableFormattingFromNode,
+	tablePropertiesFromNode,
 } from './table-model-adapter';
-import { parseBordersJson } from 'ooxml-core/docx/ui';
 import { sectionLayoutJson, sectionsFromLayout } from 'ooxml-core/docx';
 import { sectionsOf } from './section-commands';
 import { sectionPartsJson, restoreSectionParts } from 'ooxml-core/docx/ui';
@@ -116,11 +116,6 @@ export function modelToDoc(model: DocumentModel) {
 	);
 }
 
-/** A table inserted in the editor keeps the borders it was created with (see insertTable). */
-function tableBordersFromNode(value: unknown): Partial<Table> {
-	const borders = parseBordersJson(value);
-	return borders ? { borders: borders as NonNullable<Table['borders']> } : {};
-}
 /**
  * A document with no recorded section layout (a new document nobody changed page setup on) has no
  * sections of its own, but header/footer content added since must survive: one section is
@@ -302,8 +297,6 @@ export function docToModel(
 					typeof node.attrs.tableStyleId === 'string' ? node.attrs.tableStyleId : priorStyle;
 				const grid = prior ? undefined : gridOf(node);
 				blocks.push({
-					// Table-level properties (grid, width, borders, style, look) have no editor node;
-					// carry them over from the prior model so editing cell text never drops them.
 					...(prior
 						? {
 								...descriptors,
@@ -334,12 +327,7 @@ export function docToModel(
 					type: 'table',
 					id,
 					...(style && { style }),
-					...(node.attrs.tableLook && { look: node.attrs.tableLook }),
-					...(node.attrs.tableLayout && { layout: node.attrs.tableLayout }),
-					...(node.attrs.grid && { grid: JSON.parse(node.attrs.grid) }),
-					...(node.attrs.widthTwips !== null && { widthTwips: node.attrs.widthTwips }),
-					...(node.attrs.widthPercent !== null && { widthPercent: node.attrs.widthPercent }),
-					...tableBordersFromNode(node.attrs.borders),
+					...tablePropertiesFromNode(node, prior),
 					rows: convertSimpleTable(node, asParagraph, prior),
 					...tableFormattingFromNode(node),
 					...(node.attrs.structureEditable === false ? { structureEditable: false } : {}),

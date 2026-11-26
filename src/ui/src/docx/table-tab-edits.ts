@@ -34,6 +34,7 @@ export function patchTableNode(
 	};
 	assign(pos, node, {
 		...tableViewAttrs(table),
+		tablePropertiesKnown: true,
 		tableStyleId: table.style ?? '',
 		tableLook: table.look ?? null,
 		tableLayout: table.layout ?? null,

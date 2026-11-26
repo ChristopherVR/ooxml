@@ -2,10 +2,50 @@
 import { twips } from 'ooxml-core/docx';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { createDocument, loadDocx, type DocumentModel, type Table } from 'ooxml-core/docx';
+import {
+	createDocument,
+	loadDocx,
+	saveDocx,
+	type DocumentModel,
+	type Table,
+} from 'ooxml-core/docx';
 import { EditorState } from 'prosemirror-state';
 import { docToModel, modelToDoc } from './model-adapter';
 import { at } from './test-support';
+
+it('keeps authored table properties when an older collaboration client omits them', async () => {
+	const model = createDocument();
+	const properties = {
+		look: { firstRow: true, lastColumn: true },
+		layout: 'fixed',
+		grid: [twips(2400)],
+		widthTwips: twips(2400),
+		borders: { top: { style: 'double', color: '#123456' } },
+	} as const;
+	model.blocks = [
+		{
+			type: 'table',
+			id: 'legacy',
+			...properties,
+			grid: [...properties.grid],
+			rows: [[{ paragraphs: [{ type: 'paragraph', id: 'cell', runs: [{ text: 'Cell' }] }] }]],
+		},
+	];
+	const doc = modelToDoc(model);
+	const source = doc.firstChild!;
+	const legacy = doc.type.create(doc.attrs, [source.type.create({ id: 'legacy' }, source.content)]);
+	const loaded = await loadDocx(await saveDocx(docToModel(legacy, model)));
+	expect(loaded.model.blocks[0]).toMatchObject({
+		...properties,
+		borders: { top: expect.objectContaining(properties.borders.top) },
+	});
+	const current = EditorState.create({ doc })
+		.tr.setNodeAttribute(0, 'widthTwips', null)
+		.setNodeAttribute(0, 'widthPercent', 1);
+	const updated = docToModel(current.doc, model).blocks[0];
+	expect(updated).toMatchObject({ widthPercent: 1 });
+	expect(updated).not.toHaveProperty('widthTwips');
+});
 
 function mergedTableModel(): DocumentModel {
 	const model = createDocument();

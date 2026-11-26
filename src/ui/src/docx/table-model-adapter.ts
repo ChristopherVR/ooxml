@@ -13,8 +13,9 @@ import type {
 } from 'ooxml-core/docx';
 import { schema } from './schema';
 import { twips } from 'ooxml-core/units';
-import { tableCellViews, tableGrid, tableViewAttrs } from 'ooxml-core/docx/ui';
+import { parseBordersJson, tableCellViews, tableGrid, tableViewAttrs } from 'ooxml-core/docx/ui';
 import { convertRestructuredTable, structureChanged } from './table-restructure-convert';
+import { gridOf } from './table-restructure';
 
 function cellKey(cell: TableCell): string {
 	return cell.paragraphs[0]?.id ?? '';
@@ -76,6 +77,7 @@ export function tableNode(
 		'table',
 		{
 			id: block.id,
+			tablePropertiesKnown: true,
 			tableStyleId: block.style ?? '',
 			tableLook: block.look ?? null,
 			tableLayout: block.layout ?? null,
@@ -94,6 +96,26 @@ export function tableNode(
 		},
 		rows,
 	);
+}
+
+/** Older collaboration nodes omitted table properties. Current nodes can intentionally clear them. */
+export function tablePropertiesFromNode(node: ProseMirrorNode, prior?: Table): Partial<Table> {
+	const { attrs } = node;
+	const fallback = attrs.tablePropertiesKnown ? undefined : prior;
+	const look = attrs.tableLook ?? fallback?.look;
+	const layout = attrs.tableLayout ?? fallback?.layout;
+	const grid = gridOf(node)?.map(twips) ?? fallback?.grid;
+	const widthTwips = attrs.widthTwips ?? fallback?.widthTwips;
+	const widthPercent = attrs.widthPercent ?? fallback?.widthPercent;
+	const borders = parseBordersJson(attrs.borders) ?? fallback?.borders;
+	return {
+		...(look && { look }),
+		...(layout && { layout }),
+		...(grid && { grid }),
+		...(widthTwips != null && { widthTwips }),
+		...(widthPercent != null && { widthPercent }),
+		...(borders && { borders: borders as NonNullable<Table['borders']> }),
+	};
 }
 
 /**

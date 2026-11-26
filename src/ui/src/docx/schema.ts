@@ -277,6 +277,7 @@ export const schema = new Schema({
 			attrs: {
 				id: { default: '' },
 				tableStyleId: { default: null },
+				tablePropertiesKnown: { default: false },
 				tableLook: { default: null },
 				tableLayout: { default: null },
 				starterGrid: { default: false },
