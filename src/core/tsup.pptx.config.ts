@@ -58,7 +58,6 @@ const shared: Options = {
 		'fs',
 		'path',
 		'node-forge',
-		'xml-crypto',
 		'@xmldom/xmldom',
 		'@napi-rs/canvas',
 		'crypto',

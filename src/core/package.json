@@ -377,17 +377,13 @@
 	},
 	"peerDependencies": {
 		"@napi-rs/canvas": "^1.0.9",
-		"node-forge": "^1.3.0",
-		"xml-crypto": "^6.0.0"
+		"node-forge": "^1.3.0"
 	},
 	"peerDependenciesMeta": {
 		"@napi-rs/canvas": {
 			"optional": true
 		},
 		"node-forge": {
-			"optional": true
-		},
-		"xml-crypto": {
 			"optional": true
 		}
 	},
