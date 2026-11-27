@@ -154,6 +154,28 @@ describe('Word line break references', () => {
 			);
 		},
 	);
+
+	it.each([
+		{ split: 1, shrinkPt: 12, fits: true },
+		{ split: 2, shrinkPt: 12, fits: true },
+		{ split: 3, shrinkPt: 12, fits: true },
+		{ split: 2, shrinkPt: 14.4, fits: false },
+	])(
+		'squeezes for a word split across runs at $split as for the whole word ($shrinkPt pt)',
+		({ split, shrinkPt, fits }) => {
+			// Word 16 fits "tempor" whether it is one run or "temp" + "or" (issue #364).
+			const prefix = '0000 aa aa aa aa aa aa aa aa aa';
+			const first = `${prefix} MARK`;
+			const lines = wraps('', first.length * 7.2 - shrinkPt, {
+				align: 'justify',
+				runs: [
+					{ text: `${prefix} ${'MARK'.slice(0, split)}`, fontSizePt: 12 },
+					{ text: `${'MARK'.slice(split)} extra`, fontSizePt: 12 },
+				],
+			});
+			expect(lines[0]).toBe(fits ? first : prefix);
+		},
+	);
 });
 
 describe('space between paragraphs', () => {

@@ -367,6 +367,28 @@ function measureParagraph(
 		widths[index] = Infinity;
 	}
 
+	/**
+	 * Advance of the word `tokens[index]` belongs to, with the space before it: the squeeze budget of
+	 * a word split across runs is the whole word's, so a run boundary inside it never moves a break.
+	 */
+	function wholeWordPx(index: number, advance: number): number {
+		let total = advance;
+		let first = placed.length;
+		let piece = tokens[index];
+		while (piece?.glue && first > 0 && placed[first - 1]?.token.kind === 'word') {
+			first--;
+			const entry = expectDefined(placed[first], 'placed word piece');
+			total += entry.widthPx;
+			piece = entry.token;
+		}
+		for (let next = index + 1; tokens[next]?.kind === 'word' && tokens[next]?.glue; next++) {
+			const width = widths[next] ?? 0;
+			if (Number.isFinite(width)) total += width;
+		}
+		const before = placed[first - 1];
+		return total + (before?.token.kind === 'space' ? before.widthPx : 0);
+	}
+
 	for (let tokenIndex = startIndex; tokenIndex < tokens.length; tokenIndex++) {
 		const token = expectDefined(tokens[tokenIndex], 'token index');
 		tokenCursor = tokenIndex + 1;
@@ -444,13 +466,11 @@ function measureParagraph(
 		// internal (i.e. this token fits after it); a trailing space at an actual
 		// wrap point is trimmed in flushLine instead, so it must not be
 		// pre-subtracted here.
-		const previous = placed.at(-1);
-		const wordGapPx = previous?.token.kind === 'space' ? previous.widthPx : 0;
 		const squeezePx =
 			effectiveAlign === 'justify' &&
 			paragraph.squeezeJustifiedSpaces !== false &&
 			token.kind === 'word'
-				? Math.min(lineSpacePx * SPACE_SHRINK, (advance + wordGapPx) * WORD_SHRINK)
+				? Math.min(lineSpacePx * SPACE_SHRINK, wholeWordPx(tokenIndex, advance) * WORD_SHRINK)
 				: 0;
 		// A nearly fitting final line of a justified text box should not turn into
 		// a stretched nonfinal line. Leave normal word-break decisions alone.
