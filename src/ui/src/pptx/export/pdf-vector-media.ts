@@ -5,7 +5,7 @@
  * picture, not the clip's first frame. The export draws what the stage shows.
  */
 import { decodePdfImage, drawableToPdfImage } from '../../export/pdf-image';
-import type { PdfImageResource } from '../../export/pdf-vector';
+import type { PdfImageResource } from 'ooxml-core/pdf/write';
 
 /** `HTMLMediaElement.HAVE_CURRENT_DATA`: a frame for the current position is decoded. */
 const HAVE_CURRENT_DATA = 2;

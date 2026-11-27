@@ -18,7 +18,8 @@
 			"#xpath-runtime": ["./xml/xpath-runtime.ts"],
 			"#inkml-runtime": ["./drawingml/inkml/runtime.ts"],
 			"ooxml-core/pptx": ["./pptx/index.ts"],
-			"ooxml-core/math": ["./math/index.ts"]
+			"ooxml-core/math": ["./math/index.ts"],
+			"ooxml-core/xml": ["./xml/public.ts"]
 		}
 	},
 	"include": ["**/*.ts"],

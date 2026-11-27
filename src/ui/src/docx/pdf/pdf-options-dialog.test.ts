@@ -6,7 +6,7 @@ import type { EditorView } from 'prosemirror-view';
 import { DocxEditorElement, registerDocxEditor } from '../index';
 import { ribbonFile } from '../test-support';
 import { createPdfOptionsDialog } from './pdf-options-dialog';
-import type { DocxPdfResult } from './export-pdf';
+import type { DocxPdfResult } from 'ooxml-core/docx/pdf-export';
 
 registerDocxEditor();
 afterEach(() => document.body.replaceChildren());

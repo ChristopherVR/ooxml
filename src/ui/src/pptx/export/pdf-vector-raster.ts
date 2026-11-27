@@ -6,7 +6,7 @@
  * the binding's html2canvas driver); the live stage is put back exactly as it was.
  */
 import { drawableToPdfImage } from '../../export/pdf-image';
-import type { PdfImageResource } from '../../export/pdf-vector';
+import type { PdfImageResource } from 'ooxml-core/pdf/write';
 import type {
 	ExternalFontFaceCssResult,
 	FontStyleDocumentLike,

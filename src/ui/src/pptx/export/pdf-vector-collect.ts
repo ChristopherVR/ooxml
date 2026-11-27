@@ -7,9 +7,9 @@
  * transforms neutralised so text boxes are measured unrotated; each element's matrix is
  * reapplied when painting.
  */
-import type { PdfFontSet } from '../../export/pdf-embedded-font';
+import type { PdfFontSet } from 'ooxml-core/pdf/write';
 import { decodePdfImage, drawableToPdfImage } from '../../export/pdf-image';
-import type { PdfImageResource } from '../../export/pdf-vector';
+import type { PdfImageResource } from 'ooxml-core/pdf/write';
 import { withAuthoredStrokeWidths } from '../render/device-pixel-stroke';
 import { isExportIgnoredElement } from '../render/export-clone';
 import {

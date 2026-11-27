@@ -93,7 +93,7 @@ import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
 import { exportPagePng } from './viewer-export';
 import { pdfOptionsFor } from './viewer-pdf-options';
-import type { PdfFontFile } from '../export/pdf-embedded-font';
+import type { PdfFontFile } from 'ooxml-core/pdf/write';
 import { applyHostRibbonTabs } from '../embedding/host-ribbon-tabs';
 import {
 	createPrintSnapshot,

@@ -3,7 +3,7 @@
  * dialog) and the export options they stand for. DOM-free, so the mapping is tested on its own.
  */
 import type { EditorPdfOptions } from './editor-pdf';
-import type { DocxPdfMarkupBalloons } from './export-pdf';
+import type { DocxPdfMarkupBalloons } from 'ooxml-core/docx/pdf-export';
 
 export type PdfRangeChoice = 'all' | 'current' | 'selection' | 'pages';
 

@@ -7,12 +7,12 @@
  * can write (drawn as a picture by the collector) is kept as an invisible text layer in a glyphless
  * font (`pdf-text-layer-font.ts`), so it stays searchable. Pure.
  */
-import type { PdfFontSet } from '../../export/pdf-embedded-font';
-import { pdfTextWidth } from '../../export/pdf-fonts';
-import { pathOperators, parsePath } from '../../export/pdf-path';
-import { drawSvgSubtree } from '../../export/pdf-svg';
-import { PdfTextLayerFont } from '../../export/pdf-text-layer-font';
-import { PdfVectorPage } from '../../export/pdf-vector';
+import type { PdfFontSet } from 'ooxml-core/pdf/write';
+import { pdfTextWidth } from 'ooxml-core/pdf/write';
+import { pathOperators, parsePath } from 'ooxml-core/pdf/write';
+import { drawSvgSubtree } from 'ooxml-core/pdf/write';
+import { PdfTextLayerFont } from 'ooxml-core/pdf/write';
+import { PdfVectorPage } from 'ooxml-core/pdf/write';
 import { PdfDiagnosticSet, type PdfExportDiagnostic } from './pdf-export-diagnostics';
 import type { DisplayItem, PdfClip, TextItem } from './pdf-vector-display-list';
 import { primaryFamily, resolvePdfTextFont } from './pdf-text-font';

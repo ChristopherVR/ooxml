@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { demoDocument } from 'ooxml-core/visio/ui';
 import { exportPageSvg } from './export-svg';
-import { buildVectorPdf, PdfVectorPage } from '../export/pdf-vector';
-import { convertSvgPage } from '../export/pdf-svg';
-import { PdfFontSet } from '../export/pdf-embedded-font';
+import { buildVectorPdf, PdfVectorPage } from 'ooxml-core/pdf/write';
+import { convertSvgPage } from 'ooxml-core/pdf/write';
+import { PdfFontSet } from 'ooxml-core/pdf/write';
 import { existsSync, readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { exportDocumentPdfDetailed, pdfPageIndexes } from './viewer-pdf';

@@ -191,6 +191,11 @@
 			"import": "./dist/docx/pdf-convert/index.mjs",
 			"require": "./dist/docx/pdf-convert/index.cjs"
 		},
+		"./docx/pdf-export": {
+			"types": "./dist/docx/pdf-export/index.d.ts",
+			"import": "./dist/docx/pdf-export/index.mjs",
+			"require": "./dist/docx/pdf-export/index.cjs"
+		},
 		"./docx/pdf-import": {
 			"types": "./dist/docx/pdf-import/index.d.ts",
 			"import": "./dist/docx/pdf-import/index.mjs",
@@ -200,6 +205,11 @@
 			"types": "./dist/pdf/index.d.ts",
 			"import": "./dist/pdf/index.mjs",
 			"require": "./dist/pdf/index.cjs"
+		},
+		"./pdf/write": {
+			"types": "./dist/pdf/write/index.d.ts",
+			"import": "./dist/pdf/write/index.mjs",
+			"require": "./dist/pdf/write/index.cjs"
 		},
 		"./visio": {
 			"types": "./dist/visio/index.d.ts",

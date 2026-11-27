@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { PDF_SVG_NOTE_CODES } from '../../export/pdf-svg-notes';
+import { PDF_SVG_NOTE_CODES } from 'ooxml-core/pdf/write';
 import { translationsEn } from '../i18n/translations-en';
 import { createTranslator } from '../i18n/translator';
 import * as pdfVectorExportEntry from './pdf-vector-export-entry';

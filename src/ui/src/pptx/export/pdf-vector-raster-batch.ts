@@ -9,7 +9,7 @@
  * failed draw), so the html2canvas fallback still sees the live stage isolated as it always has.
  */
 import { drawableToPdfImage } from '../../export/pdf-image';
-import type { PdfImageResource } from '../../export/pdf-vector';
+import type { PdfImageResource } from 'ooxml-core/pdf/write';
 import { collectExternalFontFaceCss } from '../render/foreign-object-font-embed';
 import type {
 	ExternalFontFaceCssResult,

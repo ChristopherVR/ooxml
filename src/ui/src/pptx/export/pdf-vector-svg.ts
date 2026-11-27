@@ -108,4 +108,4 @@ export function normalizeInlineSvg(svg: SVGSVGElement): Element {
 	return copy;
 }
 
-export { viewBoxMatrix } from '../../export/pdf-svg-viewbox';
+export { viewBoxMatrix } from 'ooxml-core/pdf/write';

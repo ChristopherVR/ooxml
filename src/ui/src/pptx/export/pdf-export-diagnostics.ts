@@ -4,7 +4,7 @@
  * `pptx.pdfExport.diagnostic.<code>` keys). The collector and painter add to a
  * {@link PdfDiagnosticSet}; the export result carries the list. Framework-free.
  */
-import { PDF_SVG_NOTE_CODES, type PdfSvgNoteCode } from '../../export/pdf-svg-notes';
+import { PDF_SVG_NOTE_CODES, type PdfSvgNoteCode } from 'ooxml-core/pdf/write';
 
 /** An element (or its effect) is drawn as a picture of just that element. */
 export const PDF_PICTURE_CODES = [

@@ -9,8 +9,8 @@
  * identical to it.
  */
 import { collectLocalFontFiles } from '../../export/pdf-font-faces';
-import { PdfFontSet, type PdfFontFile } from '../../export/pdf-embedded-font';
-import { buildVectorPdf } from '../../export/pdf-vector';
+import { PdfFontSet, type PdfFontFile } from 'ooxml-core/pdf/write';
+import { buildVectorPdf } from 'ooxml-core/pdf/write';
 import type { SlideSizeEmu } from '../render/slide-size';
 import type { CanvasSize } from '../types';
 import { distinctPdfDiagnostics, type PdfExportDiagnostic } from './pdf-export-diagnostics';

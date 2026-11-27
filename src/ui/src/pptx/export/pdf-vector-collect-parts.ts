@@ -3,9 +3,9 @@
  * why it needs a picture, its content box, the bounds a picture of it covers, and its inline
  * SVG as a display item. The diagnostic codes of each reason live here too.
  */
-import { collectSvgImages, drawSvgSubtree } from '../../export/pdf-svg';
-import { PdfFallback } from '../../export/pdf-svg-style';
-import { PdfVectorPage, type PdfImageResource } from '../../export/pdf-vector';
+import { collectSvgImages, drawSvgSubtree } from 'ooxml-core/pdf/write';
+import { PdfFallback } from 'ooxml-core/pdf/write';
+import { PdfVectorPage, type PdfImageResource } from 'ooxml-core/pdf/write';
 import type { PdfExportDiagnosticCode } from './pdf-export-diagnostics';
 import { SHADOW_REASON } from './pdf-vector-box';
 import { roundedRectPath } from './pdf-vector-css';

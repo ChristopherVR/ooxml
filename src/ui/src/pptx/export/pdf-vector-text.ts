@@ -4,7 +4,7 @@
  * the stage's transforms are neutralised, so the boxes are the untransformed layout and the
  * element's matrix is applied when painting.
  */
-import type { PdfFontSet } from '../../export/pdf-embedded-font';
+import type { PdfFontSet } from 'ooxml-core/pdf/write';
 import type { PdfExportDiagnosticCode } from './pdf-export-diagnostics';
 import { cssColor } from './pdf-vector-css';
 import { canWritePdfText } from './pdf-vector-paint';

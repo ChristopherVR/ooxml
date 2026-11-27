@@ -3,7 +3,7 @@
  * samples with an optional alpha plane, both Flate-compressed when the browser has
  * `CompressionStream`. Nothing is fetched: only `data:` and `blob:` sources are decoded.
  */
-import type { PdfImageResource } from './pdf-vector';
+import type { PdfImageResource } from 'ooxml-core/pdf/write';
 
 /** The longest side a decoded picture keeps (larger pictures are downscaled). */
 export const PDF_MAX_IMAGE_SIDE = 2048;

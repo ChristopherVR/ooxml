@@ -3,7 +3,7 @@
  * browser's own image decoder, into RGBA. Nothing is fetched: the bytes are decoded in memory.
  * Returns `undefined` where the browser cannot decode the format (EMF, WMF) or has no canvas.
  */
-import type { DecodedPicture } from './pdf-pictures';
+import type { DecodedPicture } from 'ooxml-core/docx/pdf-export';
 
 /** The longest side a decoded picture keeps, as the other PDF exports cap it. */
 const MAX_SIDE = 4096;

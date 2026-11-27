@@ -3,7 +3,8 @@ import { collectLocalFontFiles } from '../../export/pdf-font-faces';
 import { currentModel } from '../current-model';
 import type { EditorCore } from '../editor-core';
 import { decodePictureInBrowser } from './browser-picture-decoder';
-import { exportDocxPdf, type DocxPdfOptions, type DocxPdfResult } from './export-pdf';
+import type { DocxPdfOptions, DocxPdfResult } from 'ooxml-core/docx/pdf-export';
+import { exportDocxPdf } from './export-pdf-entry';
 import { editorPageStatus } from './pdf-context';
 import { selectionModel } from './selection-model';
 

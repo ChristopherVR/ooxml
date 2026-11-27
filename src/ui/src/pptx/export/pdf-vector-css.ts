@@ -3,8 +3,8 @@
  * shapes and single linear gradients. Every reader returns `undefined` for a value it does not
  * understand, so the caller can draw that element as a picture instead. Pure.
  */
-import { parseColor } from '../../export/pdf-svg-style';
-import type { PdfShading } from '../../export/pdf-vector';
+import { parseColor } from 'ooxml-core/pdf/write';
+import type { PdfShading } from 'ooxml-core/pdf/write';
 import type { Matrix, Rgba } from './pdf-vector-display-list';
 
 /** A computed colour; `null` for transparent; `undefined` when it cannot be read. */

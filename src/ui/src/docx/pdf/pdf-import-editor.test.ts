@@ -5,7 +5,7 @@ import { loadDocx, type Block, type Paragraph } from 'ooxml-core/docx';
 import { createFakeMeasurer } from 'ooxml-core/docx/layout';
 import { importPdf } from 'ooxml-core/docx/pdf-import';
 import { DocxEditorElement, registerDocxEditor } from '../index';
-import { exportDocxPdf } from './export-pdf';
+import { exportDocxPdf } from 'ooxml-core/docx/pdf-export';
 
 registerDocxEditor();
 

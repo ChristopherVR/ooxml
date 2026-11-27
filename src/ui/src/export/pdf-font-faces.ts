@@ -5,7 +5,7 @@
  * them never makes a network request. Whether a font may be embedded is decided later by
  * `PdfFontSet` from the font's own licence flags.
  */
-import type { PdfFontFile } from './pdf-embedded-font';
+import type { PdfFontFile } from 'ooxml-core/pdf/write';
 
 /** The subset of `Document` this needs, so tests can pass a fake. */
 export interface FontFaceSourceDocument {

@@ -7,9 +7,9 @@
 import { inflateSync } from 'node:zlib';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { PdfFontSet } from '../../export/pdf-embedded-font';
-import { buildVectorPdf } from '../../export/pdf-vector';
-import { syntheticTrueType } from './__fixtures__/synthetic-truetype';
+import { PdfFontSet } from 'ooxml-core/pdf/write';
+import { buildVectorPdf } from 'ooxml-core/pdf/write';
+import { syntheticTrueType } from '../../../../core/text/truetype/test-support/synthetic-truetype';
 import { IDENTITY, type TextItem } from './pdf-vector-display-list';
 import { canWritePdfText, paintSlide } from './pdf-vector-paint';
 import { measureTextNode } from './pdf-vector-text';

@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { decodePdfImage, drawableToPdfImage } from '../../export/pdf-image';
-import type { PdfImageResource } from '../../export/pdf-vector';
+import type { PdfImageResource } from 'ooxml-core/pdf/write';
 import { videoPicture } from './pdf-vector-media';
 
 vi.mock('../../export/pdf-image', () => ({

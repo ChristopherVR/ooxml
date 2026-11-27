@@ -2,7 +2,7 @@
 /**
  * Validates the Word PDF export's PDF/A output with veraPDF, the open-source reference
  * validator (https://verapdf.org). It exports the corpus in
- * `src/ui/src/docx/pdf/__fixtures__/pdfa-corpus.ts` with `pdfA: true` (through its Vitest file,
+ * `src/core/docx/pdf-export/__fixtures__/pdfa-corpus.ts` with `pdfA: true` (through its Vitest file,
  * so the sources run as the tests run them), then validates every file against each flavour.
  *
  *   VERAPDF=/path/to/verapdf node scripts/pdfa-validate.mjs [options]
@@ -119,8 +119,8 @@ export function summariseReport(report) {
 
 function exportCorpus(out, fonts) {
 	const env = { ...process.env, PDFA_CORPUS_DIR: out, PDFA_FONTS: fonts.join(delimiter) };
-	const run = spawn('bunx', ['vitest', 'run', 'src/docx/pdf/pdfa-corpus'], {
-		cwd: join(ROOT, 'src/ui'),
+	const run = spawn('bunx', ['vitest', 'run', 'docx/pdf-export/pdfa-corpus'], {
+		cwd: join(ROOT, 'src/core'),
 		env,
 		stdio: 'inherit',
 	});

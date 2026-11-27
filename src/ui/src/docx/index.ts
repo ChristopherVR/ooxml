@@ -41,7 +41,7 @@ export type {
 	DocxPdfPictureDecoder,
 	DocxPdfReport,
 	DocxPdfResult,
-} from './pdf/export-pdf';
+} from 'ooxml-core/docx/pdf-export';
 export type { EditorPdfOptions } from './pdf/editor-pdf';
 export type { DocxEditorEventMap, DocxEditorEventName, DocxEditorEventDetail } from './events';
 export { DOCX_EDITOR_ATTRIBUTES } from './editor-attributes';

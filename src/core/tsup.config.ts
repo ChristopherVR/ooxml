@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import { dirname, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, type Options } from 'tsup';
 import { xlsxCjsLocaleImports, xlsxCommandLocales } from './scripts/xlsx-command-locales';
 
@@ -5,6 +8,37 @@ const pdfEntries = {
 	'docx/pdf-convert/index': 'docx/pdf-convert/index.ts',
 	'docx/pdf-import/index': 'docx/pdf-import/index.ts',
 	'pdf/index': 'pdf/index.ts',
+};
+// The PDF writer and Word's Save as PDF are built apart from the reader, so the reader's entries keep
+// only what they use. They import the areas they build on by name (`sibling-entries` below), so a
+// host that already loads `ooxml-core/docx` or `ooxml-core/docx/layout` shares that copy, and the
+// XML parser the writer reads SVG with when there is no DOMParser stays an entry loaded on first use.
+const pdfWriteEntries = {
+	'docx/pdf-export/index': 'docx/pdf-export/index.ts',
+	'pdf/write/index': 'pdf/write/index.ts',
+};
+const coreRoot = dirname(fileURLToPath(import.meta.url));
+/** The published areas a relative import in the PDF writer resolves to, by their index file. */
+const SIBLING_ENTRIES = ['docx', 'docx/layout', 'drawingml', 'text', 'opc', 'geometry', 'digest'];
+const siblingEntries: NonNullable<Options['esbuildPlugins']>[number] = {
+	name: 'sibling-entries',
+	setup(build) {
+		build.onResolve({ filter: /^\./ }, (args) => {
+			const target = resolve(args.resolveDir, args.path);
+			const area = relative(coreRoot, target).split(sep).join('/');
+			if (SIBLING_ENTRIES.some((name) => area === `${name}/index`))
+				return { path: `ooxml-core/${area.slice(0, -'/index'.length)}`, external: true };
+			// Word's Save as PDF uses the writer entry; the writer's own files stay in it.
+			const importer = relative(coreRoot, args.importer).split(sep).join('/');
+			if (
+				area.startsWith('pdf/write/') &&
+				!importer.startsWith('pdf/write/') &&
+				existsSync(`${target}.ts`)
+			)
+				return { path: 'ooxml-core/pdf/write', external: true };
+			return undefined;
+		});
+	},
 };
 
 const xlsxEntries = {
@@ -270,4 +304,35 @@ export default defineConfig([
 		},
 	},
 	{ ...shared, entry: pdfEntries, format: ['cjs'], splitting: false },
+	{
+		...shared,
+		// The simplification codes, the standard fonts' encoding and widths and Word's page marks get
+		// files of their own, so a product that labels its report with them, picks a standard font
+		// before it exports (PowerPoint's PDF notice and text fonts) or draws page borders and line
+		// numbers (Word's Print Layout) does not load the writer for them.
+		entry: {
+			...pdfWriteEntries,
+			'pdf/write/notes': 'pdf/write/pdf-svg-notes.ts',
+			'pdf/write/fonts': 'pdf/write/pdf-fonts.ts',
+			'docx/pdf-export/page-marks': 'docx/pdf-export/page-marks.ts',
+			// The export itself too, so the entry is only re-exports and a bundler can take the page
+			// marks from it without the export.
+			'docx/pdf-export/export': 'docx/pdf-export/export-pdf.ts',
+		},
+		format: ['esm'],
+		splitting: true,
+		external: [...shared.external, 'ooxml-core/xml'],
+		esbuildPlugins: [siblingEntries],
+		esbuildOptions(options) {
+			options.chunkNames = 'pdf/write/chunks/[name]-[hash]';
+		},
+	},
+	{
+		...shared,
+		entry: pdfWriteEntries,
+		format: ['cjs'],
+		splitting: false,
+		external: [...shared.external, 'ooxml-core/xml'],
+		esbuildPlugins: [siblingEntries],
+	},
 ]);

@@ -1,8 +1,8 @@
 import type { VisioDocument } from 'ooxml-core/visio';
-import { PdfFontSet, type PdfFontFile } from '../export/pdf-embedded-font';
-import { buildVectorPdf, PdfVectorPage, type PdfImageResource } from '../export/pdf-vector';
+import { PdfFontSet, type PdfFontFile } from 'ooxml-core/pdf/write';
+import { buildVectorPdf, PdfVectorPage, type PdfImageResource } from 'ooxml-core/pdf/write';
 import { exportPageSvg } from './export-svg';
-import { collectSvgImages, convertSvgPage } from '../export/pdf-svg';
+import { collectSvgImages, convertSvgPage } from 'ooxml-core/pdf/write';
 import { rasterizePage } from './viewer-export';
 import { drawingFontFamily } from './font-stack';
 import { decodePdfImage } from '../export/pdf-image';

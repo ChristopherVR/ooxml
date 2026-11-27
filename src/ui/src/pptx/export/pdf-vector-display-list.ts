@@ -5,7 +5,7 @@
  * `matrix` maps that space to the stage's painted space (the element's CSS transforms).
  * DOM-free apart from the `svg` item, which carries a detached SVG tree.
  */
-import type { PdfImageResource, PdfShading } from '../../export/pdf-vector';
+import type { PdfImageResource, PdfShading } from 'ooxml-core/pdf/write';
 
 /** A 2-D affine matrix `[a, b, c, d, e, f]`, as in CSS `matrix()`. */
 export type Matrix = readonly [number, number, number, number, number, number];

@@ -2,8 +2,8 @@
  * Which font a run of PDF text is written in (a supplied, embedded font or a standard one). Kept
  * apart from the slide painter so the public helpers do not load the PDF writer.
  */
-import type { PdfEmbeddedFont, PdfFontSet } from '../../export/pdf-embedded-font';
-import { encodeWinAnsi, pdfBaseFont } from '../../export/pdf-fonts';
+import type { PdfEmbeddedFont, PdfFontSet } from 'ooxml-core/pdf/write';
+import { encodeWinAnsi, pdfBaseFont } from 'ooxml-core/pdf/write';
 
 /** How one run of text is written. */
 export type PdfTextFont =

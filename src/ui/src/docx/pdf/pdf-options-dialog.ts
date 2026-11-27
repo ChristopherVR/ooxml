@@ -16,7 +16,7 @@ import {
 import { createDialogShell, dialogActions, localizeDialog, setDialogOpen } from '../dialog-shell';
 import type { EditorLocale } from '../localization';
 import type { EditorPdfOptions } from './editor-pdf';
-import type { DocxPdfMarkupBalloons } from './export-pdf';
+import type { DocxPdfMarkupBalloons } from 'ooxml-core/docx/pdf-export';
 import {
 	defaultPdfChoice,
 	pdfOptionsFromChoice,

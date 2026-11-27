@@ -11,7 +11,7 @@ import type { EditorCore } from './editor-core';
 import { saveDocx } from 'ooxml-core/docx';
 import { currentModel } from './current-model';
 import type { EditorPdfOptions } from './pdf/editor-pdf';
-import type { DocxPdfResult } from './pdf/export-pdf';
+import type { DocxPdfResult } from 'ooxml-core/docx/pdf-export';
 import { reflectAttribute } from './editor-attributes';
 import { docxFileName, downloadBytes, wordBlob } from './file-commands';
 import {
