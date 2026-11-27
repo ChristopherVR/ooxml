@@ -54,6 +54,8 @@ export class RelationshipSet {
 export class PackageWriter {
 	/** The InkML writer, loaded by the save when the workbook holds ink. */
 	inkml?: typeof import('#inkml-runtime');
+	/** Ink parts a drawing of this save already took: a copy of the ink gets a part of its own. */
+	readonly inkParts = new Set<string>();
 	private readonly parts = new Map<string, Uint8Array | string>();
 	private readonly types = new Map<string, string>();
 	/** Output parts still holding the source bytes of a carried part (output name to source name). */

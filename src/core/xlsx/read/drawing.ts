@@ -116,6 +116,10 @@ export function parseDrawing(
 		});
 		if (!content) continue;
 		const ink = readInkFrame(source, partName, anchorEl, content, anchor);
+		if (ink === null) {
+			out.push(unsupported('ink'));
+			continue;
+		}
 		if (ink) {
 			out.push(ink);
 			continue;

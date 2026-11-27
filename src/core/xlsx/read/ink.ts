@@ -36,7 +36,7 @@ export function readInkFrame(
 	anchorEl: XmlElement,
 	content: XmlElement,
 	anchor: DrawingAnchor,
-): InkObject | undefined {
+): InkObject | null | undefined {
 	const part = contentPartOf(content);
 	if (!part) return undefined;
 	const rel = source.rels(partName).get(relAttr(part, 'id') ?? '');
@@ -44,6 +44,9 @@ export function readInkFrame(
 		rel && rel.mode !== 'External' && rel.type === INK_RELATIONSHIP_TYPE
 			? source.target(partName, rel)
 			: undefined;
+	// Without its part the drawing cannot be read: the caller keeps it, verbatim, as an object
+	// not shown.
+	if (!target) return null;
 	const nv = child(part, 'nvContentPartPr');
 	const cNvPr = child(nv, 'cNvPr');
 	const ext = first(child(part, 'xfrm'), 'ext', NS.a);
@@ -58,7 +61,7 @@ export function readInkFrame(
 		height,
 		sourceXml: selfContainedXml(anchorEl),
 	};
-	if (target) ink.partName = target;
+	ink.partName = target;
 	const name = att(cNvPr, 'name');
 	if (name) ink.name = name;
 	const description = att(cNvPr, 'descr');
@@ -78,9 +81,9 @@ export async function resolveWorkbookInk(
 	);
 	if (!inks.length) return;
 	const { readInkPart } = await import('#inkml-runtime');
-	for (const ink of inks)
-		ink.strokes = readInkPart(source.text(ink.partName!), {
-			width: ink.width,
-			height: ink.height,
-		}).strokes;
+	for (const ink of inks) {
+		const part = readInkPart(source.text(ink.partName!), { width: ink.width, height: ink.height });
+		ink.strokes = part.strokes;
+		if (part.truncated) ink.truncated = true;
+	}
 }

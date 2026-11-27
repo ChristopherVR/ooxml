@@ -61,7 +61,8 @@ function contentPartXml(
  * Writes an ink drawing's part and returns its anchor content (new ink) or its kept anchor XML
  * (`kept`). The strokes are written in their own `width` x `height` space, which `xdr14:xfrm`
  * names; Excel stretches the ink onto the anchor, so moving or resizing it rewrites nothing.
- * Untouched ink keeps its part's bytes; changed strokes rewrite it.
+ * Untouched ink keeps its part's bytes; changed strokes rewrite it; a second drawing of the same
+ * part (a copy) gets a part of its own.
  */
 export function writeInkDrawing(
 	writer: PackageWriter,
@@ -76,7 +77,9 @@ export function writeInkDrawing(
 	if (!inkml) throw new Error('The InkML writer was not loaded for this save.');
 	const { updatedInkPart, writeInkPart } = inkml;
 	const size = { w: ink.width, h: ink.height };
-	if (ink.partName && ink.sourceXml && keepSource) {
+	const shared = ink.partName !== undefined && writer.inkParts.has(ink.partName);
+	if (ink.partName) writer.inkParts.add(ink.partName);
+	if (ink.partName && ink.sourceXml && keepSource && !shared) {
 		const source = writer.source?.text(ink.partName);
 		const xml = updatedInkPart(source, ink.strokes, { width: size.w, height: size.h });
 		if (xml === undefined) {
@@ -87,7 +90,13 @@ export function writeInkDrawing(
 		return { kept: patchXfrm(ink.sourceXml, size) };
 	}
 	const part = newInkPart(writer);
-	writer.add(part, writeInkPart(ink.strokes), INKML_CONTENT_TYPE);
+	// A copy of ink read only in part copies its part; anything else is written from its strokes.
+	const bytes = ink.truncated && ink.partName ? writer.source?.bytes(ink.partName) : undefined;
+	writer.add(
+		part,
+		bytes ?? writeInkPart(ink.strokes, undefined, { width: size.w, height: size.h }),
+		INKML_CONTENT_TYPE,
+	);
 	const relId = rels.ensure(INK_RELATIONSHIP_TYPE, relative(part));
 	const id = nextId();
 	return {

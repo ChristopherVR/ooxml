@@ -725,6 +725,11 @@ export interface InkObject {
 	height: number;
 	/** The anchor element as read; kept, with its fallback picture, when the ink is saved. */
 	sourceXml?: string;
+	/**
+	 * Part of the ink could not be read (the part is over the reader's limits): it is shown as read,
+	 * kept as it is on save, and the Draw tab leaves its strokes alone.
+	 */
+	truncated?: true;
 }
 
 /** A shape or object the model does not draw; reported so the UI can say so honestly. */

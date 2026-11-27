@@ -96,4 +96,65 @@ describe('Excel ink', () => {
 		const reread = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
 		expect(reread.sheets[0]?.drawings.filter((drawing) => drawing.kind === 'ink')).toHaveLength(1);
 	});
+
+	const newStroke = () =>
+		inkStrokeFromSamples(
+			[
+				{ x: 1, y: 1 },
+				{ x: 90, y: 40 },
+			],
+			{ kind: 'pen', color: '#000000', width: 2 },
+		)!;
+	const otherAnchor = {
+		from: { row: 12, col: 1, rowOffset: 0, colOffset: 0 },
+		ext: { cx: 952500, cy: 476250 },
+	};
+
+	it('gives a copy of ink a part of its own', async () => {
+		const wb = await loadXlsx(fixture('excel-ink.xlsx'));
+		const copy = { ...structuredClone(inkOf(wb)), anchor: otherAnchor } as InkObject;
+		wb.sheets[0]!.drawings.push(copy);
+		const reread = await loadXlsx(await saveXlsx(wb));
+		const inks = reread.sheets[0]!.drawings.filter(
+			(drawing): drawing is InkObject => drawing.kind === 'ink',
+		);
+		expect(inks.map((ink) => ink.strokes.length)).toEqual([4, 4]);
+		expect(new Set(inks.map((ink) => ink.partName)).size).toBe(2);
+	});
+
+	it('never rewrites a part read only in part', async () => {
+		const zip = await JSZip.loadAsync(fixture('excel-ink.xlsx'));
+		const big = Array.from({ length: 5000 }, (_, i) => `${i} ${i}`).join(',');
+		const xml = (await zip.file('xl/ink/ink1.xml')!.async('string')).replace(
+			/<\/(\w+:)?ink>\s*$/u,
+			(end, prefix = '') => `<${prefix}trace>${big}</${prefix}trace>${end}`,
+		);
+		expect(xml).toContain(big.slice(0, 20));
+		zip.file('xl/ink/ink1.xml', xml);
+		const wb = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
+		const ink = inkOf(wb);
+		expect(ink.truncated).toBe(true);
+		setInk(testContext(wb), 0, 0, ink.anchor, {
+			strokes: ink.strokes.slice(1),
+			width: ink.width,
+			height: ink.height,
+		});
+		const saved = await JSZip.loadAsync(await saveXlsx(wb));
+		expect(await saved.file('xl/ink/ink1.xml')!.async('string')).toBe(xml);
+	});
+
+	it('keeps ink whose part cannot be found as it was written', async () => {
+		const zip = await JSZip.loadAsync(fixture('excel-ink.xlsx'));
+		zip.file(
+			'xl/drawings/_rels/drawing1.xml.rels',
+			'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>',
+		);
+		const wb = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
+		const [drawing] = wb.sheets[0]!.drawings;
+		expect(drawing?.kind).toBe('unsupported');
+		addInk(testContext(wb), 0, otherAnchor, { strokes: [newStroke()], width: 100, height: 50 });
+		const saved = await JSZip.loadAsync(await saveXlsx(wb));
+		const out = await saved.file('xl/drawings/drawing1.xml')!.async('string');
+		expect(out.match(/<xdr:contentPart/g)).toHaveLength(2);
+	});
 });
