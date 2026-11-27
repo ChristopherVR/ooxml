@@ -14,6 +14,7 @@ import { buildPictureWatermarkRun } from './picture-watermark';
 import { buildSignatureLineRun } from './signature-line';
 import { applyWebVideo } from './web-video';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
+import { blocksArePlainLines, writeTextBoxBlocks } from './write-text-box-blocks';
 import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
 import { chartRun } from './write-chart-drawing';
 import { buildInkDrawing, patchInkXfrm } from './write-ink-drawing';
@@ -351,18 +352,18 @@ export function createImageRun(
 		if (!allocator) throw new Error('Cannot insert a shape without an id allocator.');
 		const id = allocator.docPrIds.next(image.drawingId);
 		clearNonProperties(node);
-		node.appendChild(
-			buildShapeDrawing(
-				doc,
-				image,
-				{
-					id,
-					...(image.altText ? { descr: image.altText } : {}),
-					...(image.title ? { title: image.title } : {}),
-				},
-				251658240 + (Number(id) % 4096) * 1024,
-			),
+		const drawing = buildShapeDrawing(
+			doc,
+			image,
+			{
+				id,
+				...(image.altText ? { descr: image.altText } : {}),
+				...(image.title ? { title: image.title } : {}),
+			},
+			251658240 + (Number(id) % 4096) * 1024,
 		);
+		writeTextBoxBlocks(doc, drawing, image, allocator);
+		node.appendChild(drawing);
 		return node;
 	}
 	if (image.pictureWatermark) {
@@ -409,6 +410,9 @@ export function createImageRun(
 		if (!allocator) throw new Error('Cannot insert a text box without an id allocator.');
 		clearNonProperties(node);
 		const drawing = buildTextBoxDrawing(doc, image, allocator.docPrIds.next());
+		// WordArt keeps the run look its writer gives it; plain lines keep the simple, editable form.
+		if (!image.textBoxContent?.wordArt && !blocksArePlainLines(image))
+			writeTextBoxBlocks(doc, drawing, image, allocator);
 		patchArrangement(doc, drawing, image);
 		node.appendChild(drawing);
 		return node;
