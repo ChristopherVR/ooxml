@@ -35,7 +35,8 @@ export function addInk(ctx: EditContext, s: number, anchor: DrawingAnchor, ink: 
 
 /**
  * Replaces the strokes of the ink at `index` (erased, added to or moved by the lasso), with its new
- * box when it grew; ink left with no strokes is deleted, as the eraser deletes it in Excel.
+ * box; ink left with no strokes is deleted, as the eraser deletes it in Excel. Edits passing the
+ * same `gesture` one after another are one undo step (one eraser stroke).
  */
 export function setInk(
 	ctx: EditContext,
@@ -43,20 +44,27 @@ export function setInk(
 	index: number,
 	anchor: DrawingAnchor,
 	ink: NewInk,
+	gesture?: string,
 ): void {
 	const drawing = sheetDrawingAt(ctx.workbook, s, index);
 	if (drawing?.kind !== 'ink') throw new RangeError(`No ink at index ${index} on sheet ${s}`);
 	checkAnchor(anchor);
 	if (ink.strokes.length) checkInk(ink);
-	editDrawings(ctx, s, ink.strokes.length ? 'Ink' : 'Erase ink', () => {
-		const sheet = sheetAt(ctx.workbook, s);
-		if (!ink.strokes.length) {
-			sheet.drawings.splice(index, 1);
-			return;
-		}
-		drawing.anchor = structuredClone(anchor);
-		drawing.strokes = structuredClone(ink.strokes);
-		drawing.width = ink.width;
-		drawing.height = ink.height;
-	});
+	editDrawings(
+		ctx,
+		s,
+		ink.strokes.length ? 'Ink' : 'Erase ink',
+		() => {
+			const sheet = sheetAt(ctx.workbook, s);
+			if (!ink.strokes.length) {
+				sheet.drawings.splice(index, 1);
+				return;
+			}
+			drawing.anchor = structuredClone(anchor);
+			drawing.strokes = structuredClone(ink.strokes);
+			drawing.width = ink.width;
+			drawing.height = ink.height;
+		},
+		gesture,
+	);
 }

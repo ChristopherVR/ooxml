@@ -295,7 +295,14 @@ export interface EditSession {
 	/** Draw: adds ink over the cells; returns its drawing index. */
 	addInk(sheet: number, anchor: DrawingAnchor, ink: import('./ink').NewInk): number;
 	/** Draw: replaces the strokes and box of the ink at `index`; no strokes deletes it. */
-	setInk(sheet: number, index: number, anchor: DrawingAnchor, ink: import('./ink').NewInk): void;
+	setInk(
+		sheet: number,
+		index: number,
+		anchor: DrawingAnchor,
+		ink: import('./ink').NewInk,
+		/** Edits of one gesture (an eraser stroke) passing the same key are one undo step. */
+		gesture?: string,
+	): void;
 	setTextBoxText(sheet: number, index: number, text: string): void;
 	setShapeEquation(
 		sheet: number,

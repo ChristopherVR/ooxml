@@ -7,6 +7,7 @@ import type { InkObject, Workbook } from '../model';
 import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
 import { addInk, setInk } from './ink';
+import { createEditSession } from './session';
 import { testContext } from './test-context';
 
 // Excel 16's own saves: ink pasted from PowerPoint (with its fallback picture), and ink Excel
@@ -156,5 +157,24 @@ describe('Excel ink', () => {
 		const saved = await JSZip.loadAsync(await saveXlsx(wb));
 		const out = await saved.file('xl/drawings/drawing1.xml')!.async('string');
 		expect(out.match(/<xdr:contentPart/g)).toHaveLength(2);
+	});
+
+	it('makes the edits of one eraser gesture one undo step', async () => {
+		const wb = await loadXlsx(fixture('excel-ink.xlsx'));
+		const session = createEditSession(wb);
+		const ink = inkOf(wb);
+		const size = { width: ink.width, height: ink.height };
+		const strokes = [...ink.strokes];
+		const anchor = structuredClone(ink.anchor);
+		session.setInk(0, 0, anchor, { strokes: strokes.slice(1), ...size }, 'erase-1');
+		session.setInk(0, 0, anchor, { strokes: strokes.slice(2), ...size }, 'erase-1');
+		expect(inkOf(wb).strokes).toHaveLength(2);
+		// The next gesture is a step of its own.
+		session.setInk(0, 0, anchor, { strokes: strokes.slice(3), ...size }, 'erase-2');
+		session.undo();
+		expect(inkOf(wb).strokes).toHaveLength(2);
+		session.undo();
+		expect(inkOf(wb).strokes).toHaveLength(4);
+		expect(session.canUndo()).toBe(false);
 	});
 });

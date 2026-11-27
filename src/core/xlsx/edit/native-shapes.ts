@@ -107,9 +107,11 @@ export function editDrawings<T>(
 	sheet: number,
 	label: string,
 	change: () => T,
+	merge?: string,
 ): T {
 	return ctx.run(label, 'annotations', [{ kind: 'parts', sheet, parts: ['drawings'] }], change, {
 		sheet,
+		...(merge ? { merge } : {}),
 	});
 }
 

@@ -13,6 +13,11 @@ export interface RunInfo {
 	structural?: StepStructure;
 	/** Lets the calc engine follow this structural edit in place (see `CalcHint`). */
 	calc?: CalcHint;
+	/**
+	 * A gesture's key: a step with the same key as the last one joins it, so a gesture dispatched
+	 * as many edits (an eraser stroke) is one undo step.
+	 */
+	merge?: string;
 }
 
 /** What every command module receives from the session. */

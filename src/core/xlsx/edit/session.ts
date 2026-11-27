@@ -141,6 +141,7 @@ export function createEditSession(
 	const begin = (label: string, kind: WorkbookChangeKind, info: RunInfo): OpenStep => {
 		const step: HistoryStep = { label, entries: [], structural: info.structural ?? false };
 		if (info.calc) step.calc = info.calc;
+		if (info.merge) step.merge = info.merge;
 		return { step, kind, sheet: info.sheet, ranges: [...(info.ranges ?? [])] };
 	};
 
@@ -339,7 +340,7 @@ export function createEditSession(
 		setPictureCrop: (s, index, crop) => drawings.setPictureCrop(ctx, s, index, crop),
 		addShape: (s, anchor, value) => nativeShapes.addShape(ctx, s, anchor, value),
 		addInk: (s, anchor, value) => ink.addInk(ctx, s, anchor, value),
-		setInk: (s, index, anchor, value) => ink.setInk(ctx, s, index, anchor, value),
+		setInk: (s, index, anchor, value, gesture) => ink.setInk(ctx, s, index, anchor, value, gesture),
 		formatDrawing: (s, index, intent) => formatDrawing(ctx, s, index, intent),
 		setTextBoxText: (s, index, text) => nativeShapes.setTextBoxText(ctx, s, index, text),
 		setShapeEquation: (s, index, equation, value) =>

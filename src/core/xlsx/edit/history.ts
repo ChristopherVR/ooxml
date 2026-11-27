@@ -125,6 +125,8 @@ export interface HistoryStep {
 	entries: HistoryEntry[];
 	structural: StepStructure;
 	calc?: CalcHint;
+	/** The gesture the step belongs to (`RunInfo.merge`). */
+	merge?: string;
 }
 
 function captureCells(sheet: Worksheet, ranges: CellRange[]): [number, number, Cell][] {
@@ -339,6 +341,12 @@ export class History {
 	constructor(private readonly limit: number) {}
 
 	push(step: HistoryStep): void {
+		const last = this.done.at(-1);
+		// The next edit of the same gesture, with nothing undone since: one step.
+		if (step.merge && last?.merge === step.merge && !this.undone.length) {
+			last.entries.push(...step.entries);
+			return;
+		}
 		this.done.push(step);
 		if (this.done.length > this.limit) this.done.shift();
 		this.undone.length = 0;
