@@ -1244,6 +1244,26 @@ describe('editing paragraphs with smart tags, symbols, positional tabs and speci
 		expect(xml).not.toContain('w:sym');
 	});
 
+	it('edits next to a text-font symbol and writes the symbol back (issue #365)', async () => {
+		// Calibri 00A7 is the section sign itself, not a private-use symbol-font code.
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('A')}<w:r><w:sym w:font="Calibri" w:char="00A7"/></w:r>${run('C')}</w:p>`,
+		);
+		expect(at(paragraph.runs, 1)).toMatchObject({
+			text: '§',
+			symbol: { font: 'Calibri', char: '00A7' },
+		});
+		at(paragraph.runs, 0).text = 'B';
+		const saved = await loaded.save();
+		expectInOrder(await savedParagraph(loaded), [
+			'>B<',
+			'<w:sym w:font="Calibri" w:char="00A7"/>',
+			'>C<',
+		]);
+		const reread = expectParagraph((await loadDocx(saved)).model.blocks[0]);
+		expect(reread.runs.map((item) => item.text).join('')).toBe('B§C');
+	});
+
 	it('keeps a positional tab', async () => {
 		const { loaded, paragraph } = await load(
 			`<w:p>${run('Left')}<w:r><w:ptab w:relativeTo="margin" w:alignment="right" w:leader="none"/></w:r>${run('Right')}</w:p>`,

@@ -7,7 +7,7 @@ import {
 	isStPTabRelativeTo,
 } from './generated/wml-simple-types';
 import type { TextRun } from './model';
-import { isLikelySymbolFont } from '../text/symbol-fonts';
+import { isLikelySymbolFont } from '../text/symbol-font-names';
 import { getW, makeW, named, textContent, type XmlDocument, type XmlElement } from './xml';
 
 export const SOFT_HYPHEN = '\u00AD';
@@ -65,15 +65,18 @@ const isSymbolFontCharacter = (character: string): boolean => /^[\uF000-\uF0FF]$
  * The one symbol a run's content shows; `null` when it holds different or unreadable symbols, or
  * one the run's text could not be told apart from. The model keeps a symbol as its character in
  * the run's text, written back as `w:sym` wherever it occurs, so that character must be a symbol
- * font's code that the run's own text does not use (an en dash coded `2013` would also turn the
- * run's ordinary en dashes into symbols).
+ * font's code that the run's own text does not use (an en dash coded `2013` in Symbol would also
+ * turn the run's ordinary en dashes into symbols). In a text font (Calibri `00A7`) the code is the
+ * Unicode character, which looks the same written as a symbol or as text.
  */
 export function runSymbol(content: readonly XmlElement[]): TextRun['symbol'] | null | undefined {
 	let found: TextRun['symbol'];
 	for (const child of content) {
 		if (!named(child, 'sym')) continue;
 		const symbol = { font: getW(child, 'font') ?? '', char: getW(child, 'char') ?? '' };
-		if (!isSymbolFontCharacter(symbolCharacter(symbol.char, symbol.font))) return null;
+		const shown = symbolCharacter(symbol.char, symbol.font);
+		const textFont = symbol.font !== '' && !isLikelySymbolFont(symbol.font);
+		if (!shown || (!textFont && !isSymbolFontCharacter(shown))) return null;
 		if (found && (found.font !== symbol.font || found.char !== symbol.char)) return null;
 		found = symbol;
 	}
