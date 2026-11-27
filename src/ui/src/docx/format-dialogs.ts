@@ -1,5 +1,5 @@
 import type { DocumentModel, ThemeCatalog } from 'ooxml-core/docx';
-import { createChartDataDialog, createChartTypeDialog } from './chart-dialogs';
+import { lazyDialog } from './lazy-dialog';
 import type { EditorView } from 'prosemirror-view';
 import { createFontDialog, type FormatDialog } from './font-dialog';
 import type { EditorLocale } from './localization';
@@ -170,9 +170,16 @@ export class FormatDialogs {
 				() => host.model(),
 				() => host.canDefineList?.() ?? true,
 			),
-			insertChart: createChartTypeDialog(charts, false),
-			changeChartType: createChartTypeDialog(charts, true),
-			chartData: createChartDataDialog(charts),
+			// The chart dialogs load on first use.
+			insertChart: lazyDialog(() =>
+				import('./chart-dialogs').then((m) => m.createChartTypeDialog(charts, false)),
+			),
+			changeChartType: lazyDialog(() =>
+				import('./chart-dialogs').then((m) => m.createChartTypeDialog(charts, true)),
+			),
+			chartData: lazyDialog(() =>
+				import('./chart-dialogs').then((m) => m.createChartDataDialog(charts)),
+			),
 			restrictEditing: createRestrictEditingPane({
 				view: () => (host.reviewView ? host.reviewView() : host.view()),
 				protection: () => host.restrictEditing?.protection(),
