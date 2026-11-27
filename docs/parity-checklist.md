@@ -1571,6 +1571,10 @@ installed Visio 16 build is used to check that saved files open without repair.
       from glyphs and setbacks measured in Visio 16 SVG exports (`filled-arrow.ts`,
       `open-arrow.ts`); custom `USE()` line ends are still reported, and off a straight
       round-capped line a glyph is drawn without its setback (`src/ui/src/visio/arrowheads.ts`).
+- [ ] **P2** Arrowhead setbacks are applied only to a straight two-point round-capped line: on a
+      routed (polyline) or curved connector, or a square- or flat-capped line, the line is not
+      trimmed and the glyph sits on its end, and the viewer reports it
+      (`src/ui/src/visio/arrowheads.ts`; the flowchart and architecture samples, 2026-11-27).
 - [ ] **P2** Shape text is measured and wrapped with browser fonts, so a block can run past its
       saved text-box height where Visio fits it; the viewer reports it
       (`src/ui/src/visio/render-text.ts`).

@@ -62,11 +62,19 @@
 		],
 		"order-to-delivery-flowchart": [
 			{
+				"notice": "render: Arrowheads on curved or square-capped lines are not set back from the end.",
+				"gap": "Arrowhead setbacks are applied only to a straight two-point round-capped line"
+			},
+			{
 				"notice": "render: Text exceeds its saved text-box height.",
 				"gap": "Shape text is measured and wrapped with browser fonts"
 			}
 		],
 		"platform-architecture": [
+			{
+				"notice": "render: Arrowheads on curved or square-capped lines are not set back from the end.",
+				"gap": "Arrowhead setbacks are applied only to a straight two-point round-capped line"
+			},
 			{
 				"notice": "render: Text exceeds its saved text-box height.",
 				"gap": "Shape text is measured and wrapped with browser fonts"
