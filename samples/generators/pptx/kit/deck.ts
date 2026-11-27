@@ -1,11 +1,13 @@
 /**
  * A deck under construction: the hand-written template is loaded by the core's `PptxHandler`,
  * slides are added through the SDK, and the handler's own `save` writes the package. What the
- * save cannot produce yet is patched afterwards in `finish.ts`.
+ * save cannot produce yet (paragraph builds) is patched afterwards in `finish.ts`.
  */
 import { PptxHandler } from '../../../../src/core/pptx/core/PptxHandler';
 import type { PptxData, PptxSection } from '../../../../src/core/pptx/core/types/presentation';
+import { seededIdSource } from '../../../../src/core/opc/reproducible';
 import { buildPackage } from '../../lib/package';
+import { SAMPLE_DATE, SAMPLE_ID_SEED } from '../../lib/types';
 import { finishPackage } from './finish';
 import { Slide } from './slide';
 import { buildTemplate, type TemplateSpec } from './template';
@@ -58,10 +60,15 @@ export class Deck {
 	async save(): Promise<Uint8Array> {
 		const models = this.slides.map((slide) => slide.model);
 		this.data.slides.push(...models);
-		const saved = await this.handler.save(this.data.slides, { sections: this.sections });
+		// A reproducible save: the sample date and ids from a seeded source, so two builds agree.
+		const saved = await this.handler.save(this.data.slides, {
+			sections: this.sections,
+			fixedDate: SAMPLE_DATE,
+			ids: seededIdSource(SAMPLE_ID_SEED),
+		});
 		const warnings = this.handler.getCompatibilityWarnings();
 		if (warnings.length > 0)
 			throw new Error(`The core reported save warnings: ${JSON.stringify(warnings)}`);
-		return finishPackage(saved, this.spec, this.slides);
+		return finishPackage(saved, this.slides);
 	}
 }

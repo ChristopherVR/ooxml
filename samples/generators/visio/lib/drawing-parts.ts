@@ -4,7 +4,6 @@
  * function here returns the parts to change; `Drawing` applies them.
  */
 import { readPackage } from '../../lib/package';
-import { SAMPLE_DATE_ISO } from '../../lib/types';
 import type { MasterDef, Stencil } from './masters';
 import { insertBefore, withContentTypes, withRelationship } from './parts';
 import { type RecordsetSpec, rowsetXml } from './recordset';
@@ -123,8 +122,9 @@ export async function documentPartChanges(
 }
 
 /**
- * The recordset parts as Visio reads them: ids from 1, a fixed refresh time, and rows that carry
- * the row id column (the core's `import-data-recordset` writes none of the three that way).
+ * The recordset parts as Visio reads them: ids from 1 and rows that carry the row id column (the
+ * core's `import-data-recordset` writes neither that way). The refresh time is the sample date,
+ * which the edits are given (`drawing.ts`).
  */
 export async function recordsetChanges(
 	read: ReadPart,
@@ -137,8 +137,7 @@ export async function recordsetChanges(
 		.replaceAll(
 			/<DataRecordSet ID="(\d+)"/gu,
 			(_, id: string) => `<DataRecordSet ID="${Number(id) + 1}"`,
-		)
-		.replaceAll(/TimeRefreshed="[^"]*"/gu, `TimeRefreshed="${SAMPLE_DATE_ISO.slice(0, 19)}"`);
+		);
 	const changes: Record<string, string> = { [part]: xml };
 	const parts = await readPackage(bytes);
 	recordsets.forEach((spec, index) => {

@@ -133,7 +133,7 @@ function contentTypes(spec: TemplateSpec): string {
 	);
 }
 
-/** `docProps/core.xml` with the fixed sample date; also used to replace what the core stamps. */
+/** `docProps/core.xml` of the template, dated the sample date. */
 export function corePropertiesXml(title: string, subject: string): string {
 	return (
 		`${XML}<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">` +

@@ -171,7 +171,6 @@ async function generate(): Promise<Uint8Array> {
 			{ name: 'Reporting period', type: 'lpwstr', value: REPORT.period },
 			{ name: 'Issue', type: 'lpwstr', value: '1.0' },
 		],
-		dataStoreId: '{6C0E0F4A-7B1D-4E52-9A83-2D51C7E4A001}',
 	});
 }
 

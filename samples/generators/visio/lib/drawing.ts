@@ -3,6 +3,7 @@
  * structural edits (containers, swimlanes, shape data, hyperlinks, layers, data links); this
  * module adds the parts the library has no writer for (styles, masters, drawn shapes, routes).
  */
+import { SAMPLE_DATE } from '../../lib/types';
 import { createVsdx } from '../../../../src/core/visio/create-document';
 import { editVsdx } from '../../../../src/core/visio/edit';
 import type { VisioEdit } from '../../../../src/core/visio/edit-commands';
@@ -146,7 +147,8 @@ export class Drawing {
 	async edit(edits: readonly VisioEdit[], label: string): Promise<void> {
 		if (edits.length === 0) return;
 		try {
-			const result = await editVsdx(this.bytes, [...edits]);
+			// The sample date is the time the edits stamp (a recordset's refresh time).
+			const result = await editVsdx(this.bytes, [...edits], { now: SAMPLE_DATE });
 			this.bytes = result.bytes;
 			for (const diagnostic of result.diagnostics) this.notes.add(diagnostic.code);
 		} catch (error) {

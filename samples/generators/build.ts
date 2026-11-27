@@ -9,7 +9,8 @@
  *
  * `--check` fails when a committed file, or the manifest, differs from what the generators
  * produce now: run it after changing a generator or a core writer. `--determinism` writes nothing
- * and fails when two runs of a generator disagree; `scripts/samples.test.mjs` runs it. Thumbnails
+ * and fails when two runs of a generator disagree byte for byte (before the repack, so the core
+ * writers' own output is compared); `scripts/samples.test.mjs` runs it. Thumbnails
  * are rendered separately (`samples/generators/thumbnails.ps1`), so the manifest only names where
  * each one lives.
  */
@@ -89,7 +90,8 @@ const problems: string[] = [];
 for (const sample of samples) {
 	validate(sample, seen);
 	const started = performance.now();
-	const bytes = await normalizePackage(await sample.generate());
+	const raw = await sample.generate();
+	const bytes = await normalizePackage(raw);
 	const file = `${sample.product}/${sample.fileName}`;
 	const path = join(ROOT, file);
 	const entry: ManifestEntry = {
@@ -105,8 +107,9 @@ for (const sample of samples) {
 	};
 	manifest.push(entry);
 	if (determinism) {
-		const again = await normalizePackage(await sample.generate());
-		if (createHash('sha256').update(again).digest('hex') !== entry.sha256)
+		// The raw output, before `normalizePackage`: the core writers' own bytes must repeat.
+		const again = await sample.generate();
+		if (!Buffer.from(again).equals(Buffer.from(raw)))
 			problems.push(`${file}: two runs of its generator gave different bytes`);
 	} else if (check) {
 		const committed = existsSync(path) ? await readFile(path) : undefined;

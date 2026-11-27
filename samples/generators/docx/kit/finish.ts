@@ -1,7 +1,8 @@
 /**
  * The pass after `saveDocx`: swaps the hand-written fragments in for their sentinels, adds the
  * parts the core does not write for a new document (styles, numbering, settings, extended and
- * custom properties) and fixes what would differ between two runs (dates, the data store GUID).
+ * custom properties) and the core properties with the sample date. The save itself is
+ * reproducible (`save.ts` passes the sample date and a seeded id source).
  */
 import {
 	writeAppProperties,
@@ -13,15 +14,7 @@ import type {
 	CoreProperties,
 	CustomProperty,
 } from '../../../../src/core/opc/properties/types';
-import { FONTS } from '../../lib/fiction';
-import {
-	buildPackage,
-	normalizePackage,
-	patchPackage,
-	readPackage,
-	readPartText,
-	type PackageParts,
-} from '../../lib/package';
+import { buildPackage, readPackage, type PackageParts } from '../../lib/package';
 import { SAMPLE_AUTHOR, SAMPLE_DATE_ISO } from '../../lib/types';
 
 const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -51,8 +44,6 @@ export interface FinishSpec {
 	core: CoreProperties;
 	app: AppProperties;
 	custom?: CustomProperty[];
-	/** The fixed id of the bibliography data store item (the core draws a random one). */
-	dataStoreId?: string;
 	/** A last edit of single parts, by part name. */
 	patch?: Record<string, (xml: string) => string>;
 }
@@ -203,21 +194,6 @@ export async function finish(bytes: Uint8Array, spec: FinishSpec): Promise<Uint8
 		relate('_rels/.rels', `${REL}/custom-properties`, 'docProps/custom.xml');
 	}
 
-	for (const name of Object.keys(parts)) {
-		if (!/^customXml\/itemProps\d+\.xml$/u.test(name)) continue;
-		if (!spec.dataStoreId) throw new Error('A data store item needs a fixed id');
-		parts[name] = text(name).replace(/ds:itemID="[^"]*"/u, `ds:itemID="${spec.dataStoreId}"`);
-	}
-	// The workbooks behind the charts are packages too: the core zips them with the current time
-	// and gives their cells Excel's default font, so both are put right here.
-	for (const [name, data] of Object.entries(parts)) {
-		if (!/\.xlsx$/u.test(name) || typeof data === 'string') continue;
-		const styles = await readPartText(data, 'xl/styles.xml');
-		const renamed = styles?.replace(/<name val="[^"]*"\/>/gu, `<name val="${FONTS.body}"/>`);
-		parts[name] = await normalizePackage(
-			renamed ? await patchPackage(data, { 'xl/styles.xml': renamed }) : data,
-		);
-	}
 	for (const [name, edit] of Object.entries(spec.patch ?? {})) parts[name] = edit(text(name));
 	return buildPackage(parts);
 }

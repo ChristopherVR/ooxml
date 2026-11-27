@@ -1,5 +1,7 @@
 /** Assembles the core document model of a sample and saves it with the core's own writer. */
 import { createDocument, saveDocx } from '../../../../src/core/docx/index';
+import { seededIdSource } from '../../../../src/core/opc/reproducible';
+import { SAMPLE_DATE, SAMPLE_ID_SEED } from '../../lib/types';
 import type {
 	Block,
 	DocumentModel,
@@ -68,8 +70,8 @@ export interface SaveSpec {
 /** The model the core saves: the document's blocks, stories, sections and theme. */
 export function documentModel(doc: Doc, spec: SaveSpec): DocumentModel {
 	const model = createDocument();
-	// The core's default style catalogs name Microsoft fonts; the samples write their own styles
-	// part, so the model carries no catalog and the core writes none.
+	// The samples write their own styles part, so the model carries no catalog and the core
+	// writes none.
 	delete model.paragraphStyles;
 	delete model.characterStyles;
 	delete model.tableStyles;
@@ -95,5 +97,9 @@ export function documentModel(doc: Doc, spec: SaveSpec): DocumentModel {
 }
 
 export async function save(doc: Doc, spec: SaveSpec): Promise<Uint8Array> {
-	return saveDocx(documentModel(doc, spec), doc.media);
+	// A reproducible save: the sample date and ids (data store, controls) from a seeded source.
+	return saveDocx(documentModel(doc, spec), doc.media, {
+		now: SAMPLE_DATE,
+		ids: seededIdSource(SAMPLE_ID_SEED),
+	});
 }
