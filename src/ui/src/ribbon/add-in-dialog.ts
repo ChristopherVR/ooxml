@@ -6,6 +6,7 @@ import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/offic
 import { localAddIns } from './add-in-installations';
 import { ADD_IN_PREFERENCES_CHANGED, addInPreferences } from './add-in-preferences';
 import { ADD_IN_RUNTIME_CHANGED, type OfficeAddInSelection } from './add-in-runtime-settings';
+import type { syncInstalledRibbonTabs } from './add-in-tabs';
 
 export type AddInDialogMode = 'getAddIns' | 'myAddIns';
 export type AddInDialogProduct = OfficeAddInHost | 'visio';
@@ -67,6 +68,13 @@ export interface OpenAddInsOptions {
 	manifestLocale: string;
 	scopes: readonly AddInDialogHost[];
 	selection?: () => OfficeAddInSelection | undefined | Promise<OfficeAddInSelection | undefined>;
+	/**
+	 * Puts the installed add-ins' tabs on a ribbon that has no `setInstalledAddInTabs` of its own.
+	 * The product passes `syncInstalledRibbonTabs`, which its ribbon already loaded, so the add-in
+	 * chunks do not import the ribbon elements a second way (that would split them into chunks of
+	 * their own in every product bundle).
+	 */
+	syncTabs?: typeof syncInstalledRibbonTabs;
 }
 
 export function mountedAddInRestore(host: PendingHost) {
@@ -79,6 +87,7 @@ export function watchOfficeAddIns(
 	product: OfficeAddInHost,
 	locale: () => string,
 	selection?: OpenAddInsOptions['selection'],
+	syncTabs?: OpenAddInsOptions['syncTabs'],
 ): () => void {
 	const scopes = addInScopes(host, host.querySelector('office-ui-ribbon, pptx-ui-ribbon-tabs'));
 	const listeners = new AbortController();
@@ -94,6 +103,7 @@ export function watchOfficeAddIns(
 		manifestLocale: locale(),
 		scopes,
 		...(selection && { selection }),
+		...(syncTabs && { syncTabs }),
 	});
 
 	const restore = () => {
@@ -150,6 +160,7 @@ export async function openOfficeAddIns(
 	product: AddInDialogProduct,
 	locale: string,
 	selection?: OpenAddInsOptions['selection'],
+	syncTabs?: OpenAddInsOptions['syncTabs'],
 ): Promise<void> {
 	const pending: PendingHost = host;
 	if (
@@ -168,7 +179,16 @@ export async function openOfficeAddIns(
 		const { mountAddInsDialog } = await import('../dialog/add-ins-dialog');
 		if (host.isConnected) {
 			mountAddInsDialog(
-				{ host, mode, t, product, manifestLocale: locale, scopes, ...(selection && { selection }) },
+				{
+					host,
+					mode,
+					t,
+					product,
+					manifestLocale: locale,
+					scopes,
+					...(selection && { selection }),
+					...(syncTabs && { syncTabs }),
+				},
 				restore,
 			);
 		}

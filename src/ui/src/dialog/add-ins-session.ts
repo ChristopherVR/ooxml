@@ -34,7 +34,7 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus = () => {}
 		locale: manifestLocale,
 		capabilities: addInCapabilities(selection),
 	});
-	const syncTabs = () => addInManifestTabs(host, installed, launcher, t);
+	const syncTabs = () => addInManifestTabs(host, installed, launcher, t, options.syncTabs);
 	const restore =
 		store && product !== 'visio'
 			? async (signal: AbortSignal, saved?: readonly Uint8Array[]) => {

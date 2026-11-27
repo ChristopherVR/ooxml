@@ -1,4 +1,5 @@
 /** Shared DOM focus utilities for dialogs and other modal surfaces. */
+import { deepActiveElement } from '../composed';
 
 export const MODAL_FOCUSABLE_SELECTOR = [
 	'a[href]',
@@ -45,15 +46,6 @@ function focusableElements(root: Element | ShadowRoot, found: HTMLElement[] = []
 		focusableElements(child, found);
 	}
 	return found;
-}
-
-/** The focused element, resolved through nested open shadow roots. */
-function deepActiveElement(root: Document | ShadowRoot): Element | null {
-	let active = root.activeElement;
-	while (active?.shadowRoot?.activeElement) {
-		active = active.shadowRoot.activeElement;
-	}
-	return active;
 }
 
 /**

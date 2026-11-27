@@ -1,6 +1,7 @@
 import { getCell } from 'ooxml-core/xlsx';
 import { target, sheetLocked, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { openOfficeAddIns, type AddInDialogMode } from '../../ribbon/add-in-dialog';
+import { syncInstalledRibbonTabs } from '../../ribbon/add-in-tabs';
 import type { OfficeAddInSelection } from '../../ribbon/add-in-runtime-settings';
 
 /** Reads the workbook shown when each request arrives, so a pane opened at launch keeps working. */
@@ -44,6 +45,7 @@ export function addInCommands(): Command[] {
 				'excel',
 				ctx.locale(),
 				() => excelAddInSelection(ctx),
+				syncInstalledRibbonTabs,
 			);
 		},
 	});

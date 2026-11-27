@@ -1,6 +1,8 @@
 import type { LocalAddIn } from 'ooxml-core/automation/add-ins';
 import type { OfficeServiceText } from '../dialog/office-service-dialog';
-import { modalActiveElement } from '../dialog/focus';
+// The shadow-aware active element without the dialog focus module, which this lazy chunk would
+// otherwise split out of the chunk it shares with the dialogs.
+import { deepActiveElement } from '../composed';
 import type { OpenAddInsOptions } from './add-in-dialog';
 import { addInPreferences } from './add-in-preferences';
 import { addInRuntime, allowedPaneUrl } from './add-in-runtime-settings';
@@ -40,7 +42,7 @@ export function addInLauncher(
 	async function open(addIn: LocalAddIn, source?: string, restoreFocus?: () => void) {
 		if (product === 'visio') return;
 		const { manifest } = addIn;
-		const opener = modalActiveElement(host.ownerDocument);
+		const opener = deepActiveElement(host.ownerDocument);
 		const currentPane = () => {
 			const current = installed.get(manifest.id);
 			if (

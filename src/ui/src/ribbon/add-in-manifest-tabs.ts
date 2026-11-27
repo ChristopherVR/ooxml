@@ -5,7 +5,7 @@ import type { AddInDialogHost } from './add-in-dialog';
 import type { addInLauncher } from './add-in-launch';
 import { addInIcon } from './add-in-icons';
 import { addInIssueLabel } from './add-in-local-dialog';
-import { syncInstalledRibbonTabs } from './add-in-tabs';
+import type { syncInstalledRibbonTabs } from './add-in-tabs';
 
 export const MANIFEST_TAB_PREFIX = 'installed-add-in.';
 
@@ -14,6 +14,7 @@ export function addInManifestTabs(
 	installed: ReadonlyMap<string, LocalAddIn>,
 	launcher: ReturnType<typeof addInLauncher>,
 	t: OfficeServiceText,
+	syncTabs?: typeof syncInstalledRibbonTabs,
 ) {
 	const tabs: RibbonAddInTab[] = [...installed.values()].flatMap((addIn) =>
 		addIn.manifest.tabs
@@ -65,5 +66,5 @@ export function addInManifestTabs(
 	if (!ribbon) return;
 	if ('setInstalledAddInTabs' in ribbon && typeof ribbon.setInstalledAddInTabs === 'function')
 		return ribbon.setInstalledAddInTabs(tabs);
-	syncInstalledRibbonTabs(ribbon, tabs);
+	syncTabs?.(ribbon, tabs);
 }

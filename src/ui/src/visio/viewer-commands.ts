@@ -12,6 +12,7 @@ import {
 	visioSelectionIsOnPage,
 } from 'ooxml-core/visio/ui';
 import { openOfficeAddIns } from '../ribbon/add-in-dialog';
+import { syncInstalledRibbonTabs } from '../ribbon/add-in-tabs';
 import { ribbonLocale } from './ribbon-localize';
 import { translateRibbonText } from './ribbon-locale';
 import { regionKeyDirection } from '../region-focus';
@@ -289,6 +290,8 @@ export class ViewerCommands {
 					(text) => translateRibbonText(locale, text),
 					'visio',
 					locale,
+					undefined,
+					syncInstalledRibbonTabs,
 				);
 			},
 			insertPage: () => this.#insertPage(),

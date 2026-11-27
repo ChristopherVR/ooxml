@@ -1,4 +1,5 @@
 import { syncDesignControls } from './design-ribbon-controls';
+import { confirmDialog } from '../dialog/message-dialogs';
 import type { OnlineVideoSearchProvider } from './online-video-search';
 import { SharedBuildingBlocks } from './building-blocks-shared';
 import type { signature } from 'ooxml-core/opc';
@@ -522,7 +523,7 @@ export class EditorCore {
 		const { searchPanel, printLayout, review, chrome, toolbar } = this.shell;
 		searchPanel?.refresh();
 		if (this.signatureLocked || this.model.signatures)
-			void import('./signed-document').then((m) => m.syncSignedDocumentBar(this));
+			void import('./signed-document').then((m) => m.syncSignedDocumentBar(this, confirmDialog));
 		this.shell.chartFormat?.refresh();
 		// The open pane follows the caret's thread and whether a selection can take a comment.
 		if (review?.commentsOpen) review.commentsPanel.refresh();

@@ -23,7 +23,12 @@ import { field, numberInput } from '../dialogs/fields';
 import { showDialog } from '../dialogs/frame';
 import { bounded } from './drawing-format-actions';
 import type { ChartFormatAction, ChartFormatTabTarget } from './chart-format-tab';
-import { chartFormatTarget } from './chart-format-tab';
+
+/**
+ * The element the tab formats now (`chartFormatTarget`), passed in by the tab so this lazy chunk
+ * does not import the eager tab module and the Format pane helpers it uses.
+ */
+let chartFormatTarget: (ctx: EditorContext) => ChartFormatTabTarget | undefined = () => undefined;
 
 const rgb = (value: string): DrawingColor => ({ kind: 'srgb', value, transforms: [] });
 
@@ -86,7 +91,9 @@ export async function runChartFormat(
 	chart: ChartFormatTabTarget,
 	id: ChartFormatAction,
 	arg: unknown,
+	current: (ctx: EditorContext) => ChartFormatTabTarget | undefined,
 ): Promise<void> {
+	chartFormatTarget = current;
 	const label = ctx.t(ctx.commands.get(id)?.label ?? '');
 	const { target } = chart;
 	switch (id) {

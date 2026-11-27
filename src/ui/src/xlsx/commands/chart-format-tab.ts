@@ -100,7 +100,7 @@ export function chartFormatTabCommands(): Command[] {
 					const chart = chartFormatTarget(ctx);
 					if (!chart) return;
 					const { runChartFormat } = await import('./chart-format-tab-actions');
-					await runChartFormat(ctx, chart, id as ChartFormatAction, arg);
+					await runChartFormat(ctx, chart, id as ChartFormatAction, arg, chartFormatTarget);
 				},
 			}),
 		),

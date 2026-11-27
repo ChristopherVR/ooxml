@@ -50,6 +50,7 @@ import { insertLocalDrawing } from './insert-local-drawing';
 import { captureScreenshotFile } from '../form/display-clipping';
 import { pickOfficeIcon } from '../form/icon-picker';
 import { openOfficeAddIns } from '../ribbon/add-in-dialog';
+import { syncInstalledRibbonTabs } from '../ribbon/add-in-tabs';
 import { loadWordAddInSelection } from './add-in-selection-loader';
 import { insertTextBox, selectedTextBox, updateTextBox } from './text-box-commands';
 import { focusView } from './focus-view';
@@ -154,6 +155,7 @@ export class InsertController {
 					'word',
 					this.locale,
 					() => loadWordAddInSelection(() => this.host.view()),
+					syncInstalledRibbonTabs,
 				);
 			}
 		} else if (action.type === 'insertIcon') {
