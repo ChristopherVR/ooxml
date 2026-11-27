@@ -69,6 +69,7 @@ export function createHomePopup(
 	};
 	const key = (event: KeyboardEvent) => {
 		if (event.key === 'Escape') {
+			event.preventDefault();
 			event.stopPropagation();
 			close(true);
 		} else if (event.key === 'Tab') {
@@ -79,7 +80,7 @@ export function createHomePopup(
 		const view = doc.defaultView;
 		const method = on ? 'addEventListener' : 'removeEventListener';
 		doc[method]('pointerdown', outside, true);
-		doc[method]('keydown', key as EventListener);
+		doc[method]('keydown', key as EventListener, true);
 		view?.[method]('resize', reposition);
 		doc[method]('scroll', scroll, true);
 	};

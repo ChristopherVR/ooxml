@@ -23,8 +23,7 @@ import { commandNamed, GROUP_COMMAND, marqueeAcross, openMenuOn } from './suppor
 import { fixture, loadDeckAt, ribbon, ribbonTab, slideElements, slideStage } from './support/deck';
 import { acrossFrameworks } from './support/parity';
 
-// Group lives in Home's Arrange extras, the first group to collapse into a popup on a narrower
-// window, where its button is hidden. The parity harness opens its own pages, so pass it too.
+// Keep Home's Drawing group wide enough to open Arrange without unfolding the group first.
 const WIDE = { width: 2600, height: 900 };
 test.use({ viewport: WIDE });
 
@@ -40,18 +39,13 @@ function shape(page: Page, label: string): Locator {
 	return slideElements(page).filter({ hasText: label }).first();
 }
 
-/** The ribbon's Group button, wherever it lives (Home's Arrange group, or a dedicated Arrange tab). */
+/** Open Home > Drawing > Arrange, where the Group command lives. */
 async function ribbonGroupButton(page: Page): Promise<Locator> {
-	const home = ribbon(page).getByRole('button', { name: 'Group', exact: true });
-	if ((await home.count()) > 0) {
-		return home.first();
-	}
-	const arrangeTab = ribbonTab(page, 'Arrange');
-	if ((await arrangeTab.count()) > 0) {
-		await arrangeTab.click();
-		await page.waitForTimeout(150);
-	}
-	return ribbon(page).getByRole('button', { name: 'Group', exact: true }).first();
+	await ribbonTab(page, 'Home').click();
+	await ribbon(page).getByRole('button', { name: 'Arrange', exact: true }).click();
+	const group = page.getByRole('menuitem', { name: 'Group', exact: true });
+	await expect(group).toBeVisible();
+	return group;
 }
 
 interface GroupUiState {
@@ -70,10 +64,21 @@ async function readGroupState(
 	const first = shape(page, labels[0]);
 	const second = shape(page, labels[1]);
 	await marqueeAcross(page, slideStage(page), [first, second]);
+	const selectedIds = () => page.evaluate(() => window.__pptxViewer.getSelectedElementIds());
+	const selection = await selectedIds();
+	expect(selection).toEqual(
+		expect.arrayContaining([
+			await first.getAttribute('data-element-id'),
+			await second.getAttribute('data-element-id'),
+		]),
+	);
 
 	const ribbonButton = await ribbonGroupButton(page);
 	const ribbonPresent = (await ribbonButton.count()) > 0;
 	const ribbonDisabled = ribbonPresent ? await ribbonButton.isDisabled() : true;
+	await page.keyboard.press('Escape');
+	await expect(ribbonButton).toBeHidden();
+	await expect.poll(selectedIds).toEqual(selection);
 
 	const menu = await openMenuOn(page, second);
 	const command = commandNamed(menu, GROUP_COMMAND);

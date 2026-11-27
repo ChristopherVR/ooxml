@@ -136,7 +136,16 @@ describe('home menus, colours and numbers', () => {
 		const slot = control(host, 'home.editing.select');
 		const trigger = slot.querySelector('button')!;
 		trigger.click();
-		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+		const editorKeys = vi.fn();
+		document.addEventListener('keydown', editorKeys);
+		try {
+			trigger.dispatchEvent(escape);
+			expect(escape.defaultPrevented).toBe(true);
+			expect(editorKeys).not.toHaveBeenCalled();
+		} finally {
+			document.removeEventListener('keydown', editorKeys);
+		}
 		expect(trigger.getAttribute('aria-expanded')).toBe('false');
 		trigger.click();
 		document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
