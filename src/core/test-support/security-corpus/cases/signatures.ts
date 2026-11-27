@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 
 import JSZip from 'jszip';
 
+import { withSignatureLineSignings } from '../../../opc/signature/sign/office-info';
 import { verifyPackageSignatureSummary } from '../../../opc/signature/verify/inspect';
 import {
 	rsaKeyCertificate,
@@ -23,6 +24,7 @@ import {
 import type { SecurityCase } from '../case';
 
 const SHA256 = 'http://www.w3.org/2001/04/xmlenc#sha256';
+const XMLDSIG = 'http://www.w3.org/2000/09/xmldsig#';
 const SIGNATURE_PART = '_xmlsignatures/sig1.xml';
 const EDITED_SLIDE = '<sld>edited</sld>';
 const DOCUMENT_SIGNING = { name: 'extKeyUsage', emailProtection: true };
@@ -122,5 +124,40 @@ export const cases: readonly SecurityCase[] = [
 			return { state: (await verifyPackageSignatureSummary(bytes)).state };
 		},
 		expected: { state: 'unsupported' },
+	},
+	{
+		name: 'a signature line is read only from a well-formed, signed Office object',
+		limits: { ms: 2_000, heapMb: 64 },
+		async run() {
+			const line = '{8F3B2A10-0C4D-4E5F-9A6B-7C8D9E0F1A2B}';
+			const info = `<SignatureInfoV1 xmlns="http://schemas.microsoft.com/office/2006/digsig"><SetupID>${line}</SetupID><SignatureImage>${'A'.repeat(3 * 1024 * 1024)}</SignatureImage></SignatureInfoV1>`;
+			const parts = {
+				// A DTD could make the tree differ from the bytes a signer saw.
+				'_xmlsignatures/sig1.xml': `<!DOCTYPE Signature [<!ENTITY e "x">]><Signature xmlns="${XMLDSIG}"><Object Id="idOfficeObject">${info}</Object></Signature>`,
+				// Not named by SignedInfo, so its digest protects nothing.
+				'_xmlsignatures/sig2.xml': `<Signature xmlns="${XMLDSIG}"><SignedInfo/><Object Id="idOfficeObject">${info}</Object></Signature>`,
+				// Named by SignedInfo: the line is read, the oversized picture is not.
+				'_xmlsignatures/sig3.xml': `<Signature xmlns="${XMLDSIG}"><SignedInfo><Reference URI="#idOfficeObject"/></SignedInfo><Object Id="idOfficeObject">${info}</Object></Signature>`,
+			};
+			const zip = new JSZip();
+			for (const [path, xml] of Object.entries(parts)) zip.file(path, xml);
+			// The verifier's verdict is given here: only the Office object is under test.
+			const summary = await withSignatureLineSignings(zip, {
+				state: 'verified-untrusted',
+				signatures: Object.keys(parts).map((path) => ({
+					path,
+					state: 'verified-untrusted' as const,
+				})),
+			});
+			return summary.signatures.map((entry) => ({
+				line: entry.signatureLineId ?? null,
+				image: Boolean(entry.signatureImage),
+			}));
+		},
+		expected: [
+			{ line: null, image: false },
+			{ line: null, image: false },
+			{ line: '{8F3B2A10-0C4D-4E5F-9A6B-7C8D9E0F1A2B}', image: false },
+		],
 	},
 ];

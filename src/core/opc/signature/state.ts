@@ -86,6 +86,12 @@ export interface SignatureEntry {
 	/** ISO dates of the certificate's validity. */
 	validFrom?: string | undefined;
 	validTo?: string | undefined;
+	/** The `{GUID}` of the signature line this verified signature signs (`SignatureInfoV1/SetupID`). */
+	signatureLineId?: string | undefined;
+	/** The name the signer typed on the signature line. */
+	signatureText?: string | undefined;
+	/** The signer's picture on the signature line, Base64 (a PNG when this package signed it). */
+	signatureImage?: string | undefined;
 }
 
 /** A package's signatures as a product shows them: the overall state and each signature. */

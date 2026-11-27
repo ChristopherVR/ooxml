@@ -3,7 +3,11 @@ import { readPackageInformation } from './package-information';
 import { readMailMergeSettings } from './mail-merge/settings';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { declaredEntrySize, openZip } from '../opc/zip-limits';
-import { inspectPackageSignatures, verifySignedPackage } from '../opc/signature/index';
+import {
+	inspectPackageSignatures,
+	verifySignedPackage,
+	withSignatureLineSignings,
+} from '../opc/signature/index';
 import { resolveDocxLimits } from './package-limits';
 import type { ZipLimits } from '../opc/zip-limits';
 import type { Block, DocumentModel, DocxLoadOptions, LoadedDocument } from './model';
@@ -130,7 +134,7 @@ export async function readPackage(
 		if (ends.length) model.sourceBookmarkEnds = ends;
 	}
 	if ((await inspectPackageSignatures(zip)).hasSignatures)
-		model.signatures = await verifySignedPackage(zip);
+		model.signatures = await withSignatureLineSignings(zip, await verifySignedPackage(zip));
 	const stylesFile = zip.file(documentPartPath(drawings.rels, 'styles', 'word/styles.xml'));
 	if (stylesFile) {
 		const stylesRoot = parseXml(await stylesFile.async('string')).documentElement;

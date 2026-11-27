@@ -4,6 +4,8 @@
 // signing it needs a certificate and a signing service, which this package does not have.
 import { encodePng } from '../drawingml/raster-encode';
 import type { InlineImage } from './inline-model';
+import type { Block } from './model';
+import type { Paragraph } from './model-paragraph';
 import { pictureFrameShapeType } from './picture-watermark';
 import { makeNS, makeW, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
@@ -148,4 +150,18 @@ export function signatureLinePlaceholderPng(): Uint8Array {
 			ink(14 + 28 - i + t, baseline - 40 + i);
 		}
 	return encodePng(width, height, rgb, alpha);
+}
+
+/** Every signature line in the body (and its tables), in document order. */
+export function signatureLinesOf(blocks: readonly Block[]): SignatureLineSpec[] {
+	const lines: SignatureLineSpec[] = [];
+	const visit = (paragraph: Paragraph) => {
+		for (const run of paragraph.runs)
+			if (run.image?.signatureLine) lines.push(run.image.signatureLine);
+	};
+	for (const block of blocks) {
+		if (block.type === 'paragraph') visit(block);
+		else for (const row of block.rows) for (const cell of row) cell.paragraphs.forEach(visit);
+	}
+	return lines;
 }
