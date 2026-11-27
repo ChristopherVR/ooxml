@@ -95,11 +95,11 @@ test('reviews, cancels, installs and searches local PowerPoint add-ins', async (
 	await (await chooser).setFiles(payload);
 	const consent = dialog.getByRole('region', { name: 'Review add-in permissions' });
 	await expect(consent).toContainText('Read and change this document');
-	await consent.getByRole('button', { name: 'Cancel' }).click();
+	await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
 	await expect(search).toBeFocused();
 	await expect(dialog).toContainText('No add-ins');
 	await dialog.getByLabel('Choose a local add-in file').setInputFiles(payload);
-	await consent.getByRole('button', { name: 'Install Notes' }).click();
+	await dialog.getByRole('button', { name: 'Install Notes', exact: true }).click();
 	await expect(dialog).toBeHidden();
 	await expect(mine).toBeFocused();
 

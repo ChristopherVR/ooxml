@@ -42,7 +42,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.goto(`/?framework=${framework}`);
 		await newDocument(page);
 		const editor = page.locator('docx-editor');
-		await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+		const insert = editor.getByRole('tab', { name: 'Insert', exact: true });
+		await insert.click();
 		const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
 		const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
 		const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
@@ -73,7 +74,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(await dialog.getByRole('dialog', { name: 'Office Add-ins' }).boundingBox()).toEqual(
 			initialBox,
 		);
-		await consent.getByRole('button', { name: 'Cancel' }).click();
+		await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
 		await expect(search).toBeFocused();
 		await expect(dialog).toContainText('No add-ins');
 		await dialog.getByLabel('Choose a local add-in file').setInputFiles({
@@ -81,9 +82,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			mimeType: 'application/xml',
 			buffer: await readFile(fixture),
 		});
-		await consent.getByRole('button', { name: 'Install Notes' }).click();
+		await dialog.getByRole('button', { name: 'Install Notes', exact: true }).click();
 		await expect(dialog).toBeHidden();
-		await expect(mine).toBeFocused();
+		await expect(editor.getByRole('tab', { name: 'Notes', exact: true })).toBeFocused();
+		await insert.click();
+		await reveal(editor, mine);
 		await mine.press('Enter');
 		await expect(dialog).toContainText('Notes (1.0.0)');
 		await search.fill('unmatched');
@@ -231,7 +234,8 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);
 	const editor = page.locator('docx-editor');
-	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	const insert = editor.getByRole('tab', { name: 'Insert', exact: true });
+	await insert.click();
 	const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
 	const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
 	await reveal(editor, get);
@@ -265,16 +269,17 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await expect(consent).toContainText('https://notes.example.test');
 	await expect(consent).toContainText('https://assets.example.test');
 	await expect(consent).not.toContainText('Document.ReadWrite.User');
-	const install = consent.getByRole('button', { name: 'Install Notes', exact: true });
+	const install = preview.getByRole('button', { name: 'Install Notes', exact: true });
 	await expect(consent.getByRole('heading')).toBeFocused();
 	await install.press('Enter');
 	await expect(preview).toBeHidden();
-	if (await get.isVisible()) await expect(get).toBeFocused();
+	await expect(editor.getByRole('tab', { name: 'Notes', exact: true })).toBeFocused();
 
+	await insert.click();
 	await reveal(editor, get);
 	await get.click();
 	await select(source.replace('https://notes.example.test/pane', 'javascript:alert(1)'));
-	await expect(preview.getByRole('status')).toContainText('unsafe URL');
+	await expect(preview.getByRole('alert')).toContainText('unsafe URL');
 	await page.keyboard.press('Escape');
 
 	await reveal(editor, mine);
@@ -284,7 +289,7 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await expect(installed).toContainText('Running add-ins is unavailable');
 	await expect(installed).toContainText('Unavailable requirement · WordApi 1.1');
 	await expect(installed).toContainText('Unavailable requirement · AddinCommands 1.10');
-	await expect(installed).toContainText('Unsupported feature · ExecuteFunction');
+	await expect(installed).toContainText('Unsupported feature · Function commands');
 	await expect(installed).not.toContainText('ContextMenu');
 	await page.keyboard.press('Escape');
 
@@ -296,6 +301,7 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	).toBeVisible();
 	await preview.getByRole('button', { name: 'Update Revised Notes', exact: true }).click();
 
+	await insert.click();
 	await reveal(editor, get);
 	await get.click();
 	await select(
@@ -307,6 +313,7 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await expect(preview.getByText('Update from 1.0.0 to 1.0.1', { exact: true })).toBeVisible();
 	await preview.getByRole('button', { name: 'Update Updated Notes', exact: true }).click();
 
+	await insert.click();
 	await reveal(editor, mine);
 	await mine.click();
 	await expect(installed).toContainText('Updated Notes (1.0.1)');

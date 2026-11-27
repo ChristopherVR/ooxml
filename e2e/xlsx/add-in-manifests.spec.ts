@@ -6,6 +6,8 @@ import { FRAMEWORKS, editor as excel, newWorkbook } from './helpers';
 
 /** Clicks an Add-ins command, opening the group first when the ribbon has collapsed it. */
 async function addInsCommand(editor: Locator, name: 'Get Add-ins' | 'My Add-ins') {
+	const insert = editor.getByRole('tab', { name: 'Insert', exact: true });
+	if ((await insert.getAttribute('aria-selected')) !== 'true') await insert.click();
 	const command = editor.getByRole('button', { name, exact: true });
 	if (!(await command.isVisible()))
 		await editor.getByRole('button', { name: 'Add-ins', exact: true }).click();
@@ -83,13 +85,14 @@ test('reviews and installs a unified package in Excel', async ({ page }) => {
 	await expect(consent).toContainText('https://assets.example.test');
 	await expect(consent).not.toContainText('Document.ReadWrite.User');
 	await expect(dialog).toContainText('Unavailable requirement · AddinCommands 1.10');
-	await expect(dialog).toContainText('Unsupported feature · shared runtime');
-	await consent.getByRole('button', { name: 'Install Notes', exact: true }).click();
+	await expect(dialog).toContainText('Unsupported feature · Shared runtimes');
+	await dialog.getByRole('button', { name: 'Install Notes', exact: true }).click();
+	await expect(dialog).toBeHidden();
 	await addInsCommand(editor, 'My Add-ins');
 	const installed = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 	await expect(installed).toContainText('Running add-ins is unavailable');
 	await expect(installed).toContainText('Unavailable requirement · AddinCommands 1.10');
-	await expect(installed).toContainText('Unsupported feature · shared runtime');
+	await expect(installed).toContainText('Unsupported feature · Shared runtimes');
 	await page.keyboard.press('Escape');
 
 	await addInsCommand(editor, 'Get Add-ins');
@@ -99,6 +102,7 @@ test('reviews and installs a unified package in Excel', async ({ page }) => {
 	await expect(dialog).toContainText('Updated Notes (1.0.1)');
 	await expect(dialog.getByText('Update from 1.0.0 to 1.0.1', { exact: true })).toBeVisible();
 	await dialog.getByRole('button', { name: 'Update Updated Notes', exact: true }).click();
+	await expect(dialog).toBeHidden();
 
 	await addInsCommand(editor, 'My Add-ins');
 	await expect(installed).toContainText('Updated Notes (1.0.1)');
@@ -140,11 +144,11 @@ for (const framework of FRAMEWORKS) {
 		await (await chooser).setFiles(payload);
 		const consent = dialog.getByRole('region', { name: 'Review add-in permissions' });
 		await expect(consent).toContainText('Read and change this document');
-		await consent.getByRole('button', { name: 'Cancel' }).click();
+		await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
 		await expect(search).toBeFocused();
 		await expect(dialog).toContainText('No add-ins');
 		await dialog.getByLabel('Choose a local add-in file').setInputFiles(payload);
-		await consent.getByRole('button', { name: 'Install Notes' }).click();
+		await dialog.getByRole('button', { name: 'Install Notes', exact: true }).click();
 		await expect(dialog).toBeHidden();
 		await expect(mine).toBeFocused();
 
