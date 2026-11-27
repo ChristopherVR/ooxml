@@ -78,9 +78,7 @@ describe('transitionsSection commits to the deck', () => {
 		const { wrapper, onTransitionChange } = mountTab(slideWith({ type: 'fade' }));
 		const duration = wrapper.find('input[type="number"]');
 		await duration.setValue('1.5');
-		expect(onTransitionChange).toHaveBeenCalledWith(
-			expect.objectContaining({ type: 'fade', durationMs: 1500 }),
-		);
+		expect(onTransitionChange).toHaveBeenCalledWith({ durationMs: 1500 });
 	});
 
 	it('writes the On Mouse Click gate', async () => {

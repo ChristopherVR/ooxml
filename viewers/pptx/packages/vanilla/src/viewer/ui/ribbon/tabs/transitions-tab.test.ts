@@ -109,9 +109,8 @@ describe('createTransitionsTab', () => {
 	it('commits the picked preset the moment the gallery is clicked', () => {
 		const { handlers, preset } = mount();
 		preset('fade').click();
-		expect(handlers.applyDraft).toHaveBeenCalledWith(
-			expect.objectContaining({ type: 'fade', durationSec: 0.7 }),
-			false,
+		expect(handlers.applyChange).toHaveBeenCalledWith(
+			expect.objectContaining({ type: 'fade', durationMs: 700 }),
 		);
 	});
 
@@ -120,10 +119,7 @@ describe('createTransitionsTab', () => {
 		const duration = q<HTMLInputElement>('input[type=number]');
 		duration.value = '1.5';
 		duration.dispatchEvent(new Event('input'));
-		expect(handlers.applyDraft).toHaveBeenCalledWith(
-			expect.objectContaining({ durationSec: 1.5 }),
-			false,
-		);
+		expect(handlers.applyChange).toHaveBeenCalledWith({ durationMs: 1500 });
 	});
 
 	it('commits an Advance After time on change, once After is ticked', () => {
@@ -136,10 +132,7 @@ describe('createTransitionsTab', () => {
 		const seconds = q<HTMLInputElement>('input[type=text]');
 		seconds.value = '00:03.00';
 		seconds.dispatchEvent(new Event('change'));
-		expect(handlers.applyDraft).toHaveBeenLastCalledWith(
-			expect.objectContaining({ advanceAfter: true, advanceAfterText: '00:03.00' }),
-			false,
-		);
+		expect(handlers.applyChange).toHaveBeenLastCalledWith({ advanceAfterMs: 3000 });
 	});
 
 	it('commits the Advance on Mouse Click toggle on its own', () => {
@@ -147,16 +140,15 @@ describe('createTransitionsTab', () => {
 		const onClick = checkbox('advanceOnClick');
 		onClick.checked = false;
 		onClick.dispatchEvent(new Event('change'));
-		expect(handlers.applyDraft).toHaveBeenCalledWith(
-			expect.objectContaining({ advanceOnClick: false }),
-			false,
-		);
+		expect(handlers.applyChange).toHaveBeenCalledWith({ advanceOnClick: false });
 	});
 
 	it('apply to All is a command that commits to every slide at once', () => {
 		const { handlers, preset, command } = mount();
 		preset('wipe').click();
-		expect(handlers.applyDraft).toHaveBeenLastCalledWith(expect.anything(), false);
+		expect(handlers.applyChange).toHaveBeenLastCalledWith(
+			expect.objectContaining({ type: 'wipe' }),
+		);
 		command('transitions.timing.applyToAll').click();
 		expect(handlers.applyDraft).toHaveBeenLastCalledWith(expect.anything(), true);
 	});

@@ -2,7 +2,7 @@
  /**
   * TransitionsTab: a thin adapter over the shared `pptx-ui-ribbon-transitions`
   * view. The draft is derived from the ACTIVE SLIDE, every control commits the
-  * whole draft through `EditorState.transitionOps.applyRibbonDraft`, Preview
+  * edited fields through `EditorState.transitionOps.applyChange`, Preview
   * replays the transition on the stage without writing, and sound picks are raw
   * patches through `transitionOps.applyChange`.
   */
@@ -13,7 +13,7 @@
   playDeckSound,
   playSlideTransitionPreview,
   readRibbonTransitionDraft,
-  ribbonTransitionsDraftPatch,
+  ribbonTransitionsIntentUpdates,
   ribbonTransitionsSoundChange,
   ribbonTransitionStockSoundUrl,
  } from 'ooxml-ui/pptx';
@@ -36,9 +36,9 @@
 
  function request(event: RibbonTransitionsRequestEvent): void {
   const intent = event.detail;
-  const patch = ribbonTransitionsDraftPatch(intent);
+  const patch = ribbonTransitionsIntentUpdates(intent, draft);
   if (patch) {
-   editor.transitionOps.applyRibbonDraft({ ...draft, ...patch }, false);
+   editor.transitionOps.applyChange(patch);
    return;
   }
   switch (intent.kind) {

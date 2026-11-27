@@ -17,7 +17,7 @@ import {
 	output,
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import type { RibbonTransitionDraft, RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
+import type { RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
 import {
 	applyRibbonTransitionDraft,
 	BUILT_IN_SOUNDS,
@@ -25,7 +25,7 @@ import {
 	playDeckSound,
 	playSlideTransitionPreview,
 	readRibbonTransitionDraft,
-	ribbonTransitionsDraftPatch,
+	ribbonTransitionsIntentUpdates,
 	ribbonTransitionsSoundChange,
 	ribbonTransitionStockSoundUrl,
 	ribbonTransitionTargets,
@@ -71,9 +71,9 @@ export class RibbonTransitionsSectionComponent {
 
 	protected request(event: Event): void {
 		const intent = (event as RibbonTransitionsRequestEvent).detail;
-		const patch = ribbonTransitionsDraftPatch(intent);
+		const patch = ribbonTransitionsIntentUpdates(intent, this.draft());
 		if (patch) {
-			this.commit(patch);
+			this.commitChange(patch);
 			return;
 		}
 		switch (intent.kind) {
@@ -81,7 +81,7 @@ export class RibbonTransitionsSectionComponent {
 				playSlideTransitionPreview(this.slide()?.transition, document);
 				break;
 			case 'applyToAll':
-				this.commit({}, true);
+				this.applyToAll();
 				break;
 			case 'inspector':
 				this.toggleInspector.emit();
@@ -96,15 +96,15 @@ export class RibbonTransitionsSectionComponent {
 			default:
 				void ribbonTransitionsSoundChange(intent).then((change) => {
 					if (change) {
-						this.commitSound(change);
+						this.commitChange(change);
 					}
 					return undefined;
 				});
 		}
 	}
 
-	/** `updateSlide` replaces `transition` wholesale, so a sound change is pre-merged. */
-	private commitSound(changes: Partial<PptxSlideTransition>): void {
+	/** `updateSlide` replaces `transition` wholesale, so merge the edited fields first. */
+	private commitChange(changes: Partial<PptxSlideTransition>): void {
 		const index = this.slideIndex();
 		const slide = this.editor.slides()[index];
 		if (slide && this.canEdit()) {
@@ -115,16 +115,16 @@ export class RibbonTransitionsSectionComponent {
 	}
 
 	/** Write the draft onto the targeted slides, keeping each one's direction/sound/raw XML. */
-	private commit(patch: Partial<RibbonTransitionDraft>, applyToAll = false): void {
+	private applyToAll(): void {
 		if (!this.canEdit()) {
 			return;
 		}
 		const index = this.slideIndex();
-		const next: RibbonTransitionDraft = { ...this.draft(), ...patch };
+		const draft = this.draft();
 		const slides = this.editor.slides();
-		for (const target of ribbonTransitionTargets(slides.length, index, applyToAll)) {
+		for (const target of ribbonTransitionTargets(slides.length, index, true)) {
 			this.editor.updateSlide(target, {
-				transition: applyRibbonTransitionDraft(slides[target], next),
+				transition: applyRibbonTransitionDraft(slides[target], draft),
 			});
 		}
 	}

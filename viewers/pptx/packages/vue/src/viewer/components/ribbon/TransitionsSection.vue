@@ -5,10 +5,9 @@ import {
 	playDeckSound,
 	playSlideTransitionPreview,
 	readRibbonTransitionDraft,
-	ribbonTransitionsDraftPatch,
+	ribbonTransitionsIntentUpdates,
 	ribbonTransitionsSoundChange,
 	ribbonTransitionStockSoundUrl,
-	ribbonTransitionUpdates,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import { computed } from 'vue';
@@ -17,7 +16,7 @@ import { useI18n } from 'vue-i18n';
 /**
  * TransitionsSection: a thin adapter over the shared `pptx-ui-ribbon-transitions`
  * view. Every control reads the ACTIVE SLIDE through `readRibbonTransitionDraft`
- * and commits through `ribbonTransitionUpdates`; Preview replays the transition
+ * and commits the edited fields; Preview replays the transition
  * on the stage without writing, and sound picks are raw transition patches.
  */
 interface Props {
@@ -45,9 +44,9 @@ const state = computed(() => ({
 
 function request(event: RibbonTransitionsRequestEvent): void {
 	const intent = event.detail;
-	const patch = ribbonTransitionsDraftPatch(intent);
+	const patch = ribbonTransitionsIntentUpdates(intent, draft.value);
 	if (patch) {
-		props.onTransitionChange(ribbonTransitionUpdates({ ...draft.value, ...patch }));
+		props.onTransitionChange(patch);
 		return;
 	}
 	switch (intent.kind) {

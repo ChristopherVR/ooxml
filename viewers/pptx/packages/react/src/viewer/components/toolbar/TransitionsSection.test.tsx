@@ -120,9 +120,7 @@ describe('transitionsSection commits through the callbacks', () => {
 			duration.value = '2.5';
 			duration.dispatchEvent(new Event('input', { bubbles: true }));
 		});
-		expect(onTransitionChange).toHaveBeenLastCalledWith(
-			expect.objectContaining({ durationMs: 2500 }),
-		);
+		expect(onTransitionChange).toHaveBeenLastCalledWith({ durationMs: 2500 });
 		const after = container.querySelector<HTMLInputElement>(
 			'[data-ribbon-control="transitions.timing.advanceAfter"] pptx-ui-checkbox',
 		)!;

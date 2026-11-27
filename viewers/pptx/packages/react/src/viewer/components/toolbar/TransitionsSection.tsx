@@ -4,10 +4,9 @@ import {
 	playDeckSound,
 	playSlideTransitionPreview,
 	readRibbonTransitionDraft,
-	ribbonTransitionsDraftPatch,
+	ribbonTransitionsIntentUpdates,
 	ribbonTransitionsSoundChange,
 	ribbonTransitionStockSoundUrl,
-	ribbonTransitionUpdates,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import React, { useEffect, useMemo, useRef } from 'react';
@@ -19,8 +18,8 @@ import { useTranslation } from '../../i18n/use-translation';
  *
  * The shared view owns every control, label, pressed state and gating. The
  * tab holds no transition state of its own: `readRibbonTransitionDraft`
- * derives what each control shows from the ACTIVE SLIDE, every change commits
- * `ribbonTransitionUpdates` through `onTransitionChange`, Preview replays the
+ * derives what each control shows from the ACTIVE SLIDE, controls commit
+ * through `onTransitionChange`, Preview replays the
  * slide's transition on the editing stage (and writes nothing), and sound
  * picks are raw transition patches that bypass the draft.
  */
@@ -59,9 +58,9 @@ export function TransitionsSection(p: TransitionsSectionProps): React.ReactEleme
 		}
 		const request = (event: Event) => {
 			const intent = (event as RibbonTransitionsRequestEvent).detail;
-			const patch = ribbonTransitionsDraftPatch(intent);
+			const patch = ribbonTransitionsIntentUpdates(intent, draft);
 			if (patch) {
-				p.onTransitionChange(ribbonTransitionUpdates({ ...draft, ...patch }));
+				p.onTransitionChange(patch);
 				return;
 			}
 			switch (intent.kind) {

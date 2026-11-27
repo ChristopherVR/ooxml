@@ -5,7 +5,7 @@ import {
 	playDeckSound,
 	playSlideTransitionPreview,
 	registerPptxWebControls,
-	ribbonTransitionsDraftPatch,
+	ribbonTransitionsIntentUpdates,
 	ribbonTransitionsSoundChange,
 	ribbonTransitionStockSoundUrl,
 } from 'ooxml-ui/pptx';
@@ -24,7 +24,7 @@ export interface TransitionsTab {
  * The Transitions ribbon tab: a thin adapter for the shared
  * `pptx-ui-ribbon-transitions`. Shared owns every control, label, pressed state
  * and gating; this module reads the active slide through `handlers`, commits the
- * whole draft on each change (one undoable step), replays the transition on the
+ * edited fields on each change (one undoable step), replays the transition on the
  * stage for Preview (writing nothing) and applies sound picks as raw patches.
  */
 export function createTransitionsTab(
@@ -46,9 +46,9 @@ export function createTransitionsTab(
 	};
 	el.addEventListener('transitions-request', (event) => {
 		const intent = (event as RibbonTransitionsRequestEvent).detail;
-		const patch = ribbonTransitionsDraftPatch(intent);
+		const patch = ribbonTransitionsIntentUpdates(intent, handlers.readDraft());
 		if (patch) {
-			handlers.applyDraft({ ...handlers.readDraft(), ...patch }, false);
+			handlers.applyChange(patch);
 			return;
 		}
 		switch (intent.kind) {

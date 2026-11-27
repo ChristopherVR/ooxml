@@ -4,6 +4,7 @@ import { EMPTY_RIBBON_TRANSITION_DRAFT } from './ribbon-transitions';
 import {
 	canRequestTransitions,
 	ribbonTransitionsDraftPatch,
+	ribbonTransitionsIntentUpdates,
 	ribbonTransitionsSoundChange,
 	ribbonTransitionStockSoundUrl,
 	transitionsLabel,
@@ -36,6 +37,15 @@ describe('ribbon transitions state', () => {
 		expect(canRequestTransitions(locked, { kind: 'applyToAll' })).toBeFalsy();
 		expect(canRequestTransitions(locked, { kind: 'preview' })).toBeTruthy();
 		expect(canRequestTransitions(locked, { kind: 'soundPreview' })).toBeFalsy();
+	});
+
+	it('retimes a transition without rewriting the preset from the view draft', () => {
+		expect(
+			ribbonTransitionsIntentUpdates(
+				{ kind: 'duration', value: 1.5 },
+				EMPTY_RIBBON_TRANSITION_DRAFT,
+			),
+		).toStrictEqual({ durationMs: 1500 });
 	});
 
 	it('resolves sound intents into transition patches and stock sound urls', async () => {

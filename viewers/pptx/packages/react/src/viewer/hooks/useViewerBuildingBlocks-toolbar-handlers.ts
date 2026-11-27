@@ -81,14 +81,6 @@ export function buildToolbarAnimationHandlers(
 		propertyHandlers.handleUpdateSlide({ animations: filtered });
 	};
 
-	const handleTransitionChange = (updates: Partial<PptxSlideTransition>) => {
-		if (!activeSlide) {
-			return;
-		}
-		const current = activeSlide.transition ?? { type: 'none' as const };
-		propertyHandlers.handleUpdateSlide({ transition: { ...current, ...updates } });
-	};
-
 	const handleApplyTransitionToAll = () => {
 		const transition = activeSlide?.transition;
 		if (!transition) {
@@ -101,7 +93,7 @@ export function buildToolbarAnimationHandlers(
 	return {
 		handleAddAnimation,
 		handleRemoveAnimation,
-		handleTransitionChange,
+		handleTransitionChange: propertyHandlers.handleUpdateTransition,
 		handleApplyTransitionToAll,
 	};
 }

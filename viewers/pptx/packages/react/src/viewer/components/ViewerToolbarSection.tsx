@@ -19,7 +19,6 @@ import type {
 	PptxLayoutPreview,
 	PptxSlide,
 	PptxSection,
-	PptxSlideTransition,
 	PptxPresentationProperties,
 	PptxElementAnimation,
 	PptxAnimationPreset,
@@ -338,17 +337,6 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 		const filtered = current.filter((a) => a.elementId !== selectedElement.id);
 		propertyHandlers.handleUpdateSlide({ animations: filtered });
 	}, [selectedElement, activeSlide, propertyHandlers]);
-
-	const handleTransitionChange = useCallback(
-		(updates: Partial<PptxSlideTransition>) => {
-			if (!activeSlide) {
-				return;
-			}
-			const current = activeSlide.transition ?? { type: 'none' as const };
-			propertyHandlers.handleUpdateSlide({ transition: { ...current, ...updates } });
-		},
-		[activeSlide, propertyHandlers],
-	);
 
 	const scopedLayoutOptions = React.useMemo(
 		() => scopeLayoutOptionsToActiveSlide(s.layoutOptions, activeSlide),
@@ -863,7 +851,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 				onToggleSubtitles={dialogs.handleToggleSubtitles}
 				showSubtitles={Boolean(s.presentationProperties.showSubtitles)}
 				activeSlide={activeSlide}
-				onTransitionChange={handleTransitionChange}
+				onTransitionChange={propertyHandlers.handleUpdateTransition}
 				onApplyTransitionToAll={handleApplyTransitionToAll}
 				onResetSlide={handleResetSlide}
 				onAddSection={sectionOps ? handleAddSection : undefined}

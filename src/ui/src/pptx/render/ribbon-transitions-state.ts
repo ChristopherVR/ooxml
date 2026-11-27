@@ -9,7 +9,7 @@ import type { PptxSlideTransition, PptxTransitionType } from 'ooxml-core/pptx';
 
 import { getEffectSoundAsset } from './effect-sound-synth';
 import type { RibbonTransitionDraft } from './ribbon-transitions';
-import { RIBBON_TRANSITION_PRESETS } from './ribbon-transitions';
+import { RIBBON_TRANSITION_PRESETS, ribbonTransitionUpdates } from './ribbon-transitions';
 import {
 	applyTransitionSoundFile,
 	applyTransitionStockSound,
@@ -112,6 +112,33 @@ export function ribbonTransitionsDraftPatch(
 			return { advanceAfter: intent.value };
 		case 'advanceAfterText':
 			return { advanceAfterText: intent.value };
+		default:
+			return undefined;
+	}
+}
+
+/** Commit only the edited fields, so an intervening edit can survive a stale ribbon draft. */
+export function ribbonTransitionsIntentUpdates(
+	intent: RibbonTransitionsIntent,
+	draft: RibbonTransitionDraft,
+): Partial<PptxSlideTransition> | undefined {
+	switch (intent.kind) {
+		case 'preset':
+			return ribbonTransitionUpdates({ ...draft, type: intent.value });
+		case 'duration':
+			return { durationMs: Math.round(intent.value * 1000) };
+		case 'advanceOnClick':
+			return { advanceOnClick: intent.value };
+		case 'advanceAfter':
+			return {
+				advanceAfterMs: ribbonTransitionUpdates({ ...draft, advanceAfter: intent.value })
+					.advanceAfterMs,
+			};
+		case 'advanceAfterText':
+			return {
+				advanceAfterMs: ribbonTransitionUpdates({ ...draft, advanceAfterText: intent.value })
+					.advanceAfterMs,
+			};
 		default:
 			return undefined;
 	}

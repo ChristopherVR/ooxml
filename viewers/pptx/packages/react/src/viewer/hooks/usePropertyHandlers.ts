@@ -1,5 +1,7 @@
+import { mergeSlideTransition } from 'ooxml-ui/pptx';
 import type {
 	PptxSlide,
+	PptxSlideTransition,
 	PptxPresentationProperties,
 	PptxCoreProperties,
 	PptxAppProperties,
@@ -48,6 +50,7 @@ export interface UsePropertyHandlersInput {
 export interface PropertyHandlersResult {
 	handleUpdateNotes: (text: string, segments?: TextSegment[]) => void;
 	handleUpdateSlide: (updates: Partial<PptxSlide>) => void;
+	handleUpdateTransition: (updates: Partial<PptxSlideTransition>) => void;
 	handleUpdatePresentationProperties: (updates: Partial<PptxPresentationProperties>) => void;
 	handleUpdateCoreProperties: (updates: Partial<PptxCoreProperties>) => void;
 	handleUpdateAppProperties: (updates: Partial<PptxAppProperties>) => void;
@@ -107,6 +110,17 @@ export function usePropertyHandlers(input: UsePropertyHandlersInput): PropertyHa
 	const handleUpdateSlide = (updates: Partial<PptxSlide>) => {
 		ops.updateSlides((prev) =>
 			prev.map((s, i) => (i === activeSlideIndex ? { ...s, ...updates } : s)),
+		);
+		history.markDirty();
+	};
+
+	const handleUpdateTransition = (updates: Partial<PptxSlideTransition>) => {
+		ops.updateSlides((prev) =>
+			prev.map((slide, index) =>
+				index === activeSlideIndex
+					? { ...slide, transition: mergeSlideTransition(slide.transition, updates) }
+					: slide,
+			),
 		);
 		history.markDirty();
 	};
@@ -201,6 +215,7 @@ export function usePropertyHandlers(input: UsePropertyHandlersInput): PropertyHa
 	return {
 		handleUpdateNotes,
 		handleUpdateSlide,
+		handleUpdateTransition,
 		handleUpdatePresentationProperties,
 		handleUpdateCoreProperties,
 		handleUpdateAppProperties,

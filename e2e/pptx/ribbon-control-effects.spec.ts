@@ -154,10 +154,10 @@ test.describe('transitions tab writes to the deck', () => {
 		await loadDeck(page, SAMPLE_DECK);
 		await openRibbonTab(page, 'Transitions');
 
-		await page.getByRole('button', { name: 'Fade', exact: true }).first().click();
-		const duration = page.locator('input[title="Transition duration in seconds"]').first();
+		const controls = page.locator('pptx-ui-ribbon-transitions');
+		await controls.getByRole('button', { name: 'Fade', exact: true }).click();
+		const duration = controls.getByTitle('Transition duration in seconds', { exact: true });
 		await duration.fill('1.5');
-		// Vanilla and Angular commit a number field on `change`, not `input`.
 		await duration.blur();
 
 		const deck = await readDeckJson(page);
@@ -195,10 +195,13 @@ test.describe('transitions tab writes to the deck', () => {
 		await loadDeck(page, SAMPLE_DECK);
 		await openRibbonTab(page, 'Transitions');
 
-		await page.getByRole('button', { name: 'Push', exact: true }).first().click();
+		const controls = page.locator('pptx-ui-ribbon-transitions');
+		const preset = controls.getByRole('button', { name: 'Push', exact: true });
+		await preset.click();
+		await expect(preset).toHaveAttribute('aria-pressed', 'true');
 		// A long duration so the replay is still running when the assertion polls;
 		// the marker is removed the moment the animation ends.
-		const duration = page.locator('input[title="Transition duration in seconds"]').first();
+		const duration = controls.getByTitle('Transition duration in seconds', { exact: true });
 		await duration.fill('5');
 		await duration.blur();
 
