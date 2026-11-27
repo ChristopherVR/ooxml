@@ -40,8 +40,6 @@ function transaction<T>(
 	});
 }
 
-const productKeys = (host: string) => IDBKeyRange.bound(`${host}:`, `${host};`, false, true);
-
 /** A local manifest store shared by the suite and the demos. */
 export function createAddInPreferencesStore(name: string): OfficeAddInPreferences {
 	const memory = new Map<string, Uint8Array>();
@@ -58,14 +56,16 @@ export function createAddInPreferencesStore(name: string): OfficeAddInPreference
 			return transaction(db, 'readonly', (store) => {
 				const files: Uint8Array[] = [];
 				let total = 0;
-				const request = store.openCursor(productKeys(host));
+				// Apply the same profile-wide budget to older databases with per-product limits.
+				const request = store.openCursor();
 				request.onsuccess = () => {
 					const cursor = request.result;
-					if (!cursor || files.length >= installLimit) return;
+					if (!cursor || files.length >= installLimit || total >= byteLimit) return;
 					const bytes: unknown = cursor.value;
 					if (bytes instanceof Uint8Array && total + bytes.byteLength <= byteLimit) {
-						files.push(bytes);
 						total += bytes.byteLength;
+						if (typeof cursor.key === 'string' && cursor.key.startsWith(`${host}:`))
+							files.push(bytes);
 					}
 					cursor.continue();
 				};
@@ -83,8 +83,8 @@ export function createAddInPreferencesStore(name: string): OfficeAddInPreference
 					return;
 				}
 				for (const [record, value] of memory) {
-					if (record === key || !record.startsWith(`${host}:`)) continue;
-					count++;
+					if (record === key) continue;
+					if (record.startsWith(`${host}:`)) count++;
 					total += value.byteLength;
 				}
 				if (overLimit(count, total)) throw limitError();
@@ -96,7 +96,7 @@ export function createAddInPreferencesStore(name: string): OfficeAddInPreference
 					store.delete(key);
 					return;
 				}
-				const request = store.openCursor(productKeys(host));
+				const request = store.openCursor();
 				request.onsuccess = () => {
 					const cursor = request.result;
 					if (overLimit(count, total)) tx.abort();
@@ -104,7 +104,7 @@ export function createAddInPreferencesStore(name: string): OfficeAddInPreference
 					else {
 						const value: unknown = cursor.value;
 						if (cursor.key !== key && value instanceof Uint8Array) {
-							count++;
+							if (typeof cursor.key === 'string' && cursor.key.startsWith(`${host}:`)) count++;
 							total += value.byteLength;
 						}
 						cursor.continue();
