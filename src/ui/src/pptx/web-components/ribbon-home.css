@@ -1,0 +1,8 @@
+/* The Home view is light DOM (scoped document styles); the shadow root only slots it. */
+:host {
+	display: contents;
+}
+
+slot {
+	display: contents;
+}

@@ -1,9 +1,12 @@
+import { html } from 'lit';
+import { OfficeElement, controlStyles } from '../../base';
 import { defineElement } from '../../registry';
 import { openOfficeAddIns, officeAddInsMount } from '../../ribbon/add-in-dialog';
 import { canRequestHome, homeLabel } from '../render';
 import type { RibbonHomeFamily, RibbonHomeIntent, RibbonHomeViewState } from '../render';
 import type { HomeLayoutArtwork } from './ribbon-home-layout';
 import { attachRibbonHomeStyles } from './ribbon-home-styles';
+import css from './ribbon-home.css?raw';
 import { createRibbonHomeView } from './ribbon-home-view';
 
 export type RibbonHomeRequestEvent = CustomEvent<RibbonHomeIntent>;
@@ -46,7 +49,9 @@ export function definePptxRibbonHome(
 	if (registry.get(tag)) {
 		return;
 	}
-	class RibbonHome extends HTMLElement implements PptxUiRibbonHomeElement {
+	// The view stays in the light DOM (slotted), so host customization and layout selectors reach it.
+	class RibbonHome extends OfficeElement implements PptxUiRibbonHomeElement {
+		static override styles = controlStyles(css);
 		private model: RibbonHomeViewState = { controls: {} };
 		layoutArtwork: HomeLayoutArtwork | undefined;
 		private readonly view = createRibbonHomeView(
@@ -85,13 +90,17 @@ export function definePptxRibbonHome(
 		}
 		set state(value: RibbonHomeViewState) {
 			this.model = value;
-			this.render();
+			this.sync();
 		}
-		connectedCallback(): void {
+		protected override render() {
+			return html`<slot></slot>`;
+		}
+		override connectedCallback(): void {
+			super.connectedCallback();
 			attachRibbonHomeStyles(this.ownerDocument);
-			this.render();
+			this.sync();
 		}
-		private render(): void {
+		private sync(): void {
 			if (!this.contains(this.view.root)) {
 				this.append(this.view.root);
 			}
