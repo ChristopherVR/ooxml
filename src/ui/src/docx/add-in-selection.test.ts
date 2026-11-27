@@ -27,10 +27,57 @@ it('reads a read-only selection and writes multiline plain text as paragraphs wh
 	view.state.doc.forEach((child) => expect(child.attrs).toEqual(paragraph.attrs));
 });
 
-it('drops a Word selection adapter if its view changes while loading', async () => {
-	view = new EditorView(document.body, { state: EditorState.create({ schema }) });
-	let current: EditorView | undefined = view;
-	const selection = loadWordAddInSelection(() => current);
-	current = undefined;
-	await expect(selection).resolves.toBeUndefined();
+it('gives inserted paragraphs the formatting but not the identity of the paragraph they land in', () => {
+	const paragraph = schema.node(
+		'paragraph',
+		{
+			id: 'p-source',
+			style: 'ListParagraph',
+			numId: 3,
+			ilvl: 0,
+			listLabelText: '1.',
+			markRevision: { kind: 'insert', author: 'A' },
+			formatRevision: { author: 'B' },
+			sourceParagraphPropertiesXml: '<w:pPr/>',
+			restoredParagraphPropertiesXml: '<w:pPr/>',
+			bookmarks: ['start'],
+		},
+		[schema.text('original')],
+	);
+	const doc = schema.node('doc', null, [paragraph]);
+	view = new EditorView(document.body, {
+		state: EditorState.create({ doc, selection: TextSelection.create(doc, 9) }),
+	});
+	expect(wordAddInSelection(() => view).writeText('a\nb\nc')).toBe(true);
+	expect(view.state.doc.childCount).toBe(3);
+	expect(view.state.doc.child(0).attrs).toEqual(paragraph.attrs);
+	for (const index of [1, 2]) {
+		const attrs = view.state.doc.child(index).attrs;
+		expect(attrs).toMatchObject({ style: 'ListParagraph', numId: 3, ilvl: 0 });
+		expect(attrs).toMatchObject({
+			id: '',
+			listLabelText: null,
+			markRevision: null,
+			formatRevision: null,
+			sourceParagraphPropertiesXml: null,
+			restoredParagraphPropertiesXml: null,
+			bookmarks: [],
+		});
+	}
+});
+
+it('resolves the Word view on each request, so a pane opened before the view still works', async () => {
+	let current: EditorView | undefined;
+	const selection = await loadWordAddInSelection(() => current);
+	expect(selection.readText()).toBeUndefined();
+	expect(selection.writeText('early')).toBe(false);
+	const doc = schema.node('doc', null, [schema.node('paragraph', null, [schema.text('later')])]);
+	view = new EditorView(document.body, {
+		state: EditorState.create({ doc, selection: TextSelection.create(doc, 1, 6) }),
+	});
+	current = view;
+	expect(selection.readText()).toBe('later');
+	view.destroy();
+	expect(selection.readText()).toBeUndefined();
+	view = undefined;
 });

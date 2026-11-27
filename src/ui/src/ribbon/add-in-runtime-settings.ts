@@ -1,6 +1,6 @@
 import type { AddInDialogHost } from './add-in-dialog';
 
-/** A selection bound to the document that was current when the pane opened. */
+/** The text selection of the editor that opened the pane; a pane reads and writes through it. */
 export interface OfficeAddInSelection {
 	readText(): string | undefined;
 	writeText(text: string): boolean;

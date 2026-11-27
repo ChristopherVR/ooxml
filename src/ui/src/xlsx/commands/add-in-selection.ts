@@ -3,11 +3,11 @@ import { target, sheetLocked, type Command, type EditorContext } from 'ooxml-cor
 import { openOfficeAddIns, type AddInDialogMode } from '../../ribbon/add-in-dialog';
 import type { OfficeAddInSelection } from '../../ribbon/add-in-runtime-settings';
 
+/** Reads the workbook shown when each request arrives, so a pane opened at launch keeps working. */
 export function excelAddInSelection(ctx: EditorContext): OfficeAddInSelection {
-	const session = ctx.session();
 	const singleCell = () => {
 		const selected = target(ctx);
-		if (!selected || selected.session !== session || selected.ranges.length !== 1) return;
+		if (!selected || selected.ranges.length !== 1) return;
 		const { start, end } = selected.range;
 		if (start.row === end.row && start.col === end.col) return selected;
 	};
