@@ -147,15 +147,15 @@ manifest ID. Changing profiles switches the active store. Each profile can keep 
 16 MiB of add-in files across Word, Excel and PowerPoint. Removing an add-in deletes that
 record. The suite has no profile removal action. If a profile entry is removed outside the
 suite, its `ooxml-suite-add-ins-<profile>` database remains until site data is cleared.
-The records contain publisher-supplied
-manifest and package data. They stay on this device and contain no document selections or
+The records contain publisher-supplied manifest and package data. They stay on this
+device and contain no document selections or
 access tokens. Standalone library consumers default to session memory. A host can pass
 `null` to `setOfficeAddInPreferences` to turn persistence off in its editor scope. Clearing
 this site's browser data removes stored add-ins.
 
 The Word, Excel and PowerPoint demos use a separate local IndexedDB database
 (`ooxml-demo-add-ins`) to keep confirmed add-ins across demo reloads, with up to
-16 MiB per product. If IndexedDB is unavailable, the demo keeps records in page
+16 MiB across products on the same origin. If IndexedDB is unavailable, the demo keeps records in page
 memory. Remove an add-in in My Add-ins to delete it, clear the site's browser data,
 or open the demo with `?addInsStorage=off` to use session-only installation.
 Publisher code still requires explicit host opt-in.
