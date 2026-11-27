@@ -36,6 +36,7 @@
 	const groups = $derived(CONTEXTUAL_TAB_GROUPS[tab]);
 	const picture = $derived<PictureRibbonState>({
 		element: editor.selectedElement,
+		selectedIds: editor.selectedElements.map((element) => element.id),
 		editable: editor.editable,
 		translate: t,
 		slides: editor.slides,

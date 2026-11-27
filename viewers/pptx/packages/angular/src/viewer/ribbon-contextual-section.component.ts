@@ -121,6 +121,7 @@ export class RibbonContextualSectionComponent {
 		const slideIndex = this.slideIndex();
 		return {
 			element: this.selectedElement(),
+			selectedIds: this.editor.selectedIds(),
 			editable: this.canEdit(),
 			translate: ngxTranslate(this.translation),
 			slides: this.editor.slides(),

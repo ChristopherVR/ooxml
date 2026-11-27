@@ -1354,8 +1354,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       without editable drawing shapes.
 - [ ] **P1** Picture Format: Compress, Change Picture, Reset Picture (and size), Picture Border,
       Alt Text and Arrange work in all five bindings (`e2e/pptx/picture-format-commands.spec.ts`);
-      open: Picture Layout (disabled with a reason) and formats other than PNG and JPEG for
-      Change Picture, Compress and Reset.
+      Picture Layout converts the selected pictures into one of the built-in picture SmartArt
+      layouts in the shared SmartArt picker, saved with the built-in layout definition and the
+      pictures in its placeholders (`picture-layout.ts`, `picture-layout-dialog.ts`, lazy with the
+      layout library, 2026-11-27). Open: formats other than PNG and JPEG for Change Picture,
+      Compress and Reset; Picture Layout has no live hover preview on the slide and picks the
+      layout in a dialog rather than a ribbon dropdown.
 - [x] **P1** SmartArt Design: Text Pane, Promote, Demote, Right to Left, Move Up, Move Down and
       Convert (to shapes) are enabled and wired across all five bindings
       (`ribbon-galleries/smartart-commands.ts`, `smartart-layout.ts`, `smartart-commands.test.ts`

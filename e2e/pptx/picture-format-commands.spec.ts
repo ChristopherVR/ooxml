@@ -20,7 +20,7 @@ async function pictureFormat(page: Page) {
 
 test('picture commands replace the source, compress it and edit the outline', async ({ page }) => {
 	const picture = await pictureFormat(page);
-	await expect(control(page, 'pictureStyles.layout')).toBeDisabled();
+	await expect(control(page, 'pictureStyles.layout')).toBeEnabled();
 	await control(page, 'adjust.changePicture').click();
 	const bytes = await page.evaluate(() => {
 		const canvas = document.createElement('canvas');
@@ -110,4 +110,15 @@ test('background removal supports marking, discard and commit, and picture tools
 	await expect(page.getByTestId('element-alt-text').first()).toBeVisible();
 	await control(page, 'arrange.rotateRight').click();
 	await control(page, 'arrange.selectionPane').click();
+});
+
+test('Picture Layout turns the selected picture into a picture SmartArt', async ({ page }) => {
+	await pictureFormat(page);
+	const pictures = await elementsOfType(page, 'image').count();
+	await control(page, 'pictureStyles.layout').click();
+	const layouts = dialog(page).getByRole('listbox');
+	await layouts.getByRole('option', { name: 'Picture Grid', exact: true }).click();
+	await dialog(page).getByRole('button', { name: 'OK' }).click();
+	await expect(dialog(page)).toHaveCount(0);
+	await expect(elementsOfType(page, 'image')).toHaveCount(pictures - 1);
 });

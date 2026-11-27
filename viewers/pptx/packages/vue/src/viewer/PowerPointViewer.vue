@@ -2195,6 +2195,7 @@ const ribbonProps = computed(() => ({
 	onPatchElement: ops.updateElement,
 	picture: {
 		element: selectedElements.value[0] ?? null,
+		selectedIds: selectedElements.value.map((element) => element.id),
 		editable: canEditEffective.value,
 		slides: slides.value,
 		loadImage: (path: string) => handler.value?.getImageData(path) ?? Promise.resolve(undefined),

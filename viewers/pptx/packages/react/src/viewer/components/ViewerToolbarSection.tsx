@@ -591,6 +591,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 				onPatchElement={ops.updateElementById}
 				picture={{
 					element: selectedElement,
+					selectedIds: s.selectedElementIds,
 					editable: canEdit,
 					slides: s.slides,
 					loadImage: props.loadPicture,

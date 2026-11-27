@@ -193,6 +193,7 @@ export function createEditingChromeSync(deps: EditingChromeSyncDeps): () => void
 			),
 			picture: {
 				slides: state.slides,
+				selectedIds: state.selectedElementIds,
 				updateSlides: deps.updatePictureSlides,
 				loadImage: (path) => deps.getHandler?.()?.getImageData(path) ?? Promise.resolve(undefined),
 			},

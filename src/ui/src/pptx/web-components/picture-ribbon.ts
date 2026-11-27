@@ -35,7 +35,7 @@ type PictureCommand = (typeof COMMANDS)[PictureStripGroup][number][1];
 export type PictureDialogCommand =
 	| Extract<
 			PictureCommand,
-			'removeBackground' | 'compress' | 'changePicture' | 'resetSize' | 'border'
+			'removeBackground' | 'compress' | 'changePicture' | 'resetSize' | 'border' | 'layout'
 	  >
 	| 'resetPicture';
 
@@ -147,12 +147,12 @@ export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 		}
 
 		private reason(action: PictureCommand): string | undefined {
-			if (action === 'layout')
+			const state = this.model;
+			if (action === 'layout' && (!state?.slides || !state.updateSlides))
 				return this.label(
 					'pptx.pictureFormat.layoutUnavailable',
 					'Picture layouts cannot be created from a selection yet.',
 				);
-			const state = this.model;
 			const picture = state?.element;
 			if (action === 'altText' && isDirectPicture(picture) && state?.altText) return;
 			if (action === 'selectionPane' && state?.selectionPane) return;
@@ -204,7 +204,7 @@ export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 			if (this.reason(action)) return;
 			const state = this.model;
 			const picture = state?.element;
-			if (!state || !isDirectPicture(picture) || action === 'layout') return;
+			if (!state || !isDirectPicture(picture)) return;
 			if (action === 'altText') {
 				state.altText?.();
 				return;

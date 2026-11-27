@@ -346,7 +346,7 @@ export interface RibbonSelectionState {
 	cropActive?: boolean;
 	/** What the shared ribbon galleries build their descriptors from. */
 	galleryContext?: RibbonGalleryContext;
-	picture?: Pick<PictureRibbonState, 'slides' | 'updateSlides' | 'loadImage'>;
+	picture?: Pick<PictureRibbonState, 'slides' | 'updateSlides' | 'loadImage' | 'selectedIds'>;
 	/** Chart Format > Current Selection: the selected chart's current element. */
 	chartFormatTarget?: string;
 }

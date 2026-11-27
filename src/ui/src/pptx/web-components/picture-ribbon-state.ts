@@ -3,6 +3,8 @@ import { canInteractWithElement } from '../render/element-locks';
 
 export interface PictureRibbonState {
 	element: PptxElement | null | undefined;
+	/** Every selected element id; Picture Layout converts each selected picture. */
+	selectedIds?: readonly string[] | undefined;
 	editable: boolean;
 	translate: (key: string) => string;
 	patch: (id: string, patch: Partial<PptxElement>) => void;

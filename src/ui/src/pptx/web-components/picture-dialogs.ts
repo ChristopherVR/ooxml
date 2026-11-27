@@ -31,6 +31,11 @@ export function runPictureDialog(
 				if (!context.signal.aborted) compressPictures(context);
 			}, context.cancel);
 			break;
+		case 'layout':
+			void import('./picture-layout-dialog').then(({ choosePictureLayout }) => {
+				if (!context.signal.aborted) void choosePictureLayout(context);
+			}, context.cancel);
+			break;
 		case 'removeBackground':
 			void import('./picture-removal-dialog').then(({ removePictureBackground }) => {
 				if (!context.signal.aborted) removePictureBackground(context);

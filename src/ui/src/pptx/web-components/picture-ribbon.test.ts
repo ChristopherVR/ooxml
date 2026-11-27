@@ -86,6 +86,16 @@ describe('picture ribbon', () => {
 		expect(layout.title).toMatch(/from a selection/u);
 	});
 
+	it('enables Picture Layout when the host can replace elements on the slide', () => {
+		const { strip, state, command } = mount('picture-styles');
+		strip.state = {
+			...state,
+			slides: [{ id: 's1', rId: 'rId2', slideNumber: 1, elements: [picture] }],
+			updateSlides: vi.fn(),
+		};
+		expect(command('pictureStyles.layout').disabled).toBe(false);
+	});
+
 	it('rotates through the element update and opens the existing Selection Pane', () => {
 		const { state, command } = mount('picture-arrange');
 		command('arrange.rotateRight').click();
