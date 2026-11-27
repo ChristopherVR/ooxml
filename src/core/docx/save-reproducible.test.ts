@@ -57,7 +57,8 @@ describe('reproducible Word saves', () => {
 	});
 
 	it('refers new styles to the theme fonts and saves the default theme', async () => {
-		expect(DEFAULT_STYLES_XML).not.toMatch(/w:(?:ascii|hAnsi|eastAsia|cs)="/u);
+		// Only w:rFonts names fonts; w:lang also has a w:eastAsia attribute (a language).
+		expect(DEFAULT_STYLES_XML).not.toMatch(/<w:rFonts[^>]*\sw:(?:ascii|hAnsi|eastAsia|cs)="/u);
 		expect(DEFAULT_STYLES_XML).toContain('w:asciiTheme="minorHAnsi"');
 		expect(DEFAULT_STYLES_XML).toContain('w:asciiTheme="majorHAnsi"');
 		const zip = await JSZip.loadAsync(await save());
