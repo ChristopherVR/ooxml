@@ -112,14 +112,25 @@ export function assertMasterMarkup(
 			);
 	}
 }
-export function masterStyleCells(
+const STYLE_CATEGORIES = ['LineStyle', 'FillStyle', 'TextStyle'] as const;
+interface StyleChain {
+	cells: ReadonlyMap<string, Element>;
+	depth: number;
+}
+/**
+ * Resolves the effective style cells of master sheets. The style index, each style's ancestry and
+ * each line, fill and text style combination are built and charged once per proof, so an instance
+ * pays only for what it adds: many instances on one style cost the style work of one.
+ */
+export function masterStyleResolver(
 	document: Element,
-	template: Element,
-	instance: Element | undefined,
 	check: () => void,
 	charge: () => void = () => {},
-	verifyMovementProtection = false,
-): Map<string, Element> {
+): (
+	template: Element,
+	instance: Element | undefined,
+	verifyMovementProtection?: boolean,
+) => ReadonlyMap<string, Element> {
 	const styles = new Map<string, Element>();
 	for (const container of children(document, 'StyleSheets'))
 		for (const style of children(container, 'StyleSheet')) {
@@ -130,46 +141,64 @@ export function masterStyleCells(
 			styles.set(id, style);
 		}
 	const defaults = children(document, 'DocumentSheet')[0];
+	const chains = new Map<string, StyleChain>();
+	const proven = new Set<Element>();
 	const collect = (
 		id: string,
 		category: string,
-		seen = new Set<string>(),
-	): Map<string, Element> => {
+		verify: boolean,
+		active = new Set<string>(),
+	): StyleChain => {
 		check();
-		if (seen.has(id) || seen.size >= 64)
+		const key = JSON.stringify([id, category, verify]);
+		const known = chains.get(key);
+		if (known) return known;
+		if (active.has(id))
 			fail('EDIT_UNSUPPORTED_PACKAGE_DEPENDENCY', 'Invalid inherited master style ancestry.');
-		seen.add(id);
+		active.add(id);
 		const style = styles.get(id);
 		if (!style) fail('EDIT_UNSUPPORTED_PACKAGE_DEPENDENCY', 'Missing inherited master style.');
 		const own = masterCells(style, charge);
-		assertMasterMarkup(style, new Set(own.values()), check);
+		if (!proven.has(style)) {
+			assertMasterMarkup(style, new Set(own.values()), check);
+			proven.add(style);
+		}
 		const parent = attribute(style, category);
-		const result =
-			parent !== undefined && parent !== id
-				? collect(parent, category, seen)
-				: new Map<string, Element>();
+		const inherited =
+			parent !== undefined && parent !== id ? collect(parent, category, verify, active) : undefined;
+		const depth = (inherited?.depth ?? 0) + 1;
+		if (depth > 64)
+			fail('EDIT_UNSUPPORTED_PACKAGE_DEPENDENCY', 'Invalid inherited master style ancestry.');
+		const cells = new Map(inherited?.cells);
 		for (const [name, node] of own) {
 			charge();
-			if (attribute(node, 'F') !== 'Inh') result.set(name, node);
-			else if (
-				verifyMovementProtection &&
-				/^lock(move[xy]|width|height|aspect|delete)$/.test(name)
-			) {
+			if (attribute(node, 'F') !== 'Inh') cells.set(name, node);
+			else if (verify && /^lock(move[xy]|width|height|aspect|delete)$/.test(name)) {
 				charge();
-				inheritedProtection(node, result.get(name));
+				inheritedProtection(node, cells.get(name));
 			}
 		}
-		return result;
+		const chain = { cells, depth };
+		chains.set(key, chain);
+		return chain;
 	};
-	const result = new Map<string, Element>();
-	for (const category of ['LineStyle', 'FillStyle', 'TextStyle']) {
-		const id =
-			attribute(instance, category) ??
-			attribute(template, category) ??
-			attribute(defaults, category) ??
-			(styles.has('0') ? '0' : undefined);
-		if (id !== undefined)
-			for (const [name, node] of collect(id, category)) {
+	const combined = new Map<string, ReadonlyMap<string, Element>>();
+	return (template, instance, verifyMovementProtection = false) => {
+		const ids = STYLE_CATEGORIES.map(
+			(category) =>
+				attribute(instance, category) ??
+				attribute(template, category) ??
+				attribute(defaults, category) ??
+				(styles.has('0') ? '0' : undefined),
+		);
+		const key = JSON.stringify([ids, verifyMovementProtection]);
+		const known = combined.get(key);
+		if (known) return known;
+		const result = new Map<string, Element>();
+		STYLE_CATEGORIES.forEach((category, index) => {
+			const id = ids[index];
+			if (id === undefined) return;
+			for (const [name, node] of collect(id, category, verifyMovementProtection).cells) {
 				charge();
 				if (result.has(name) && result.get(name) !== node)
 					fail(
@@ -178,28 +207,45 @@ export function masterStyleCells(
 					);
 				result.set(name, node);
 			}
-	}
-	return result;
+		});
+		combined.set(key, result);
+		return result;
+	};
 }
 
 export interface MasterCellSource {
 	node: Element;
 	kind: 'template' | 'instance' | 'style';
 }
-export function overlay(
-	cells: Map<string, MasterCellSource>,
-	additions: Map<string, Element>,
-	kind: MasterCellSource['kind'],
+/** The names each source cell is known by in `cells`, for `overlay`. */
+export function masterAliases(
+	cells: ReadonlyMap<string, MasterCellSource>,
 	charge: () => void,
-): void {
-	const aliases = new Map<Element, Set<string>>(),
-		inherited = new Map<Element, MasterCellSource>();
+): Map<Element, ReadonlySet<string>> {
+	const aliases = new Map<Element, Set<string>>();
 	for (const [name, source] of cells) {
 		charge();
 		const names = aliases.get(source.node) ?? new Set<string>();
 		names.add(name);
 		aliases.set(source.node, names);
 	}
+	return aliases;
+}
+/**
+ * Lays `additions` over `cells`. `aliases` must describe `cells` (`masterAliases`); it is updated
+ * in place, and its name sets are replaced rather than changed, so a copy of a map shared between
+ * instances of one master can be passed.
+ */
+export function overlay(
+	cells: Map<string, MasterCellSource>,
+	additions: ReadonlyMap<string, Element>,
+	kind: MasterCellSource['kind'],
+	charge: () => void,
+	aliases: Map<Element, ReadonlySet<string>> = masterAliases(cells, charge),
+): void {
+	const inherited = new Map<Element, MasterCellSource>();
+	const alias = (node: Element, names: readonly string[]) =>
+		aliases.set(node, new Set([...(aliases.get(node) ?? []), ...names]));
 	for (const [name, node] of additions) {
 		charge();
 		const source = cells.get(name);
@@ -215,23 +261,20 @@ export function overlay(
 					'Inherited master cell has no effective source.',
 				);
 			cells.set(name, source);
-			const names = aliases.get(source.node) ?? new Set<string>();
-			names.add(name);
-			aliases.set(source.node, names);
+			alias(source.node, [name]);
 			continue;
 		}
-		const previous = cells.get(name),
-			names = aliases.get(node) ?? new Set<string>();
+		const previous = cells.get(name);
+		const names = [name];
 		if (previous && previous.node !== node) {
-			for (const alias of aliases.get(previous.node) ?? []) {
+			for (const other of aliases.get(previous.node) ?? []) {
 				charge();
-				cells.set(alias, { node, kind });
-				names.add(alias);
+				cells.set(other, { node, kind });
+				names.push(other);
 			}
 			aliases.delete(previous.node);
 		}
 		cells.set(name, { node, kind });
-		names.add(name);
-		aliases.set(node, names);
+		alias(node, names);
 	}
 }

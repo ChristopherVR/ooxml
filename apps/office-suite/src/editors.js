@@ -317,7 +317,10 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	await element.load(doc.bytes, doc.name);
 	fit();
 	for (const name of ['document-change', 'workbook-change'])
-		element.addEventListener(name, changed);
+		element.addEventListener(name, (event) => {
+			// Visio reports its own save (`markClean`, called after the suite saves) as a change.
+			if (event.detail?.kind !== 'save') changed();
+		});
 	// Selection and formatting changes that do not edit the document still move the bar's state.
 	let selection = null;
 	if (doc.kind === 'xlsx')
@@ -331,9 +334,12 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 		let previous = element.controller.state.edit;
 		let page = element.controller.state.pageIndex;
 		stop = element.controller.subscribe((state) => {
+			// An edit in progress, or one the editor refused, changes the edit state but not the
+			// drawing: only the bar's undo and busy state follow it. Applied edits, undo and redo
+			// arrive as `document-change` above.
 			if (state.edit !== previous) {
 				previous = state.edit;
-				changed();
+				moved();
 			}
 			if (state.pageIndex !== page) {
 				page = state.pageIndex;

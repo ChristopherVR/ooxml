@@ -15,11 +15,10 @@ import {
 import {
 	masterCells,
 	masterShapes,
-	masterStyleCells,
-	assertMasterMarkup,
 	overlay,
 	type MasterCellSource as Source,
 } from './edit-master-index';
+import { masterLayers } from './edit-master-layers';
 
 interface Binding {
 	id: string;
@@ -34,6 +33,17 @@ function problem(message: string): never {
 	return fail('EDIT_UNSUPPORTED_PACKAGE_DEPENDENCY', message);
 }
 
+const TRANSFORM_CELLS = [
+	'PinX',
+	'PinY',
+	'Width',
+	'Height',
+	'LocPinX',
+	'LocPinY',
+	'Angle',
+	'FlipX',
+	'FlipY',
+];
 const themeCell = /^(ColorSchemeIndex|EffectSchemeIndex|FontSchemeIndex|ThemeIndex|QuickStyle.*)$/i;
 /** Prove that effective cells of active master instances cannot depend on the edited local shapes.
  * Definitions remain untouched. Unsupported formulas and unresolved scopes remain refused.
@@ -79,6 +89,7 @@ export async function assertVisioMasterIndependence(
 		check();
 		if (--buildWork < 0) problem('Master effective-cell construction budget exceeded.');
 	};
+	const layers = masterLayers(document, check, charge);
 	const pageBindings = new Map<string, Binding>();
 	const movingTargets = new Set<string>();
 	for (const command of commands) {
@@ -111,18 +122,8 @@ export async function assertVisioMasterIndependence(
 		}
 		const tops = children(children(root, 'Shapes')[0], 'Shape');
 		if (tops.length !== 1) problem('Only a uniquely rooted master can prove independence.');
-		const templates = masterShapes(root),
+		const templates = layers.templates(root),
 			context = new Map<string, Binding>();
-		assertMasterMarkup(
-			root,
-			new Set(
-				templates.flatMap((shape) => {
-					charge();
-					return [...masterCells(shape, charge).values()];
-				}),
-			),
-			check,
-		);
 		const locals = [instance, ...masterShapes(instance)];
 		const byTemplate = new Map<string, Element>();
 		const rootId = attribute(tops[0], 'ID');
@@ -146,28 +147,23 @@ export async function assertVisioMasterIndependence(
 				problem('Chained master definitions are unsupported.');
 			const templateId = attribute(template, 'ID');
 			if (!templateId || context.has(templateId)) problem('Master-local sheet IDs are ambiguous.');
-			const local = byTemplate.get(templateId),
-				cells = new Map<string, Source>();
+			const local = byTemplate.get(templateId);
 			const movedInstance =
 				local === instance && movingTargets.has(JSON.stringify([pageId, attribute(local, 'ID')]));
-			for (const [name, node] of masterStyleCells(
-				document,
-				template,
-				local,
-				check,
-				charge,
-				movedInstance,
-			))
-				cells.set(name, { node, kind: 'style' });
-			overlay(cells, masterCells(template, charge), 'template', charge);
-			const inheritedCells = new Map(cells);
-			overlay(cells, masterCells(local, charge), 'instance', charge);
+			const inherited = layers.layer(template, local, movedInstance);
+			// Each binding holds its own effective cells, so the copy is charged per instance.
+			const cells = new Map<string, Source>();
+			for (const [name, source] of inherited.cells) {
+				charge();
+				cells.set(name, source);
+			}
+			overlay(cells, masterCells(local, charge), 'instance', charge, new Map(inherited.aliases));
 			const binding: Binding = {
 				id: `${pageId}:${attribute(instance, 'ID')}:${templateId}`,
 				pageId,
 				template,
 				cells,
-				inheritedCells,
+				inheritedCells: inherited.cells,
 				context,
 				...(local ? { instance: local } : {}),
 			};
@@ -210,7 +206,7 @@ export async function assertVisioMasterIndependence(
 		const shape = pageShapes.get(id);
 		if (!shape) problem('Local master override has a missing page reference.');
 		const cells = new Map<string, Source>();
-		for (const [name, node] of masterStyleCells(document, shape, shape, check, charge))
+		for (const [name, node] of layers.styles(shape, shape))
 			cells.set(name, { node, kind: 'style' });
 		overlay(cells, masterCells(shape, charge), 'instance', charge);
 		const result: Binding = {
@@ -224,6 +220,23 @@ export async function assertVisioMasterIndependence(
 		};
 		pageInputs.set(id, result);
 		return result;
+	};
+	const transformEdited = (binding: Binding): boolean => {
+		let shape =
+			binding.instance ??
+			[...binding.context.values()].find((item) => item.instance?.hasAttribute('Master'))?.instance;
+		if (!shape) return true;
+		for (; shape?.localName === 'Shape'; shape = shape.parentElement?.parentElement ?? undefined) {
+			const shapeId = attribute(shape, 'ID');
+			if (shapeId === undefined) return true;
+			for (const cell of TRANSFORM_CELLS)
+				if (
+					directAffected(binding.pageId, shapeId, cell) ||
+					query({ pageId: binding.pageId, shapeId, cell }, changed)
+				)
+					return true;
+		}
+		return false;
 	};
 	let steps = 100_000;
 	const inspect = (binding: Binding, name: string): void => {
@@ -257,6 +270,12 @@ export async function assertVisioMasterIndependence(
 			};
 			const dimension = defaults[name];
 			if (dimension) inspect(binding, dimension);
+			// The transform event (a glued connector's _XFTRIGGER) changes only when the sheet or
+			// a group around it is moved, resized, rotated or flipped.
+			else if (name === 'eventxfmod') {
+				if (transformEdited(binding))
+					problem('Effective master cache depends on an edited page shape.');
+			}
 			// Text format cells left to the document defaults are never geometry-dependent.
 			else if (!themeCell.test(name) && !/^(char|para)\./.test(name))
 				problem(`Missing effective master reference ${name}.`);
