@@ -76,7 +76,7 @@ For an application, prefer the editor package of your framework ([Word](https://
 | `ooxml-ui/chart-format-locales` | The Chart Format pane's own translations (`CHART_FORMAT_STRINGS`), for a product dictionary to extend.                  |
 | `ooxml-ui/teams`                | The Teams elements and `<teams-app>`.                                                                                   |
 | `ooxml-ui/bindings`             | The framework binding kit; `/bindings/react`, `/vue` and `/solid` are its component factories.                          |
-| `ooxml-ui/suite`                | The browser document persistence the Office suite uses.                                                                 |
+| `ooxml-ui/suite`                | The browser document and add-in preference persistence the Office suite and demos use.                                  |
 | `ooxml-ui/docx`                 | The Word editor and viewer elements (`<docx-editor>`).                                                                  |
 | `ooxml-ui/xlsx`                 | The Excel editor and viewer elements (`<xlsx-editor>`).                                                                 |
 | `ooxml-ui/visio`                | The Visio editor and viewer elements (`<visio-viewer>`).                                                                |
@@ -142,6 +142,8 @@ editor.addEventListener('office-ribbon-add-in', (event) => {
 A command runs its `run` callback, then dispatches the bubbling, composed `office-ribbon-add-in` event; it never reaches the product's own command router. `size: 'small'` commands fill columns of three and `items` makes a drop-down. A tab whose id is empty, repeated or equal to a built-in tab is skipped, so an add-in cannot replace a product tab. Assigning a new array each render is cheap and never closes an open drop-down. The descriptor types are DOM-free and live in `ooxml-core/ribbon`. Products render the list with `syncRibbonAddIns(ribbon, tabs, options)`.
 
 `setOfficeAddInCatalog(editor, entries)` exposes trusted host commands in the shared Office Add-ins dialog (Get Add-ins, My Add-ins), and `setOfficeAddInStorefront(editor, ...)` turns on its Store pivot, which is off by default.
+
+Upload My Add-in installs an add-in-only XML manifest, a unified JSON manifest or a `.zip` app package after a consent step. Installs stay in editor memory unless the host passes a preference store with `setOfficeAddInPreferences` (the suite and demos use the IndexedDB store from `ooxml-ui/suite`). `setOfficeAddInMarketplaceResolver` lets a host resolve a Marketplace link or `WA...` asset id through its own backend; the library never fetches one itself. `setOfficeAddInRuntime` runs compatible task panes in sandboxed frames from HTTPS origins the host approves, and only after the host sets `frameSrcEnforced: true` once its page's CSP `frame-src` allowlist is in place. Word and Excel give a pane a text selection bridge. Marketplace resolution and execution are off by default, and the dialog, validator and runtime load on first use. See [the add-ins plan](../../docs/office-addins-plan.md) and [PRIVACY.md](../../PRIVACY.md).
 
 ## Framework binding kit
 
