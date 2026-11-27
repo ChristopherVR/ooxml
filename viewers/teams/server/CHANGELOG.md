@@ -3,6 +3,17 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@2.0.1) - 2026-11-27
+
+### Bug Fixes
+
+- **security:** Address open CodeQL findings ([d3cfa23](https://github.com/ChristopherVR/ooxml/commit/d3cfa23a430dad131e7a62a5b6db929b7082ce49))
+- **teams:** Keep maintenance hooks out of the /health body ([ca40824](https://github.com/ChristopherVR/ooxml/commit/ca408244666656731f62dad4c651c480ce5563c7))
+
+### Documentation
+
+- Rewrite the OpenTeams viewer and server READMEs ([15e0b11](https://github.com/ChristopherVR/ooxml/commit/15e0b11b2dcf26edfe165577124e6a47b0ecc79e))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

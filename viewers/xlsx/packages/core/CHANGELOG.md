@@ -3,6 +3,13 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-core@2.0.1) - 2026-11-27
+
+### Documentation
+
+- Rewrite the Excel viewer READMEs ([65fd477](https://github.com/ChristopherVR/ooxml/commit/65fd477dbbaf5b9f730a97a2b553c9da3a4f6e28))
+- Close the privacy gaps for sharing, recovery and links ([72dfa8c](https://github.com/ChristopherVR/ooxml/commit/72dfa8cfe34f2073b6805a48b5c8f267b32f20fe))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-core@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

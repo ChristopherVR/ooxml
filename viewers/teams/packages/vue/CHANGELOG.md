@@ -3,6 +3,20 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-vue-viewer@2.0.1) - 2026-11-27
+
+### Bug Fixes
+
+- **teams:** Accept workspace ids up to the 128-character room limit ([66d9e54](https://github.com/ChristopherVR/ooxml/commit/66d9e54ae76010beef52939d857cacf4da95ee9d))
+
+### Documentation
+
+- Rewrite the OpenTeams viewer and server READMEs ([15e0b11](https://github.com/ChristopherVR/ooxml/commit/15e0b11b2dcf26edfe165577124e6a47b0ecc79e))
+
+### Dependencies
+
+- **deps:** Apply compatible updates from PRs #326 and #327 ([6130d6a](https://github.com/ChristopherVR/ooxml/commit/6130d6afc55d3f459423042525d735f5d48a2501))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-vue-viewer@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

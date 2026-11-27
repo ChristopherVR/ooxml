@@ -3,6 +3,34 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@2.1.0) - 2026-11-27
+
+### Features
+
+- **ui:** Add the draw tab ruler to word and excel ([986d45a](https://github.com/ChristopherVR/ooxml/commit/986d45a46b113ee73fb1314bedf3f4a71c4866e8))
+
+### Bug Fixes
+
+- **xlsx:** Expose an opt-in editor IMAGE provider ([027ddf5](https://github.com/ChristopherVR/ooxml/commit/027ddf5023555df381bd0e4cb63ae5d1035a0f48))
+- **xlsx:** Use the IMAGE provider on workbook open ([31acc80](https://github.com/ChristopherVR/ooxml/commit/31acc80d27879842e48d71bed69216a08868e843))
+- **ui:** Fit erased Excel ink and keep pen presses off the cells ([be403c1](https://github.com/ChristopherVR/ooxml/commit/be403c17d00c31b1406c0f8759703ecc77fd764d))
+- **xlsx:** Forward googleFonts through every binding ([1d2e707](https://github.com/ChristopherVR/ooxml/commit/1d2e707ebef44ebf66fdca71c11abeb84ae297ee))
+- **xlsx:** Take class and style on the svelte editor ([ff94995](https://github.com/ChristopherVR/ooxml/commit/ff94995a99fbd8bc95a88386c1cf60598128b0b5))
+
+### Documentation
+
+- Rewrite the Excel viewer READMEs ([65fd477](https://github.com/ChristopherVR/ooxml/commit/65fd477dbbaf5b9f730a97a2b553c9da3a4f6e28))
+- Close the privacy gaps for sharing, recovery and links ([72dfa8c](https://github.com/ChristopherVR/ooxml/commit/72dfa8cfe34f2073b6805a48b5c8f267b32f20fe))
+
+### Dependencies
+
+- **deps:** Bump the angular group with 8 updates ([4870238](https://github.com/ChristopherVR/ooxml/commit/4870238d776526df79c345320638f45c3cff0674))
+- **deps:** Reconcile angular dependency updates ([117066d](https://github.com/ChristopherVR/ooxml/commit/117066d9bf22e78aded860206f0bd2a54ed0c3f1))
+
+### Chores
+
+- **ci:** Integrate Office fixes and dependency updates ([3d436e0](https://github.com/ChristopherVR/ooxml/commit/3d436e0c7505cee722dafa343e5c6c2b290e5e24))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

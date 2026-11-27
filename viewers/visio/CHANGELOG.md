@@ -4,7 +4,7 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
-## Unreleased
+## 2026-11-27
 
 <!-- release-notes: 2.5 -->
 

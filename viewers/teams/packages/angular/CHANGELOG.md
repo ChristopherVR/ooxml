@@ -3,6 +3,25 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-angular-viewer@2.0.1) - 2026-11-27
+
+### Bug Fixes
+
+- **teams:** Accept workspace ids up to the 128-character room limit ([66d9e54](https://github.com/ChristopherVR/ooxml/commit/66d9e54ae76010beef52939d857cacf4da95ee9d))
+
+### Documentation
+
+- Rewrite the OpenTeams viewer and server READMEs ([15e0b11](https://github.com/ChristopherVR/ooxml/commit/15e0b11b2dcf26edfe165577124e6a47b0ecc79e))
+
+### Dependencies
+
+- **deps:** Bump the angular group with 8 updates ([4870238](https://github.com/ChristopherVR/ooxml/commit/4870238d776526df79c345320638f45c3cff0674))
+- **deps:** Reconcile angular dependency updates ([117066d](https://github.com/ChristopherVR/ooxml/commit/117066d9bf22e78aded860206f0bd2a54ed0c3f1))
+
+### Chores
+
+- **ci:** Integrate Office fixes and dependency updates ([3d436e0](https://github.com/ChristopherVR/ooxml/commit/3d436e0c7505cee722dafa343e5c6c2b290e5e24))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-angular-viewer@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

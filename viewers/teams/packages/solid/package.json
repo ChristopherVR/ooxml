@@ -1,6 +1,6 @@
 {
 	"name": "openteams-solid-viewer",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "SolidJS component and primitive for OpenTeams, the open-source bring-your-own-server team workspace (Teams protocol 2). The <teams-app> UI comes with it through ooxml-ui.",
 	"keywords": [
 		"chat",

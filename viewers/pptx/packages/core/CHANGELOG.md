@@ -3,6 +3,27 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [5.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@5.0.1) - 2026-11-27
+
+### Bug Fixes
+
+- **pptx:** Declare what the viewer packages import ([6e50efd](https://github.com/ChristopherVR/ooxml/commit/6e50efdd796bc76aa3b535ec6c1e6673c39a2a0e))
+
+### Documentation
+
+- Rewrite the PowerPoint viewer READMEs ([26e0f5d](https://github.com/ChristopherVR/ooxml/commit/26e0f5d4066765857ff411139a963d2ee5d55fa7))
+
+### Dependencies
+
+- **deps:** Apply compatible updates from PRs #326 and #327 ([6130d6a](https://github.com/ChristopherVR/ooxml/commit/6130d6afc55d3f459423042525d735f5d48a2501))
+- **deps:** Take emf-converter 5.0.1 ([59b8fb7](https://github.com/ChristopherVR/ooxml/commit/59b8fb7544a0579eafcc51f6953275af8bb68ae1))
+
+### Chores
+
+- **deps-dev:** Bump the development-minor-and-patch group with 5 updates ([1de2f58](https://github.com/ChristopherVR/ooxml/commit/1de2f5802035cecc41059252691efc14fc6d2951))
+- **deps-dev:** Reconcile development dependency updates ([1b1f293](https://github.com/ChristopherVR/ooxml/commit/1b1f29363b97bb4ac83728892938829dedd0a0b0))
+- **ci:** Integrate Office fixes and dependency updates ([3d436e0](https://github.com/ChristopherVR/ooxml/commit/3d436e0c7505cee722dafa343e5c6c2b290e5e24))
+
 ## [5.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@5.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

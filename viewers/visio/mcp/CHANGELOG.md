@@ -3,6 +3,12 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/visio-viewer-mcp@2.0.1) - 2026-11-27
+
+### Documentation
+
+- Rewrite the Visio viewer and area READMEs ([afd56e5](https://github.com/ChristopherVR/ooxml/commit/afd56e5bb4fb374bc97561f8a605d365c770350d))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-viewer-mcp@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

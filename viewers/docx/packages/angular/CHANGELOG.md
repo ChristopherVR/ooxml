@@ -3,6 +3,41 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-angular-viewer@2.1.0) - 2026-11-27
+
+### Features
+
+- **docx:** Enable the mailings ribbon workflow ([d471275](https://github.com/ChristopherVR/ooxml/commit/d471275f03cdb4c76101d9757efc75bfc1e1dda6))
+- **docx:** Add drawing arrangement controls ([f18be26](https://github.com/ChristopherVR/ooxml/commit/f18be269254d2f2a6536f7e876d41684e8e3c10c))
+- **docx:** Add mailings stationery, prompts and email output ([bdbb7a3](https://github.com/ChristopherVR/ooxml/commit/bdbb7a3eb20e510efb0a2e4b12f45c1267317f38))
+- **docx:** Add onlineVideoHosts to every Word binding ([24a4d39](https://github.com/ChristopherVR/ooxml/commit/24a4d39b7893a668051b45f5cc7f277eee164e9c))
+- **docx:** Sign lines, search videos and share building blocks ([39a1f51](https://github.com/ChristopherVR/ooxml/commit/39a1f512fe27c288d4efaa17b4aa221ff765fe29))
+
+### Bug Fixes
+
+- **docx:** Expose all views to navigation bindings ([541f428](https://github.com/ChristopherVR/ooxml/commit/541f428b77d14915618bd5b1fffd0cf7800906e9))
+
+### Refactor
+
+- **docx:** Split envelopes and labels and document providers ([79e59d7](https://github.com/ChristopherVR/ooxml/commit/79e59d78320dad0209712f8dcbbbda1ad31e0f67))
+
+### Documentation
+
+- Rewrite the Word viewer READMEs ([0ac9ef9](https://github.com/ChristopherVR/ooxml/commit/0ac9ef9b6435c38af8129637f5e292cb540eed27))
+
+### Testing
+
+- **docx:** Expect the Svelte binding's new host provider props ([48dfdd6](https://github.com/ChristopherVR/ooxml/commit/48dfdd686cff0dd56197432eb61dd67165d57dad))
+
+### Dependencies
+
+- **deps:** Bump the angular group with 8 updates ([4870238](https://github.com/ChristopherVR/ooxml/commit/4870238d776526df79c345320638f45c3cff0674))
+- **deps:** Reconcile angular dependency updates ([117066d](https://github.com/ChristopherVR/ooxml/commit/117066d9bf22e78aded860206f0bd2a54ed0c3f1))
+
+### Chores
+
+- **ci:** Integrate Office fixes and dependency updates ([3d436e0](https://github.com/ChristopherVR/ooxml/commit/3d436e0c7505cee722dafa343e5c6c2b290e5e24))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-angular-viewer@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

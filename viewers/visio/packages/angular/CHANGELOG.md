@@ -3,6 +3,27 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/visio-angular-viewer@2.0.1) - 2026-11-27
+
+### Bug Fixes
+
+- **visio:** Pass the file name through the svelte load handle ([835ac25](https://github.com/ChristopherVR/ooxml/commit/835ac255135ada34788ad6af7453e1c46752f558))
+
+### Documentation
+
+- Rewrite the Visio viewer and area READMEs ([afd56e5](https://github.com/ChristopherVR/ooxml/commit/afd56e5bb4fb374bc97561f8a605d365c770350d))
+- Close the privacy gaps for sharing, recovery and links ([72dfa8c](https://github.com/ChristopherVR/ooxml/commit/72dfa8cfe34f2073b6805a48b5c8f267b32f20fe))
+
+### Dependencies
+
+- **deps:** Bump the angular group with 8 updates ([4870238](https://github.com/ChristopherVR/ooxml/commit/4870238d776526df79c345320638f45c3cff0674))
+- **deps:** Reconcile angular dependency updates ([117066d](https://github.com/ChristopherVR/ooxml/commit/117066d9bf22e78aded860206f0bd2a54ed0c3f1))
+- **deps:** Take emf-converter 5.0.1 ([59b8fb7](https://github.com/ChristopherVR/ooxml/commit/59b8fb7544a0579eafcc51f6953275af8bb68ae1))
+
+### Chores
+
+- **ci:** Integrate Office fixes and dependency updates ([3d436e0](https://github.com/ChristopherVR/ooxml/commit/3d436e0c7505cee722dafa343e5c6c2b290e5e24))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-angular-viewer@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

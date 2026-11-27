@@ -3,7 +3,7 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [2.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.5.0) - Unreleased
+## [2.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.5.0) - 2026-11-27
 
 <!-- release-notes: 2.5 -->
 

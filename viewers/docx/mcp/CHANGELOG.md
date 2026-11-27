@@ -3,6 +3,12 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/docx-viewer-mcp@2.0.1) - 2026-11-27
+
+### Documentation
+
+- Rewrite the Word viewer READMEs ([0ac9ef9](https://github.com/ChristopherVR/ooxml/commit/0ac9ef9b6435c38af8129637f5e292cb540eed27))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-viewer-mcp@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->
