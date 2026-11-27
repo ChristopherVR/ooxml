@@ -140,7 +140,9 @@ const AHEAD = 8;
 /**
  * The inflated chunks of one entry as they are produced, with the checks of
  * {@link inflateEntryGuarded}: a violation throws from the iteration before more is inflated.
- * Inflating pauses while the reader is behind, and stops when the reader stops early.
+ * Inflating pauses while the reader is behind, and stops when the reader stops early. After a
+ * violation no further compressed block is read; the inflater may still finish the current 16 KiB
+ * input block, whose output is dropped chunk by chunk rather than kept.
  */
 export async function* streamEntryGuarded(
 	entry: JSZip.JSZipObject,

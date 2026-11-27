@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { lyingZipOf } from '../../../opc/__fixtures__/lying-zip';
 import { AddInManifestError, readLocalAddIn } from '../../../automation/add-ins';
 import { pngPreview } from '../../../automation/add-ins/package-icon';
+import { openZip, ZipLimitError } from '../../../opc/zip-limits';
 import { encodePng } from '../../../drawingml/raster-encode';
 import type { SecurityCase } from '../case';
 
@@ -35,6 +36,29 @@ export const cases: readonly SecurityCase[] = [
 				'field',
 			),
 		expected: 'archive entry',
+	},
+	{
+		// 8 MiB of real deflated zeros declared as 1 KiB: the read is refused at the first inflated
+		// chunk past the declared size, and nothing past that chunk is kept.
+		name: 'an archive entry stops inflating at the first chunk past its declared size',
+		limits: { ms: 2_000, heapMb: 64 },
+		async run() {
+			const bytes = lyingZipOf([
+				{ name: 'manifest.json', data: deflateRawSync(Buffer.alloc(8 << 20)), declared: 1024 },
+			]);
+			let inflated: number | undefined;
+			try {
+				await (await openZip(bytes)).file('manifest.json')?.async('uint8array');
+			} catch (error) {
+				if (!(error instanceof ZipLimitError) || error.kind !== 'declaredSize') throw error;
+				inflated = error.actual;
+			}
+			return {
+				refusal: await refusal(bytes, 'field'),
+				stoppedWithin64KiB: inflated !== undefined && inflated <= 1024 + 64 * 1024,
+			};
+		},
+		expected: { refusal: 'archive entry', stoppedWithin64KiB: true },
 	},
 	{
 		name: 'task pane URLs cannot carry publisher credentials',
