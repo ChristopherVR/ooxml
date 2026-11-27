@@ -195,6 +195,21 @@ test.describe('touch Insert controls', () => {
 		const insert = page.locator('pptx-ui-ribbon-insert');
 		await insert.evaluate((host) => host.style.setProperty('--pptx-primary', '#123456'));
 		await page.setViewportSize({ width: 900, height: 900 });
+		// The ribbon collapses its groups a frame or more after the resize: wait until the set
+		// of collapsed groups stops changing, or a group can collapse after it was checked.
+		const collapsedGroups = insert.locator('[data-ribbon-group][data-collapsed]');
+		let lastCollapsed = -1;
+		await expect
+			.poll(
+				async () => {
+					const count = await collapsedGroups.count();
+					const settled = count > 0 && count === lastCollapsed;
+					lastCollapsed = count;
+					return settled;
+				},
+				{ intervals: [100] },
+			)
+			.toBe(true);
 		// At 900px several groups collapse into popups: open the one holding the control.
 		const reveal = async (group: string) => {
 			const collapsed = insert.locator(`[data-ribbon-group="${group}"][data-collapsed]`);
