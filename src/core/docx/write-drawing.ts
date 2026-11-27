@@ -15,6 +15,7 @@ import { buildSignatureLineRun } from './signature-line';
 import { applyWebVideo } from './web-video';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
 import { blocksArePlainLines, writeTextBoxBlocks } from './write-text-box-blocks';
+import { patchTextBoxBlocks, textBoxBlocksChanged } from './patch-text-box-blocks';
 import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
 import { chartRun } from './write-chart-drawing';
 import { buildInkDrawing, patchInkXfrm } from './write-ink-drawing';
@@ -222,13 +223,27 @@ function shapeArtwork(image: InlineImage): string {
 export function createImageRun(
 	doc: XmlDocument,
 	image: InlineImage,
-	base: InlineImage | undefined,
+	loaded: InlineImage | undefined,
 	old: XmlElement | undefined,
 	allocator?: RelationshipAllocator,
 ): XmlElement {
 	const node = old ?? makeW(doc, 'r');
 	const oldDrawing = findDrawingChild(old);
 	const oldContainer = drawingContainer(old);
+	let base = loaded;
+	// A merge or field update changed the text inside a kept text box: write it, then compare the
+	// rest of the drawing as if its text were unchanged.
+	if (
+		base &&
+		oldDrawing &&
+		textBoxBlocksChanged(image, base) &&
+		patchTextBoxBlocks(doc, oldDrawing, oldContainer, image, base, allocator)
+	)
+		base = {
+			...base,
+			textBoxContent: image.textBoxContent!,
+			...(image.textBoxText && { textBoxText: image.textBoxText }),
+		};
 	if (!base && oldDrawing)
 		throw new Error(
 			'Cannot safely insert a picture here: this position lines up with a different existing picture. Edit further away from surrounding pictures, then save.',

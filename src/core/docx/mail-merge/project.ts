@@ -1,4 +1,3 @@
-import { mapStoryBlocks } from '../cell-blocks';
 import { computedFields, type ComputedFieldResult } from '../computed-fields';
 import {
 	fieldResultSpans,
@@ -8,6 +7,7 @@ import {
 import { fieldName } from '../field-runs';
 import { withStoryBlocks } from '../field-stories';
 import type { Block, DocumentModel, Paragraph, TextRun } from '../model';
+import { mapMergeStory, markSpaces } from './cross-paragraph';
 import type { MailMergeData } from './data-source';
 import { isMergeField, MergeFields, type MailMergeOptions } from './field-values';
 
@@ -97,7 +97,7 @@ function projectParagraph(
 		const codeNodes = new Map(
 			codeChildren.map((child, index) => [child.span.from, { child, index }]),
 		);
-		let instruction = span.instr;
+		let instruction = markSpaces(span.instr);
 		if (codeNodes.size) {
 			instruction = '';
 			for (let at = span.from + 1; at < span.insertAt; at++) {
@@ -107,6 +107,7 @@ function projectParagraph(
 					at = entry.child.span.to;
 				} else instruction += runs[at]?.fieldCode ?? '';
 			}
+			instruction = markSpaces(instruction);
 		}
 		const resolved = new Map<number, string>();
 		const result = fields.evaluate({
@@ -165,6 +166,13 @@ function projectParagraph(
 	return { ...paragraph, runs: next.length ? next : [{ text: '' }] };
 }
 
+/** The text of a text box's top-level paragraphs, as `InlineImage.textBoxText` keeps it. */
+function textBoxLines(blocks: readonly Block[]): string[] {
+	return blocks.flatMap((block) =>
+		block.type === 'paragraph' ? [block.runs.map((run) => run.text).join('')] : [],
+	);
+}
+
 export function projectMerge(
 	model: DocumentModel,
 	data: MailMergeData,
@@ -175,22 +183,39 @@ export function projectMerge(
 	const fields = new MergeFields(data, start, sequence, options);
 	const computed = computedFields(model);
 	let storyIndex = 0;
-	const project = (blocks: Block[], body: boolean) => {
+	const textBoxes = (value: Paragraph): Paragraph => {
+		let changed = false;
+		const runs = value.runs.map((run) => {
+			const content = run.image?.textBoxContent;
+			if (!content?.blocks.length || run.image?.textBoxEditable) return run;
+			const blocks = project(content.blocks, false, false);
+			if (blocks === content.blocks) return run;
+			changed = true;
+			const image = { ...run.image!, textBoxContent: { ...content, blocks } };
+			if (image.textBoxText) image.textBoxText = textBoxLines(blocks);
+			return { ...run, image };
+		});
+		return changed ? { ...value, runs } : value;
+	};
+	function project(blocks: Block[], body: boolean, boxes = true): Block[] {
 		const story = { openFields: 0, index: storyIndex++ };
-		const paragraph = (value: Paragraph) => projectParagraph(value, fields, computed, body, story);
+		const paragraph = (value: Paragraph) =>
+			projectParagraph(boxes ? textBoxes(value) : value, fields, computed, body, story);
 		const table = blocks[0];
 		if (!body || model.mailMerge?.mainDocumentType !== 'mailingLabels' || table?.type !== 'table')
-			return mapStoryBlocks(blocks, paragraph);
+			return mapMergeStory(blocks, paragraph);
 		const rows = table.rows.map((row) =>
 			row.map((cell) => {
 				if (cell.sourceBlocks) return cell;
-				const paragraphs = cell.paragraphs.map(paragraph);
+				const paragraphs = mapMergeStory(cell.paragraphs, paragraph).filter(
+					(item): item is Paragraph => item.type === 'paragraph',
+				);
 				if (!fields.exhausted) return { ...cell, paragraphs };
 				return { ...cell, paragraphs: paragraphs.map((p) => ({ ...p, runs: [{ text: '' }] })) };
 			}),
 		);
-		return [{ ...table, rows }, ...mapStoryBlocks(blocks.slice(1), paragraph)];
-	};
+		return [{ ...table, rows }, ...mapMergeStory(blocks.slice(1), paragraph)];
+	}
 	const blocks = project(model.blocks, true);
 	const nextIndex = fields.index + 1;
 	fields.index = start;

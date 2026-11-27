@@ -156,8 +156,16 @@ remain in the source package. New source targets default to external relationshi
 and targets are metadata for the host. `options.fieldMappings` can override the saved mappings
 for a merge. [Open XML mail merge settings](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.mailmerge)
 
-The engine covers body paragraphs, table cells, headers, footers, footnotes, and endnotes.
-Record rules run at the top level of the body. Locked fields and cross-paragraph fields keep
-their source results. Desktop Word compatibility remains open for the full set of regional
-address and greeting formats, printer-specific envelope settings, custom label sizes,
-barcodes, text boxes, caption picture tokens and the full range of template objects.
+The engine covers body paragraphs, table cells, headers, footers, footnotes, endnotes and the
+DrawingML text boxes (`wps:txbx`) in any of them. Record rules run at the top level of the body;
+fields in text boxes merge but do not advance the record. A complex field whose code or result
+spans paragraphs (an `IF` whose branch text holds paragraph marks, or a merge field whose saved
+result does) merges as one field: the paragraphs it covers are evaluated together and split
+again at the paragraph marks that remain, each taking the formatting of the paragraph whose mark
+ends it, as in Word. A field that crosses a table, never closes or spans more than 256
+paragraphs keeps its source result, and so do locked fields. A merged text box writes its new
+text into its `w:txbxContent` and drops its VML fallback copy rather than leave it stale;
+legacy VML-only text boxes (`w:pict` without DrawingML) are kept unmerged. Desktop Word
+compatibility remains open for the full set of regional address and greeting formats,
+printer-specific envelope settings, barcodes, caption picture tokens and the full range of
+template objects.
