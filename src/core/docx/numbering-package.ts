@@ -127,7 +127,8 @@ function buildNumElement(doc: XmlDocument, def: NumDefinition): XmlElement {
  * Applies additive definitions and supported instance start changes to `word/numbering.xml`.
  * Existing abstract definitions and full level overrides remain read-only. Other mutations are
  * rejected before patching the original XML. New entries are appended in schema order and the
- * part/relationship/content-type are created the first time a document gains numbering.
+ * part/relationship/content-type are created the first time a document gains numbering, which
+ * includes a new document saved without a source package (`binding` undefined).
  */
 export async function applyNumberingCatalog(
 	zip: JSZip,
@@ -138,10 +139,6 @@ export async function applyNumberingCatalog(
 	const next = model.numberingCatalog;
 	const prior = binding?.base.numberingCatalog;
 	if (JSON.stringify(next ?? null) === JSON.stringify(prior ?? null)) return;
-	if (!binding)
-		throw new Error(
-			'Creating or editing numbering definitions is not supported by the standalone DOCX writer.',
-		);
 	if (!next)
 		throw new Error(
 			'Removing the numbering catalog is not supported; the source numbering.xml is preserved unchanged.',

@@ -124,23 +124,35 @@ describe('numbering package surgery', () => {
 		);
 	});
 
-	it('rejects creating a numbering catalog from the standalone writer', async () => {
+	it('creates the numbering part for a new document saved by the standalone writer', async () => {
 		const { saveDocx } = await import('./save');
-		const { catalog } = ensureListDefinition(undefined, 'bullet');
-		await expect(
-			saveDocx({
-				blocks: [{ type: 'paragraph', id: 'p', runs: [{ text: 'x' }] }],
-				page: {
-					width: 816,
-					height: 1056,
-					marginTop: 96,
-					marginRight: 96,
-					marginBottom: 96,
-					marginLeft: 96,
-				},
-				warnings: [],
-				numberingCatalog: catalog,
-			}),
-		).rejects.toThrow('standalone DOCX writer');
+		const { catalog, numId } = ensureListDefinition(undefined, 'bullet');
+		const bytes = await saveDocx({
+			blocks: [
+				{ type: 'paragraph', id: 'p', runs: [{ text: 'x' }], numbering: { numId, level: 0 } },
+			],
+			page: {
+				width: 816,
+				height: 1056,
+				marginTop: 96,
+				marginRight: 96,
+				marginBottom: 96,
+				marginLeft: 96,
+			},
+			warnings: [],
+			numberingCatalog: catalog,
+		});
+		const output = await JSZip.loadAsync(bytes);
+		const numberingXml = await output.file('word/numbering.xml')?.async('string');
+		expect(numberingXml).toContain(`w:numId="${numId}"`);
+		expect(await output.file('[Content_Types].xml')?.async('string')).toContain(
+			'/word/numbering.xml',
+		);
+		expect(await output.file('word/_rels/document.xml.rels')?.async('string')).toContain(
+			'relationships/numbering',
+		);
+		const reopened = await loadDocx(bytes);
+		expect((reopened.model.blocks[0] as Paragraph).numbering).toEqual({ numId, level: 0 });
+		expect(reopened.model.numberingCatalog?.nums[String(numId)]).toBeDefined();
 	});
 });
