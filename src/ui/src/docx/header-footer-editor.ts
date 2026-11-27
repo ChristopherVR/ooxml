@@ -13,6 +13,7 @@ import { positionalTabInputPlugin } from 'ooxml-core/docx/ui';
 import { assignMissingParagraphIds, docToModel, modelToDoc } from './model-adapter';
 import { editorKeymap } from './editor-commands';
 import { focusView } from './focus-view';
+import { browserClickCountPlugin } from './click-count';
 import { renderStoryPreview } from './story-render';
 import type { PictureSource } from './picture-paint';
 import { translateUiText } from './localization';
@@ -91,6 +92,7 @@ export function openBlocksEditor(
 			doc: modelToDoc(model),
 			plugins: [
 				history(),
+				browserClickCountPlugin(),
 				...(options.history
 					? [
 							keymap({
