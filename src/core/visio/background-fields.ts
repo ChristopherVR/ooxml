@@ -7,7 +7,7 @@ export interface VisioForegroundPage {
 	number?: number;
 }
 
-const PAGE_NAME = /^=?\s*PAGENAME\s*\(\s*0?\s*\)\s*$/i;
+const PAGE_NAME = /^=?\s*PAGENAME\s*\(\s*(?:0\s*)?\)\s*$/i;
 const PAGE_NUMBER = /^=?\s*PAGENUMBER\s*\(\s*\)\s*$/i;
 
 /**

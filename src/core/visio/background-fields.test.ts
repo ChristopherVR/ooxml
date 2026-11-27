@@ -80,4 +80,27 @@ describe('page fields on a background page', () => {
 		expect(shape!.text!.plainText).toBe('Page: ORDERS #1');
 		expect(shape!.text!.runs.map((entry) => entry.text)).toEqual(['Page: ORDERS #1']);
 	});
+
+	it.each([
+		['PAGENAME()', true],
+		['=pagename( 0 )', true],
+		['= PAGENAME(0)\t', true],
+		['PAGENAME(\t\t)', true],
+		['PAGENAME(00)', false],
+		['PAGENAME(1)', false],
+		['PAGENAME(0', false],
+	])('reads %j as a page name field: %s', (formula, isPageName) => {
+		const { page, footer } = background();
+		footer.text!.fields![0]!.formula = formula;
+		const [shape] = visioBackgroundFieldShapes(page, { name: 'Orders', number: 1 });
+		expect(shape!.text!.plainText).toBe(isPageName ? 'Page: Orders #1' : 'Page: Background-1 #1');
+	});
+
+	it('reads a long page name formula that does not close in linear time', () => {
+		const { page, footer } = background();
+		footer.text!.fields![0]!.formula = `PAGENAME(${'\t'.repeat(100_000)}x`;
+		const started = performance.now();
+		visioBackgroundFieldShapes(page, { name: 'Orders', number: 1 });
+		expect(performance.now() - started).toBeLessThan(500);
+	});
 });

@@ -8,6 +8,8 @@ import { parseTransform } from '../../../pdf/write/pdf-svg-style';
 import { readDeclaredFonts } from '../../../opc/declared-fonts';
 import { PresentationBuilder } from '../../../pptx/core/builders/sdk';
 import { PptxHandler } from '../../../pptx/core/PptxHandler';
+import { visioBackgroundFieldShapes } from '../../../visio/background-fields';
+import { demoDocument } from '../../../visio/ui/demo-document';
 import { createMemoryCubeProvider } from '../../../xlsx/formula/cube-memory';
 import { loadXlsx } from '../../../xlsx/read/load';
 import type { SecurityCase } from '../case';
@@ -146,5 +148,27 @@ export const cases: readonly SecurityCase[] = [
 			return { transforms: parseTransform('0'.repeat(150_000)).length };
 		},
 		expected: { transforms: 0 },
+	},
+	{
+		name: 'a Visio page name field formula that never closes is read in linear time',
+		limits: { ms: 1_500, heapMb: 128 },
+		run() {
+			const page = structuredClone(demoDocument.pages[0]!);
+			page.isBackground = true;
+			const shape = page.shapes[0]!;
+			shape.text = {
+				...shape.text!,
+				plainText: 'Background',
+				runs: [{ ...shape.text!.runs[0]!, text: 'Background' }],
+				fields: [
+					{ start: 0, end: 10, cached: 'Background', formula: `PAGENAME(${'\t'.repeat(100_000)}x` },
+				],
+			};
+			page.shapes = [shape];
+			return {
+				kept: visioBackgroundFieldShapes(page, { name: 'Orders', number: 1 }) === page.shapes,
+			};
+		},
+		expected: { kept: true },
 	},
 ];
