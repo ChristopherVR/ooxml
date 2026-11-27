@@ -71,18 +71,46 @@ export function parseColor(value: string | null | undefined): Rgba | null {
 	throw new PdfFallback(`colour "${value}"`);
 }
 
+const WORD = /\w/;
+const SPACE = /\s/;
+
+/**
+ * Each `name(arguments)` call in a transform list, in order: the calls `/(\w+)\s*\(([^)]*)\)/g`
+ * finds, read in one pass so a long run of word characters without a call stays linear.
+ */
+export function transformCalls(value: string): [name: string, args: string][] {
+	const calls: [string, string][] = [];
+	let index = 0;
+	while (index < value.length) {
+		if (!WORD.test(value[index]!)) {
+			index++;
+			continue;
+		}
+		const start = index;
+		while (index < value.length && WORD.test(value[index]!)) index++;
+		let open = index;
+		while (open < value.length && SPACE.test(value[open]!)) open++;
+		if (value[open] !== '(') continue;
+		const close = value.indexOf(')', open + 1);
+		// No later call can close either.
+		if (close < 0) break;
+		calls.push([value.slice(start, index), value.slice(open + 1, close)]);
+		index = close + 1;
+	}
+	return calls;
+}
+
 /** Transform list as 2x3 matrices applied left to right (SVG order). */
 export function parseTransform(value: string | null): number[][] {
 	if (!value) return [];
 	const out: number[][] = [];
-	const pattern = /(\w+)\s*\(([^)]*)\)/g;
-	for (const match of value.matchAll(pattern)) {
-		const v = match[2]!
+	for (const [name, args] of transformCalls(value)) {
+		const v = args
 			.split(/[\s,]+/)
 			.filter(Boolean)
 			.map(Number);
 		if (v.some((item) => !Number.isFinite(item))) throw new PdfFallback('transform');
-		switch (match[1]) {
+		switch (name) {
 			case 'matrix':
 				if (v.length !== 6) throw new PdfFallback('transform');
 				out.push(v);

@@ -4,6 +4,7 @@ import JSZip from 'jszip';
 import { autoCorrectTextInput } from '../../../docx/autocorrect';
 import { docx, p } from '../../../docx/test-support/compare-docs';
 import { loadDocx } from '../../../docx/parse';
+import { parseTransform } from '../../../pdf/write/pdf-svg-style';
 import { readDeclaredFonts } from '../../../opc/declared-fonts';
 import { PresentationBuilder } from '../../../pptx/core/builders/sdk';
 import { PptxHandler } from '../../../pptx/core/PptxHandler';
@@ -137,5 +138,13 @@ export const cases: readonly SecurityCase[] = [
 			return { action: autoCorrectTextInput(before, ' ') ?? null };
 		},
 		expected: { action: null },
+	},
+	{
+		name: 'an SVG transform list without calls is read in linear time',
+		limits: { ms: 1_500, heapMb: 128 },
+		run() {
+			return { transforms: parseTransform('0'.repeat(150_000)).length };
+		},
+		expected: { transforms: 0 },
 	},
 ];
