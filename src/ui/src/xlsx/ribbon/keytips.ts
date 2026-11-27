@@ -21,6 +21,8 @@ const TAB_KEYS: Record<string, string> = {
 	tableDesign: 'JT',
 	'chart-design': 'JC',
 	chartDesign: 'JC',
+	'chart-format': 'JO',
+	chartFormat: 'JO',
 };
 
 /** Excel's command KeyTips, by the command's English label. */

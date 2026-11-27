@@ -72,3 +72,4 @@ export * from './series-axis';
 export * from './series-type';
 export * from './group-decorations';
 export * from './axis-label';
+export * from './shape-format';

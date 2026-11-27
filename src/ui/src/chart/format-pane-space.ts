@@ -11,13 +11,7 @@
  *
  * @module chart/format-pane-space
  */
-import type {
-	ChartAxis,
-	ChartFormatTarget,
-	ChartRangeNumbers,
-	ChartSpace,
-	ChartSpaceSeries,
-} from 'ooxml-core/chart';
+import type { ChartAxis, ChartFormatTarget, ChartRangeNumbers, ChartSpace } from 'ooxml-core/chart';
 import {
 	chartGroupPaintsLine,
 	chartLabelPositions,
@@ -40,7 +34,7 @@ import type {
 } from 'ooxml-core/drawingml';
 import { resolveDrawingColor } from 'ooxml-core/drawingml';
 
-import { chartFormatTargetOptions, type ChartFormatDescribe } from './format-pane-targets';
+import { chartSpaceTargetOptions } from './format-pane-space-targets';
 import type {
 	ChartFormatAxisView,
 	ChartFormatElementView,
@@ -135,15 +129,6 @@ function lineView(line: DrawingLine | undefined, resolve: Resolve): ChartFormatL
 	};
 }
 
-const vertical = (axis: ChartAxis, space: ChartSpace): boolean => {
-	if (axis.position) return axis.position === 'l' || axis.position === 'r';
-	const horizontalBars = space.plotArea.groups.some((group) => group.barDirection === 'bar');
-	return axis.kind === 'val' ? !horizontalBars : horizontalBars;
-};
-
-const seriesName = (series: ChartSpaceSeries | undefined, index: number) =>
-	series?.tx?.text || series?.tx?.value || `Series ${index + 1}`;
-
 function axisView(axis: ChartAxis, advanced = false): ChartFormatAxisView {
 	const view: ChartFormatAxisView = {
 		kind: axis.kind,
@@ -182,26 +167,6 @@ function axisView(axis: ChartAxis, advanced = false): ChartFormatAxisView {
 	return view;
 }
 
-/** Every element of `space` a pane can target, in PowerPoint's picker order. */
-function targetsOf(space: ChartSpace): ChartFormatTarget[] {
-	const targets: ChartFormatTarget[] = [{ kind: 'chartArea' }];
-	if (space.title) targets.push({ kind: 'title' });
-	space.plotArea.axes.forEach((axis, axisIndex) => {
-		if (axis.deleted) return;
-		targets.push({ kind: 'axis', axisIndex });
-		if (axis.majorGridlines) targets.push({ kind: 'majorGridlines', axisIndex });
-		if (axis.minorGridlines) targets.push({ kind: 'minorGridlines', axisIndex });
-	});
-	if (space.legend) targets.push({ kind: 'legend' });
-	targets.push({ kind: 'plotArea' });
-	if (space.plotArea.groups.some((group) => group.dataLabels && !group.dataLabels.deleted))
-		targets.push({ kind: 'dataLabels' });
-	chartSeriesEntries(space).forEach((_, seriesIndex) => {
-		targets.push({ kind: 'series', seriesIndex }, { kind: 'dataLabels', seriesIndex });
-	});
-	return targets;
-}
-
 /** The Format pane source of `space`. */
 export function chartSpaceFormatSource(
 	space: ChartSpace,
@@ -221,17 +186,6 @@ export function chartSpaceFormatSource(
 			advanced,
 			options.resolveRange,
 		);
-	const describe: ChartFormatDescribe = {
-		axis: (axisIndex) => {
-			const axis = space.plotArea.axes[axisIndex];
-			if (!axis) return undefined;
-			const secondary = space.plotArea.axes
-				.slice(0, axisIndex)
-				.some((other) => other.kind === axis.kind);
-			return { kind: axis.kind, vertical: vertical(axis, space), secondary };
-		},
-		seriesName: (seriesIndex) => seriesName(entries[seriesIndex]?.series, seriesIndex),
-	};
 	const element = (target: ChartFormatTarget): ChartFormatElementView => {
 		const lineTarget =
 			target.kind === 'axis' ||
@@ -310,7 +264,7 @@ export function chartSpaceFormatSource(
 		return view;
 	};
 	return {
-		targets: chartFormatTargetOptions(targetsOf(space), describe),
+		targets: chartSpaceTargetOptions(space),
 		textOptions: advanced,
 		patternPresets: [
 			'pct5',

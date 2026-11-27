@@ -1,6 +1,7 @@
 // Every UI-COMMANDS translation table, flattened per locale for `locales/<lang>/commands.ts`.
 import { AUDIT_STRINGS } from './audit';
 import { CORE_FEATURE_STRINGS } from './core-features';
+import { CHART_FORMAT_STRINGS } from './chart-format';
 import { CHART_SERIES_STRINGS } from './chart-series';
 import { DATA_TOOLS_STRINGS } from './data-tools';
 import { FILTER_STRINGS } from './filters';
@@ -35,6 +36,7 @@ export const COMMAND_TABLES: readonly Translations[] = [
 	RULES_STRINGS,
 	CORE_FEATURE_STRINGS,
 	CHART_SERIES_STRINGS,
+	CHART_FORMAT_STRINGS,
 	SPARKLINE_STRINGS,
 	PIVOT_STRINGS,
 	PIVOT_CONTEXT_STRINGS,

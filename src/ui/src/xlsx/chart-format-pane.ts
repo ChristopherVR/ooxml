@@ -164,6 +164,11 @@ export function createChartFormatPane(ctx: EditorContext) {
 		target = `series:${index}`;
 		open('[data-chart-format-field="series.overlap"] input');
 	};
+	/** Format Selection: the pane on any element key (`axis:0`, `series:1`, ...). */
+	const openTarget = (arg: unknown) => {
+		target = typeof arg === 'string' && parseChartFormatTargetKey(arg) ? arg : 'chartArea';
+		open('[data-chart-format-target]');
+	};
 	relocalize();
-	return { element, refresh, relocalize, openArea, openSeries };
+	return { element, refresh, relocalize, openArea, openSeries, openTarget };
 }

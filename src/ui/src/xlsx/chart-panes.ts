@@ -25,6 +25,9 @@ export function registerChartPanes(
 	ctx.dialogs.register('format-chart-series', async (_ctx, arg) =>
 		(await loadFormat()).openSeries(arg),
 	);
+	ctx.dialogs.register('format-chart-selection', async (_ctx, arg) =>
+		(await loadFormat()).openTarget(arg),
+	);
 	ctx.dialogs.register('chart-ex', async () => {
 		if (!extended) {
 			const { createChartExPane } = await import('./chart-ex-pane');

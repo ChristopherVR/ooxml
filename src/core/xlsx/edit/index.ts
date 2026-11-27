@@ -120,6 +120,7 @@ export {
 	chartGradientStopTransparency,
 	type ChartGradientEdit,
 } from './chart-series-gradient';
+export { chartShapeStyleFormat } from './chart-shape-style';
 export {
 	chartSeriesFillPatch,
 	chartSeriesSolidFillPatch,

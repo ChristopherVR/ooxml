@@ -12,6 +12,7 @@ import {
 import { dataTab, formulasTab } from './formulas-data';
 import { homeTab } from './home';
 import { drawTab } from './draw';
+import { chartFormatTab } from './chart-format';
 import { pictureFormatTab, shapeFormatTab } from './drawing-format';
 import { insertTab, pageLayoutTab } from './insert-layout';
 import { helpTab, reviewTab, viewTab } from 'ooxml-core/xlsx/ui';
@@ -31,6 +32,7 @@ export function commandTabs(): RibbonTab[] {
 		helpTab(),
 		tableDesignTab(),
 		chartDesignTab(),
+		chartFormatTab(),
 		pictureFormatTab(),
 		shapeFormatTab(),
 		graphicsFormatTab(),

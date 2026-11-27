@@ -84,6 +84,12 @@ is edited over its parsed chart model (`ChartSpace`, the shared model in `ooxml-
   gridlines, data labels, the legend and series options. Supported controls also cover effects,
   shape 3D, text, pattern fills, markers, trendlines/error bars, axis titles and admitted secondary
   axes. Series and chart-area fills open the same panel from their Series Options commands.
+- **Format tab (chart):** the contextual tab next to Chart Design. Current Selection picks a chart
+  element (Chart Elements), opens the Format pane on it (Format Selection) or returns it to the
+  chart style (Reset to Match Style); Shape Styles, Shape Fill, Shape Outline and Shape Effects
+  (shadow) and the WordArt Styles, Text Fill and Text Outline format that element through the same
+  chart edits as the pane; Insert Shapes, Arrange and Size are the shape tools (shapes are inserted
+  on the sheet, not inside the chart).
 - A type change keeps the formatting: titles, legend, axes and fills carry over to the new type.
 - A chart part whose content the model cannot carry (for example detail below the top level, such
   as an unknown nested series extension) is never rewritten from the model. Its chart commands and

@@ -35,6 +35,7 @@ import { reviewCommands } from './review';
 import { styleCommands } from './styles';
 import { viewCommands } from './view';
 import { chartAreaCommand, chartSeriesCommand } from './chart-format';
+import { chartFormatTabCommands } from './chart-format-tab';
 import { smartArtCommands } from '../smartart-controller';
 
 /** Every UI-COMMANDS command (fresh objects; safe to register on several editors). */
@@ -72,6 +73,7 @@ export function allCommands(): Command[] {
 		...contextualCommands(),
 		chartSeriesCommand(),
 		chartAreaCommand(),
+		...chartFormatTabCommands(),
 		...smartArtCommands(),
 	];
 }

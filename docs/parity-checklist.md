@@ -391,7 +391,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Ribbon
 
-- [ ] **P1** Missing tabs: Chart Format (a pane instead).
+- [x] **P1** Chart Format contextual tab: Current Selection (Chart Elements, Format Selection,
+      which opens the pane on the element, Reset to Match Style), Insert Shapes, Shape Styles
+      (gallery, fill, outline, shadow), WordArt Styles (gallery, text fill and outline), Arrange
+      and Size, through the shared chart edit intents (`chart/edit/shape-format.ts`,
+      `src/ui/src/xlsx/commands/chart-format-tab.ts`). Remaining: Shape Effects offers the shadow
+      only (glow, soft edges, bevel and 3-D are in the pane), Change Shape and WordArt text
+      effects other than the shadow are not offered, and Insert Shapes places shapes on the sheet,
+      not inside the chart.
 - [x] **P2** Draw tab: drawing, the eraser, the lasso, Ink to Shape and Ink Replay work and save
       as Excel ink (`xlsx/edit/ink.test.ts`, `e2e/xlsx/draw-tab.spec.ts`). The Ruler (Stencils)
       lies over the cells; it is dragged, turned with the mouse wheel or Shift and the arrow keys,
