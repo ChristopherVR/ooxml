@@ -13,6 +13,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { SAMPLE_ID } from '../apps/office-suite/src/samples.js';
 import { escapeHtml } from './release-markdown.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -57,21 +58,45 @@ export function formatSize(bytes) {
 	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** The manifest, checked for the fields the page and the suite read. */
-export function readManifest(root = ROOT) {
-	const manifest = JSON.parse(readFileSync(join(root, 'samples', 'manifest.json'), 'utf8'));
+/**
+ * The entries of a parsed manifest, checked for everything the page writes into HTML and the suite
+ * reads: a slug id (it becomes an element id and a link), text fields, a list of feature strings,
+ * a byte size, a SHA-256 and paths that stay inside samples/.
+ */
+export function checkManifest(manifest) {
+	const fail = (sample, why) => {
+		throw new Error(`samples/manifest.json: ${sample?.id ?? '?'} ${why}`);
+	};
+	if (!Array.isArray(manifest?.samples)) throw new Error('samples/manifest.json lists no samples');
+	const seen = new Set();
 	for (const sample of manifest.samples) {
-		for (const key of ['id', 'product', 'title', 'description', 'file', 'thumbnail'])
-			if (typeof sample[key] !== 'string' || !sample[key])
-				throw new Error(`samples/manifest.json: ${sample.id ?? '?'} has no ${key}`);
+		for (const key of ['id', 'product', 'title', 'description', 'file', 'thumbnail', 'sha256'])
+			if (typeof sample?.[key] !== 'string' || !sample[key]) fail(sample, `has no ${key}`);
+		if (!SAMPLE_ID.test(sample.id)) fail(sample, 'has an id that is not a lower-case slug');
+		if (seen.has(sample.id)) fail(sample, 'is listed twice');
+		seen.add(sample.id);
 		if (!PRODUCTS.some((product) => product.id === sample.product))
-			throw new Error(`samples/manifest.json: ${sample.id} names the product ${sample.product}`);
+			fail(sample, `names the product ${sample.product}`);
+		if (
+			!Array.isArray(sample.features) ||
+			sample.features.length === 0 ||
+			sample.features.some((feature) => typeof feature !== 'string' || !feature)
+		)
+			fail(sample, 'needs a list of feature strings');
+		if (!Number.isSafeInteger(sample.size) || sample.size <= 0)
+			fail(sample, 'needs its size in bytes');
+		if (!/^[0-9a-f]{64}$/u.test(sample.sha256)) fail(sample, 'has a sha256 that is not one');
 		// The suite builds the request from these, so they stay inside samples/.
 		for (const key of ['file', 'thumbnail'])
 			if (!/^[a-z]+\/[a-z0-9-]+\.[a-z]+$/u.test(sample[key]))
-				throw new Error(`samples/manifest.json: ${sample.id} has an unexpected ${key} path`);
+				fail(sample, `has an unexpected ${key} path`);
 	}
 	return manifest;
+}
+
+/** The manifest, checked for the fields the page and the suite read. */
+export function readManifest(root = ROOT) {
+	return checkManifest(JSON.parse(readFileSync(join(root, 'samples', 'manifest.json'), 'utf8')));
 }
 
 function card(sample, product) {

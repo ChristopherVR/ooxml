@@ -307,21 +307,44 @@ async function create(kind) {
 }
 /**
  * Opens the sample the address names (`?sample=<id>`, from the gallery at samples/): an earlier
- * copy that was never edited, or a new one fetched from this site. See samples.js.
+ * copy that was never edited, or a new one fetched from this site. See samples.js. Returns whether
+ * it opened: a link that fails says why in a notice with the way back to the gallery, and leaves
+ * the workspace to its usual route.
  */
 async function openSample() {
-	const samples = await import('./samples.js');
-	const link = samples.takeSampleLink(location.href);
-	history.replaceState(null, '', link.href);
-	if (!link.id) throw new Error('That sample is not available.');
-	notify('Opening the sample...');
-	const sample = await samples.findSample(link.id, { base: suiteBase });
-	const doc =
-		samples.untouchedCopy(files, sample) ??
-		(await store.create(sample.name, await samples.downloadSample(sample), {
-			sourceUrl: sample.url,
-		}));
-	await open(doc.id, undefined, { focus: true });
+	let samples;
+	try {
+		samples = await import('./samples.js');
+		const link = samples.takeSampleLink(location.href);
+		history.replaceState(null, '', link.href);
+		if (!link.id) throw new Error('That sample is not available.');
+		notify('Opening the sample...');
+		const sample = await samples.findSample(link.id, { base: suiteBase });
+		const doc =
+			(await samples.untouchedCopy(files, sample)) ??
+			(await store.create(sample.name, await samples.downloadSample(sample), {
+				sourceUrl: sample.url,
+			}));
+		await open(doc.id, undefined, { focus: true });
+		// The Word samples are designed pages (a cover, columns, text boxes): show them as pages.
+		if (doc.kind === 'docx')
+			sessions.sessions
+				.get(doc.id)
+				?.node.querySelector('docx-editor')
+				?.getNavigationProps?.()
+				.onViewModeChange?.('print');
+		return true;
+	} catch (error) {
+		active = null;
+		view = 'home';
+		renderTabs();
+		notify(error);
+		samples?.showSampleNotice(error instanceof Error ? error.message : String(error), {
+			base: suiteBase,
+			host: document.querySelector('.suite-body'),
+		});
+		return false;
+	}
 }
 async function importFiles(items) {
 	for (const file of items) {
@@ -663,9 +686,10 @@ task(async () => {
 	await loadPolicy();
 	document.body.dataset.ai = assistantEnabled() ? 'on' : 'off';
 	const id = localDocumentId(location.href);
-	// A sample link from the gallery wins over the route: it is what the visitor asked for.
-	if (new URLSearchParams(location.search).has('sample')) await openSample();
-	else if (id) await open(id);
+	// A sample link from the gallery wins over the route: it is what the visitor asked for. One
+	// that cannot be opened falls through to the route, as if the link had not named a sample.
+	if (new URLSearchParams(location.search).has('sample') && (await openSample())) return;
+	if (id) await open(id);
 	else if (localAttachmentId(location.href)) await showAttachment(localAttachmentId(location.href));
 	else if (location.hash === '#/teams' || (product === 'teams' && !location.hash))
 		await showTeams();
