@@ -40,11 +40,7 @@ const DRAGGED_POINT_INDEX = 1;
 
 /** The chart's own graphic frame, via the shared accessibility contract. */
 function chartHost(page: Page): Locator {
-	return page
-		.locator('[aria-roledescription="slide"]')
-		.first()
-		.locator('[aria-roledescription="chart"]')
-		.first();
+	return page.locator('[data-pptx-viewport]').getByRole('img', { name: 'Chart: Pie', exact: true });
 }
 
 function pieSliceMark(page: Page): Locator {

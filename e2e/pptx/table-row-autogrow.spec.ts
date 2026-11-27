@@ -30,15 +30,17 @@ test('a table whose rows auto-grow past the authored frame renders every row, un
 	await thumbnail(page, 5).click();
 
 	const stage = slideStage(page);
+	const tables = stage.locator('table');
+	await expect(tables).toHaveCount(1);
 	// R4 is the last row: if it is visible and inside its element wrapper's
 	// box, no trailing row was clipped off.
-	const lastRowCell = stage.getByText('R4 C1', { exact: true });
+	const lastRowCell = tables.getByText('R4 C1', { exact: true });
 	await expect(lastRowCell).toBeVisible();
 
 	// Sanity: the tall-font row PowerPoint deliberately grows this table for
 	// is also on screen (rules out a false pass from a table that just never
 	// clipped because nothing actually grew).
-	await expect(stage.getByText('R3 C2', { exact: true })).toBeVisible();
+	await expect(tables.getByText('R3 C2', { exact: true })).toBeVisible();
 
 	const cellBox = await lastRowCell.boundingBox();
 	expect(cellBox).not.toBeNull();

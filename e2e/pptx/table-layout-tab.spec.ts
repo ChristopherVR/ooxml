@@ -37,18 +37,18 @@ test("Table Layout shows next to Table Design with PowerPoint's groups", async (
 	await selectTableCell(page, cellAt(page, 0, 0));
 	await expect(page.locator('[data-ribbon-contextual-tab="tableDesign"]').first()).toBeVisible();
 	await page.locator('[data-ribbon-contextual-tab="tableLayout"]').first().click();
-	const labels = await page
-		.locator('pptx-ui-ribbon-group[data-ribbon-group^="tableLayout."]')
-		.evaluateAll((groups) => groups.map((group) => group.getAttribute('label')));
-	expect(labels).toEqual([
-		'Table',
-		'Rows & Columns',
-		'Merge',
-		'Cell Size',
-		'Alignment',
-		'Table Size',
-		'Arrange',
-	]);
+	const groups = page.locator('pptx-ui-ribbon-group[data-ribbon-group^="tableLayout."]');
+	await expect
+		.poll(() => groups.evaluateAll((items) => items.map((group) => group.getAttribute('label'))))
+		.toEqual([
+			'Table',
+			'Rows & Columns',
+			'Merge',
+			'Cell Size',
+			'Alignment',
+			'Table Size',
+			'Arrange',
+		]);
 });
 
 test('Insert Below adds a row under the selected cell', async ({ page }) => {
