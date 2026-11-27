@@ -120,11 +120,19 @@ test.describe('collaboration presence geometry', () => {
 			const remoteCursor = guest.locator('[data-pptx-remote-cursor]').first();
 			await expect(remoteCursor).toBeVisible({ timeout: 20_000 });
 
-			const tip = await boxOf(remoteCursor);
-			expect(tip.x).toBeGreaterThanOrEqual(guestTarget.x - TOLERANCE_PX);
-			expect(tip.x).toBeLessThanOrEqual(guestTarget.x + guestTarget.width + TOLERANCE_PX);
-			expect(tip.y).toBeGreaterThanOrEqual(guestTarget.y - TOLERANCE_PX);
-			expect(tip.y).toBeLessThanOrEqual(guestTarget.y + guestTarget.height + TOLERANCE_PX);
+			// The cursor can still show a throttled point from the approach first; wait for the
+			// final position to arrive.
+			await expect
+				.poll(async () => {
+					const tip = await boxOf(remoteCursor);
+					return (
+						tip.x >= guestTarget.x - TOLERANCE_PX &&
+						tip.x <= guestTarget.x + guestTarget.width + TOLERANCE_PX &&
+						tip.y >= guestTarget.y - TOLERANCE_PX &&
+						tip.y <= guestTarget.y + guestTarget.height + TOLERANCE_PX
+					);
+				})
+				.toBe(true);
 		} finally {
 			await guest.close();
 		}
