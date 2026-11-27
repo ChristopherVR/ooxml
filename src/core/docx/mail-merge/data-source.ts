@@ -66,6 +66,9 @@ export function mailMergeDelimitedText(
 	};
 }
 
+/** The longest field name a streamed header may hold, whatever the value limit. */
+const MAX_FIELD_NAME_LENGTH = 255;
+
 /** Builds records row by row, enforcing `limits` as each row arrives. */
 class RecordBuilder {
 	private fields: Map<number, string> | undefined;
@@ -124,7 +127,11 @@ export function mailMergeDelimitedChunks(
 				...(limits && {
 					maxRows: limits.maxRecords + 1,
 					maxColumns: limits.maxFields,
-					...(limits.maxValueLength !== undefined && { maxFieldLength: limits.maxValueLength }),
+					...(limits.maxValueLength !== undefined && {
+						maxFieldLength: limits.maxValueLength,
+						// The value limit is for recipients' values, not the field names of row 1.
+						maxHeaderFieldLength: Math.max(limits.maxValueLength, MAX_FIELD_NAME_LENGTH),
+					}),
 				}),
 			});
 			const builder = new RecordBuilder(limits);

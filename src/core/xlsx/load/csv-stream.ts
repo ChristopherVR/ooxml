@@ -10,6 +10,8 @@ export interface CsvRowReaderOptions {
 	maxColumns?: number;
 	/** The longest field, in UTF-16 code units. */
 	maxFieldLength?: number;
+	/** The longest field of the first row (a header), when it differs from `maxFieldLength`. */
+	maxHeaderFieldLength?: number;
 }
 
 export interface CsvRowReader {
@@ -39,10 +41,12 @@ export function csvRowReader(options: CsvRowReaderOptions = {}): CsvRowReader {
 	let carriage = false;
 	let output: string[][] = [];
 	const maxField = options.maxFieldLength ?? Infinity;
+	const maxHeaderField = options.maxHeaderFieldLength ?? maxField;
 
 	const append = (text: string) => {
 		field += text;
-		if (field.length > maxField) throw new RangeError('A delimited text field is too long.');
+		if (field.length > (rowCount === 0 ? maxHeaderField : maxField))
+			throw new RangeError('A delimited text field is too long.');
 	};
 	const pushField = () => {
 		if (options.maxColumns !== undefined && row.length >= options.maxColumns)
