@@ -18,6 +18,7 @@ import { ensureContentTypeOverride } from './zip-parts';
 import type { XmlDocument } from './xml';
 import { writeNewChartExPart, writeNewChartPart } from './chart-save';
 import { writeNewInkPart } from './ink-save';
+import { INK_RELATIONSHIP } from './ink';
 
 const CONTENT_TYPES_PART = '[Content_Types].xml';
 const extensionOf = (partName: string): string => partName.split('.').pop()?.toLowerCase() ?? '';
@@ -26,6 +27,16 @@ const extensionOf = (partName: string): string => partName.split('.').pop()?.toL
 export function relationshipsPartFor(partName: string): string {
 	const slash = partName.lastIndexOf('/');
 	return `${partName.slice(0, slash)}/_rels/${partName.slice(slash + 1)}.rels`;
+}
+
+/** The part a relationship of `source` names (relative to its folder, or absolute). */
+export function resolvePartTarget(source: string, target: string): string {
+	if (target.startsWith('/')) return target.slice(1);
+	const parts = source.split('/').slice(0, -1);
+	for (const segment of target.split('/'))
+		if (segment === '..') parts.pop();
+		else if (segment !== '.') parts.push(segment);
+	return parts.join('/');
 }
 
 /** `target` as a relationship target of `source`: relative when it is in the same folder or below. */
@@ -49,6 +60,9 @@ export async function allocatorForPart(
 		docPrIds,
 	);
 	allocator.docPrIds.reserveFromDocument(doc);
+	for (const [id, rel] of declared)
+		if (rel.type === INK_RELATIONSHIP && rel.mode !== 'External')
+			allocator.inkParts.set(id, resolvePartTarget(partName, rel.target));
 	return allocator;
 }
 

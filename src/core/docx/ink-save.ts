@@ -65,7 +65,7 @@ export async function applyInkPartEdits(
 	zip: JSZip,
 	model: DocumentModel,
 	base: DocumentModel | undefined,
-	keptInk: ReadonlySet<object>,
+	keptInk: ReadonlyMap<object, string>,
 ): Promise<void> {
 	if (!base) return;
 	const bodyParts = new Set(inksIn(base.blocks).flatMap((ink) => ink.partName ?? []));
@@ -86,11 +86,13 @@ export async function applyInkPartEdits(
 		const saved = new Set<string>();
 		for (const image of changed) {
 			const ink = image.ink!;
-			if (saved.has(ink.partName!)) continue;
-			saved.add(ink.partName!);
-			const source = await zip.file(ink.partName!)?.async('string');
+			// The part this drawing's own story names (a copied header has copies of its parts).
+			const part = keptInk.get(ink) || ink.partName!;
+			if (saved.has(part)) continue;
+			saved.add(part);
+			const source = await zip.file(part)?.async('string');
 			const xml = updatedInkPart(source, ink.strokes, ink);
-			if (xml !== undefined) zip.file(ink.partName!, xml);
+			if (xml !== undefined) zip.file(part, xml);
 		}
 	}
 	if (!body) return;

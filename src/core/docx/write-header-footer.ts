@@ -19,6 +19,9 @@ import type { RelationshipAllocator } from './relationship-allocator';
 import { buildXml, parseXml, type XmlDocument } from './xml';
 import { applyBlocks } from './write';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
+import { buildRelationshipsXml, parseRelationships } from './package-parts';
+import { resolvePartTarget } from './part-relationships';
+import { INK_RELATIONSHIP } from './ink';
 
 type Kind = 'headers' | 'footers';
 const KINDS: Kind[] = ['headers', 'footers'];
@@ -65,6 +68,28 @@ export function newHeaderFooterParts(
 }
 
 /**
+ * A copied header's relationships, each ink part copied for it: ink edited in the copy must not
+ * change the header it was copied from, which shares nothing else that is edited in place.
+ */
+async function withOwnInkParts(zip: JSZip, source: string, xml: string): Promise<string> {
+	const rels = parseRelationships(xml);
+	let changed = false;
+	for (const rel of rels.values()) {
+		if (rel.type !== INK_RELATIONSHIP || rel.mode === 'External') continue;
+		const from = zip.file(resolvePartTarget(source, rel.target));
+		if (!from) continue;
+		let index = 1;
+		while (zip.file(`word/ink/ink${index}.xml`)) index++;
+		const part = `word/ink/ink${index}.xml`;
+		zip.file(part, await from.async('uint8array'));
+		await ensureContentTypeOverride(zip, part, 'application/inkml+xml');
+		rel.target = part.slice('word/'.length);
+		changed = true;
+	}
+	return changed ? buildRelationshipsXml(rels) : xml;
+}
+
+/**
  * Creates every header/footer part the model added: an empty part, its content-type override and
  * its document relationship. Returns the relationship id of each new part so `w:sectPr` can
  * reference it. The part's blocks are written afterwards by `applyHeaderFooterEdits`.
@@ -104,7 +129,11 @@ export async function createHeaderFooterParts(
 					: xml,
 			);
 			const rels = zip.file(relationshipsPartFor(content!.sourcePartName!));
-			if (rels) zip.file(relationshipsPartFor(partName), await rels.async('uint8array'));
+			if (rels)
+				zip.file(
+					relationshipsPartFor(partName),
+					await withOwnInkParts(zip, content!.sourcePartName!, await rels.async('string')),
+				);
 		}
 		await ensureContentTypeOverride(
 			zip,

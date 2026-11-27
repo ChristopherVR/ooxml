@@ -70,6 +70,9 @@ export class RelationshipAllocator {
 	/** Shared drawing-id allocator, so `wp:docPr` ids stay unique across every part of a save. */
 	readonly docPrIds: DocPrIdAllocator;
 
+	/** The ink parts this part's relationships name, by relationship id. */
+	readonly inkParts = new Map<string, string>();
+
 	constructor(existingIds: Iterable<string>, docPrIds: DocPrIdAllocator = new DocPrIdAllocator()) {
 		this.used = new Set(existingIds);
 		this.docPrIds = docPrIds;

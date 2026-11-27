@@ -244,7 +244,10 @@ export function createImageRun(
 	if (chart) return chart;
 	// Kept ink keeps its drawing (its part is saved by ink-save.ts); new ink gets a part on save.
 	if (base?.ink && oldDrawing && image.ink?.relId && image.ink.relId === base.ink.relId) {
-		allocator?.docPrIds.keptInk.add(image.ink);
+		allocator?.docPrIds.keptInk.set(
+			image.ink,
+			allocator.inkParts.get(image.ink.relId) ?? image.ink.partName ?? '',
+		);
 		// The fallback picture shows the strokes as they were: drop it once they change.
 		if (
 			oldContainer?.localName === 'AlternateContent' &&

@@ -240,6 +240,54 @@ describe('Word ink', () => {
 			expect(await zip.file('word/ink/ink1.xml')!.async('string')).toBe(await sourcePart());
 		});
 
+		/** A document whose default header holds a copy of the body's ink, saved and reloaded. */
+		async function withHeaderInk() {
+			const loaded = await loadDocx(fixture('word-ink-inline.docx'));
+			const edited = structuredClone(loaded.model);
+			const paragraph = structuredClone(edited.blocks[inkParagraph(edited)] as Paragraph);
+			paragraph.id = 'header-ink';
+			edited.sections![0]!.headers = {
+				default: { blocks: [paragraph], partName: 'word/header1.xml' },
+			};
+			return loadDocx(await loaded.save(edited));
+		}
+		const headerInk = (model: DocumentModel, slot: 'default' | 'even') =>
+			inksIn(model.sections![0]!.headers![slot]!.blocks)[0]!;
+
+		it('gives a header copied from another its own ink parts', async () => {
+			const loaded = await withHeaderInk();
+			const source = headerInk(loaded.model, 'default');
+			expect(source.strokes).toHaveLength(4);
+			const edited = structuredClone(loaded.model);
+			edited.sections![0]!.headers!.even = {
+				...structuredClone(edited.sections![0]!.headers!.default!),
+				partName: 'word/header2.xml',
+				sourcePartName: 'word/header1.xml',
+			};
+			headerInk(edited, 'even').strokes.splice(0, 2);
+			const reloaded = (await loadDocx(await loaded.save(edited))).model;
+			expect(headerInk(reloaded, 'default').strokes).toHaveLength(4);
+			expect(headerInk(reloaded, 'even').strokes).toHaveLength(2);
+			expect(headerInk(reloaded, 'even').partName).not.toBe(
+				headerInk(reloaded, 'default').partName,
+			);
+		});
+
+		it('keeps header ink whole when an edited copy goes into the body', async () => {
+			const loaded = await withHeaderInk();
+			const edited = structuredClone(loaded.model);
+			const run = structuredClone(
+				(edited.sections![0]!.headers!.default!.blocks[0] as Paragraph).runs.find(
+					(item) => item.image?.ink,
+				)!,
+			);
+			run.image!.ink!.strokes.splice(0, 3);
+			edited.blocks.push({ type: 'paragraph', runs: [run] } as Paragraph);
+			const reloaded = (await loadDocx(await loaded.save(edited))).model;
+			expect(headerInk(reloaded, 'default').strokes).toHaveLength(4);
+			expect(inksIn(reloaded.blocks).at(-1)!.strokes).toHaveLength(1);
+		});
+
 		it('keeps ink through a paragraph split and join', async () => {
 			const loaded = await loadDocx(fixture('word-ink-inline.docx'));
 			const split = structuredClone(loaded.model);

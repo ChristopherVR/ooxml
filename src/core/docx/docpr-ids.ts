@@ -11,10 +11,11 @@ const VML_NS = 'urn:schemas-microsoft-com:vml';
 
 export class DocPrIdAllocator {
 	/**
-	 * The ink that kept its own drawing (and so its part) in this save. Only their parts may be
-	 * rewritten: a copy of ink still names the part it was copied from.
+	 * The ink that kept its own drawing in this save, with the part its story's relationship names.
+	 * Only those parts may be rewritten: a copy of ink still names the part it was copied from, and
+	 * a header copied this save names its own copies of its ink parts.
 	 */
-	readonly keptInk = new Set<object>();
+	readonly keptInk = new Map<object, string>();
 	private max = 0;
 	private used = new Set<number>();
 
