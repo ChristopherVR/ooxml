@@ -113,7 +113,9 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 		}
 	}
 
-	ctx.pivots = new PivotWritePlan(writer, workbook, source, bookPart, rels, reserved);
+	ctx.pivots = new PivotWritePlan(writer, workbook, source, bookPart, rels, reserved, (code) =>
+		ctx.styles.numFmtId(code),
+	);
 	ctx.slicers = new SlicerWritePlan(writer, workbook, source, bookPart, rels, reserved);
 	// Excel refuses a workbook whose sheets are all hidden.
 	const states = workbook.sheets.map((sheet) => sheet.state);

@@ -100,11 +100,21 @@ export interface PivotValueField {
 	field: string;
 	aggregate: PivotAggregate;
 	caption: string;
+	/**
+	 * The number format code of the value field (`dataField/@numFmtId`, ECMA-376 Part 1, 18.10.1.21),
+	 * which Excel applies to its values when it refreshes the report. Omitted: the source format.
+	 */
+	numberFormat?: string;
 }
 export interface PivotValueFieldOptions {
 	field: string;
 	aggregate?: PivotAggregate;
 	caption?: string;
+	/**
+	 * The number format code of the value field (`dataField/@numFmtId`, ECMA-376 Part 1, 18.10.1.21),
+	 * which Excel applies to its values when it refreshes the report. Omitted: the source format.
+	 */
+	numberFormat?: string;
 }
 
 /** Items hidden from one field (what a slicer or the item filter list sets). */
@@ -214,6 +224,8 @@ export interface PivotTable {
 	valueField: string;
 	aggregate: PivotAggregate;
 	valueCaption: string;
+	/** The number format of the first value field (`dataField/@numFmtId`). */
+	valueNumberFormat?: string;
 	/** Extra measures in Values axis order. The existing value fields remain the primary measure. */
 	additionalValues?: PivotValueField[];
 	/** Values on rows require multiple measures; any number of row and column fields. */
@@ -250,6 +262,8 @@ export interface PivotTableOptions {
 	pageFilter?: PivotPageFilter;
 	fieldGroups?: PivotFieldGroup[];
 	valueField: string;
+	/** The number format of the value field (`dataField/@numFmtId`). */
+	valueNumberFormat?: string;
 	additionalValues?: PivotValueFieldOptions[];
 	valuesAxis?: 'columns' | 'rows';
 	valuesPosition?: PivotValuesPosition;
@@ -280,6 +294,8 @@ export type PivotTablePatch = Partial<
 	name?: string;
 	source?: string;
 	destination?: CellAddress;
+	/** The number format of the first value field; `null` removes it. */
+	valueNumberFormat?: string | null;
 	display?: PivotDisplayOptions;
 	condition?: PivotCondition | null;
 	calculatedField?: Omit<PivotCalculatedField, 'caption'> | null;

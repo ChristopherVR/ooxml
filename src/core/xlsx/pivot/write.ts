@@ -27,6 +27,8 @@ export class PivotWritePlan {
 		bookPart: string,
 		bookRels: RelationshipSet,
 		reserved: ReadonlySet<string>,
+		/** Gives a value field's number format its `numFmtId` in the workbook's styles. */
+		numberFormatId?: (code: string) => number,
 	) {
 		const chartFormats = new Map<PivotTable, Map<number, number>>();
 		const rewrite = new Set<PivotTable>();
@@ -117,7 +119,7 @@ export class PivotWritePlan {
 				writer.rels(definition, cacheRels);
 				writer.add(
 					table,
-					pivotTableXml(pivot, cacheId, cache, chartFormats.get(pivot)),
+					pivotTableXml(pivot, cacheId, cache, chartFormats.get(pivot), numberFormatId),
 					TYPES.table,
 				);
 				const tableRels = new RelationshipSet();

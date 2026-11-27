@@ -22,7 +22,7 @@ const TABLE: Record<string, string> = {
 	i: 't r i',
 	x: 'v',
 	dataFields: 'count',
-	dataField: 'name fld subtotal baseField baseItem showDataAs',
+	dataField: 'name fld subtotal baseField baseItem showDataAs numFmtId',
 	chartFormats: 'count',
 	chartFormat: 'chart format series',
 	pivotArea:

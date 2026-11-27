@@ -70,6 +70,11 @@ function rebuildPivotTable(
 				? old.valueCaption
 				: pivotCaption(aggregate, valueField, old),
 	};
+	if (patch.valueNumberFormat !== undefined) {
+		if (typeof patch.valueNumberFormat === 'string' && patch.valueNumberFormat)
+			next.valueNumberFormat = patch.valueNumberFormat;
+		else delete next.valueNumberFormat;
+	}
 	if (next.rowField !== old.rowField) delete next.condition;
 	if (patch.condition !== undefined) {
 		if (patch.condition === null) delete next.condition;

@@ -19,6 +19,7 @@ import { readPivotDisplay } from './display';
 import { readPivotCondition } from './condition';
 import { assertPivotFieldPlacement, readPivotCalculatedField } from './calculated';
 import { readPivotCache } from './read-cache';
+import { pivotNumberFormat } from './number-format-read';
 
 export function readPivotDefinition(
 	workbook: Workbook,
@@ -92,6 +93,7 @@ export function readPivotDefinition(
 		}
 	}
 	const aggregate = (att(measure, 'subtotal') ?? 'sum') as PivotTable['aggregate'];
+	const valueNumberFormat = pivotNumberFormat(source, att(measure, 'numFmtId'));
 	if (
 		!PIVOT_AGGREGATES.includes(aggregate) ||
 		(att(measure, 'showDataAs') && att(measure, 'showDataAs') !== 'normal')
@@ -251,6 +253,7 @@ export function readPivotDefinition(
 		valueField: data,
 		aggregate,
 		valueCaption: decodeEscapes(att(measure, 'name') ?? data),
+		...(valueNumberFormat ? { valueNumberFormat } : {}),
 		...(dataFields.length > (calculated ? 2 : 1)
 			? {
 					additionalValues: dataFields.slice(1, calculated ? -1 : undefined).map((measure) => {
@@ -262,7 +265,13 @@ export function readPivotDefinition(
 							(att(measure, 'showDataAs') && att(measure, 'showDataAs') !== 'normal')
 						)
 							throw new Error('Unsupported pivot measure');
-						return { field, aggregate, caption: decodeEscapes(att(measure, 'name') ?? field) };
+						const numberFormat = pivotNumberFormat(source, att(measure, 'numFmtId'));
+						return {
+							field,
+							aggregate,
+							caption: decodeEscapes(att(measure, 'name') ?? field),
+							...(numberFormat ? { numberFormat } : {}),
+						};
 					}),
 				}
 			: {}),

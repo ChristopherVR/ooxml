@@ -12,10 +12,20 @@ import { PIVOT_AGGREGATES } from './data';
 export const pivotMeasures = (
 	pivot: Pick<
 		PivotTable,
-		'valueField' | 'aggregate' | 'valueCaption' | 'additionalValues' | 'calculatedField'
+		| 'valueField'
+		| 'aggregate'
+		| 'valueCaption'
+		| 'valueNumberFormat'
+		| 'additionalValues'
+		| 'calculatedField'
 	>,
 ): PivotValueField[] => [
-	{ field: pivot.valueField, aggregate: pivot.aggregate, caption: pivot.valueCaption },
+	{
+		field: pivot.valueField,
+		aggregate: pivot.aggregate,
+		caption: pivot.valueCaption,
+		...(pivot.valueNumberFormat ? { numberFormat: pivot.valueNumberFormat } : {}),
+	},
 	...(pivot.additionalValues ?? []),
 	...(pivot.calculatedField
 		? [
@@ -39,10 +49,13 @@ export function normalizedPivotMeasures(
 		const aggregate = value.aggregate ?? 'sum';
 		if (!PIVOT_AGGREGATES.includes(aggregate))
 			throw new Error('Choose a valid PivotTable aggregate.');
+		if (value.numberFormat !== undefined && typeof value.numberFormat !== 'string')
+			throw new Error('Choose a valid PivotTable value number format.');
 		return {
 			field: value.field,
 			aggregate,
 			caption: value.caption ?? pivotMeasureName(aggregate, value.field, pivot),
+			...(value.numberFormat ? { numberFormat: value.numberFormat } : {}),
 		};
 	});
 }

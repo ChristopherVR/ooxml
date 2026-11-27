@@ -238,6 +238,9 @@ export function createPivotTable(
 		valueField: options.valueField,
 		aggregate,
 		valueCaption: pivotCaption(aggregate, options.valueField, { captions }),
+		...(typeof options.valueNumberFormat === 'string' && options.valueNumberFormat
+			? { valueNumberFormat: options.valueNumberFormat }
+			: {}),
 		...(options.pageFilter !== undefined
 			? { pageFilter: structuredClone(options.pageFilter) }
 			: {}),

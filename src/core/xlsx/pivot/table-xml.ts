@@ -27,6 +27,8 @@ export function pivotTableXml(
 	cacheId: number,
 	cache: PivotCacheData,
 	charts?: ReadonlyMap<number, number>,
+	/** The `numFmtId` of a value field's format code, from the workbook's style writer. */
+	numberFormatId?: (code: string) => number,
 ): string {
 	const grid = pivotGrid(source);
 	// Date groups add their derived fields after the cache fields; the table lists them all.
@@ -166,7 +168,7 @@ export function pivotTableXml(
 	else body += '<colItems count="1"><i/></colItems>';
 	if (page >= 0)
 		body += `<pageFields count="1"><pageField${attrs({ fld: page, hier: -1, item: pivot.pageFilter!.item !== undefined ? pageItems.findIndex((item) => pivotValueKey(item) === pivotValueKey(pivot.pageFilter!.item!)) : undefined })}/></pageFields>`;
-	body += `<dataFields count="${measures.length}">${measures.map((measure) => `<dataField${attrs({ name: encodeEscapes(measure.caption), fld: measureField(measure.field), subtotal: measure.aggregate, baseField: 0, baseItem: 0 })}/>`).join('')}</dataFields>`;
+	body += `<dataFields count="${measures.length}">${measures.map((measure) => `<dataField${attrs({ name: encodeEscapes(measure.caption), fld: measureField(measure.field), subtotal: measure.aggregate, baseField: 0, baseItem: 0, numFmtId: measure.numberFormat && numberFormatId ? numberFormatId(measure.numberFormat) : undefined })}/>`).join('')}</dataFields>`;
 	const doc = parseXml(
 		pivot.sourceXml ??
 			`<pivotTableDefinition xmlns="${NS.x}" dataCaption="Values" updatedVersion="6" minRefreshableVersion="3" createdVersion="6"><pivotTableStyleInfo name="PivotStyleLight16" showRowHeaders="1" showColHeaders="1" showRowStripes="0" showColStripes="0" showLastColumn="1"/></pivotTableDefinition>`,

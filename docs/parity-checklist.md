@@ -386,6 +386,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       style gallery and style options; Excel 16 reopens and refreshes the results (2026-11-26).
 - [ ] **P1** PivotTable definitions and caches are not mapped to Yjs, so pivot editing is disabled
       while a collaboration session is bound; the Field List is the settings dialog, not a pane.
+- [ ] **P2** PivotTable value field number formats (`dataField/@numFmtId`) are read, written and
+      set through the model API (`valueNumberFormat`, `numberFormat`), but the report's value
+      cells do not take the format when the model lays them out, and Value Field Settings has no
+      Number Format button (`xlsx/pivot/number-format.test.ts`).
 - [x] **P1** Insert: Shapes (the shared preset gallery), Text Box, New Note (a legacy note) and
       Header & Footer (edited in Page Layout view), with undo and save round trips
       (`xlsx/edit/page-authoring.test.ts`, `src/ui/src/xlsx/commands/ribbon-authoring.test.ts`,
