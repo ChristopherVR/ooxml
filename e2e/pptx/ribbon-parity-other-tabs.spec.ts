@@ -213,7 +213,7 @@ const CONTEXTUAL: {
 		label: 'Shape Format',
 		fixture: 'ribbon-galleries.pptx',
 		tab: 'shapeFormat',
-		groups: ['Shape Styles', 'WordArt Styles'],
+		groups: ['Shape Styles', 'WordArt Styles', 'Arrange'],
 		pick: (page) => elementWithText(page, 'GALLERY SHAPE'),
 	},
 	{
@@ -262,8 +262,7 @@ for (const entry of CONTEXTUAL) {
 		await expect(tab).toBeVisible();
 		await expect(tab).toContainText(entry.label);
 		await tab.click();
-		await page.waitForTimeout(200);
-		expect(labels(await readGroups(page))).toEqual(entry.groups);
+		await expect.poll(async () => labels(await readGroups(page))).toEqual(entry.groups);
 	});
 }
 
@@ -294,14 +293,22 @@ test('SmartArt Design offers Create Graphic, Layouts and Reset with working Add 
 	await selectElement(page, elementWithText(page, 'Alpha'));
 	await page.locator('[data-ribbon-contextual-tab="smartArtDesign"]').first().click();
 	const bar = ribbon(page);
-	// Three rows of small commands, like PowerPoint's Create Graphic (Add Shape Before and
-	// Above sit beside Add Shape here, where PowerPoint folds them into its drop-down).
-	const create = bar.locator(
-		'[data-ribbon-group="smartArtDesign.createGraphic"] pptx-ui-ribbon-gallery',
+	// The gallery commands sit in three rows alongside the contextual editing controls.
+	const create = bar.locator('[data-ribbon-group="smartArtDesign.createGraphic"]');
+	const galleries = create.locator(
+		['addShape', 'addShapeBefore', 'addShapeAbove', 'addBullet', 'textPane', 'rightToLeft']
+			.map(
+				(id) => `pptx-ui-ribbon-gallery[data-ribbon-control="smartArtDesign.createGraphic.${id}"]`,
+			)
+			.join(', '),
 	);
-	await expect(create).toHaveCount(10);
-	const ys = await create.evaluateAll((items) =>
-		items.map((item) => Math.round(item.getBoundingClientRect().y)),
+	await expect(create.locator('pptx-ui-ribbon-gallery')).toHaveCount(10);
+	await expect(galleries).toHaveCount(6);
+	const ys = await galleries.evaluateAll((items) =>
+		items.map((item) => {
+			const { y, height } = item.getBoundingClientRect();
+			return Math.round(y + height / 2);
+		}),
 	);
 	expect(new Set(ys).size).toBe(3);
 	// Layouts is a gallery strip with a drop-down of every switchable family.
@@ -312,7 +319,9 @@ test('SmartArt Design offers Create Graphic, Layouts and Reset with working Add 
 		'[data-ribbon-control="smartArtDesign.createGraphic.promote"] button',
 	);
 	await expect(promote).toBeDisabled();
-	await expect(promote).toHaveAttribute('title', /text pane/iu);
+	await expect(promote).toHaveAccessibleDescription(
+		'The SmartArt hierarchy does not allow this command for the current selection.',
+	);
 	// Reset Graphic is a large command.
 	const reset = bar.locator('[data-ribbon-control="smartArtDesign.reset.resetGraphic"]');
 	await expect(reset).toHaveAttribute('data-command-large', '');
