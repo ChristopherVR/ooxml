@@ -8,8 +8,6 @@
  * @module render/visual-3d-bevel-lighting-material
  */
 
-import type { MaterialPresetType } from 'ooxml-core/pptx';
-
 /** feDiffuseLighting/feSpecularLighting constants for a material preset. */
 export interface MaterialLighting {
 	diffuseConstant: number;
@@ -92,7 +90,9 @@ const white = '#ffffff';
  * separate, NOT-landed attempt at fixing the flat-interior specular
  * saturation defect below.
  */
-export const MATERIAL_LIGHTING: Record<MaterialPresetType, MaterialLighting> = {
+// Keyed by `a:sp3d/@prstMaterial` (ECMA-376 ST_PresetMaterialType); no runtime or type import of
+// the PowerPoint model, so the shared bevel lighting compiles in the strict UI project too.
+export const MATERIAL_LIGHTING = {
 	matte: {
 		diffuseConstant: 0.9,
 		specularConstant: 0.02,
@@ -280,15 +280,18 @@ export const MATERIAL_LIGHTING: Record<MaterialPresetType, MaterialLighting> = {
 		lightingColor: white,
 		surfaceScaleMultiplier: 1,
 	},
-};
+} satisfies Record<string, MaterialLighting>;
 
 /**
  * PowerPoint's documented default `prstMaterial` (ECMA-376 20.1.10.50) when
  * `a:sp3d` carries a bevel but no explicit material attribute.
  */
-const DEFAULT_MATERIAL: MaterialPresetType = 'warmMatte';
+const DEFAULT_MATERIAL = 'warmMatte' satisfies keyof typeof MATERIAL_LIGHTING;
 
 export function getMaterialLighting(material: string | undefined): MaterialLighting {
-	const key = (material as MaterialPresetType | undefined) ?? DEFAULT_MATERIAL;
-	return MATERIAL_LIGHTING[key] ?? MATERIAL_LIGHTING[DEFAULT_MATERIAL];
+	const key =
+		material !== undefined && Object.hasOwn(MATERIAL_LIGHTING, material)
+			? material
+			: DEFAULT_MATERIAL;
+	return MATERIAL_LIGHTING[key as keyof typeof MATERIAL_LIGHTING];
 }

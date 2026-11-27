@@ -634,6 +634,10 @@ export interface ImageObject {
 	effects?: import('../drawingml/picture-effects').DrawingPictureEffect[];
 	line?: import('../drawingml/types').DrawingLine;
 	shadow?: import('../drawingml/effect-model').DrawingOuterShadow;
+	/** The picture's `a:scene3d` (camera and light rig) and `a:sp3d` (bevel, depth, material), for
+	 * drawing only; the frame XML keeps them on save. */
+	scene3d?: import('../drawingml/text-3d-model').DrawingScene3D;
+	shape3d?: import('../drawingml/text-3d-model').DrawingText3DValues;
 	effectDag?: true;
 	hasExplicitEffects?: true;
 	style?: import('../drawingml/shape-style-refs').DrawingShapeStyleRefs;

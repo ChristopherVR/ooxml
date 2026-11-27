@@ -41,11 +41,7 @@ import type { SvgFilterDefinition } from './visual-effects';
 
 export { getCameraTransform } from './visual-3d-camera';
 export type { ElementSizePx, Scene3dParams, CameraTransform } from './visual-3d-camera';
-export {
-	getBevelLightingFilterMarkup,
-	getBevelLightingSvgFilter,
-	getBevelLightingFilterId,
-} from './visual-3d-bevel-lighting';
+export { getBevelLightingFilterMarkup, getBevelLightingFilterId } from './visual-3d-bevel-lighting';
 export type {
 	BevelLightingShapeParams,
 	BevelLightingSceneParams,
@@ -64,6 +60,22 @@ export type {
 	Extrusion3dCss,
 	Shape3dExtrusionParams,
 } from './visual-3d-extrusion';
+
+/**
+ * Convenience wrapper: resolve a bevel lighting filter straight from a
+ * `PptxElement`, mirroring `getSoftEdgeSvgFilter`'s call shape. Returns
+ * `undefined` for a non-shape element or one with no bevel. (Kept here, not in
+ * `visual-3d-bevel-lighting`, so that module stays free of the PowerPoint model.)
+ */
+export function getBevelLightingSvgFilter(el: PptxElement): SvgFilterDefinition | undefined {
+	if (!hasShapeProperties(el)) {
+		return undefined;
+	}
+	const ss = el.shapeStyle;
+	const shape3d: Pptx3DShape | undefined = ss?.shape3d;
+	const scene3d: Pptx3DScene | undefined = ss?.scene3d;
+	return getBevelLightingFilterMarkup(el.id, shape3d, scene3d);
+}
 
 /** Structural subset of `Pptx3DShape` consumed by the 3D helpers. */
 export interface Shape3dParams {

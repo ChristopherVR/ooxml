@@ -23,6 +23,7 @@ import {
 	type ChartFillPart,
 	type ChartObject,
 	type DrawingObject,
+	type ImageObject,
 } from 'ooxml-core/xlsx';
 import { h, place, svgNode, viewOf } from './dom';
 import { QUADRANTS, type Box } from 'ooxml-core/xlsx/ui';
@@ -37,6 +38,17 @@ import { trackPointerGesture } from '../../pointer-gesture';
 import { paintPictureFrame } from './picture-frame';
 import { paintInk } from './ink';
 import { paintPivotChartButtons } from './pivot-chart-buttons';
+
+type Picture3d = typeof import('./picture-3d');
+let picture3d: Picture3d | undefined;
+let picture3dLoad: Promise<Picture3d> | undefined;
+
+const bevelled = (type: string | undefined) => type !== undefined && type !== 'none';
+/** Whether a picture carries Picture Style 3-D (a camera or a bevel) the grid draws. */
+export const pictureHas3d = (picture: ImageObject): boolean =>
+	!!picture.scene3d ||
+	bevelled(picture.shape3d?.bevelTopType) ||
+	bevelled(picture.shape3d?.bevelBottomType);
 
 interface ObjectNode extends HTMLDivElement {
 	xgSig?: string | undefined;
@@ -308,6 +320,21 @@ export class DrawingLayer {
 			node.classList.add('xg-obj-unsupported');
 			node.textContent = view.ctx.t('{name} (not shown)', { name: drawing.description });
 		}
+		if (drawing.kind === 'image' && pictureHas3d(drawing)) this.#paint3d(node, drawing, box);
+	}
+
+	/** Picture Style 3-D, from a module loaded the first time a sheet shows such a picture. */
+	#paint3d(node: HTMLElement, picture: ImageObject, box: Box): void {
+		if (picture3d) {
+			picture3d.paintPicture3d(node, picture, box, this.#view.zoom() / 100);
+			return;
+		}
+		picture3dLoad ??= import('./picture-3d');
+		void picture3dLoad.then((module) => {
+			picture3d = module;
+			this.redraw();
+			this.render();
+		});
 	}
 
 	#paintChart(node: HTMLElement, drawing: ChartObject, box: Box): void {

@@ -38,6 +38,7 @@ import { getReflectionWrapperStyle } from './reflection';
 import { getSilhouetteEffects } from './silhouette-effects';
 import { escapeSvgAttr } from './svg-attr-escape';
 import { svgIdToken } from './svg-id';
+import type { SvgFilterDefinition } from './svg-filter-definition';
 
 export { escapeSvgAttr };
 
@@ -759,20 +760,7 @@ export function getDuotoneFilterId(elementId: string): string {
 	return `dag-duotone-${svgIdToken(elementId)}`;
 }
 
-/**
- * A high-fidelity SVG `<filter>` definition: the filter `id`, a `filter:
- * url(#id)` reference for callers, and the `<filter>` markup to inject into a
- * `<defs>` (or a standalone hidden `<svg>`). Optional/secondary to the CSS
- * path.
- */
-export interface SvgFilterDefinition {
-	/** The `<filter>` element id. */
-	id: string;
-	/** A ready-to-use `filter: url(#id)` CSS reference. */
-	cssReference: string;
-	/** The `<filter>…</filter>` markup (no wrapping `<svg>`/`<defs>`). */
-	filterMarkup: string;
-}
+export type { SvgFilterDefinition } from './svg-filter-definition';
 
 /**
  * Build the duotone `<filter>` markup (BT.709 grayscale → linear ramp between

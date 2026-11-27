@@ -3,13 +3,12 @@ import { inspectRasterImage } from '../../drawingml/raster-image';
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
 import { PICTURE_STYLES } from '../../drawingml/picture-styles-catalog';
 import { pictureStyleFormat } from '../../drawingml/picture-style-format';
-import { DEFAULT_OUTER_SHADOW_PRESET } from '../../drawingml/shape-effects-catalog';
+import { defaultOuterShadow } from '../../drawingml/shape-effects-catalog';
 import {
 	presetShapeStyle,
 	themeShapeStyle,
 	type ShapeStylePick,
 } from '../../drawingml/shape-style-catalog';
-import type { DrawingOuterShadow } from '../../drawingml/effect-model';
 import { wordArtRgb } from '../../drawingml/word-art';
 import { NS, buildXml, elements, parseXml } from '../../xml/index';
 import { anchorToPixelBox, pixelBoxToAnchor, pixelSizeToExtent } from '../layout/anchors';
@@ -54,21 +53,7 @@ const line = (before: DrawingLine | undefined, ink: Ink | null): DrawingLine => 
 	widthEmu: before?.widthEmu || 12700,
 	fill: fill(ink),
 });
-function shadow(): DrawingOuterShadow {
-	const { distEmu, dir, blurEmu, alpha, algn } = DEFAULT_OUTER_SHADOW_PRESET;
-	return {
-		kind: 'outerShadow',
-		distanceEmu: distEmu,
-		directionAngle: dir,
-		blurRadiusEmu: blurEmu,
-		...(algn ? { alignment: algn } : {}),
-		color: {
-			kind: 'srgb',
-			value: '000000',
-			transforms: alpha === undefined ? [] : [{ name: 'alpha', value: String(alpha) }],
-		},
-	};
-}
+const shadow = defaultOuterShadow;
 
 function frameFormat(
 	intent: DrawingFormatIntent,
@@ -137,6 +122,17 @@ function applyImageFormat(image: ImageObject, format: DrawingFrameFormat): void 
 	else if (format.line === null) delete image.line;
 	if (format.effects !== undefined) delete merged.shadow;
 	updateFrameEffects(image, format);
+	// The view copies of the authored 3-D (the frame XML is what is saved).
+	if (format.scene3d === null) delete image.scene3d;
+	else if (format.scene3d) {
+		const { sourceXml: _xml, ...scene } = format.scene3d;
+		image.scene3d = scene;
+	}
+	if (format.shape3d === null) delete image.shape3d;
+	else if (format.shape3d) {
+		const { sourceXml: _xml, extrusionColor: _e, contourColor: _c, ...shape } = format.shape3d;
+		image.shape3d = shape;
+	}
 }
 
 export function formatDrawing(

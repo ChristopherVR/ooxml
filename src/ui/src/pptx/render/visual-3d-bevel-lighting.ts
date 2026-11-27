@@ -169,31 +169,29 @@
  * @module render/visual-3d-bevel-lighting
  */
 
-import type { Pptx3DScene, Pptx3DShape, PptxElement } from 'ooxml-core/pptx';
-import { hasShapeProperties } from 'ooxml-core/pptx';
-
 import type { BevelFilterLayer } from './visual-3d-bevel-lighting-layer';
 import { resolveLayer } from './visual-3d-bevel-lighting-layer';
 import { isRoutedToLegacyBevelShadow } from './visual-3d-bevel-lighting-routing';
 import { svgIdToken } from './svg-id';
-import type { SvgFilterDefinition } from './visual-effects';
-import { escapeSvgAttr } from './visual-effects';
+import type { SvgFilterDefinition } from './svg-filter-definition';
+// No runtime import of the PowerPoint model, so other products' painters can use this module.
+import { escapeSvgAttr } from './svg-attr-escape';
 
 /** Structural subset of the bevel-relevant `Pptx3DShape` fields. */
 export interface BevelLightingShapeParams {
-	bevelTopType?: string;
-	bevelTopWidth?: number;
-	bevelTopHeight?: number;
-	bevelBottomType?: string;
-	bevelBottomWidth?: number;
-	bevelBottomHeight?: number;
-	presetMaterial?: string;
+	bevelTopType?: string | undefined;
+	bevelTopWidth?: number | undefined;
+	bevelTopHeight?: number | undefined;
+	bevelBottomType?: string | undefined;
+	bevelBottomWidth?: number | undefined;
+	bevelBottomHeight?: number | undefined;
+	presetMaterial?: string | undefined;
 }
 
 /** Structural subset of the bevel-relevant `Pptx3DScene` fields. */
 export interface BevelLightingSceneParams {
-	lightRigType?: string;
-	lightRigDirection?: string;
+	lightRigType?: string | undefined;
+	lightRigDirection?: string | undefined;
 }
 
 /**
@@ -335,19 +333,4 @@ export function getBevelLightingFilterMarkup(
 	const id = getBevelLightingFilterId(elementId);
 	const filterMarkup = `<filter id="${escapeSvgAttr(id)}" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">${primitives}</filter>`;
 	return { id, cssReference: `url(#${id})`, filterMarkup };
-}
-
-/**
- * Convenience wrapper: resolve a bevel lighting filter straight from a
- * `PptxElement`, mirroring `getSoftEdgeSvgFilter`'s call shape. Returns
- * `undefined` for a non-shape element or one with no bevel.
- */
-export function getBevelLightingSvgFilter(el: PptxElement): SvgFilterDefinition | undefined {
-	if (!hasShapeProperties(el)) {
-		return undefined;
-	}
-	const ss = el.shapeStyle;
-	const shape3d: Pptx3DShape | undefined = ss?.shape3d;
-	const scene3d: Pptx3DScene | undefined = ss?.scene3d;
-	return getBevelLightingFilterMarkup(el.id, shape3d, scene3d);
 }

@@ -153,8 +153,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       DrawingML catalogues (42 theme styles, 35 presets, 28 picture styles), fill, outline,
       effects, size, Alt Text, Reset and Compress for one or several drawings; Excel 16 reopens
       them (`xlsx/edit/drawing-format.ts`, 2026-11-26).
-- [ ] **P1** Excel draws Picture Style inner shadows, reflections, soft edges, compound borders
-      and 3-D effects flat in the worksheet (they are saved).
+- [x] **P1** Excel draws Picture Style 3-D in the worksheet: bevels lit from the light rig and
+      material, 3-D rotation and the perspective and isometric camera presets, through
+      PowerPoint's shared camera and bevel lighting (`src/ui/src/xlsx/grid/picture-3d.ts`, loaded
+      on first use). Approximate: one flat projected face, no extrusion sides or contour, no
+      perspective-origin correction, and a picture also rotated in 2-D is turned after the camera.
+- [ ] **P1** Excel draws Picture Style inner shadows, reflections, soft edges and compound
+      borders flat in the worksheet (they are saved).
 - [ ] **P1** Picture Format and Shape Format contextual tabs are partial in Word Picture Format (Wrap Text, Crop and Format only; Arrange is shared with Shape Format)
       and in PowerPoint Shape Format (Arrange is done; Size and Alt Text are open).
 - [x] **P1** Shared chart Format pane analysis: several trendlines per series (a section each, Add

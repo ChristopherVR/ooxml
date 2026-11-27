@@ -312,3 +312,20 @@ export const ROTATION_GROUPS: ReadonlyArray<{
 
 /** The scene PowerPoint writes around a bevel / camera pick. */
 export const DEFAULT_SCENE_LIGHT_RIG = { lightRigType: 'threePt', lightRigDirection: 't' } as const;
+
+/** The outer shadow Shape Effects > Shadow applies by default (Offset: Bottom Right). */
+export function defaultOuterShadow(): import('./effect-model').DrawingOuterShadow {
+	const { distEmu, dir, blurEmu, alpha, algn } = DEFAULT_OUTER_SHADOW_PRESET;
+	return {
+		kind: 'outerShadow',
+		distanceEmu: distEmu,
+		directionAngle: dir,
+		blurRadiusEmu: blurEmu,
+		...(algn ? { alignment: algn } : {}),
+		color: {
+			kind: 'srgb',
+			value: '000000',
+			transforms: alpha === undefined ? [] : [{ name: 'alpha', value: String(alpha) }],
+		},
+	};
+}

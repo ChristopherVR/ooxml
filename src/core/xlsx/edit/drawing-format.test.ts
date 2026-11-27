@@ -187,3 +187,22 @@ it('adds a shadow before existing reflection and preserves it when the shadow is
 		expect.stringContaining('<a:reflection blurRad="12700"/>'),
 	);
 });
+
+it('carries Picture Style 3-D on the picture for drawing and reads it back', async () => {
+	const book = createWorkbook();
+	const edit = createEditSession(book);
+	edit.addImage(0, encodePng(1, 1, Uint8Array.of(255, 0, 0)), 'image/png', position, 'Logo');
+	edit.formatDrawing(0, 0, { kind: 'pictureStyle', style: 'bevelPerspective' });
+	const expected = {
+		scene3d: { cameraPreset: 'perspectiveRelaxed', cameraRotX: 19800000, lightRigType: 'threePt' },
+		shape3d: { bevelTopWidth: 101600, bevelTopHeight: 101600, presetMaterial: 'matte' },
+	};
+	expect(book.sheets[0]?.drawings[0]).toMatchObject(expected);
+	expect(book.sheets[0]?.drawings[0]).not.toHaveProperty('scene3d.sourceXml');
+	const loaded = await reopen(book);
+	expect(loaded.sheets[0]?.drawings[0]).toMatchObject(expected);
+	const reset = createEditSession(loaded);
+	reset.formatDrawing(0, 0, { kind: 'resetPicture' });
+	expect(loaded.sheets[0]?.drawings[0]).not.toHaveProperty('scene3d');
+	expect(loaded.sheets[0]?.drawings[0]).not.toHaveProperty('shape3d');
+});

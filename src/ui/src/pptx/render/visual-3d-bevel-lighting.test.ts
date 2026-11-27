@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-	getBevelLightingFilterId,
-	getBevelLightingFilterMarkup,
-	getBevelLightingSvgFilter,
-} from './visual-3d-bevel-lighting';
+import { getBevelLightingFilterId, getBevelLightingFilterMarkup } from './visual-3d-bevel-lighting';
+import { getBevelLightingSvgFilter } from './visual-3d';
 
 describe('getBevelLightingFilterMarkup', () => {
 	it('returns undefined for no shape3d', () => {

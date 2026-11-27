@@ -47,7 +47,7 @@ export function resolveAzimuthDeg(
 export interface BevelFilterLayer {
 	index: number;
 	blurStdDev: number;
-	morphologyRadius?: number;
+	morphologyRadius?: number | undefined;
 	/**
 	 * `feFuncA type="table"` stops reshaping the blur(+erode) height ramp into
 	 * a non-monotonic (two-lobe) profile before it is lit, for the 3 profiles
@@ -55,7 +55,7 @@ export interface BevelFilterLayer {
 	 * .heightTransferTable`'s doc comment). `undefined` for every other
 	 * profile, which lights the blur(+erode) ramp directly, unchanged.
 	 */
-	heightTransferTable?: readonly number[];
+	heightTransferTable?: readonly number[] | undefined;
 	surfaceScale: number;
 	azimuthDeg: number;
 	elevationDeg: number;

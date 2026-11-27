@@ -100,28 +100,28 @@ export type { ParametricCameraParams } from './visual-3d-camera-parametric';
  * helpers accept the same shape; `Pptx3DScene` structurally satisfies it.
  */
 export interface Scene3dParams {
-	cameraPreset?: string;
-	cameraRotX?: number;
-	cameraRotY?: number;
-	cameraRotZ?: number;
+	cameraPreset?: string | undefined;
+	cameraRotX?: number | undefined;
+	cameraRotY?: number | undefined;
+	cameraRotZ?: number | undefined;
 	/** `a:camera/@fov`, in 1/60000 degrees. Overrides the preset's default FOV. */
-	cameraFieldOfView?: number;
+	cameraFieldOfView?: number | undefined;
 	/** `a:camera/@zoom`, a fraction where 1 = 100%. Narrows the effective FOV. */
-	cameraZoom?: number;
-	lightRigType?: string;
-	lightRigDirection?: string;
-	hasBackdrop?: boolean;
+	cameraZoom?: number | undefined;
+	lightRigType?: string | undefined;
+	lightRigDirection?: string | undefined;
+	hasBackdrop?: boolean | undefined;
 	/** Backdrop plane normal vector (`a:backdrop/a:norm`), default (0, 1, 0): a flat floor. */
-	backdropNormalX?: number;
-	backdropNormalY?: number;
-	backdropNormalZ?: number;
+	backdropNormalX?: number | undefined;
+	backdropNormalY?: number | undefined;
+	backdropNormalZ?: number | undefined;
 }
 
 /** Resolved camera transform produced by {@link getCameraTransform}. */
 export interface CameraTransform {
-	perspective?: string;
+	perspective?: string | undefined;
 	/** CSS `perspective-origin` (e.g. `"93% 0%"`); `undefined` means the default centred `50% 50%`. */
-	perspectiveOrigin?: string;
+	perspectiveOrigin?: string | undefined;
 	/**
 	 * A COM-measured exact `matrix3d(...)` CSS transform (see
 	 * `visual-3d-camera-homography`), when the preset has ground truth and no
@@ -133,9 +133,9 @@ export interface CameraTransform {
 	 * "which side is the camera on" (extrusion panel visibility/shading), not
 	 * the exact transform; see {@link cameraFlatFace}.
 	 */
-	matrix3d?: string;
+	matrix3d?: string | undefined;
 	/** `'0 0'` when {@link matrix3d} is set; `undefined` (default `50% 50%`) otherwise. */
-	transformOrigin?: string;
+	transformOrigin?: string | undefined;
 	/**
 	 * `true` when a COM-measured homography resolved the preset to an
 	 * IDENTITY transform (the front face is flat; see
@@ -149,7 +149,7 @@ export interface CameraTransform {
 	 * is `true`, the same way they already skip them when {@link matrix3d} is
 	 * set.
 	 */
-	cameraFlatFace?: boolean;
+	cameraFlatFace?: boolean | undefined;
 	rotateX: number;
 	rotateY: number;
 	rotateZ: number;
@@ -160,7 +160,7 @@ export interface CameraTransform {
 	 * override, or an unrecognised preset): callers fall back to their own
 	 * `rotateX`/`rotateY` threshold heuristic in that case, unchanged.
 	 */
-	panelSides?: PanelVisibility;
+	panelSides?: PanelVisibility | undefined;
 }
 
 /**
