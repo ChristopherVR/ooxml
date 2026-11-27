@@ -3,7 +3,7 @@ import type { Paragraph, Table, TableCell, TextRun } from './model';
 const MAX_CELL_TEXT = 4096;
 const MAX_FORMULA_CELLS = 10_000;
 const NUMBER =
-	/^([+-]?)\s*\p{Sc}?\s*((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)(e[+-]?\d+)?\s*\p{Sc}?\s*(%)?$/iu;
+	/^([+-]?)\s*(?:\p{Sc}\s*)?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)(e[+-]?\d+)?\s*(?:\p{Sc}\s*)?(%)?$/iu;
 const DIRECTIONS = new Map([
 	['ABOVE', [-1, 0]],
 	['BELOW', [1, 0]],

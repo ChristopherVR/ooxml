@@ -166,6 +166,13 @@ describe('Word table contextual operations', () => {
 		['($15.25)', '($15.25)'],
 		['12,34', '0'],
 		['(-5)', '-5'],
+		['+ $ 5', '5'],
+		['- 5 $', '-5'],
+		['5 $ %', '0.05'],
+		['5\t\t%', '0.05'],
+		['$ $5', '0'],
+		['.5e1 \u20ac', '5'],
+		['5 %%', '0'],
 	])('uses the numeric value of table cell %s', (text, expected) => {
 		const table = makeTable();
 		table.rows[0]![1]!.paragraphs[0]!.runs = [{ text }];
