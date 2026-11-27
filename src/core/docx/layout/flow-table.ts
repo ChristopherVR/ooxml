@@ -1,5 +1,6 @@
 import { reflowNestedFragments } from './nested-fragment-edges';
 import { tableParagraphKeeps } from './table-paragraph-keeps';
+import { widowControlCut } from './table-widow-cuts';
 import { independentNoteStories, measuredNoteReferences } from './table-note-stories';
 import { layoutBorderedRow, TableFragmentBorders } from './table-border-layout';
 import { nestedFrameProfile } from './nested-frame-profile';
@@ -302,9 +303,14 @@ export function placeTable(
 				remaining,
 				cursor.atColumnTop && fragmentRows.length === 0,
 			);
+			// On an empty page a paragraph taller than the page splits regardless of widow control.
+			const widowCut =
+				paragraphCuts || (cursor.atColumnTop && fragmentRows.every((item) => item.repeated))
+					? undefined
+					: widowControlCut(row, remainingRow, Math.max(0, remaining));
 			const { before, after } = splitRowAtHeight(
 				remainingRow,
-				Math.max(0, remaining),
+				Math.max(0, Math.min(remaining, widowCut ?? Infinity)),
 				undefined,
 				paragraphCuts,
 			);
