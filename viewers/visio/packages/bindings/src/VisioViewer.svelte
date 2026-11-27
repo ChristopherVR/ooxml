@@ -24,7 +24,7 @@
   /** Reactive viewer state as a Svelte store: `const state = viewer.getState()`, then `$state`. */
   export function getState() { return readonly(state); }
   export function getHandle() { return handle; }
-  export function load(source: VsdxSource) { return handle.load(source); }
+  export function load(source: VsdxSource, fileName?: string) { return handle.load(source, fileName); }
   export function createBlankDrawing(blankOptions?: CreateVsdxOptions) { return handle.createBlankDrawing(blankOptions); }
   export function openCloudFile(file: CloudOpenedFile) { return handle.openCloudFile(file); }
   export function applyEdits(edits: readonly VisioEdit[]) { return handle.applyEdits(edits); }
