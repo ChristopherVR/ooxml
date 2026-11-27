@@ -41,6 +41,23 @@ const siblingEntries: NonNullable<Options['esbuildPlugins']>[number] = {
 	},
 };
 
+/**
+ * Word's layout draws charts with the chart area's renderer, which every Word editor also loads as
+ * `ooxml-core/chart` (the chart commands and dialogs). The layout entry imports it by that name, so
+ * a host shares one copy instead of carrying a second one inside the layout.
+ */
+const layoutSharedAreas: NonNullable<Options['esbuildPlugins']>[number] = {
+	name: 'layout-shared-areas',
+	setup(build) {
+		build.onResolve({ filter: /^\./ }, (args) => {
+			const area = relative(coreRoot, resolve(args.resolveDir, args.path)).split(sep).join('/');
+			return area === 'chart/index' || area === 'chart'
+				? { path: 'ooxml-core/chart', external: true }
+				: undefined;
+		});
+	},
+};
+
 const xlsxEntries = {
 	'xlsx/index': 'xlsx/index.ts',
 	'xlsx/ui/index': 'xlsx/ui/index.ts',
@@ -144,6 +161,7 @@ const {
 	'docx/embedded': docxEmbedded,
 	'docx/load/index': docxLoad,
 	'opc/index': opc,
+	'docx/layout/index': docxLayout,
 	...eagerEntries
 } = shared.entry;
 
@@ -170,6 +188,13 @@ export default defineConfig([
 		},
 		format: ['esm'],
 		splitting: false,
+	},
+	{
+		...shared,
+		entry: { 'docx/layout/index': docxLayout },
+		format: ['esm'],
+		splitting: false,
+		esbuildPlugins: [layoutSharedAreas],
 	},
 	{ ...shared, format: ['cjs'], splitting: false },
 	ownChunks('docx/index', docx, 'docx/chunks'),
