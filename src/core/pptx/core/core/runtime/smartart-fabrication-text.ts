@@ -48,7 +48,10 @@ function runProperties(style: TextStyle, writeRun?: SmartArtRunWriter): XmlObjec
 		rPr['a:solidFill'] = { 'a:srgbClr': { '@_val': color } };
 	}
 	if (style.fontFamily && !rPr['a:latin']) {
-		rPr['a:latin'] = { '@_typeface': style.fontFamily };
+		// A face the run did not choose itself is the theme's body font.
+		rPr['a:latin'] = {
+			'@_typeface': style.fontFamilyIsCascadeDefault ? '+mn-lt' : style.fontFamily,
+		};
 	}
 	if (style.runPropertiesExtLstXml) {
 		rPr['a:extLst'] = style.runPropertiesExtLstXml;

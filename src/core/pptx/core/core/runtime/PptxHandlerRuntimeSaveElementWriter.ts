@@ -1,3 +1,4 @@
+import { saveEnvironmentOf } from '../../../../opc/reproducible';
 import { applyConnectorShapeIds } from '../../services';
 import { hasShapeProperties, hasTextProperties } from '../../types';
 import type {
@@ -130,6 +131,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return `ppt/extendedCharts/chart${n}.xml`;
 	}
 
+	/** A new chart workbook in the deck's body font, dated as the save dates its entries. */
+	private chartWorkbookOptions(): { zipDate: Date; minorFont?: string } {
+		const { zipDate, minorFont } = saveEnvironmentOf(this.zip);
+		return { zipDate, ...(minorFont && { minorFont }) };
+	}
+
 	/**
 	 * Generate a self-contained chart part for an SDK-created chart, register a
 	 * slide relationship to it, and return the `p:graphicFrame` envelope. The
@@ -210,6 +217,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				partName: partPath,
 				relationships: colorRels,
 				rows: embedded.rows,
+				workbook: this.chartWorkbookOptions(),
 			});
 			(this.pendingChartWorkbookPartPaths ??= []).push(parts.workbookPartName);
 		} else if (colorTarget) {

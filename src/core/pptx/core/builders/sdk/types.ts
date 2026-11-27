@@ -652,6 +652,11 @@ export interface PresentationOptions {
 	/** Presentation author. */
 	creator?: string | undefined;
 	/**
+	 * The creation time written to `docProps/core.xml` (`dcterms:created` and
+	 * `dcterms:modified`). Default: the current time, as PowerPoint stamps it.
+	 */
+	now?: Date | undefined;
+	/**
 	 * Number of blank slides to include in the initial presentation.
 	 * Default: 0 (no slides). Slides use the "Blank" layout.
 	 */

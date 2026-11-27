@@ -87,9 +87,10 @@ function buildParOfConnection(
 	srcOrd: number,
 	parTransId: string,
 	sibTransId: string,
+	guid: () => string,
 ): XmlObject {
 	return {
-		'@_modelId': newSmartArtGuid(),
+		'@_modelId': guid(),
 		'@_srcId': srcId,
 		'@_destId': destId,
 		'@_srcOrd': String(srcOrd),
@@ -99,9 +100,14 @@ function buildParOfConnection(
 	};
 }
 
-function buildPresOfConnection(srcId: string, destId: string, presId: string): XmlObject {
+function buildPresOfConnection(
+	srcId: string,
+	destId: string,
+	presId: string,
+	guid: () => string,
+): XmlObject {
 	return {
-		'@_modelId': newSmartArtGuid(),
+		'@_modelId': guid(),
 		'@_type': 'presOf',
 		'@_srcId': srcId,
 		'@_destId': destId,
@@ -116,9 +122,10 @@ function buildPresParOfConnection(
 	destId: string,
 	srcOrd: number,
 	presId: string,
+	guid: () => string,
 ): XmlObject {
 	return {
-		'@_modelId': newSmartArtGuid(),
+		'@_modelId': guid(),
 		'@_type': 'presParOf',
 		'@_srcId': srcId,
 		'@_destId': destId,
@@ -176,6 +183,7 @@ export function synthesizeNewSmartArtStructuralPoints(
 	existingCxns: XmlObject[],
 	nodes: PptxSmartArtNode[],
 	connections: PptxSmartArtConnection[] | undefined,
+	guid: () => string = newSmartArtGuid,
 ): { pts: XmlObject[]; cxns: XmlObject[]; extraConnections: PptxSmartArtConnection[] } {
 	const existingContentIds = new Set(
 		existingPts.filter(isContentPoint).map((pt) => String(pt['@_modelId'] || '')),
@@ -213,10 +221,10 @@ export function synthesizeNewSmartArtStructuralPoints(
 			continue;
 		}
 
-		const parTransId = newSmartArtGuid();
-		const sibTransId = newSmartArtGuid();
-		const presNodeId = newSmartArtGuid();
-		const presSibTransId = newSmartArtGuid();
+		const parTransId = guid();
+		const sibTransId = guid();
+		const presNodeId = guid();
+		const presSibTransId = guid();
 
 		pts.push(buildContentPoint(node));
 		pts.push(buildTransPoint(parTransId, 'parTrans'));
@@ -235,8 +243,8 @@ export function synthesizeNewSmartArtStructuralPoints(
 		}
 
 		const srcOrd = connectionByChildId.get(node.id)?.srcOrd ?? 0;
-		cxns.push(buildParOfConnection(parentId, node.id, srcOrd, parTransId, sibTransId));
-		cxns.push(buildPresOfConnection(node.id, presNodeId, presId));
+		cxns.push(buildParOfConnection(parentId, node.id, srcOrd, parTransId, sibTransId, guid));
+		cxns.push(buildPresOfConnection(node.id, presNodeId, presId, guid));
 		extraConnections.push({
 			sourceId: node.id,
 			destId: presNodeId,
@@ -247,8 +255,8 @@ export function synthesizeNewSmartArtStructuralPoints(
 
 		const parentPresId = String(parentPres['@_modelId']);
 		const baseOrd = maxPresParOfOrd(cxns, parentPresId) + 1;
-		cxns.push(buildPresParOfConnection(parentPresId, presNodeId, baseOrd, presId));
-		cxns.push(buildPresParOfConnection(parentPresId, presSibTransId, baseOrd + 1, presId));
+		cxns.push(buildPresParOfConnection(parentPresId, presNodeId, baseOrd, presId, guid));
+		cxns.push(buildPresParOfConnection(parentPresId, presSibTransId, baseOrd + 1, presId, guid));
 		extraConnections.push(
 			{
 				sourceId: parentPresId,

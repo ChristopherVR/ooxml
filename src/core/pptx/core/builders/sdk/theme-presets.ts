@@ -7,6 +7,7 @@
  * @module sdk/theme-presets
  */
 
+import { OFFICE_THEME_FONTS } from '../../../../drawingml/office-theme-fonts';
 import type { PresentationThemeInput } from './types';
 
 /** A single theme preset definition. */
@@ -18,7 +19,7 @@ export interface ThemePreset extends PresentationThemeInput {
 
 /** Pre-built theme presets. */
 export const ThemePresets = {
-	/** Default Office theme (Calibri, blue accent palette). */
+	/** Default Office theme (the shared `OFFICE_THEME_FONTS`, blue accent palette). */
 	OFFICE: {
 		name: 'Office Theme',
 		colors: {
@@ -35,7 +36,7 @@ export const ThemePresets = {
 			hlink: '#0563C1',
 			folHlink: '#954F72',
 		},
-		fonts: { majorFont: 'Calibri Light', minorFont: 'Calibri' },
+		fonts: { majorFont: OFFICE_THEME_FONTS.major, minorFont: OFFICE_THEME_FONTS.minor },
 	},
 
 	/** Modern blue - clean, professional look. */

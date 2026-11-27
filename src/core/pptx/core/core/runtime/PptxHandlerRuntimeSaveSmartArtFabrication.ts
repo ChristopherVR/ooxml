@@ -6,6 +6,8 @@
  * write the parts, register the slide relationships, queue content-type
  * overrides, and return the `p:graphicFrame` envelope with `dgm:relIds`.
  */
+import { createOfficeGuid } from '../../../../crypto/uuid';
+import { saveEnvironmentOf } from '../../../../opc/reproducible';
 import type { XmlObject, SmartArtPptxElement } from '../../types';
 import { SMART_ART_DEFINITION_PARTS, regenerateSmartArtDrawingShapes } from '../../utils';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveElementEmbedding';
@@ -114,8 +116,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// recomputing the simplified layout and drawing every node as a roundRect.
 		// SDK-inserted diagrams carry no `drawingShapes`, so fall back to running
 		// the same decompose/layout algorithms the viewer renders with.
-		const guidByNodeId = buildNodeGuidMap(data.nodes);
-		const presentationGuidByNodeId = buildPresentationGuidMap(data.nodes);
+		// Model ids come from the save's id source: random, or seeded for a reproducible save.
+		const { ids } = saveEnvironmentOf(this.zip);
+		const guid = () => createOfficeGuid(ids);
+		const guidByNodeId = buildNodeGuidMap(data.nodes, guid);
+		const presentationGuidByNodeId = buildPresentationGuidMap(data.nodes, guid);
 		const drawingShapes =
 			data.drawingShapes && data.drawingShapes.length > 0
 				? data.drawingShapes
@@ -143,6 +148,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				{
 					guidByNodeId,
 					presentationGuidByNodeId,
+					createModelId: guid,
 					...(drawingRelId !== undefined && { drawingRelId }),
 				},
 			),

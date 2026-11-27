@@ -127,13 +127,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected saveFixedDate: Date | undefined;
 
 	/**
+	 * The save in progress is reproducible (`fixedDate` or an injected `ids`
+	 * source): names that would otherwise come from time-based element ids
+	 * are derived from the shape instead.
+	 */
+	protected saveReproducible = false;
+
+	/**
 	 * The `p:cNvPr/@name` of a group with neither a name nor one from its
 	 * file: its element id, or for a reproducible save (`fixedDate`), which
 	 * must not depend on the time-based ids of elements made in code,
 	 * `Group <shape id>` as PowerPoint names groups.
 	 */
 	private groupFallbackName(group: GroupPptxElement): string {
-		return this.saveFixedDate ? `Group ${group.shapeId ?? ''}`.trim() : group.id;
+		return this.saveReproducible ? `Group ${group.shapeId ?? ''}`.trim() : group.id;
 	}
 
 	protected buildGroupShapeXml(

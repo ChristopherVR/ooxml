@@ -1,3 +1,5 @@
+import { createOfficeGuid } from '../../../../crypto/uuid';
+import { saveEnvironmentOf } from '../../../../opc/reproducible';
 import { remapEditorAnimationsToShapeIds, resolveConnectorShapeIds } from '../../services';
 import { writeCommonSlideDataName } from '../../services/slide-name';
 import { XmlObject, PptxComment, PptxSlide } from '../../types';
@@ -69,13 +71,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return `ppt/comments/modernComment${index}.xml`;
 	}
 
+	/** A new author's GUID, from the save's id source (random unless reproducible). */
 	private createModernCommentAuthorId(): string {
-		const uuid = globalThis.crypto?.randomUUID?.();
-		if (uuid) {
-			return `{${uuid.toUpperCase()}}`;
-		}
-		const suffix = String(this.modernCommentAuthors.size + 1).padStart(12, '0');
-		return `{00000000-0000-0000-0000-${suffix}}`;
+		return createOfficeGuid(saveEnvironmentOf(this.zip).ids);
 	}
 
 	/**

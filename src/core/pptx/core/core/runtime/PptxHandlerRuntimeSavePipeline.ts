@@ -1,5 +1,13 @@
 import { keepCompressedMedia, writeZipText } from '../../../../opc/zip-save';
 import { nextRelationshipId } from '../../../../opc/relationships';
+import {
+	bindSaveEnvironment,
+	dateZipEntries,
+	saveEnvironment,
+	saveEnvironmentOf,
+	seededIdSource,
+	type ReproducibleSaveOptions,
+} from '../../../../opc/reproducible';
 import { XmlObject, PptxSlide } from '../../types';
 import type { PptxHeaderFooter, PptxSlideSize } from '../../types';
 import type { OoxmlConformanceClass } from '../../utils';
@@ -60,6 +68,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	): Promise<Uint8Array> {
 		validateSlideGeometry(slides);
 		this.saveFixedDate = validFixedDate(options?.fixedDate);
+		this.saveReproducible = Boolean(this.saveFixedDate || options?.ids);
+		// Every writer of this save reads its clock and id source from the package
+		// (`saveEnvironmentOf(this.zip)`); `fixedDate` is shorthand for all three.
+		const minorFont = this.resolveThemeTypeface('+mn-lt');
+		bindSaveEnvironment(this.zip, {
+			...saveEnvironment(reproducibleOptions(options, this.saveFixedDate)),
+			...(minorFont && minorFont !== '+mn-lt' ? { minorFont } : {}),
+		});
 		const templates = [
 			...(options?.slideMasters ?? []),
 			...(options?.slideLayouts ?? []),
@@ -375,6 +391,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			appProperties: options?.appProperties,
 			customProperties: options?.customProperties,
 			fixedDate: this.saveFixedDate,
+			now: saveEnvironmentOf(this.zip).now,
 		});
 
 		await this.applyTagCollectionChanges(options?.tags);
@@ -444,13 +461,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// New and edited parts use level 6, zlib's default: PowerPoint DEFLATEs its own packages, so
 		// a saved deck stays the size of the one the user opened. Unchanged parts keep their bytes.
 		keepCompressedMedia(this.zip);
-		// A reproducible save dates every ZIP entry the same, not when each part
-		// was last written.
-		if (this.saveFixedDate) {
-			for (const file of Object.values(this.zip.files)) {
-				file.date = this.saveFixedDate;
-			}
-		}
+		// Every ZIP entry gets one date (1980-01-01 by default, as PowerPoint
+		// writes), not the time each part was last written.
+		dateZipEntries(this.zip, saveEnvironmentOf(this.zip).zipDate);
 		const output = await archiveWithEditedPictures(this.zip, slides);
 		return await output.generateAsync({
 			type: 'uint8array',
@@ -545,6 +558,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		root['Relationship'] = filtered;
 		this.zip.file(relsPath, this.builder.build(relsData));
 	}
+}
+
+/** The clock, id source and ZIP date of a save; `fixedDate` stands in for any not given. */
+function reproducibleOptions(
+	options: PptxHandlerSaveOptions | undefined,
+	fixedDate: Date | undefined,
+): ReproducibleSaveOptions {
+	const now = options?.now ?? fixedDate;
+	const ids = options?.ids ?? (fixedDate ? seededIdSource(0) : undefined);
+	const zipDate = options?.zipDate ?? fixedDate;
+	return { ...(now && { now }), ...(ids && { ids }), ...(zipDate && { zipDate }) };
 }
 
 /** `fixedDate` when it is a valid date; an invalid one throws rather than saving a broken date. */

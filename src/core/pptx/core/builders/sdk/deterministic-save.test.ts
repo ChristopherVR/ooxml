@@ -1,7 +1,8 @@
 /**
- * `save(slides, { fixedDate })` gives the same bytes for the same input,
- * whenever it runs, and the dates and revision it writes load back. Without
- * `fixedDate` a save is dated and counted as before.
+ * `save(slides, { fixedDate })`, or the shared `now` and `ids` options, give
+ * the same bytes for the same input whenever it runs, and the dates and
+ * revision it writes load back. Without them a save is dated and counted as
+ * before, and ids are random.
  */
 import JSZip from 'jszip';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -9,6 +10,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxHandlerSaveOptions } from '../../core/types';
 import { createShapeElement } from './ElementFactory';
+import { OFFICE_THEME_FONTS } from '../../../../drawingml/office-theme-fonts';
+import { seededIdSource } from '../../../../opc/reproducible';
 
 const PNG =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
@@ -107,5 +110,74 @@ describe('fixedDate', () => {
 
 	it('rejects an invalid date', async () => {
 		await expect(build({ fixedDate: new Date('nope') })).rejects.toThrow(RangeError);
+	});
+});
+
+describe('now and ids (the shared reproducible save options)', () => {
+	const NOW = new Date('2026-01-15T09:00:00Z');
+
+	async function buildWithSmartArt(options?: PptxHandlerSaveOptions): Promise<Uint8Array> {
+		const { handler, createSlide } = await PptxHandler.create({ title: 'Report', now: NOW });
+		const slide = createSlide('Title and Content')
+			.addTable({ rows: [{ cells: [{ text: 'a' }, { text: 'b' }] }] })
+			.addChart('bar', { series: [{ name: 'S', values: [1, 2] }], categories: ['x', 'y'] })
+			.build();
+		slide.elements.push({
+			type: 'smartArt',
+			id: 'diagram-1',
+			x: 40,
+			y: 300,
+			width: 600,
+			height: 160,
+			smartArtData: {
+				layout: 'basicChevronProcess',
+				nodes: [
+					{ id: 'n1', text: 'One' },
+					{ id: 'n2', text: 'Two' },
+				],
+			},
+		} as unknown as (typeof slide.elements)[number]);
+		return handler.save([slide], options);
+	}
+
+	it('gives identical bytes for the same now and seed at different times', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+		vi.setSystemTime(new Date('2026-05-05T10:00:00Z'));
+		const first = await buildWithSmartArt({ now: NOW, ids: seededIdSource(1) });
+		vi.setSystemTime(new Date('2026-06-07T11:00:03.500Z'));
+		const second = await buildWithSmartArt({ now: NOW, ids: seededIdSource(1) });
+		expect(Buffer.from(second).equals(Buffer.from(first))).toBe(true);
+		const core = await coreXml(first);
+		expect(core).toMatch(/<dcterms:created [^>]*>2026-01-15T09:00:00Z</u);
+		expect(core).toMatch(/<dcterms:modified [^>]*>2026-01-15T09:00:00Z</u);
+	});
+
+	it('dates every entry 1980-01-01 by default, as PowerPoint writes', async () => {
+		const bytes = await build();
+		const view = new DataView(bytes.buffer, bytes.byteOffset);
+		expect(view.getUint16(10, true)).toBe(0);
+		expect(view.getUint16(12, true)).toBe(0x21);
+	});
+
+	it('names fonts only in the theme: SmartArt runs, chart workbook and master bullets', async () => {
+		const zip = await JSZip.loadAsync(await buildWithSmartArt({ now: NOW }));
+		for (const name of Object.keys(zip.files).filter((part) =>
+			/^ppt\/diagrams\/drawing\d+\.xml$/u.test(part),
+		)) {
+			const xml = await zip.file(name)!.async('string');
+			expect(xml).not.toContain(`typeface="${OFFICE_THEME_FONTS.minor}"`);
+		}
+		const master = (await zip.file('ppt/slideMasters/slideMaster1.xml')?.async('string')) ?? '';
+		expect(master).not.toContain('typeface="Arial"');
+		const workbookName = Object.keys(zip.files).find((part) =>
+			/^ppt\/embeddings\/.+\.xlsx$/u.test(part),
+		);
+		expect(workbookName).toBeDefined();
+		const workbook = await JSZip.loadAsync(await zip.file(workbookName!)!.async('uint8array'));
+		const styles = await workbook.file('xl/styles.xml')!.async('string');
+		expect(styles).toContain(`<name val="${OFFICE_THEME_FONTS.minor}"/>`);
+		expect(styles).toContain('<scheme val="minor"/>');
+		const theme = (await zip.file('ppt/theme/theme1.xml')?.async('string')) ?? '';
+		expect(theme).toContain(`<a:latin typeface="${OFFICE_THEME_FONTS.minor}"/>`);
 	});
 });

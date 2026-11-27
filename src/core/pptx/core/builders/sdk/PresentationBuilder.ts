@@ -21,6 +21,7 @@ import { newPresentationAppXml } from './presentation-app-properties';
 import { standardLayoutPlaceholders } from './standard-layout-placeholders';
 import type { PresentationOptions } from './types';
 import { at } from '../../../../geometry/indexed';
+import { themeFontPair } from '../../../../drawingml/office-theme-fonts';
 
 // ---------------------------------------------------------------------------
 // Default values
@@ -43,9 +44,6 @@ const DEFAULT_COLORS = {
 	hlink: '#0563C1',
 	folHlink: '#954F72',
 };
-
-const DEFAULT_MAJOR_FONT = 'Calibri Light';
-const DEFAULT_MINOR_FONT = 'Calibri';
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -102,8 +100,9 @@ function resolveThemeColors(
 	return resolved;
 }
 
-function isoNow(): string {
-	return new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+/** W3CDTF to the second, as PowerPoint writes `dcterms:created`. */
+function isoSeconds(date: Date): string {
+	return date.toISOString().replace(/\.\d+Z$/, 'Z');
 }
 
 // Standard layout definitions
@@ -270,7 +269,7 @@ ${layoutRefs}
     <p:bodyStyle>
       <a:lvl1pPr marL="228600" indent="-228600" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
         <a:spcBef><a:spcPct val="20000"/></a:spcBef>
-        <a:buFont typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+        <a:buFontTx/>
         <a:buChar char="&#x2022;"/>
         <a:defRPr sz="3200" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr>
       </a:lvl1pPr>
@@ -403,8 +402,7 @@ function tableStylesXml(): string {
 <a:tblStyleLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" def="{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}"/>`;
 }
 
-function corePropsXml(title?: string, creator?: string): string {
-	const now = isoNow();
+function corePropsXml(now: string, title?: string, creator?: string): string {
 	const titleText = escText(title ?? '');
 	const creatorText = escText(creator ?? 'pptx-viewer-sdk');
 	return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -442,8 +440,12 @@ export async function buildBlankPresentationArchive(
 	const height = options?.height ?? DEFAULT_HEIGHT;
 	const themeName = options?.theme?.name ?? 'Office Theme';
 	const colors = resolveThemeColors(options?.theme?.colors);
-	const majorFont = options?.theme?.fonts?.majorFont ?? DEFAULT_MAJOR_FONT;
-	const minorFont = options?.theme?.fonts?.minorFont ?? DEFAULT_MINOR_FONT;
+	// The theme part is the only place a new deck names its fonts; masters and
+	// layouts refer to them (`+mj-lt` / `+mn-lt`), as PowerPoint's own do.
+	const { major: majorFont, minor: minorFont } = themeFontPair({
+		major: options?.theme?.fonts?.majorFont,
+		minor: options?.theme?.fonts?.minorFont,
+	});
 	const layoutCount = STANDARD_LAYOUTS.length;
 	const initialSlideCount = Math.max(0, options?.initialSlideCount ?? 0);
 
@@ -486,7 +488,10 @@ export async function buildBlankPresentationArchive(
 	zip.file('ppt/presProps.xml', presPropsXml());
 	zip.file('ppt/viewProps.xml', viewPropsXml());
 	zip.file('ppt/tableStyles.xml', tableStylesXml());
-	zip.file('docProps/core.xml', corePropsXml(options?.title, options?.creator));
+	zip.file(
+		'docProps/core.xml',
+		corePropsXml(isoSeconds(options?.now ?? new Date()), options?.title, options?.creator),
+	);
 	zip.file('docProps/app.xml', newPresentationAppXml(initialSlideCount, options?.appProperties));
 
 	return zip.generateAsync({ type: 'arraybuffer' });

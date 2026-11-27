@@ -1,3 +1,4 @@
+import type { ReproducibleSaveOptions } from '../../../opc/reproducible';
 import type { PptxXmlBuilder } from '../builders/fluent';
 import type { PptxSvgRasterizer } from './svg-rasterizer';
 import type {
@@ -124,13 +125,21 @@ export type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm' | 'ppt';
 
 export type { PptxSvgRasterizer } from './svg-rasterizer';
 
-export interface PptxHandlerSaveOptions {
+/**
+ * `now`, `ids` and `zipDate` (`ReproducibleSaveOptions`, shared by every
+ * product's writer) fix the time the save stamps as `dcterms:modified`, the
+ * source of the ids PowerPoint draws at random (table `a16:colId`, SmartArt
+ * model ids, chart series ids, comment author ids) and the date of every ZIP
+ * entry (1980-01-01 by default, as PowerPoint writes).
+ */
+export interface PptxHandlerSaveOptions extends ReproducibleSaveOptions {
 	/**
-	 * A reproducible save: `dcterms:created` / `dcterms:modified` are this date
-	 * (unless `coreProperties` gives them), `cp:revision` is
-	 * `coreProperties.revision` or 1 instead of the next count, new table
-	 * columns get reproducible `a16:colId`s and every ZIP entry is dated this
-	 * date. Two saves of the same input then produce the same bytes.
+	 * A reproducible save in one option: `dcterms:created` / `dcterms:modified`
+	 * are this date (unless `coreProperties` gives them), `cp:revision` is
+	 * `coreProperties.revision` or 1 instead of the next count, ids come from a
+	 * seeded source (unless `ids` is given) and every ZIP entry is dated this
+	 * date (unless `zipDate` is given). Two saves of the same input then
+	 * produce the same bytes.
 	 */
 	fixedDate?: Date;
 	headerFooter?: PptxHeaderFooter | undefined;

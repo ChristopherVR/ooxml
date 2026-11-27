@@ -153,7 +153,8 @@ import {
 } from './table-style-change-cell-clear';
 import { recordTableParagraphOrder } from './table-paragraph-save-order';
 import { rebuildTableXmlFromData } from './table-structural-ops';
-import { deterministicColumnId } from './table-xml-rebuild';
+import { saveColumnId } from './table-xml-rebuild';
+import { saveEnvironmentOf } from '../../../../opc/reproducible';
 import { writeTablePropertiesOwnFillAndEffects } from './table-tblpr-save';
 import { at } from '../../../../geometry/indexed';
 
@@ -235,7 +236,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					tableData,
 					PptxHandlerRuntime.EMU_PER_PX,
 					this.ensureArray.bind(this),
-					this.saveFixedDate ? deterministicColumnId : undefined,
+					saveColumnId(saveEnvironmentOf(this.zip).ids),
 				);
 
 				// After rebuilding, apply text and style to all cells
@@ -1915,7 +1916,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// independent of its idx/order, so leaving it would give the new
 			// series the SAME identity as the one it was templated from.
 			// Replace it with a fresh id before anything else.
-			regenerateClonedUniqueId(clone, (key) => this.compatibilityService.getXmlLocalName(key));
+			regenerateClonedUniqueId(
+				clone,
+				(key) => this.compatibilityService.getXmlLocalName(key),
+				saveEnvironmentOf(this.zip).ids,
+			);
 
 			// Update idx / order
 			const idxNode = this.xmlLookupService.getChildByLocalName(clone, 'idx');
@@ -2028,7 +2033,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// chart-series-identity.ts), matching what PowerPoint itself writes for
 		// a freshly authored series. `c:extLst` is the trailing child in
 		// schema order.
-		ser['c:extLst'] = buildChartUniqueIdExtLst(generateChartUniqueId());
+		ser['c:extLst'] = buildChartUniqueIdExtLst(
+			generateChartUniqueId(saveEnvironmentOf(this.zip).ids),
+		);
 
 		return ser;
 	}

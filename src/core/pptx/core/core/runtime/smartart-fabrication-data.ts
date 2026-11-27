@@ -26,13 +26,19 @@ export {
 export type FabricatedDefIds = DiagramDefinitionIds;
 
 /** The stable `nodeId -> {GUID}` model-id map shared by the data and drawing parts. */
-export function buildNodeGuidMap(nodes: PptxSmartArtData['nodes']): Map<string, string> {
-	return buildDiagramNodeGuidMap(nodes, newSmartArtGuid);
+export function buildNodeGuidMap(
+	nodes: PptxSmartArtData['nodes'],
+	guid: () => string = newSmartArtGuid,
+): Map<string, string> {
+	return buildDiagramNodeGuidMap(nodes, guid);
 }
 
 /** Stable presentation-point ids for cached drawing shapes. */
-export function buildPresentationGuidMap(nodes: PptxSmartArtData['nodes']): Map<string, string> {
-	return buildDiagramPresentationGuidMap(nodes, newSmartArtGuid);
+export function buildPresentationGuidMap(
+	nodes: PptxSmartArtData['nodes'],
+	guid: () => string = newSmartArtGuid,
+): Map<string, string> {
+	return buildDiagramPresentationGuidMap(nodes, guid);
 }
 
 /** Build the complete `dataN.xml` payload for a fabricated SmartArt diagram. */

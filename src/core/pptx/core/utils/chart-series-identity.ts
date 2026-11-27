@@ -1,3 +1,4 @@
+import type { IdSource } from '../../../opc/reproducible';
 import { createOfficeGuid as generateChartUniqueId } from '../../../crypto/uuid';
 /**
  * chart-series-identity.ts: `c16:uniqueId` (CT_UniqueId, the Office 2014+
@@ -63,10 +64,14 @@ export function buildChartUniqueIdExtLst(uniqueId: string): XmlObject {
  * every node produced by cloning an existing node as a template for a new
  * one, so the new node never shares its template's identity.
  */
-export function regenerateClonedUniqueId(clonedNode: XmlObject, localName: LocalName): void {
+export function regenerateClonedUniqueId(
+	clonedNode: XmlObject,
+	localName: LocalName,
+	ids?: IdSource,
+): void {
 	const ext = findChartExtByUri(clonedNode, localName, CHART_UNIQUE_ID_EXT_URI);
 	const uniqueIdNode = findChildByLocalName(ext, 'uniqueId', localName);
 	if (uniqueIdNode) {
-		uniqueIdNode['@_val'] = generateChartUniqueId();
+		uniqueIdNode['@_val'] = generateChartUniqueId(ids);
 	}
 }

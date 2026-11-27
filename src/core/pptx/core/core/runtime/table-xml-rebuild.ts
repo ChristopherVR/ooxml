@@ -6,6 +6,7 @@
  *
  * @module runtime/table-xml-rebuild
  */
+import { randomIdSource, type IdSource } from '../../../../opc/reproducible';
 import type { PptxTableData, XmlObject } from '../../types';
 import { DEFAULT_ROW_HEIGHT_EMU, createDefaultXmlCell } from './table-structural-helpers';
 
@@ -174,24 +175,13 @@ export function slideContainsA16Element(node: unknown): boolean {
 	return false;
 }
 
-function randomColumnId(): string {
-	// PowerPoint emits unsigned-32-bit integers. Values only need to be
-	// unique within a single <a:tblGrid>; uniqueness across tables / files
-	// isn't required.
-	return String(Math.floor(Math.random() * 0xffffffff));
-}
-
 /**
- * A reproducible `a16:colId` for the column at `index`: an FNV-1a hash, so
- * the ids look like PowerPoint's 32-bit ones and differ per column.
+ * The `a16:colId` maker of a save: an unsigned 32-bit integer from the save's
+ * id source (random, as PowerPoint mints them, unless the save is
+ * reproducible). Values only need to be unique within one `<a:tblGrid>`.
  */
-export function deterministicColumnId(index: number): string {
-	let hash = 0x811c9dc5;
-	for (const ch of `a16:colId:${index}`) {
-		hash ^= ch.charCodeAt(0);
-		hash = Math.imul(hash, 0x01000193) >>> 0;
-	}
-	return String(hash);
+export function saveColumnId(ids: IdSource = randomIdSource): (index: number) => string {
+	return () => String(ids.next());
 }
 
 // ---------------------------------------------------------------------------
@@ -210,15 +200,15 @@ export function deterministicColumnId(index: number): string {
  * @param emuPerPx - EMU-to-pixel conversion factor.
  * @param ensureArrayFn - A function that normalises a value into an array.
  * @param newColumnId - The `a16:colId` of a new column (random by default,
- *   as PowerPoint mints them; {@link deterministicColumnId} for a
- *   reproducible save).
+ *   as PowerPoint mints them; {@link saveColumnId} of a reproducible
+ *   save's id source).
  */
 export function rebuildTableXmlFromData(
 	tbl: XmlObject,
 	tableData: PptxTableData,
 	emuPerPx: number,
 	ensureArrayFn: (value: unknown) => unknown[],
-	newColumnId: (index: number) => string = randomColumnId,
+	newColumnId: (index: number) => string = saveColumnId(),
 ): void {
 	const existingXmlRows = ensureArrayFn(tbl['a:tr']) as XmlObject[];
 	const existingGridCols = ensureArrayFn(

@@ -5,6 +5,7 @@
  * used by the layout algorithms and the main decompose entry-point.
  */
 
+import { OFFICE_THEME_FONTS } from '../../../drawingml/office-theme-fonts';
 import type {
 	PptxSmartArtNode,
 	ShapePptxElement,
@@ -118,7 +119,10 @@ export function makeShapeElement(
 		color: opts?.fontColor ?? '#FFFFFF',
 		align: opts?.textAlign ?? 'center',
 		vAlign: opts?.textVAlign ?? 'middle',
-		fontFamily: 'Calibri',
+		// Node text is in the theme's body font: drawn in the default theme's face,
+		// and saved as a reference to the theme (`+mn-lt`), as PowerPoint writes it.
+		fontFamily: OFFICE_THEME_FONTS.minor,
+		fontFamilyIsCascadeDefault: true,
 	};
 
 	return {

@@ -1,3 +1,5 @@
+import { createOfficeGuid } from '../../../../crypto/uuid';
+import { randomIdSource, type IdSource } from '../../../../opc/reproducible';
 import type { XmlObject } from '../../types';
 import type {
 	PptxSmartArtNode,
@@ -5,7 +7,6 @@ import type {
 	PptxSmartArtTextParagraph,
 	PptxSmartArtTextRun,
 } from '../../types/smart-art';
-import { generateFontGuid } from '../../utils/font-deobfuscation';
 import {
 	applySmartArtConnectionAttributes,
 	applySmartArtPointAttributes,
@@ -379,8 +380,8 @@ export function mergeSmartArtPointXml(
  * `dgm:pt`/`dgm:cxn` `@_modelId` values. Every `dgm:cxn` requires a unique
  * `@_modelId`, just like `dgm:pt` does.
  */
-export function newSmartArtGuid(): string {
-	return `{${generateFontGuid()}}`;
+export function newSmartArtGuid(ids: IdSource = randomIdSource): string {
+	return createOfficeGuid(ids);
 }
 
 /**
@@ -461,6 +462,7 @@ function connectionKey(conn: {
 export function mergeSmartArtConnectionXml(
 	existingCxns: XmlObject[],
 	connections: PptxSmartArtConnection[],
+	guid: () => string = newSmartArtGuid,
 ): XmlObject[] {
 	const existingByKey = new Map<string, XmlObject[]>();
 	const existingByModelId = new Map<string, XmlObject>();
@@ -501,12 +503,12 @@ export function mergeSmartArtConnectionXml(
 		const matchById = conn.modelId ? existingByModelId.get(conn.modelId) : undefined;
 		const match = matchById ?? queue?.shift();
 		if (match) {
-			applySmartArtConnectionAttributes(match, conn, newSmartArtGuid);
+			applySmartArtConnectionAttributes(match, conn, guid);
 			return match;
 		}
 
 		const cxnNode: XmlObject = {};
-		applySmartArtConnectionAttributes(cxnNode, conn, newSmartArtGuid);
+		applySmartArtConnectionAttributes(cxnNode, conn, guid);
 		if (conn.type) {
 			cxnNode['@_type'] = conn.type;
 		}

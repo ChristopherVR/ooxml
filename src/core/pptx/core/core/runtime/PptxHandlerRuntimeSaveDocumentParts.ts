@@ -1,3 +1,5 @@
+import { createOfficeGuid } from '../../../../crypto/uuid';
+import { saveEnvironmentOf } from '../../../../opc/reproducible';
 import { writeZipBytes, writeZipText } from '../../../../opc/zip-save';
 import { XmlObject, PptxElement } from '../../types';
 import type {
@@ -69,6 +71,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
 	 * Collect SmartArt data for deferred async processing during save.
 	 */
+	/** A new SmartArt model id from the save's id source (random unless reproducible). */
+	protected readonly saveModelId = (): string => createOfficeGuid(saveEnvironmentOf(this.zip).ids);
+
 	protected serializeSmartArtDataToXml(element: SmartArtPptxElement, slidePath: string): void {
 		if (!element.smartArtData?.dataRelId) {
 			return;
@@ -164,6 +169,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						existingCxns,
 						smartArtData.nodes,
 						smartArtData.connections,
+						this.saveModelId,
 					);
 					existingPts = synthesized.pts;
 					existingCxns = synthesized.cxns;
@@ -196,7 +202,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// required @_modelId (and parTransId / sibTransId / presId) instead
 				// of being rebuilt from scratch and losing them.
 				if (cxnKey && cxnList && desiredConnections && desiredConnections.length > 0) {
-					cxnList[cxnKey] = mergeSmartArtConnectionXml(existingCxns, desiredConnections);
+					cxnList[cxnKey] = mergeSmartArtConnectionXml(
+						existingCxns,
+						desiredConnections,
+						this.saveModelId,
+					);
 				}
 
 				const saveLayout = smartArtData.layoutDirty
@@ -258,15 +268,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						const savedData = await this.zip.file(dataPartPath)?.async('string');
 						const pictureCache =
 							pictureSource && savedData
-								? buildGeneratedDiagramCache(savedData, {
-										extentEmu: { width: element.width * 9525, height: element.height * 9525 },
-										source: {
-											...pictureSource,
-											...(saveLayout ? { layoutXml: saveLayout.xml } : {}),
+								? buildGeneratedDiagramCache(
+										savedData,
+										{
+											extentEmu: { width: element.width * 9525, height: element.height * 9525 },
+											source: {
+												...pictureSource,
+												...(saveLayout ? { layoutXml: saveLayout.xml } : {}),
+											},
+											minorFont: smartArtData.themeMinorFont,
+											scheme: smartArtData.pictureScheme,
 										},
-										minorFont: smartArtData.themeMinorFont,
-										scheme: smartArtData.pictureScheme,
-									})
+										this.saveModelId,
+									)
 								: undefined;
 						if (pictureCache)
 							this.zip.file(

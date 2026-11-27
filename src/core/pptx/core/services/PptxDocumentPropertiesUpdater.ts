@@ -36,6 +36,8 @@ export interface PptxDocumentPropertiesSaveOptions {
 	customProperties?: PptxCustomProperty[] | undefined;
 	/** A reproducible save: `created` / `modified` are this date, the revision is not counted up. */
 	fixedDate?: Date | undefined;
+	/** The time the save stamps as `dcterms:modified` (the save's `now`); default: the current time. */
+	now?: Date | undefined;
 }
 
 export interface PptxDocumentPropertiesUpdaterContext {
@@ -72,7 +74,7 @@ export class PptxDocumentPropertiesUpdater {
 		slides: PptxSlide[],
 		options?: PptxDocumentPropertiesSaveOptions,
 	): Promise<void> {
-		await this.updateCoreProperties(options?.coreProperties, options?.fixedDate);
+		await this.updateCoreProperties(options?.coreProperties, options?.fixedDate, options?.now);
 		await this.updateAppProperties(slides, options?.appProperties);
 		await this.updateCustomProperties(options?.customProperties);
 	}
@@ -80,6 +82,7 @@ export class PptxDocumentPropertiesUpdater {
 	private async updateCoreProperties(
 		overrides: PptxCoreProperties | undefined,
 		fixedDate: Date | undefined,
+		now: Date | undefined,
 	): Promise<void> {
 		const coreFile = this.context.zip.file('docProps/core.xml');
 		if (!coreFile) {
@@ -104,7 +107,7 @@ export class PptxDocumentPropertiesUpdater {
 				: {
 						...core,
 						revision: String(Number.isFinite(revision) && revision >= 0 ? revision + 1 : 1),
-						modified: formatW3cdtf(new Date()),
+						modified: formatW3cdtf(now ?? new Date()),
 					};
 			this.context.zip.file('docProps/core.xml', writeCoreProperties(next, coreXml));
 		} catch (error) {

@@ -18,6 +18,8 @@
  *
  * @module table-style-editor
  */
+import { createOfficeGuid } from '../../../../crypto/uuid';
+import { randomIdSource, type IdSource } from '../../../../opc/reproducible';
 import type {
 	CreateTableStyleOptions,
 	ParsedTableStyleEntry,
@@ -41,34 +43,19 @@ function deepClone<T>(value: T): T {
 
 /**
  * Generate a fresh, braced-and-uppercased GUID for a new table style, unique
- * within `existingIds`. Prefers `crypto.randomUUID()`; falls back to a
- * timestamp+random construction (collision-checked against `existingIds`,
- * retried) on a runtime without it.
+ * within `existingIds`, from `ids` (random by default; the shared
+ * `createOfficeGuid`).
  */
-export function generateTableStyleGuid(existingIds: ReadonlySet<string> = new Set()): string {
-	const cryptoObj = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
-	for (let attempt = 0; attempt < 8; attempt++) {
-		const uuid = cryptoObj?.randomUUID?.();
-		const guid = uuid ? `{${uuid.toUpperCase()}}` : fallbackGuid(attempt);
+export function generateTableStyleGuid(
+	existingIds: ReadonlySet<string> = new Set(),
+	ids: IdSource = randomIdSource,
+): string {
+	for (;;) {
+		const guid = createOfficeGuid(ids);
 		if (!existingIds.has(normalizeTableStyleGuid(guid))) {
 			return guid;
 		}
 	}
-	// Astronomically unlikely to be reached (random-UUID collision 8x in a
-	// row, or 8 fallback collisions); last resort, still unique enough.
-	return `{${Date.now().toString(16).padStart(12, '0')}-FFFF-FFFF-FFFF-${Math.random()
-		.toString(16)
-		.slice(2, 14)
-		.padEnd(12, '0')}}`.toUpperCase();
-}
-
-function fallbackGuid(salt: number): string {
-	const rand = () =>
-		Math.floor(Math.random() * 0xffffffff)
-			.toString(16)
-			.padStart(8, '0');
-	const time = (Date.now() + salt).toString(16).padStart(12, '0').slice(-12);
-	return `{${rand()}-${rand().slice(0, 4)}-4${rand().slice(1, 4)}-8${rand().slice(1, 4)}-${time}}`;
 }
 
 /**
