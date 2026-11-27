@@ -192,11 +192,20 @@ bun samples/generators/build.ts --check          # compare the committed files w
 bun samples/generators/build.ts --determinism    # generate everything twice and compare
 ```
 
-`scripts/samples.test.mjs` (part of `bun run test:scripts`) runs the determinism check and
-verifies that `manifest.json` describes exactly the committed files. It does not rebuild the
-committed files, so a change to a core writer does not fail it; run `--check` after changing a
-generator or a writer the samples go through, rebuild when it reports a difference, and open the
-rebuilt files in Office before committing them.
+`scripts/samples.test.mjs` (part of `bun run test:scripts`) typechecks the generators against the
+core sources they import (`samples/tsconfig.json`, also `bun run typecheck:samples`), runs every
+generator twice and compares the bytes, and verifies that `manifest.json` describes exactly the
+committed files. CI runs it for a change under `samples/` and for a change to a core area the
+generators import, so a model or writer change that breaks a generator fails with that change.
+
+It does not compare the committed files with a fresh build, so a writer change that only moves
+bytes does not fail it. `--check` reports that difference on demand.
+
+**Commit rebuilt files only when a sample really changes.** The files are binary: every rebuilt
+copy stays in the repository's history at its full size. Rebuild and commit when a generator
+changes what a sample contains, or when a core fix changes what a reader would see or what Office
+accepts, and then open the rebuilt files in Office first. A difference `--check` reports that
+changes nothing a reader sees (part order, an id, whitespace) is not a reason to commit them.
 
 The thumbnails are pictures of what Office draws, so they are not part of the deterministic
 build. `generators/thumbnails.ps1` renders them on Windows with desktop Office and Python
@@ -209,11 +218,13 @@ each sample. Rerun it when a sample's first slide, page or sheet changes.
 entry and copies the files and thumbnails beside it; the suite build and the Pages build both call
 it. "Open in Word" (or Excel, PowerPoint, Visio) links to the suite with `?sample=<id>`; the suite
 then fetches the manifest and that one file from its own site and adds a copy to the library in
-the browser (`apps/office-suite/src/samples.js`, disclosed in `PRIVACY.md`). The samples are never
-bundled into an editor.
+the browser (`apps/office-suite/src/samples.js`, disclosed in `PRIVACY.md`). The file must have
+the size and SHA-256 the manifest records. The samples are never bundled into an editor, and the
+desktop app is built without them (`bun run build:suite:desktop`).
 
 ## What the editors do not show yet
 
 The samples use features on purpose that the editors only preserve, or draw differently from
 Office. Those gaps are listed in [`docs/parity-checklist.md`](../docs/parity-checklist.md); a
-sample keeps the feature so the gap stays visible.
+sample keeps the feature so the gap stays visible. `e2e/a11y/samples-expected.json` names the
+load notice each gap causes and the checklist item behind it, and that list may only shrink.
