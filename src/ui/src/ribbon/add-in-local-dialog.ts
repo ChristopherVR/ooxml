@@ -9,6 +9,10 @@ const featureLabels = new Map([
 	['web application identity', 'Microsoft sign-in'],
 	['contextmenu', 'Context menus'],
 	['togglebutton', 'Toggle commands'],
+	['shared runtime', 'Shared runtimes'],
+	['mobile form factor', 'Mobile add-ins'],
+	['dynamic ribbon command', 'Dynamic ribbon commands'],
+	['versionoverrides', 'Manifest version overrides'],
 ]);
 
 export function addInIssueLabel(issue: AddInIssue, t: OfficeServiceText): string {
