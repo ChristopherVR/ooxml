@@ -15,8 +15,11 @@
     onribbonaddin?: EditorEventHandlers['office-ribbon-add-in'];
     oncollaborationchange?: EditorEventHandlers['collaboration-change'];
     onready?: EditorEventHandlers['ready'];
+    /** Class and inline style of the host `<div>`, as `className`/`class` on the other bindings. */
+    class?: string;
+    style?: string;
   };
-  let { workbook, bytes, src, fileName, readOnly = false, locale = 'en', theme = 'auto', authorName = 'Author', validateReplace = false, showToolbar = true, showFormulaBar = true, hiddenActions = [], ribbonAddIns, themeColors, collaboration, customization, storage, fileProviders, imageProvider, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onfilecommand, onworkbookwarning, onribbonaction, onribboncustomize, onsheetchange, onribbonaddin, oncollaborationchange, onready }: Props = $props();
+  let { workbook, bytes, src, fileName, readOnly = false, locale = 'en', theme = 'auto', authorName = 'Author', validateReplace = false, showToolbar = true, showFormulaBar = true, hiddenActions = [], ribbonAddIns, themeColors, collaboration, customization, storage, fileProviders, imageProvider, googleFonts, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onfilecommand, onworkbookwarning, onribbonaction, onribboncustomize, onsheetchange, onribbonaddin, oncollaborationchange, onready, class: className, style }: Props = $props();
   let binding: EditorBinding | undefined;
   const handle = deferredHandle(() => binding);
   // Live `element` and `dirty`, the same handle vocabulary as the other frameworks (`EDITOR_HANDLE_KEYS`).
@@ -49,4 +52,4 @@
   export function getElement() { return binding?.element; }
   export { element, dirty };
 </script>
-<div use:attach={{ workbook, bytes, src, fileName, readOnly, locale, theme, authorName, validateReplace, showToolbar, showFormulaBar, hiddenActions, ribbonAddIns, themeColors, collaboration, customization, storage, fileProviders, imageProvider, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onfilecommand, onworkbookwarning, onribbonaction, onribboncustomize, onsheetchange, onribbonaddin, oncollaborationchange, onready }}></div>
+<div class={className} {style} use:attach={{ workbook, bytes, src, fileName, readOnly, locale, theme, authorName, validateReplace, showToolbar, showFormulaBar, hiddenActions, ribbonAddIns, themeColors, collaboration, customization, storage, fileProviders, imageProvider, googleFonts, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onfilecommand, onworkbookwarning, onribbonaction, onribboncustomize, onsheetchange, onribbonaddin, oncollaborationchange, onready }}></div>

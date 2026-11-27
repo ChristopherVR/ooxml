@@ -35,6 +35,24 @@ describe('Svelte editor adapter', () => {
 		expect(target.querySelector('xlsx-editor')).toBeNull();
 	});
 
+	it('puts class and style on the host div, as the other bindings do', () => {
+		const target = document.createElement('div');
+		document.body.append(target);
+		const props = reactiveProps<{ class: string; style: string }>({
+			class: 'sheet',
+			style: 'height: 400px;',
+		});
+		const component = mount(XlsxEditor, { target, props });
+		flushSync();
+		const wrapper = target.querySelector('xlsx-editor')!.parentElement!;
+		expect(wrapper.className).toBe('sheet');
+		expect(wrapper.getAttribute('style')).toBe('height: 400px;');
+		props.class = 'sheet wide';
+		flushSync();
+		expect(wrapper.className).toBe('sheet wide');
+		unmount(component);
+	});
+
 	it('keeps in-editor changes when other props change and calls the new callbacks', () => {
 		const target = document.createElement('div');
 		document.body.append(target);
