@@ -1,17 +1,18 @@
 import type { ContentControl, TextRun } from '../model';
-import { definedProps } from '../defined-props';
 import type { LayoutRun } from './input';
-import { DEFAULT_FONT_SIZE_PT } from './units';
 import type { BlockContentControlTags } from './block-content-control-tags';
+import { contentControlTagMetrics } from './content-control-tag-metrics';
 
-function tag(control: ContentControl, edge: 'start' | 'end', adjacent?: LayoutRun): LayoutRun {
+function tag(control: ContentControl, edge: 'start' | 'end'): LayoutRun {
+	const structural = control.level !== 'inline';
 	return {
-		text: edge === 'start' ? (control.alias ?? '').replace(/\s+/g, ' ').trim() : '',
+		text: edge === 'start' || structural ? (control.alias ?? '').replace(/\s+/g, ' ').trim() : '',
 		contentControlTag: edge,
+		...(structural && { blockContentControlTag: true }),
 		synthetic: true,
 		sourceLength: 0,
-		fontSizePt: (adjacent?.fontSizePt ?? DEFAULT_FONT_SIZE_PT) * 0.75,
-		...definedProps({ fontFamily: adjacent?.fontFamily }),
+		fontSizePt: contentControlTagMetrics.fontSizePt,
+		fontFamily: contentControlTagMetrics.fontFamily,
 	};
 }
 
@@ -20,17 +21,10 @@ export function adaptBlockContentControlTags(
 	runs: LayoutRun[],
 	edges: BlockContentControlTags,
 ): LayoutRun[] {
-	let first: LayoutRun | undefined;
-	let last: LayoutRun | undefined;
-	for (const run of runs) {
-		if (run.hidden || run.contentControlTag) continue;
-		first ??= run;
-		last = run;
-	}
 	return [
-		...edges.start.map((control) => tag(control, 'start', first)),
+		...edges.start.map((control) => tag(control, 'start')),
 		...runs,
-		...edges.end.map((control) => tag(control, 'end', last)),
+		...edges.end.map((control) => tag(control, 'end')),
 	];
 }
 
@@ -41,22 +35,22 @@ export function adaptContentControlTags(
 ): LayoutRun[] {
 	const result: LayoutRun[] = [];
 	let active: ContentControl | undefined;
-	let lastVisible: LayoutRun | undefined;
+	let hasVisibleContent = false;
 	for (const run of runs) {
 		const control = run.contentControl?.appearance === 'tags' ? run.contentControl : undefined;
 		if (active && control?.id !== active.id) {
-			if (lastVisible) result.push(tag(active, 'end', lastVisible));
-			lastVisible = undefined;
+			if (hasVisibleContent) result.push(tag(active, 'end'));
+			hasVisibleContent = false;
 		}
 		active = control;
 		for (const part of adapt(run)) {
 			if (control && !part.hidden) {
-				if (!lastVisible) result.push(tag(control, 'start', part));
-				lastVisible = part;
+				if (!hasVisibleContent) result.push(tag(control, 'start'));
+				hasVisibleContent = true;
 			}
 			result.push(part);
 		}
 	}
-	if (active && lastVisible) result.push(tag(active, 'end', lastVisible));
+	if (active && hasVisibleContent) result.push(tag(active, 'end'));
 	return result;
 }

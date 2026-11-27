@@ -38,6 +38,8 @@ export interface LayoutRun {
 	synthetic?: boolean;
 	/** A visible `w15:appearance="tags"` boundary, measured without consuming source text. */
 	contentControlTag?: 'start' | 'end';
+	/** A paragraph, row or cell tag. Its closing edge has the same label slot as its opening edge. */
+	blockContentControlTag?: true;
 	/** Generated list marker; the remaining characters in this run are its separator. */
 	marker?: {
 		length: number;

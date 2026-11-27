@@ -60,12 +60,14 @@ describe('renderPrintLayout', () => {
 		const tags = [...element.querySelectorAll<HTMLElement>('.dve-print-content-control-tag')];
 		expect(tags.map((tag) => [tag.dataset.tagEdge, tag.textContent])).toEqual([
 			['start', 'Block'],
-			['end', ''],
+			['end', 'Block'],
 			['start', 'Rows'],
 			['start', 'Cells'],
-			['end', ''],
-			['end', ''],
+			['end', 'Cells'],
+			['end', 'Rows'],
 		]);
+		expect(tags.every((tag) => tag.style.fontFamily.includes('Tahoma'))).toBe(true);
+		expect(tags.every((tag) => tag.style.fontSize === '8pt')).toBe(true);
 		expect(tags.every((tag) => Number.parseFloat(tag.style.width) > 0)).toBe(true);
 	});
 

@@ -67,8 +67,11 @@ describe('exportDocxPdf', () => {
 		const pdf = inspect(bytes);
 		expect(pdf.text).toContain('BlockLorem ipsum');
 		expect(pdf.text).toContain('RowsCellsConsectetur');
+		expect(pdf.text).toMatch(/amet\s*Block/);
+		expect(pdf.text).toMatch(/adipiscing\s*Cells/);
+		expect(pdf.text).toMatch(/eiusmod\s*Rows/);
 		expect(pdf.content.match(/0\.909804 0\.941176 0\.972549 rg/g)).toHaveLength(6);
-		expect(pdf.content.match(/0\.098039 0\.164706 0\.223529 rg/g)).toHaveLength(3);
+		expect(pdf.content.match(/0\.098039 0\.164706 0\.223529 rg/g)).toHaveLength(6);
 	});
 
 	it('writes real text with no images for a text-only document', async () => {

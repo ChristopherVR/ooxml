@@ -3,10 +3,18 @@ import type { BreakToken } from './text-breaks';
 import type { LayoutParagraph } from './input';
 import { DEFAULT_FONT_SIZE_PT, ptToPx, twipsToPx } from './units';
 import { fontOf, type PlacedToken } from './paragraph-tokens';
+import { contentControlTagMetrics } from './content-control-tag-metrics';
 
 /** How far superscript text is raised and subscript lowered, as a share of the run's size. */
 const SUPER_RAISE = 0.33;
 const SUB_DROP = 0.14;
+
+const tagExtent = {
+	above: ptToPx(contentControlTagMetrics.lineAscentPt),
+	below: ptToPx(contentControlTagMetrics.lineDescentPt),
+	ascent: ptToPx(contentControlTagMetrics.boxAscentPt),
+	descent: ptToPx(contentControlTagMetrics.boxHeightPt - contentControlTagMetrics.boxAscentPt),
+};
 
 /** Where a token's box sits relative to the baseline: its extent above and below it. */
 export function tokenExtent(
@@ -21,18 +29,9 @@ export function tokenExtent(
 		const above = run.object.heightPx - below;
 		return { above, below, ascent: above, descent: below };
 	}
+	if (run?.contentControlTag) return tagExtent;
 	const { ascent, descent } = fontMetrics(measurer, fonts[token.runIndex] ?? fontOf({ text: '' }));
 	const size = ptToPx(run?.fontSizePt ?? DEFAULT_FONT_SIZE_PT);
-	if (run?.contentControlTag) {
-		// Approximate the tag box and its leading from the Word PDF screenshot in #349.
-		const clearance = size * 0.45;
-		return {
-			above: ascent + clearance,
-			below: descent + clearance,
-			ascent: ascent + clearance / 2,
-			descent: descent + clearance / 2,
-		};
-	}
 	const scriptShift =
 		run?.script === 'super' ? SUPER_RAISE * size : run?.script === 'sub' ? -SUB_DROP * size : 0;
 	const shift = scriptShift + (run?.positionPx ?? 0);

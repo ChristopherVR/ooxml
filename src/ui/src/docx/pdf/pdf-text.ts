@@ -6,7 +6,9 @@
  */
 import {
 	DEFAULT_FONT_SIZE_PT,
+	contentControlTagMetrics,
 	fontMetrics,
+	ptToPx,
 	type LayoutFontSpec,
 	type LayoutFragment,
 	type LayoutLine,
@@ -67,6 +69,8 @@ export class DocxPdfText {
 	 * placed (top and line height, as Print Layout draws a span), else the line's baseline.
 	 */
 	baseline(fragment: LayoutFragment, line: LayoutLine, lineTop: number): number {
+		if (fragment.contentControlTag && line.baselinePx !== undefined)
+			return lineTop + line.baselinePx - ptToPx(contentControlTagMetrics.labelRisePt);
 		if (fragment.topPx !== undefined && fragment.boxHeightPx !== undefined) {
 			const { ascent, descent } = fontMetrics(this.measurer, this.#font(fragment));
 			return lineTop + fragment.topPx + (fragment.boxHeightPx - ascent - descent) / 2 + ascent;

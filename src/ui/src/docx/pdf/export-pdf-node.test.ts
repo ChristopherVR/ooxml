@@ -49,6 +49,7 @@ describe('exportDocxPdf without a DOM', () => {
 		const tagged = await exported('content-control-tags');
 		const control = await exported('content-control-tags-control');
 		expect(tagged.text.match(/\bCondition\b/g)).toHaveLength(40);
+		expect(tagged.content.match(/ 10\.666667 Tf [^\n]*\(Condition\) Tj/g)).toHaveLength(40);
 		expect(
 			tagged.content.match(/0\.909804 0\.941176 0\.972549 rg\n[^\n]+ re\nf/g) ?? [],
 		).toHaveLength(240);

@@ -6,16 +6,14 @@
 }
 .dve-sdt-tag {
 	display: inline-block;
-	min-inline-size: 0.8em;
-	min-block-size: 1em;
-	padding-inline: 0.4em;
 	box-sizing: border-box;
-	border: 1px solid var(--office-border, #9cb4c9);
+	box-shadow: inset 0 0 0 1px var(--office-border, #9cb4c9);
 	border-radius: 4px 0 0 4px;
 	background: var(--office-selected, #e8f0f8);
 	color: var(--office-foreground, #192a39);
-	font-size: 0.75em;
-	line-height: 1;
+	font-style: normal;
+	font-weight: normal;
+	text-align: center;
 	white-space: nowrap;
 	user-select: none;
 }
@@ -24,7 +22,6 @@
 }
 .dve-sdt-tag[data-tag-edge='end'] {
 	border-radius: 0 4px 4px 0;
-	vertical-align: -0.12em;
 }
 .dve-sdt[data-sdt-placeholder],
 p[data-sdt-block] .dve-sdt[data-sdt-placeholder],

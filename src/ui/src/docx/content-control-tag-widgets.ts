@@ -1,6 +1,7 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { controlOccurrences, everyControlSpan } from 'ooxml-core/docx/ui';
+import { contentControlTagMetrics, cssFontStack } from 'ooxml-core/docx/layout';
 
 export type TagEdge = 'start' | 'end';
 
@@ -34,6 +35,15 @@ function tagWidget(
 			tag.dataset.tagTitle = title;
 			if (inline) tag.dataset.inlineTag = '';
 			tag.setAttribute('aria-hidden', 'true');
+			const labelled = edge === 'start' || !inline;
+			const metrics = contentControlTagMetrics;
+			Object.assign(tag.style, {
+				fontFamily: cssFontStack(metrics.fontFamily),
+				fontSize: `${metrics.fontSizePt}pt`,
+				lineHeight: `${metrics.boxHeightPt}pt`,
+				minInlineSize: `${labelled ? metrics.minLabelWidthPt : metrics.inlineEndWidthPt}pt`,
+				paddingInline: labelled ? `${metrics.labelPaddingPt / 2}pt` : '0',
+			});
 			return tag;
 		},
 		{
@@ -68,7 +78,7 @@ export function contentControlTagWidgets(doc: ProseMirrorNode): DecorationSet {
 		const closeSide = isInline ? -0.5 : 2 - 1 / (to - end + 1);
 		widgets.push(
 			tagWidget(start, 'start', title, openSide, isInline),
-			tagWidget(end, 'end', '', closeSide, isInline),
+			tagWidget(end, 'end', isInline ? '' : title, closeSide, isInline),
 		);
 	}
 	return DecorationSet.create(doc, widgets);

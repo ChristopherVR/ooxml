@@ -54,4 +54,44 @@ paragraphs and a control spanning two table rows, nested with a control spanning
 The reporter's samples contain inline controls only. Regenerate the follow-up with
 `python src/core/docx/layout/fixtures/word-layout-reports/generate-block-content-control-tags.py`.
 
+For #349, `measured-inline-content-control-tags.docx` is a synthetic Lorem ipsum fixture
+with no personal metadata. It combines the four Arial sizes from the Word COM probes.
+Each size has an absent title, a short title, a long title and a bounding-box control.
+A manual break follows the control so the next line start gives the tagged line height.
+The Node generator and full COM coordinates and PDF exports are in the issue's scratch
+directory `word-measure/issue-349`.
+
+Word 16.0.20625.20108 Print Layout measurements use points from
+`Range.Information(5)` and `Range.Information(6)`. The two edge advances are measured
+between the one-character ranges straddling each marker.
+
+| Body pt | Start, absent | Start, A | Start, Lorem Ipsum Dolor | Inline end | Tagged line | Bounding-box line |
+| ------- | ------------- | -------- | ------------------------ | ---------- | ----------- | ----------------- |
+| 8       | 18.5          | 18.5     | 81.5                     | 11.5       | 18.5        | 9                 |
+| 11      | 18.5          | 18.5     | 81.5                     | 11.5       | 18.5        | 12.5              |
+| 16      | 18.5          | 18.5     | 81.5                     | 11.5       | 19          | 18.5              |
+| 24      | 18.5          | 18.5     | 81.5                     | 11.5       | 27.5        | 27.5              |
+
+Times New Roman at 11 pt gave the same figures as Arial. Toggling `ShowXMLMarkup` left
+the original figures unchanged. Both bounding-box and hidden appearances gave zero
+advances and a 12.5 pt line at 11 pt.
+
+| Structural probes, 11 pt | COM start advance | PDF start outline | PDF end outline |
+| ------------------------ | ----------------- | ----------------- | --------------- |
+| Lorem Block              | 56.5              | 56.66             | 56.64           |
+| Lorem Row                | 53.5              | 53.3              | 53.3            |
+| Lorem Cell               | 51                | 50.78             | 50.76           |
+| Absent title             | 18.5              | 18.5              | 18.48           |
+
+Word's print-optimized PDF contains both tag outlines and 8 pt Tahoma text. The inline
+closing tag is unlabelled. Structural tags repeat the title on the closing edge. The
+tag boxes are 13.44 pt high and the title baseline is 3 pt above the body baseline.
+The PDF advances for `A` and `Lorem Ipsum Dolor` are 4.83 and 68.06 pt at the label size.
+The reporter's tagged and bounding-box files had 3 and 2 pages in both
+`ComputeStatistics(2)` and PDF, with 240 and zero PDF tag outlines respectively.
+
+In the 11 pt Arial tagged probe, COM put `Amet` and the wrapped `in` at (45, 63.5)
+and (45, 157.5). The PDF glyph boxes began at (45, 64.05) and (45, 158.15).
+The bounding-box probe broke at `luctus` at (45, 133.5) in COM and (45, 133.91) in PDF.
+
 Run the Word export again with `pwsh -File src/core/scripts/docx-layout-reports-word.ps1`.

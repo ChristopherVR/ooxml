@@ -1,6 +1,7 @@
 // Framework-neutral, DOM-free pagination engine for DocumentModel. Approximates Word pagination; it does not claim Word layout parity.
 export * from './units';
 export * from './measure';
+export { contentControlTagMetrics } from './content-control-tag-metrics';
 export { ligatureCss } from './ligatures';
 export * from './text-breaks';
 export * from './input';

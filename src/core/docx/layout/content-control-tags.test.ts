@@ -6,6 +6,7 @@ import { layoutDocumentModel } from './layout';
 import { createFakeMeasurer } from './measure';
 import { layoutParagraph } from './paragraph-layout';
 import { at } from './test-helpers';
+import { ptToPx } from './units';
 
 const measurer = createFakeMeasurer();
 const fixtures = './fixtures/word-layout-reports/';
@@ -39,16 +40,66 @@ it('lays out one pair of tags for each paragraph, row and cell group', async () 
 	).toEqual([
 		[['start', 'Block', 0, 0, true]],
 		[],
-		[['end', '', 4, 4, true]],
+		[['end', 'Block', 4, 4, true]],
 		[
 			['start', 'Rows', 0, 0, true],
 			['start', 'Cells', 0, 0, true],
 		],
-		[['end', '', 10, 10, true]],
+		[['end', 'Cells', 10, 10, true]],
 		[],
-		[['end', '', 7, 7, true]],
+		[['end', 'Rows', 7, 7, true]],
 		[],
 	]);
+});
+
+it('uses the measured inline tag advances and line height at four body sizes', async () => {
+	const { model } = await loadDocx(
+		await readFile(
+			new URL(fixtures + 'measured-inline-content-control-tags.docx', import.meta.url),
+		),
+	);
+	const { pages } = layoutDocumentModel(model, {
+		...measurer,
+		widthOf(text, font) {
+			// Tahoma label advances read from Word's exported PDF, in points at 8 pt.
+			if (font.family === 'Tahoma' && font.sizePx === ptToPx(8)) {
+				if (text === 'Lorem Ipsum Dolor') return ptToPx(68.06);
+				if (text === 'A') return ptToPx(4.83);
+			}
+			return measurer.widthOf(text, font);
+		},
+	});
+	const paragraphs = pages.flatMap((page) =>
+		page.columns.flatMap((column) => column.blocks.filter((block) => block.kind === 'paragraph')),
+	);
+	expect(paragraphs).toHaveLength(16);
+	for (const [sizeIndex, [taggedHeight, plainHeight]] of (
+		[
+			[18.5, 9],
+			[18.5, 12.5],
+			[19, 18.5],
+			[27.5, 27.5],
+		] as const
+	).entries()) {
+		const first = sizeIndex * 4;
+		for (const [titleIndex, startWidth] of [18.5, 18.5, 81.5].entries()) {
+			const line = at(at(paragraphs, first + titleIndex).lines, 0);
+			const tags = line.fragments.filter((fragment) => fragment.contentControlTag);
+			expect(tags).toHaveLength(2);
+			for (const [tag, width] of [
+				[at(tags, 0), startWidth],
+				[at(tags, 1), 11.5],
+			] as const) {
+				expect(Math.abs(tag.widthPx - ptToPx(width))).toBeLessThanOrEqual(ptToPx(0.5));
+				expect(tag).toMatchObject({ fontFamily: 'Tahoma', fontSizePt: 8 });
+				expect(Math.abs((tag.boxHeightPx ?? 0) - ptToPx(13.44))).toBeLessThan(ptToPx(0.1));
+			}
+			expect(Math.abs(line.heightPx - ptToPx(taggedHeight))).toBeLessThan(ptToPx(0.65));
+		}
+		const control = at(at(paragraphs, first + 3).lines, 0);
+		expect(control.fragments.some((fragment) => fragment.contentControlTag)).toBe(false);
+		expect(Math.abs(control.heightPx - ptToPx(plainHeight))).toBeLessThan(ptToPx(0.5));
+	}
 });
 
 it('wraps the block title with its first word and keeps the closing tag with the last word', () => {
@@ -212,7 +263,7 @@ it('keeps the two tags next to a multi-run control and maps them to its source b
 		0,
 	);
 	if (block.kind !== 'paragraph') throw new Error('Expected a paragraph');
-	const { lines } = layoutParagraph(block, 90, measurer, () => {});
+	const { lines } = layoutParagraph(block, 118, measurer, () => {});
 	expect(lines.map((line) => line.fragments.map((fragment) => fragment.text).join(''))).toEqual([
 		'First',
 		'A labelword',

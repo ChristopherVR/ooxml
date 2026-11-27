@@ -4,7 +4,8 @@ import { findHyphenSplit, lineUsedWidthPx } from './hyphenate-line';
 import { fittingWordPrefix } from './word-overflow';
 import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
 import type { LayoutParagraph } from './input';
-import { NO_TWIPS, twipsToPx } from './units';
+import { NO_TWIPS, ptToPx, twipsToPx } from './units';
+import { contentControlTagMetrics } from './content-control-tag-metrics';
 import { placePositionalTab, placeTab } from './tab-stops';
 import {
 	fontOf,
@@ -191,8 +192,15 @@ function measureParagraph(
 	const tokenWidth = (token: BreakToken): number => {
 		const run = token.kind === 'word' ? paragraph.runs[token.runIndex] : undefined;
 		const font = fonts[token.runIndex];
-		// Horizontal room for the tag outline, including the unlabelled closing tag.
-		const tagPadding = run?.contentControlTag && font ? font.sizePx * 0.8 : 0;
+		if (run?.contentControlTag) {
+			if (run.contentControlTag === 'end' && !run.blockContentControlTag)
+				return ptToPx(contentControlTagMetrics.inlineEndWidthPt);
+			return Math.max(
+				ptToPx(contentControlTagMetrics.minLabelWidthPt),
+				runTextWidth(run.text, run, measurer, font) +
+					ptToPx(contentControlTagMetrics.labelPaddingPt),
+			);
+		}
 		// A picture bullet takes its picture's width, not the fallback glyph's.
 		if (run?.marker?.widthPx !== undefined && token.kind === 'word' && token.sourceStart === 0)
 			if (token.text === run.text.slice(0, run.marker.length)) return run.marker.widthPx;
@@ -202,7 +210,7 @@ function measureParagraph(
 					expectDefined(paragraph.runs[token.runIndex], 'token run'),
 					measurer,
 					font,
-				) + tagPadding
+				)
 			: token.kind === 'object'
 				? (paragraph.runs[token.runIndex]?.object?.widthPx ?? 0)
 				: 0;
@@ -278,7 +286,7 @@ function measureParagraph(
 				token,
 				token.kind === 'word' || token.kind === 'space' ? token.text.length : 1,
 			);
-			fragment.topPx = baselinePx - extent.above;
+			fragment.topPx = baselinePx - (fragment.contentControlTag ? extent.ascent : extent.above);
 			if (token.kind !== 'object') fragment.boxHeightPx = extent.ascent + extent.descent;
 		});
 		if (jump) {

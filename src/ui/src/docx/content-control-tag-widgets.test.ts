@@ -76,6 +76,9 @@ describe('content control tag caret', () => {
 			expect(sides('end')).toEqual([1, 1, 1]);
 			const tags = view.dom.querySelectorAll<HTMLElement>('.dve-sdt-tag');
 			expect(tags).toHaveLength(6);
+			expect(
+				[...tags].filter((tag) => tag.dataset.tagEdge === 'end').map((tag) => tag.dataset.tagTitle),
+			).toEqual(['Block', 'Cells', 'Rows']);
 			for (const tag of tags) {
 				select(view, view.posAtDOM(tag, 0));
 				expect(anchorIsOnContentSide(view, tag)).toBe(true);
