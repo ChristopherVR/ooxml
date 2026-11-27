@@ -343,22 +343,39 @@ test('typing in the same cell leaves table ribbon state alone', async ({ page })
 	await expect(repeat).toHaveAttribute('data-pressed-writes', '1');
 });
 
-test('freeform table drawing and erasing have accessible unavailable reasons', async ({ page }) => {
+test('Draw Table splits a cell with a drawn line and the Eraser merges it back', async ({
+	page,
+}) => {
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);
 	await insertTableOfSize(page);
 	const editor = page.locator('docx-editor');
-	await editor.locator('.ProseMirror td').first().click();
-	await editor.getByRole('tab', { name: 'Table Design', exact: true }).click();
-	const painter = editor.getByRole('button', { name: 'Border Painter', exact: true });
-	await reveal(editor, painter);
-	await expect(painter).toBeEnabled();
-	for (const [name, reason] of [
-		['Draw Table', 'Freeform table drawing is unavailable.'],
-		['Eraser', 'Removing cell boundaries with the Eraser is unavailable.'],
-	] as const) {
-		const control = editor.getByRole('button', { name, exact: true });
-		await expect(control).toBeDisabled();
-		await expect(control).toHaveAccessibleDescription(reason);
-	}
+	const cells = editor.locator('.ProseMirror td');
+	await cells.first().click();
+	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
+	const pen = editor.getByRole('button', { name: 'Draw Table', exact: true });
+	await reveal(editor, pen);
+	await pen.click();
+	await expect(pen).toHaveAttribute('aria-pressed', 'true');
+	const box = (await cells.first().boundingBox())!;
+	const x = box.x + box.width / 2;
+	await page.mouse.move(x, box.y + 4);
+	await page.mouse.down();
+	await page.mouse.move(x, box.y + box.height / 2, { steps: 4 });
+	await page.mouse.move(x, box.y + box.height - 4, { steps: 4 });
+	await page.mouse.up();
+	await expect(cells).toHaveCount(5);
+	const eraser = editor.getByRole('button', { name: 'Eraser', exact: true });
+	await eraser.click();
+	await expect(eraser).toHaveAttribute('aria-pressed', 'true');
+	await expect(pen).toHaveAttribute('aria-pressed', 'false');
+	const first = (await cells.first().boundingBox())!;
+	await page.mouse.click(first.x + first.width - 1, first.y + first.height / 2);
+	await expect(cells).toHaveCount(4);
+	await page.keyboard.press('Escape');
+	await expect(eraser).toHaveAttribute('aria-pressed', 'false');
+	// The merge is one undo step: undoing it brings back the drawn line.
+	await cells.first().click();
+	await page.keyboard.press('ControlOrMeta+z');
+	await expect(cells).toHaveCount(5);
 });

@@ -161,6 +161,8 @@ const paths = {
 	formatSelection: 'M4 4h11v11H4z M7 8h5 M7 11h3 M15 13l5 5-2 2-5-5z',
 	legend: 'M4 6h3v3H4z M10 7.5h10 M4 11h3v3H4z M10 12.5h10 M4 16h3v3H4z M10 17.5h10',
 	caret: 'M7 10l5 5 5-5',
+	drawTable: 'M3 4h11v11H3z M3 9.5h11 M8.5 4v11 M13 21l7-7-2-2-7 7v2z',
+	tableEraser: 'M15 4l5 5-9 9H7l-3-3z M11 8l5 5 M10 20h10',
 	...EQUATION_ICON_PATHS,
 } as const;
 

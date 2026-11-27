@@ -5,7 +5,12 @@ import type { EditorCore } from './editor-core';
 import { translate } from './localization';
 import type { TableTabAction } from './table-ribbon';
 import { TABLE_LOOK_OPTIONS } from './table-ribbon-keys';
-import { canRepeatAt, tableTabContext, tableTabReason } from './table-tab-context';
+import {
+	canRepeatAt,
+	freeformTableReason,
+	tableTabContext,
+	tableTabReason,
+} from './table-tab-context';
 
 type Context = NonNullable<ReturnType<typeof tableTabContext>>;
 
@@ -105,11 +110,9 @@ export function syncTableControls(
 	>('[data-table-command]')) {
 		const key = control.dataset.tableCommand as TableTabAction['key'];
 		const reason =
-			control.dataset.drawMode === 'draw'
-				? 'tableTab.drawUnavailable'
-				: control.dataset.drawMode === 'erase'
-					? 'tableTab.eraseUnavailable'
-					: tableTabReason(core, key, context);
+			control.dataset.drawMode === 'draw' || control.dataset.drawMode === 'erase'
+				? freeformTableReason(core)
+				: tableTabReason(core, key, context);
 		control.disabled = Boolean(reason);
 		if (reason) {
 			control.title = translate(core.locale, reason);

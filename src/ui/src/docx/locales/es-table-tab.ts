@@ -1,9 +1,13 @@
 import type { enTableTab } from './en-table-tab';
 
 export const esTableTab = {
-	'tableTab.drawUnavailable': 'El dibujo de tablas a mano alzada no está disponible.',
-	'tableTab.eraseUnavailable':
-		'La eliminación de límites de celda con el borrador no está disponible.',
+	Draw: 'Dibujar',
+	'tableTab.drawLineRefused': 'Dibuje la línea más lejos del borde de la celda.',
+	'tableTab.drawTooSmall': 'Arrastre un rectángulo más grande para dibujar una tabla.',
+	'tableTab.eraseRefused':
+		'Las celdas a ambos lados de esta línea no se pueden combinar en un rectángulo.',
+	'tableTab.eraseOuterRefused':
+		'Este borde exterior no se puede borrar en una tabla con celdas combinadas.',
 	'Table Style Options': 'Opciones de estilo de tabla',
 	'Plain Tables': 'Tablas sencillas',
 	'Grid Tables': 'Tablas de cuadrícula',

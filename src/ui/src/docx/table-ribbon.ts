@@ -28,9 +28,18 @@ export type TableTabAction = { type: 'tableTab' } & (
 	| { key: 'align'; vertical: 'top' | 'center' | 'bottom'; horizontal: 'left' | 'center' | 'right' }
 	| { key: 'pen'; property: keyof BorderPen; value: string }
 	| { key: 'borders'; value: TableBorderPreset }
-	| { key: 'draw'; value: 'paint' }
+	| { key: 'draw'; value: 'paint' | 'draw' | 'erase' }
 	| { key: SimpleTableKey }
 );
+
+/** Border Painter (Table Design), and Draw Table and Eraser (Layout > Draw): pressed while on. */
+const draw = (label: string, value: 'paint' | 'draw' | 'erase', icon: RibbonIcon) => {
+	const control = tool(label, icon, { type: 'tableTab', key: 'draw', value }, { inline: true });
+	control.dataset.tableCommand = 'draw';
+	control.dataset.drawMode = value;
+	control.setAttribute('aria-pressed', 'false');
+	return control;
+};
 
 const command = (label: string, icon: RibbonIcon, key: SimpleTableKey) => {
 	const button = tool(label, icon, { type: 'tableTab', key }, { inline: true });
@@ -95,18 +104,6 @@ function design(panel: HTMLElement) {
 		control.setAttribute('aria-pressed', 'false');
 		return control;
 	});
-	const draw = (label: string, value: 'paint' | 'draw' | 'erase') => {
-		const control = tool(
-			label,
-			'formatPainter',
-			value === 'paint' ? { type: 'tableTab', key: 'draw', value } : null,
-			{ inline: true },
-		);
-		control.dataset.tableCommand = 'draw';
-		control.dataset.drawMode = value;
-		control.setAttribute('aria-pressed', 'false');
-		return control;
-	};
 	panel.append(
 		group('Table Style Options', stack(...options.slice(0, 3)), stack(...options.slice(3))),
 		group(
@@ -168,7 +165,7 @@ function design(panel: HTMLElement) {
 					true,
 				),
 			),
-			stack(draw('Border Painter', 'paint'), draw('Draw Table', 'draw'), draw('Eraser', 'erase')),
+			draw('Border Painter', 'paint', 'formatPainter'),
 		),
 	);
 }
@@ -214,6 +211,7 @@ function layout(panel: HTMLElement) {
 				gridlines,
 			),
 		),
+		group('Draw', draw('Draw Table', 'draw', 'drawTable'), draw('Eraser', 'erase', 'tableEraser')),
 	);
 	panel.append(
 		group(

@@ -16,7 +16,7 @@ import {
 import { toggleTableDraw } from './table-draw';
 import type { TableTabAction } from './table-ribbon';
 import { openTableStyles } from './table-style-gallery';
-import { tableTabContext, tableTabReason } from './table-tab-context';
+import { freeformTableReason, tableTabContext, tableTabReason } from './table-tab-context';
 import { openTableConvert, openTableFormula, openTableSort } from './table-tab-dialogs';
 import {
 	alignTableCells,
@@ -57,6 +57,12 @@ export function runTableTabAction(
 	tools: WordTableTools,
 	opener?: HTMLElement,
 ): void {
+	if (action.key === 'draw' && action.value !== 'paint') {
+		// Turning a tool off is always allowed; turning it on needs an editable body.
+		if (core.shell.canvas?.dataset.tableDraw === action.value || !freeformTableReason(core))
+			toggleTableDraw(core, action.value, pens.get(core) ?? DEFAULT_PEN);
+		return;
+	}
 	const view = core.targetView();
 	const context = view && tableTabContext(view.state);
 	if (!view || !context || tableTabReason(core, action.key, context)) return;

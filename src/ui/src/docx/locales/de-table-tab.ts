@@ -1,9 +1,13 @@
 import type { enTableTab } from './en-table-tab';
 
 export const deTableTab = {
-	'tableTab.drawUnavailable': 'Freihandzeichnen von Tabellen ist nicht verfügbar.',
-	'tableTab.eraseUnavailable':
-		'Das Entfernen von Zellgrenzen mit dem Radierer ist nicht verfügbar.',
+	Draw: 'Zeichnen',
+	'tableTab.drawLineRefused': 'Zeichnen Sie die Linie weiter vom Zellrand entfernt.',
+	'tableTab.drawTooSmall': 'Ziehen Sie ein größeres Rechteck, um eine Tabelle zu zeichnen.',
+	'tableTab.eraseRefused':
+		'Die Zellen auf beiden Seiten dieser Linie lassen sich nicht zu einem Rechteck verbinden.',
+	'tableTab.eraseOuterRefused':
+		'Dieser äußere Rahmen kann in einer Tabelle mit verbundenen Zellen nicht radiert werden.',
 	'Table Style Options': 'Tabellenformatoptionen',
 	'Plain Tables': 'Einfache Tabellen',
 	'Grid Tables': 'Rastertabellen',

@@ -1,6 +1,11 @@
 export const enTableTab = {
-	'tableTab.drawUnavailable': 'Freeform table drawing is unavailable.',
-	'tableTab.eraseUnavailable': 'Removing cell boundaries with the Eraser is unavailable.',
+	Draw: 'Draw',
+	'tableTab.drawLineRefused': 'Draw the line farther from the cell edge.',
+	'tableTab.drawTooSmall': 'Drag a larger rectangle to draw a table.',
+	'tableTab.eraseRefused':
+		'The cells on both sides of this line cannot be merged into one rectangle.',
+	'tableTab.eraseOuterRefused':
+		'This outside border cannot be erased in a table with merged cells.',
 	'Table Style Options': 'Table Style Options',
 	'Plain Tables': 'Plain Tables',
 	'Grid Tables': 'Grid Tables',

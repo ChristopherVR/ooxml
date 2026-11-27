@@ -1,8 +1,11 @@
 import type { enTableTab } from './en-table-tab';
 
 export const zhCNTableTab = {
-	'tableTab.drawUnavailable': '暂不支持手绘表格。',
-	'tableTab.eraseUnavailable': '暂不支持使用橡皮擦删除单元格边界。',
+	Draw: '绘图',
+	'tableTab.drawLineRefused': '请在离单元格边缘更远的位置绘制线条。',
+	'tableTab.drawTooSmall': '请拖出更大的矩形来绘制表格。',
+	'tableTab.eraseRefused': '此线条两侧的单元格无法合并为一个矩形。',
+	'tableTab.eraseOuterRefused': '在包含合并单元格的表格中无法擦除此外边框。',
 	'Table Style Options': '表格样式选项',
 	'Plain Tables': '普通表格',
 	'Grid Tables': '网格表格',

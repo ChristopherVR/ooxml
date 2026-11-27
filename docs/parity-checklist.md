@@ -866,8 +866,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Table Design and Layout tabs: table styles and style options, Cell Size and AutoFit,
       cell alignment and margins, Repeat Header Rows, Formula, Convert to Text, Select and Draw
       Borders (2026-11-27).
-- [ ] **P2** Word tables: freeform Draw Table and the structural Eraser (merging cells), and
-      splitting merged cells into arbitrary counts when the grid must be rebuilt.
+- [x] **P2** Word tables: Layout > Draw Table (a rectangle in the body draws a one-cell table; a
+      line inside a cell splits it into columns, cutting a grid column when needed, or into rows)
+      and the Eraser (erasing an inner line merges the two cells beside it when they form a
+      rectangle, an outer line loses its border), each one undo step, Esc to stop
+      (`docx/table-draw.ts`, `src/ui/src/docx/table-freeform.ts`, 2026-11-27).
+- [ ] **P2** Word tables: Draw Table lines across several cells at once, dragging the Eraser along
+      a line, a drawn table placed where it was drawn (it goes before or after the paragraph under
+      the pointer, at the column's left edge), erasing outer lines of a table with merged cells, and
+      Split Cells into arbitrary counts when the grid must be rebuilt.
 - [x] **P1** Equation tab: Insert New Equation and Alt+=, the built-in gallery, Convert
       (Professional and Linear), Normal Text, Unicode and LaTeX input, symbol and structure
       galleries, and in-place editing of linear text that rebuilds the equation exactly.

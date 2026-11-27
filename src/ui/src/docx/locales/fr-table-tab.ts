@@ -1,9 +1,13 @@
 import type { enTableTab } from './en-table-tab';
 
 export const frTableTab = {
-	'tableTab.drawUnavailable': 'Le dessin de tableaux à main levée est indisponible.',
-	'tableTab.eraseUnavailable':
-		'La suppression des séparations de cellules avec la gomme est indisponible.',
+	Draw: 'Dessiner',
+	'tableTab.drawLineRefused': 'Tracez la ligne plus loin du bord de la cellule.',
+	'tableTab.drawTooSmall': 'Faites glisser un rectangle plus grand pour dessiner un tableau.',
+	'tableTab.eraseRefused':
+		"Les cellules de part et d'autre de cette ligne ne peuvent pas être fusionnées en un rectangle.",
+	'tableTab.eraseOuterRefused':
+		'Cette bordure extérieure ne peut pas être effacée dans un tableau contenant des cellules fusionnées.',
 	'Table Style Options': 'Options de style de tableau',
 	'Plain Tables': 'Tableaux simples',
 	'Grid Tables': 'Tableaux quadrillés',

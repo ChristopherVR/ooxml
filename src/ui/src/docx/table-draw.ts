@@ -21,13 +21,23 @@ export function toggleTableDraw(core: EditorCore, mode: Mode, pen: BorderPen): v
 	drawing.set(canvas, controller);
 	canvas.dataset.tableDraw = mode;
 	const { signal } = controller;
-	let start: Element | null = null;
 	const finish = () => {
 		controller.abort();
 		delete canvas.dataset.tableDraw;
 		drawing.delete(canvas);
 		core.refreshControls();
 	};
+	if (mode !== 'paint') {
+		void import('./table-freeform')
+			.then(({ startFreeformTable }) => {
+				if (!signal.aborted) startFreeformTable(core, canvas, mode, signal);
+			})
+			.catch((error: unknown) => core.host.reportError(error));
+		listenForEscape(canvas, signal, finish);
+		core.refreshControls();
+		return;
+	}
+	let start: Element | null = null;
 	const cellOf = (event: PointerEvent) =>
 		event.target instanceof Element ? event.target.closest('td, .dve-print-cell') : null;
 	canvas.addEventListener(
@@ -82,18 +92,19 @@ export function toggleTableDraw(core: EditorCore, mode: Mode, pen: BorderPen): v
 		},
 		{ capture: true, signal },
 	);
-	const cancel = (event: KeyboardEvent) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			finish();
-		}
-	};
+	listenForEscape(canvas, signal, finish);
+	core.refreshControls();
+}
+
+/** Esc leaves the drawing tool, as in Word. */
+function listenForEscape(canvas: HTMLElement, signal: AbortSignal, finish: () => void): void {
 	canvas.getRootNode().addEventListener(
 		'keydown',
 		(event) => {
-			if (event instanceof KeyboardEvent) cancel(event);
+			if (!(event instanceof KeyboardEvent) || event.key !== 'Escape') return;
+			event.preventDefault();
+			finish();
 		},
 		{ capture: true, signal },
 	);
-	core.refreshControls();
 }

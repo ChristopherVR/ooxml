@@ -42,20 +42,32 @@ export function tableTabReason(core: EditorCore, key: TableTabAction['key'], con
 		(core.model.trackChanges || forcesTrackChanges(core.model.protection))
 	)
 		return 'tableTab.tracking';
-	if (
-		!core.view?.editable ||
-		!core.canEditBody() ||
-		core.targetView() !== core.view ||
-		core.collab.active ||
-		core.model.protection?.enforced
-	)
-		return 'tableTab.editable';
+	if (!bodyEditable(core)) return 'tableTab.editable';
 	if (key === 'repeat' && !canRepeatAt(context)) return 'tableTab.headerStart';
 	if (
 		key === 'formula' &&
 		(context.top !== context.bottom || context.firstColumn !== context.lastColumn)
 	)
 		return 'tableTab.selectCell';
+}
+
+const bodyEditable = (core: EditorCore): boolean =>
+	Boolean(
+		core.view?.editable &&
+		core.canEditBody() &&
+		core.targetView() === core.view &&
+		!core.collab.active &&
+		!core.model.protection?.enforced,
+	);
+
+/**
+ * Why Draw Table and the Eraser cannot edit now. Unlike the other table commands they also work on
+ * merged tables (through the merge-aware structure path), and Draw Table also outside a table.
+ */
+export function freeformTableReason(core: EditorCore) {
+	if (core.model.trackChanges || forcesTrackChanges(core.model.protection))
+		return 'tableTab.tracking';
+	if (!bodyEditable(core)) return 'tableTab.editable';
 }
 
 type SyncTableControls = typeof import('./table-ribbon-state').syncTableControls;
