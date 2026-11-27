@@ -47,6 +47,7 @@ export function wireRibbonTabCue(ribbon: HTMLElement, label: () => string): () =
 		resize?.observe(ribbon);
 		schedule();
 	};
+	button.addEventListener('mousedown', (event) => event.preventDefault());
 	button.addEventListener('click', () => {
 		const strip = list;
 		if (!strip) return;

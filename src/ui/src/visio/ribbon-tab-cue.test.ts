@@ -53,6 +53,7 @@ describe('ribbon tab cue', () => {
 		expect(button.getAttribute('aria-label')).toBe('More tabs');
 		expect(ribbon.hasAttribute('data-tabs-end')).toBe(true);
 		expect(ribbon.hasAttribute('data-tabs-start')).toBe(false);
+		expect(button.dispatchEvent(new MouseEvent('mousedown', { cancelable: true }))).toBe(false);
 		button.click();
 		expect(scrollTo).toHaveBeenLastCalledWith({ left: 240, behavior: 'smooth' });
 		Object.defineProperty(list, 'scrollLeft', { value: 300, configurable: true });
