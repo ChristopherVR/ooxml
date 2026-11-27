@@ -22,10 +22,10 @@ export interface PointerHost {
 	followLink(row: number, col: number): boolean;
 	fill(source: CellRange, target: CellRange): void;
 	/**
-	 * A Draw tool is on: a press on the cells is ink, never a selection, even before the drawing
-	 * surface has loaded over them.
+	 * Whether a Draw tool is on: a press on the cells is then ink, never a selection, even before
+	 * the drawing surface has loaded over them (the host records that stroke).
 	 */
-	inking?(): boolean;
+	inking?(event: PointerEvent): boolean;
 }
 
 type DragKind = 'cells' | 'rows' | 'cols' | 'point' | 'fill';
@@ -129,7 +129,7 @@ export function wirePointer(host: PointerHost): () => void {
 		}
 		if (event.button !== 0) return;
 		event.preventDefault();
-		if (hit.area === 'cell' && host.inking?.()) return;
+		if (hit.area === 'cell' && host.inking?.(event)) return;
 		const sheet = view.sheet();
 		const editable = !view.ctx.readOnly();
 		if (target.closest('[data-handle="fill"]') && editable) {

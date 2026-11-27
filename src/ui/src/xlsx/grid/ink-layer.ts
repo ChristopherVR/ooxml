@@ -19,9 +19,6 @@ import { startInkReplay } from './ink-replay-run';
 import { InkSelection } from './ink-selection';
 import { anchorOf, fittedInk, sheetInks, zoomOf } from './ink-sheet';
 
-const JOIN_MS = 2000;
-const JOIN_PX = 48;
-
 /** Whether a key goes to something that takes Delete itself (a box, a list, a dialog). */
 function keepsOwnDelete(event: KeyboardEvent): boolean {
 	const path = event.composedPath();
@@ -63,7 +60,7 @@ export class InkLayer implements GridInk {
 			this.#canvas.addEventListener(type, (event) => run((event as CustomEvent<T>).detail), {
 				signal,
 			});
-		on<InkStrokeDetail>('office-ink-stroke', (detail) => this.#stroke(detail));
+		on<InkStrokeDetail>('office-ink-stroke', (detail) => this.stroke(detail));
 		on<InkEraseDetail>('office-ink-erase', (detail) => this.#erasing(detail));
 		on<InkLassoDetail>('office-ink-lasso', (detail) =>
 			this.#selection.select(
@@ -107,7 +104,8 @@ export class InkLayer implements GridInk {
 		return { x: plane.x / f, y: plane.y / f };
 	}
 
-	#stroke(detail: InkStrokeDetail): void {
+	/** Adds a pen stroke (canvas coordinates), drawn on the canvas or before it had loaded. */
+	stroke(detail: InkStrokeDetail): void {
 		const tool = this.#tool;
 		if (!this.#view.ctx.session() || !tool || !this.#view.sheet() || this.#view.ctx.readOnly())
 			return;
@@ -133,11 +131,7 @@ export class InkLayer implements GridInk {
 			target &&
 			last.sheet === sheetIndex &&
 			target.ink === last.ink &&
-			now - last.at < JOIN_MS &&
-			bounds.x < target.box.x + target.box.width + JOIN_PX &&
-			bounds.x + bounds.width > target.box.x - JOIN_PX &&
-			bounds.y < target.box.y + target.box.height + JOIN_PX &&
-			bounds.y + bounds.height > target.box.y - JOIN_PX &&
+			tools.inkJoins(target.box, bounds, now - last.at) &&
 			// A drawing collects strokes up to a size its part is always read back whole at.
 			tools.canJoinInk(target.ink.strokes, [stroke])
 		) {
@@ -178,13 +172,20 @@ export class InkLayer implements GridInk {
 		const anchor = anchorOf(this.#view, box);
 		const placed =
 			index === undefined
-				? session.addInk(sheetIndex, anchor, { ...ink, name: this.#view.ctx.t('Ink') })
+				? session.addInk(sheetIndex, anchor, { ...ink, name: this.#newName() })
 				: (session.setInk(sheetIndex, index, anchor, ink), index);
 		const drawing = this.#view.sheet()?.drawings[placed];
 		this.#last =
 			drawing?.kind === 'ink'
 				? { sheet: sheetIndex, index: placed, ink: drawing, at: Date.now() }
 				: undefined;
+	}
+
+	/** A new drawing's name, as Excel numbers them: Ink 1, Ink 2 (in the editor's language). */
+	#newName(): string {
+		const count =
+			this.#view.sheet()?.drawings.filter((drawing) => drawing.kind === 'ink').length ?? 0;
+		return `${this.#view.ctx.t('Ink')} ${count + 1}`;
 	}
 
 	/** Eraser moves are applied once a frame; the gesture is one undo step. */
@@ -218,19 +219,9 @@ export class InkLayer implements GridInk {
 			// Last first, so deleting an emptied drawing keeps the indexes before it.
 			for (const entry of sheetInks(this.#view).reverse()) {
 				const { ink, box } = entry;
-				if (
-					point.x < box.x - reach ||
-					point.x > box.x + box.width + reach ||
-					point.y < box.y - reach ||
-					point.y > box.y + box.height + reach
-				)
-					continue;
-				const kx = ink.width / (box.width || 1);
-				const local = {
-					x: (point.x - box.x) * kx,
-					y: (point.y - box.y) * (ink.height / (box.height || 1)),
-				};
-				const kept = inkTools().eraseInkStrokes(ink.strokes, local, reach * kx);
+				if (!inkTools().inkBoxReaches(box, point, reach)) continue;
+				const local = inkTools().inkLocalPoint(box, ink, point);
+				const kept = inkTools().eraseInkStrokes(ink.strokes, local.point, reach * local.factor);
 				if (kept.length === ink.strokes.length) continue;
 				const next = fittedInk(this.#view, entry, kept);
 				session.setInk(sheetIndex, entry.index, next.anchor, next.ink, gesture);

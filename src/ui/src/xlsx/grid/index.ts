@@ -11,6 +11,7 @@ import type {
 	Selection,
 } from 'ooxml-core/xlsx/ui';
 import type { InkLayer } from './ink-layer';
+import { EarlyInk } from './ink-early';
 import { CellEditor } from './cell-editor';
 import { ensureStyle } from './dom';
 import { drawingKeyDown } from './drawing-keys';
@@ -126,7 +127,11 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 				ctx.session()?.fill(view.sheetIndex(), source, target);
 				selection.set({ ...selection.get(), ranges: [target] });
 			},
-			inking: () => inkTool !== undefined && !ctx.readOnly(),
+			inking: (event) => {
+				if (inkTool === undefined || ctx.readOnly()) return false;
+				if (!inkLayer) earlyInk.press(event, inkTool);
+				return true;
+			},
 		}),
 		wireTooltips(view),
 		installNotePopups(view),
@@ -217,15 +222,30 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 	let inkLayer: InkLayer | undefined;
 	let inkLoading: Promise<InkLayer> | undefined;
 	let inkTool: GridInkTool | undefined;
+	let destroyed = false;
+	const earlyInk = new EarlyInk(view);
 	const loadInk = () =>
 		(inkLoading ??= Promise.all([
 			import('./ink-layer'),
 			import('../../ink/tools').then((tools) => tools.loadTools()),
-		]).then(([{ InkLayer }]) => {
-			inkLayer = new InkLayer(view);
-			inkLayer.setTool(inkTool);
-			return inkLayer;
-		}));
+		]).then(
+			([{ InkLayer }]) => {
+				// The grid may have gone while the surface loaded: then nothing is built.
+				if (destroyed) throw new Error('The grid was destroyed.');
+				const layer = new InkLayer(view);
+				inkLayer = layer;
+				layer.setTool(inkTool);
+				// Strokes drawn while it loaded, in order, then any finished afterwards.
+				for (const stroke of earlyInk.take()) layer.stroke(stroke);
+				earlyInk.deliver = (stroke) => layer.stroke(stroke);
+				return layer;
+			},
+			(cause: unknown) => {
+				// A chunk that failed to load is tried again on the next use.
+				inkLoading = undefined;
+				throw cause;
+			},
+		));
 	const ink: GridInk = {
 		setTool(tool) {
 			inkTool = tool;
@@ -282,6 +302,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		list.close();
 		filters.destroy();
 		drawings.destroy();
+		destroyed = true;
 		inkLayer?.destroy();
 		editor.destroy();
 		a11y.destroy();

@@ -53,22 +53,11 @@ export function anchorOf(view: GridView, box: InkBox) {
  */
 export function fittedInk(view: GridView, entry: SheetInk, strokes: InkStroke[]) {
 	const { ink, box } = entry;
-	const bounds = inkTools().inkStrokesBounds(strokes);
-	if (!bounds)
-		return { anchor: ink.anchor, ink: { strokes, width: ink.width, height: ink.height } };
-	const kx = box.width / (ink.width || 1);
-	const ky = box.height / (ink.height || 1);
-	return {
-		anchor: anchorOf(view, {
-			x: box.x + bounds.x * kx,
-			y: box.y + bounds.y * ky,
-			width: bounds.width * kx,
-			height: bounds.height * ky,
-		}),
-		ink: {
-			strokes: inkTools().transformInkStrokes(strokes, -bounds.x, -bounds.y),
-			width: bounds.width,
-			height: bounds.height,
-		},
-	};
+	const fit = inkTools().fitInkBox(strokes, ink, box);
+	return fit
+		? {
+				anchor: anchorOf(view, fit.box),
+				ink: { strokes: fit.strokes, width: fit.width, height: fit.height },
+			}
+		: { anchor: ink.anchor, ink: { strokes, width: ink.width, height: ink.height } };
 }
