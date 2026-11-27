@@ -1,7 +1,7 @@
 // The neutral chart model (`chart/ChartSpace`) of a chart created in the spreadsheet model: what
 // `chart/writeChartSpace` serialises for a new chart part. It describes the part the xlsx writer
 // has always generated (and Excel accepts): one chart group, two axes with fixed ids (the
-// `chart/edit` defaults the type switch also uses), palette or manual series colours, the modern
+// `chart/edit` defaults the type switch also uses), the groups of a combination chart drawn over it, palette or manual series colours, the modern
 // built-in style 102 unless the chart carries its own.
 import { builtInChartStyleXml, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
 import { applyChartQuickLayout, chartSupportsQuickLayout } from '../../chart/edit/quick-layout';
@@ -181,6 +181,50 @@ function plot(chart: ChartObject, series: ChartSpaceSeries[]): [ChartPlotGroup, 
 	}
 }
 
+/** The axis ids of a secondary pair, the first ones the chart edits allocate (`secondary-axis.ts`). */
+const SECONDARY_AXES: readonly [number, number] = [500000003, 500000004];
+
+/**
+ * The groups a combination chart draws over its first (`extraGroups`), each with its own series
+ * and options, and the secondary axis pair the groups marked `secondary` plot on: a deleted
+ * category axis and a value axis crossing at the maximum, at the right edge, as Excel writes it.
+ * Stock groups are not built from the summary.
+ */
+function extraPlots(
+	chart: ChartObject,
+	firstIndex: number,
+): { groups: ChartPlotGroup[]; axes: ChartAxis[] } {
+	const groups: ChartPlotGroup[] = [];
+	let index = firstIndex;
+	let secondary = false;
+	for (const extra of chart.extraGroups ?? []) {
+		if (extra.chartType === 'stock') continue;
+		const view: ChartObject = { ...chart, chartType: extra.chartType };
+		delete view.grouping;
+		delete view.barGapWidth;
+		delete view.barOverlap;
+		if (extra.grouping) view.grouping = extra.grouping;
+		if (extra.barGapWidth !== undefined) view.barGapWidth = extra.barGapWidth;
+		if (extra.barOverlap !== undefined) view.barOverlap = extra.barOverlap;
+		const series = extra.series.map((entry) => seriesModel(view, entry, index++));
+		const [group] = plot(view, series);
+		if (extra.secondary) {
+			group.axisIds = [...SECONDARY_AXES];
+			secondary = true;
+		}
+		groups.push(group);
+	}
+	if (!secondary) return { groups, axes: [] };
+	const horizontal = chart.chartType === 'bar';
+	const axes = defaultChartAxes(horizontal, false, SECONDARY_AXES);
+	axes[0].deleted = true;
+	axes[0].position = horizontal ? 'r' : 't';
+	axes[1].position = horizontal ? 't' : 'r';
+	axes[1].crosses = 'max';
+	axes[1].majorGridlines = false;
+	return { groups, axes };
+}
+
 /** The built-in style: `c:style` 1..48, or the `c14:style` 101..148 choice with its fallback. */
 function style(chart: ChartObject): Pick<ChartSpace, 'style' | 'c14Style'> {
 	const id = effectiveBuiltInChartStyle(chart.formatting);
@@ -192,11 +236,17 @@ function style(chart: ChartObject): Pick<ChartSpace, 'style' | 'c14Style'> {
 export function chartSpaceFromObject(chart: ChartObject): ChartSpace {
 	const series = chart.series.map((entry, index) => seriesModel(chart, entry, index));
 	const [group, chartAxes] = plot(chart, series);
+	// A pie or doughnut has no axes for the groups of a combination to share.
+	const extra = chartAxes.length ? extraPlots(chart, series.length) : { groups: [], axes: [] };
 	const space: ChartSpace = {
 		roundedCorners: false,
 		...style(chart),
 		autoTitleDeleted: chart.title === undefined,
-		plotArea: { layout: {}, groups: [group], axes: chartAxes },
+		plotArea: {
+			layout: {},
+			groups: [group, ...extra.groups],
+			axes: [...chartAxes, ...extra.axes],
+		},
 		plotVisibleOnly: true,
 		displayBlanksAs: 'gap',
 	};

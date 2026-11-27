@@ -72,4 +72,39 @@ describe('chartXml (new chart parts through the shared chart writer)', () => {
 			});
 		}
 	});
+
+	it('writes the extra groups of a combination chart, a secondary one on its own axes', () => {
+		const combo: ChartObject = {
+			...column,
+			extraGroups: [
+				{
+					chartType: 'line',
+					secondary: true,
+					series: [
+						{
+							name: 'Share',
+							valuesRef: 'Data!$C$2:$C$3',
+							categoriesRef: 'Data!$A$2:$A$3',
+							categories: ['Q1', 'Q2'],
+							values: [0.4, 0.6],
+						},
+					],
+				},
+			],
+		};
+		const xml = chartXml(combo);
+		expect(xml).toMatch(/<\/c:barChart><c:lineChart>.*<c:idx val="1"\/><c:order val="1"\/>/);
+		expect(xml).toContain('<c:axId val="500000003"/><c:axId val="500000004"/></c:lineChart>');
+		expect(xml).toMatch(/<c:catAx><c:axId val="500000003"\/>.*?<c:delete val="1"\/>/);
+		expect(xml).toMatch(
+			/<c:valAx><c:axId val="500000004"\/>.*?<c:axPos val="r"\/>.*?<c:crosses val="max"\/>/,
+		);
+		const read = parseChart(xml, anchor, 'xl/charts/chart1.xml');
+		expect(read?.series.map((series) => series.name)).toEqual(['North']);
+		expect(read?.extraGroups).toMatchObject([
+			{ chartType: 'line', secondary: true, series: [{ name: 'Share' }] },
+		]);
+		const { chartSpace } = parseChartSpace(xml);
+		expect(chartSpace.plotArea.groups.map((group) => group.kind)).toEqual(['bar', 'line']);
+	});
 });
