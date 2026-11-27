@@ -279,7 +279,7 @@ test.describe('OneDrive under File > Open', () => {
 		});
 		await expect(unsaved(page).first()).toBeVisible();
 		await fileSave(page);
+		await expect.poll(() => cloud.writes, { timeout: 30_000 }).toStrictEqual(['mine']);
 		await expect(unsaved(page)).toHaveCount(0, { timeout: 30_000 });
-		expect(cloud.writes).toStrictEqual(['mine']);
 	});
 });
