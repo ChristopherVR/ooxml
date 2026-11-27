@@ -152,7 +152,7 @@ export function mountResources() {
 	const rail = $('rail');
 	rail.insertAdjacentHTML(
 		'beforeend',
-		`<span class="nav-caption">Resources</span><a class="rail-link" href="${new URL('docs/', suiteBase)}">${icon('book')}<span>Documentation</span></a>${hasSamples() ? `<a class="rail-link" href="${new URL('samples/', suiteBase)}">${icon('doc')}<span>Sample files</span></a>` : ''}<a class="rail-link" href="${new URL('releases/2.0/', suiteBase)}">${icon('spark')}<span>Release notes</span></a>`,
+		`<span class="nav-caption">Resources</span><a class="rail-link" href="${new URL('docs/', suiteBase)}">${icon('book')}<span>Documentation</span></a>${hasSamples() ? `<a class="rail-link" href="${new URL('samples/', suiteBase)}">${icon('doc')}<span>Sample files</span></a>` : ''}<a class="rail-link" href="${new URL('releases/2.5/', suiteBase)}">${icon('spark')}<span>Release notes</span></a>`,
 	);
 	if (product) return;
 	const sites = document.createElement('button');

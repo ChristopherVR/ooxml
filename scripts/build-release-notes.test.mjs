@@ -278,20 +278,58 @@ test('writeReleasePages renders every post and copies its media next to the page
 	}
 });
 
-test('the release post in the repository renders with its stable change anchors', () => {
-	const html = renderReleasePage(
-		readFileSync(join(ROOT, 'docs/releases/2.0.md'), 'utf8'),
-		readFileSync(join(ROOT, TEMPLATE), 'utf8'),
-	);
-	for (const area of ['core', 'ui-mcp', 'word', 'excel', 'powerpoint', 'visio', 'openteams'])
-		assert.match(
-			html,
-			new RegExp(
-				`<a id="changes-${area}" class="changes-anchor"></a>\\s*<details class="changes reveal" data-area="${area}">`,
-			),
+for (const post of ['2.0', '2.5'])
+	test(`the ${post} post in the repository renders with its stable change anchors`, () => {
+		const html = renderReleasePage(
+			readFileSync(join(ROOT, `docs/releases/${post}.md`), 'utf8'),
+			readFileSync(join(ROOT, TEMPLATE), 'utf8'),
 		);
-	assert.doesNotMatch(html, /\{\{\w+\}\}/);
-	assert.doesNotMatch(html, /\u2014/u);
+		for (const area of ['core', 'ui-mcp', 'word', 'excel', 'powerpoint', 'visio', 'openteams'])
+			assert.match(
+				html,
+				new RegExp(
+					`<a id="changes-${area}" class="changes-anchor"></a>\\s*<details class="changes reveal" data-area="${area}">`,
+				),
+			);
+		assert.doesNotMatch(html, /\{\{\w+\}\}/);
+		assert.doesNotMatch(html, /\u2014/u);
+	});
+
+test('the 2.5 post shows its eight recordings once, from posters, with its own version', () => {
+	const source = readFileSync(join(ROOT, 'docs/releases/2.5.md'), 'utf8');
+	const showcase = JSON.parse(readFileSync(join(ROOT, 'docs/releases/2.5/showcase.json'), 'utf8'));
+	const assets = join(ROOT, 'docs/releases/2.5/assets');
+	const media = (url) => {
+		const file = url.split('/').pop();
+		const stem = file.replace(/\.gif$/u, '');
+		return file.endsWith('.gif')
+			? { src: `assets/${stem}.poster.webp`, animation: `assets/${file}` }
+			: { src: `assets/${file}` };
+	};
+	const template = readFileSync(join(ROOT, TEMPLATE), 'utf8');
+	const html = renderReleasePage(source, template, { showcase, media });
+	assert.match(html, /<html lang="en" data-appearance-default="system">/);
+	assert.match(html, /aria-label="2\.5 highlights"/);
+	assert.doesNotMatch(html, /2\.0 highlights|Before 2\.0/);
+	for (const { id } of showcase.sections) assert.ok(html.includes(`<h2 id="${id}">`), id);
+	const items = showcase['new-features'];
+	assert.equal(items.length, 8);
+	for (const item of items) {
+		const gif = readFileSync(join(assets, item.image));
+		assert.equal(gif.toString('ascii', 0, 3), 'GIF', item.image);
+		assert.ok(gif.length <= 1024 * 1024, `${item.image} is ${gif.length} bytes`);
+		assert.deepEqual(imageSize(gif), { width: 1180, height: 802 }, item.image);
+		readFileSync(join(assets, item.image.replace(/\.gif$/u, '.poster.webp')));
+		// The scene draws the recording; the Markdown keeps it for GitHub, so it must not repeat.
+		assert.equal(html.split(`data-animation="assets/${item.image}"`).length - 1, 1, item.image);
+		const alt = new RegExp(
+			`!\\[([^\\]]+)\\]\\(2\\.5/assets/${item.image.replace('.', '\\.')}\\)`,
+			'u',
+		);
+		assert.match(source, alt, `${item.image} has alt text in the Markdown`);
+	}
+	assert.match(html, /class="tile tile-visio"/);
+	assert.doesNotMatch(html, /<video\b/);
 });
 
 test('still images offer controlled playback and the release guide links back to the post', () => {
