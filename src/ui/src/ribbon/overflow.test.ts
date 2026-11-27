@@ -75,6 +75,17 @@ describe('ribbon overflow', () => {
 		expect(document.querySelector('.ribbon-overflow-panel')).toBeNull();
 	});
 
+	it('gives a dropdown its natural width as a floor, so wider dropdown controls still fit', () => {
+		const natural = createRibbonOverflow({ ...options, naturalWidth: true });
+		const { el, groups } = panel(150);
+		natural.fitPanel(el);
+		groups[1]!.querySelector<HTMLButtonElement>('.ribbon-overflow-button')!.click();
+		const content = document.querySelector<HTMLElement>('.ribbon-overflow-content')!;
+		expect(content.style.minWidth).toBe('100px');
+		expect(content.style.width).toBe('');
+		natural.close();
+	});
+
 	it('keeps a preferred group expanded while a sibling can fold to make room', () => {
 		const { el, groups } = panel(150);
 		const preferred = createRibbonOverflow({

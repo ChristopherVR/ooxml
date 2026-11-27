@@ -88,7 +88,8 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		content.dataset.caption = group.dataset.caption ?? '';
 		content.setAttribute('role', 'group');
 		content.setAttribute('aria-label', group.getAttribute('aria-label') ?? '');
-		if (options.naturalWidth) content.style.width = `${group.dataset.natural ?? 200}px`;
+		// A floor, not a width: the pop-out may style its controls wider than the ribbon did.
+		if (options.naturalWidth) content.style.minWidth = `${group.dataset.natural ?? 200}px`;
 		const moved = [...group.children].filter((child) => child !== button);
 		content.append(...moved);
 		pop.append(content);
