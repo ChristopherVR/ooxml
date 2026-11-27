@@ -160,6 +160,6 @@ test.describe('selecting inside a group', () => {
 		await page.keyboard.press('Escape');
 		await expectSelectionLike(page, group(page));
 		await page.keyboard.press('Escape');
-		await expect.poll(() => selectionBox(page)).toBeNull();
+		await expect(viewport(page).getByRole('button', { name: /^resize (nw|se)$/iu })).toHaveCount(0);
 	});
 });
