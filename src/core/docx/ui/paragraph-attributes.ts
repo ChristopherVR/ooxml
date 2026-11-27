@@ -58,6 +58,10 @@ export function paragraphFromAttrs(attrs: Attrs, id: string, runs: TextRun[]): P
 		...(attrs.bookmarks?.length ? { bookmarks: [...attrs.bookmarks] } : {}),
 		...(attrs.permissions?.length ? { permissions: structuredClone(attrs.permissions) } : {}),
 		...(attrs.contentControl ? { contentControl: structuredClone(attrs.contentControl) } : {}),
+		// The controls around the paragraph's own: kept, so that saving leaves their `w:sdt` in place.
+		...(attrs.outerContentControls
+			? { outerContentControls: structuredClone(attrs.outerContentControls) }
+			: {}),
 	};
 }
 
@@ -105,5 +109,6 @@ export function paragraphAttrs(paragraph: Paragraph): Attrs {
 		bookmarks: paragraph.bookmarks ?? [],
 		permissions: paragraph.permissions ?? null,
 		contentControl: paragraph.contentControl ?? null,
+		outerContentControls: paragraph.outerContentControls ?? null,
 	};
 }

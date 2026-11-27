@@ -22,10 +22,13 @@ export function withChain<T extends Holder>(holder: T, chain: readonly ContentCo
 		outerContentControls?: ContentControl[];
 	};
 	if (!chain.length) return rest as T;
+	// A block that said which controls are around its own keeps saying it (empty when none are
+	// left), so that the writer unwraps the ones it lost.
+	const tracked = holder.outerContentControls !== undefined || chain.length > 1;
 	return {
 		...rest,
 		contentControl: chain.at(-1)!,
-		...(chain.length > 1 && { outerContentControls: chain.slice(0, -1) }),
+		...(tracked && { outerContentControls: chain.slice(0, -1) }),
 	} as T;
 }
 

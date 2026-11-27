@@ -15,8 +15,17 @@ const plainRun = (run: TextRun): TextRun => {
 	return rest;
 };
 
+/**
+ * `holder` without its controls. It says it has none around it either (an empty
+ * `outerContentControls`), so that the writer unwraps the outer ones too.
+ */
+function withoutControls<T extends Parameters<typeof withChain>[0]>(holder: T): T {
+	if (!holder.contentControl) return holder;
+	return { ...withChain(holder, []), outerContentControls: [] };
+}
+
 const plainParagraph = (paragraph: Paragraph): Paragraph =>
-	withChain({ ...paragraph, runs: paragraph.runs.map(plainRun) }, []);
+	withoutControls({ ...paragraph, runs: paragraph.runs.map(plainRun) });
 
 function plainCell(cell: TableCell): TableCell {
 	const { contentControl: _control, ...rest } = cell;
@@ -33,16 +42,13 @@ function plainCell(cell: TableCell): TableCell {
 }
 
 function plainTable(table: Table): Table {
-	return withChain(
-		{
-			...table,
-			rows: table.rows.map((row) => row.map(plainCell)),
-			...(table.rowProperties && {
-				rowProperties: table.rowProperties.map((properties) => withChain(properties, [])),
-			}),
-		},
-		[],
-	);
+	return withoutControls({
+		...table,
+		rows: table.rows.map((row) => row.map(plainCell)),
+		...(table.rowProperties && {
+			rowProperties: table.rowProperties.map((properties) => withoutControls(properties)),
+		}),
+	});
 }
 
 /** `model` without content controls (see above). */

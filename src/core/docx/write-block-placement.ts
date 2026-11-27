@@ -3,7 +3,8 @@
 // each kept element keeps its own `w:sdt` wrappers, and a new one goes inside the controls it
 // shares with the element before it (a repeating section around a new item), in new `w:sdt`
 // wrappers for the rest of its controls.
-import type { ContentControl } from './content-control-model';
+import { saveEnvironmentOf } from '../opc/reproducible';
+import { freshControlId, type ContentControl } from './content-control-model';
 import type { Block } from './model';
 import { isSdt, sdtContent } from './content-control';
 import {
@@ -13,20 +14,38 @@ import {
 } from './write-content-control';
 import type { FlatBlock } from './parse-content-control';
 import { replaceSlots } from './write-slots';
-import { isElement, type XmlDocument, type XmlElement } from './xml';
+import { first, getW, isElement, named, WORD_NS, type XmlDocument, type XmlElement } from './xml';
+
+/** A block or row as the placement reads its controls. */
+export type ControlHolder = Pick<Block, 'contentControl' | 'outerContentControls'> | undefined;
 
 /** The controls around a block, outermost first, ending with its own; none without one. */
-export const blockChain = (
-	block: Pick<Block, 'contentControl' | 'outerContentControls'> | undefined,
-): ContentControl[] =>
+export const blockChain = (block: ControlHolder): ContentControl[] =>
 	block?.contentControl ? [...(block.outerContentControls ?? []), block.contentControl] : [];
 
-/** The ancestor of the node that is a direct child of the container, or the node itself. */
-function topLevel(node: XmlElement, container: XmlElement): XmlElement {
-	let current = node;
-	while (current.parentNode && current.parentNode !== container)
-		current = current.parentNode as XmlElement;
-	return current;
+/**
+ * Whether the model says which controls are around the block: `outerContentControls` set, even
+ * empty. A model that leaves it unset (an editor that carries only the block's own control)
+ * leaves the `w:sdt` elements around that control as they are.
+ */
+const tracksOuter = (block: ControlHolder): boolean => block?.outerContentControls !== undefined;
+
+/** The model id of each source `w:sdt` (a control read without `w:id` has a generated one). */
+function sourceIds(flat: readonly FlatBlock[]): Map<XmlElement, string> {
+	const ids = new Map<XmlElement, string>();
+	for (const entry of flat) {
+		if (entry.sdt && entry.control) ids.set(entry.sdt, entry.control.id);
+		for (const level of entry.outer ?? []) ids.set(level.sdt, level.control.id);
+	}
+	return ids;
+}
+
+/** The control ids every `w:sdtPr` of `doc` has. */
+function partControlIds(doc: XmlDocument): Set<string> {
+	const used = new Set<string>();
+	for (const id of Array.from(doc.getElementsByTagNameNS(WORD_NS, 'id')))
+		if (named(id.parentNode as XmlElement, 'sdtPr')) used.add(getW(id, 'val') ?? '');
+	return used;
 }
 
 /** The `w:sdt` elements between `node` and `container`, outermost first. */
@@ -58,28 +77,65 @@ function pruneEmptyControls(flat: FlatBlock[]): void {
 	}
 }
 
-/** Wraps `node` where it is in a new `w:sdt` for each control, the first outermost. */
-function wrap(doc: XmlDocument, node: XmlElement, controls: readonly ContentControl[]): void {
-	for (const control of controls) {
-		const { sdt, content } = createContentControl(doc, control);
-		node.parentNode!.insertBefore(sdt, node);
-		content.appendChild(node);
-	}
+/**
+ * Where a new element goes beside `neighbour` (a placed one): inside the `w:sdt` elements around
+ * `neighbour` that `chain` shares with it (by model id, outermost first), or every one up to the
+ * level holding `chain`'s own control when `chain` names only some of the controls around it.
+ * Returns the number of shared levels and the controls still to wrap it in.
+ */
+function sharedLevels(
+	sdts: readonly XmlElement[],
+	chain: readonly ContentControl[],
+	idOf: (sdt: XmlElement) => string | undefined,
+): { depth: number; rest: readonly ContentControl[] } {
+	const ids = sdts.map(idOf);
+	const own = chain.at(-1);
+	const at = own ? ids.lastIndexOf(own.id) : -1;
+	if (at >= 0) return { depth: at + 1, rest: [] };
+	let depth = 0;
+	while (depth < Math.min(chain.length, ids.length) && ids[depth] === chain[depth]!.id) depth++;
+	return { depth, rest: chain.slice(depth) };
 }
 
 /**
  * Places elements already written to `nodes` in `container`, each inside the controls of
- * `chains` (parallel to `nodes`, outermost first). Returns false, changing nothing, when the kept
- * elements changed their relative order (the caller then replaces slot by slot).
+ * `holders` (parallel to `nodes`). Returns false, changing nothing, when the kept elements
+ * changed their relative order (the caller then replaces slot by slot).
  */
 export function placeControlledById(
 	doc: XmlDocument,
 	container: XmlElement,
 	flat: FlatBlock[],
-	chains: readonly (readonly ContentControl[])[],
+	holders: readonly ControlHolder[],
 	nodes: XmlElement[],
 	anchor: XmlElement | null,
 ): boolean {
+	const chains = holders.map(blockChain);
+	const modelIds = sourceIds(flat);
+	const idOf = (sdt: XmlElement) =>
+		modelIds.get(sdt) ?? getW(first(first(sdt, 'sdtPr'), 'id'), 'val');
+	let used: Set<string> | undefined;
+	/** Wraps `node` where it is in a new `w:sdt` for each control, the first outermost. */
+	const wrap = (node: XmlElement, controls: readonly ContentControl[]) => {
+		const around = new Set(sdtAncestors(node, container).map(idOf));
+		for (const control of controls) {
+			// Already inside it: never a second `w:sdt` with its id around the same content.
+			if (around.has(control.id)) continue;
+			used ??= partControlIds(doc);
+			// Ids are unique in a part (ECMA-376 17.5.2.18): one in use elsewhere gets a new one.
+			const id = used.has(control.id)
+				? freshControlId(used, saveEnvironmentOf(doc).ids)
+				: control.id;
+			used.add(id);
+			const { sdt, content } = createContentControl(
+				doc,
+				id === control.id ? control : { ...control, id },
+			);
+			modelIds.set(sdt, control.id);
+			node.parentNode!.insertBefore(sdt, node);
+			content.appendChild(node);
+		}
+	};
 	const oldSet = new Set(flat.map((entry) => entry.element));
 	const outputSet = new Set(nodes);
 	const keptInOrder = nodes.filter((node) => oldSet.has(node));
@@ -88,37 +144,29 @@ export function placeControlledById(
 	for (const entry of flat)
 		if (!outputSet.has(entry.element)) entry.element.parentNode?.removeChild(entry.element);
 	pruneEmptyControls(flat);
-	let previous: { node: XmlElement; chain: readonly ContentControl[] } | undefined;
+	let previous: XmlElement | undefined;
 	nodes.forEach((node, index) => {
 		const chain = chains[index] ?? [];
 		if (oldSet.has(node)) {
-			previous = { node, chain };
+			previous = node;
 			return;
 		}
-		if (previous) {
-			const sdts = sdtAncestors(previous.node, container);
-			const before = previous.chain;
-			let depth = 0;
-			if (sdts.length === before.length)
-				while (
-					depth < Math.min(chain.length, before.length) &&
-					before[depth]!.id === chain[depth]!.id
-				)
-					depth++;
-			else if (before.length && before.at(-1)!.id === chain.at(-1)?.id) depth = sdts.length;
-			const reference = depth >= sdts.length ? previous.node : sdts[depth]!;
-			(reference.parentNode as XmlElement).insertBefore(node, reference.nextSibling);
-			if (sdts.length === before.length || depth < sdts.length) wrap(doc, node, chain.slice(depth));
+		// After the element before it, else before the first kept one, inside what they share.
+		const neighbour = previous ?? keptInOrder[0];
+		if (neighbour) {
+			const sdts = sdtAncestors(neighbour, container);
+			const { depth, rest } = sharedLevels(sdts, chain, idOf);
+			const reference = depth >= sdts.length ? neighbour : sdts[depth]!;
+			const parent = reference.parentNode as XmlElement;
+			parent.insertBefore(node, previous ? reference.nextSibling : reference);
+			wrap(node, rest);
 		} else {
-			// No kept element comes before this one, so the next kept one is the first of them.
-			const next = keptInOrder[0];
-			if (next) topLevel(next, container).parentNode!.insertBefore(node, topLevel(next, container));
-			else container.insertBefore(node, anchor);
-			wrap(doc, node, chain);
+			container.insertBefore(node, anchor);
+			wrap(node, chain);
 		}
-		previous = { node, chain };
+		previous = node;
 	});
-	syncControls(doc, flat, chains, nodes);
+	syncControls(doc, flat, holders, nodes);
 	return true;
 }
 
@@ -130,7 +178,7 @@ export const placeBlocksById = (
 	blocks: readonly Block[],
 	nodes: XmlElement[],
 	anchor: XmlElement | null,
-): boolean => placeControlledById(doc, container, flat, blocks.map(blockChain), nodes, anchor);
+): boolean => placeControlledById(doc, container, flat, blocks, nodes, anchor);
 
 /**
  * Brings the `w:sdt` wrappers of `flat` (the source elements, before the edit) in step with the
@@ -141,7 +189,7 @@ export const placeBlocksById = (
 export function syncControls(
 	doc: XmlDocument,
 	flat: FlatBlock[],
-	chains: readonly (readonly ContentControl[])[],
+	holders: readonly ControlHolder[],
 	nodes: readonly XmlElement[],
 ): void {
 	const bySdt = new Map<XmlElement, ContentControl>();
@@ -153,12 +201,19 @@ export function syncControls(
 	};
 	flat.forEach((entry) => {
 		const index = indexOf.get(entry.element);
-		const chain = index === undefined ? undefined : chains[index];
 		// A deleted element has no say: the ones that remain decide whether their control stays.
-		if (!entry.sdt || !chain) return;
+		if (!entry.sdt || index === undefined) return;
+		const holder = holders[index];
+		// A model that does not say which controls are around the element's own follows only the
+		// innermost `w:sdt`: patched from its control, unwrapped when it has none.
+		if (!tracksOuter(holder)) {
+			note(entry.sdt, holder?.contentControl);
+			return;
+		}
 		// Each `w:sdt` around it follows the model's control with its id: patched when the model
 		// keeps it, unwrapped when the model took it off every element it held. A model that gives
 		// the innermost one another id (and no outer one) patches it, as one control.
+		const chain = blockChain(holder);
 		const ids = new Set(chain.map((control) => control.id));
 		const levels = [...(entry.outer ?? []), { control: entry.control!, sdt: entry.sdt }];
 		levels.forEach((level) => {
@@ -177,7 +232,7 @@ export const syncBlockControls = (
 	flat: FlatBlock[],
 	blocks: readonly Block[],
 	nodes: readonly XmlElement[],
-): void => syncControls(doc, flat, blocks.map(blockChain), nodes);
+): void => syncControls(doc, flat, blocks, nodes);
 
 /**
  * Puts the written paragraphs of a cell in place: through `placeBlocksById` when a block control

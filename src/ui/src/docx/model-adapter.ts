@@ -258,7 +258,8 @@ export function docToModel(
 			(previous.shadingFill ?? null) === (node.attrs.shadingFill ?? null) &&
 			sameJson(previous.bookmarks ?? [], node.attrs.bookmarks ?? []) &&
 			sameJson(previous.permissions ?? null, node.attrs.permissions ?? null) &&
-			sameJson(previous.contentControl ?? null, node.attrs.contentControl ?? null)
+			sameJson(previous.contentControl ?? null, node.attrs.contentControl ?? null) &&
+			sameJson(previous.outerContentControls ?? null, node.attrs.outerContentControls ?? null)
 		)
 			return previous;
 		return paragraphFromAttrs(node.attrs, id, runs);

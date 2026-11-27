@@ -190,6 +190,8 @@ export const schema = new Schema({
 				permissions: { default: null },
 				/** Block-level content control (`w:sdt`) around this paragraph, as an object. */
 				contentControl: { default: null },
+				/** The block controls around `contentControl` (a repeating section, a group). */
+				outerContentControls: { default: null },
 			},
 			parseDOM: [
 				{

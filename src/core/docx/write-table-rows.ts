@@ -5,7 +5,7 @@
 import { rowEditKey, type BlockCopies } from './block-copies';
 import type { Paragraph, Table } from './model';
 import { flatCellParagraphs, flatCells, flatRows } from './parse-content-control';
-import { blockChain, placeCellParagraphs, placeControlledById } from './write-block-placement';
+import { placeCellParagraphs, placeControlledById } from './write-block-placement';
 import { replaceSlots } from './write-slots';
 import { placeTableControl } from './write-table-controls';
 import { makeW, type XmlDocument, type XmlElement } from './xml';
@@ -80,8 +80,8 @@ export function writeMergedRows(
 	});
 	// Each row keeps or joins the row controls the model gives it: a repeating section's new item
 	// goes inside the section, after the item before it.
-	const chains = table.rows.map((_, index) => blockChain(table.rowProperties?.[index]));
-	if (!placeControlledById(doc, node, flat, chains, nextRows, null))
+	const holders = table.rows.map((_, index) => table.rowProperties?.[index]);
+	if (!placeControlledById(doc, node, flat, holders, nextRows, null))
 		replaceSlots(node, oldRows, nextRows);
 	return node;
 }
