@@ -58,12 +58,8 @@ export class InkEraser {
 		for (const detail of points) {
 			const point = this.#host.client(detail);
 			const reach = detail.radius;
-			for (const target of this.#host.targets(
-				(rect) =>
-					point.x >= rect.left - reach &&
-					point.x <= rect.right + reach &&
-					point.y >= rect.top - reach &&
-					point.y <= rect.bottom + reach,
+			for (const target of this.#host.targets((rect) =>
+				inkTools().inkBoxReaches(rect, point, reach),
 			)) {
 				const strokes = edits.get(target.pos)?.strokes ?? target.ink.strokes;
 				const local = localPoint(target, point);

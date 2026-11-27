@@ -29,12 +29,12 @@
 
 /* The Draw tab's commands size to their captions, which wrap between words and never clip
    ("Mit Toucheingabe zeichnen" in German), as Excel's do. */
-.ribbon-panel[data-panel='Draw'] .ribbon-group button.ribbon-large {
+:is(.ribbon-group, .ribbon-overflow-panel) button.ribbon-large.dve-draw-command {
 	width: auto;
 	min-width: 52px;
 	max-width: 112px;
 }
-.ribbon-panel[data-panel='Draw'] .ribbon-large > span {
+:is(.ribbon-group, .ribbon-overflow-panel) button.dve-draw-command > span {
 	overflow: visible;
 	text-overflow: clip;
 	overflow-wrap: normal;

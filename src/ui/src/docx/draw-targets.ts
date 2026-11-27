@@ -4,6 +4,7 @@
 import type { InkCoordinate } from 'ooxml-core/drawingml';
 import type { DocxInk } from 'ooxml-core/docx';
 import type { EditorView } from 'prosemirror-view';
+import { inkTools } from '../ink/tools';
 import { paragraphStart } from './ink-commands';
 import { drawHelpers } from './draw-helpers';
 
@@ -68,14 +69,11 @@ export function localPoint(
 	point: InkCoordinate,
 ): { point: InkCoordinate; factor: number } {
 	const rect = target.element.getBoundingClientRect();
-	const factor = target.ink.width / (rect.width || 1);
-	return {
-		point: {
-			x: (point.x - rect.left) * factor,
-			y: (point.y - rect.top) * (target.ink.height / (rect.height || 1)),
-		},
-		factor,
-	};
+	return inkTools().inkLocalPoint(
+		{ x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+		target.ink,
+		point,
+	);
 }
 
 /** How a target's own coordinates map onto its page (CSS pixels from the page's corner). */

@@ -1,5 +1,6 @@
 import { syncRibbonAddIns } from '../ribbon/add-in-tabs';
 import { loadDrawTab } from './draw-loader';
+import { attachRibbonHistoryKeys } from './ribbon-history-keys';
 import { refitRibbon } from './ribbon-overflow';
 import { applyShellLabels } from './shell-labels';
 import type { CollaborativeEditor } from 'ooxml-core/collab';
@@ -160,6 +161,11 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 				event.detail,
 				event.target instanceof HTMLElement ? event.target : undefined,
 			),
+		);
+	// Undo and Redo also work with focus on the ribbon (after a ribbon command), as in Word.
+	if (toolbar)
+		attachRibbonHistoryKeys(toolbar, (key) =>
+			routeRibbonAction(core, { type: 'history', key }, undefined),
 		);
 	toolbar?.addEventListener('office-ribbon-select', (event) => {
 		if (event instanceof CustomEvent && event.detail?.tab === 'table-layout')

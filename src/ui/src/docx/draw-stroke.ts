@@ -9,10 +9,6 @@ import { bodyAnchor, scaleOf, sheetAt } from './draw-targets';
 import { appendInk, insertInk } from './ink-commands';
 import { drawHelpers } from './draw-helpers';
 
-/** Ink drawn this close in time and space joins the previous drawing. */
-const JOIN_MS = 2000;
-const JOIN_PX = 48;
-
 export interface StrokeHost {
 	view(): EditorView | undefined;
 	pages(): HTMLElement | undefined;
@@ -79,20 +75,18 @@ export class InkStrokes {
 		const node = last && view.state.doc.nodeAt(last.pos);
 		const ink = node && node.attrs.ink === last?.ink ? drawHelpers().inkOf(node) : undefined;
 		const bounds = inkTools().inkStrokesBounds([stroke]);
-		if (!last || !node || !ink || !bounds || now - last.at >= JOIN_MS || last.page !== page)
-			return undefined;
+		if (!last || !node || !ink || !bounds || last.page !== page) return undefined;
 		const placement = JSON.parse(String(node.attrs.placement)) as {
 			offsetXPx?: number;
 			offsetYPx?: number;
 		};
-		const x = placement.offsetXPx ?? 0;
-		const y = placement.offsetYPx ?? 0;
-		const near =
-			bounds.x < x + Number(node.attrs.widthPx) + JOIN_PX &&
-			bounds.x + bounds.width > x - JOIN_PX &&
-			bounds.y < y + Number(node.attrs.heightPx) + JOIN_PX &&
-			bounds.y + bounds.height > y - JOIN_PX;
-		return near &&
+		const box = {
+			x: placement.offsetXPx ?? 0,
+			y: placement.offsetYPx ?? 0,
+			width: Number(node.attrs.widthPx),
+			height: Number(node.attrs.heightPx),
+		};
+		return inkTools().inkJoins(box, bounds, now - last.at) &&
 			inkTools().canJoinInk(ink.strokes, [stroke]) &&
 			appendInk(view, last.pos, [stroke])
 			? last.pos

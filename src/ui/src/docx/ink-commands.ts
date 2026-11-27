@@ -35,16 +35,7 @@ export function paragraphStart(doc: ProseMirrorNode, blockId: string): number | 
 }
 
 /** `box` on whole pixels, covering it: offsets and sizes are written in whole pixels. */
-function snap(box: InkBox): InkBox {
-	const x = Math.floor(box.x);
-	const y = Math.floor(box.y);
-	return {
-		x,
-		y,
-		width: Math.max(1, Math.ceil(box.x + box.width - x)),
-		height: Math.max(1, Math.ceil(box.y + box.height - y)),
-	};
-}
+const snap = (box: InkBox): InkBox => inkTools().snapInkBox(box);
 
 /** A floating placement at `box` measured from the page, in front of the text like Word's ink. */
 function pagePlacement(box: InkBox, doc: ProseMirrorNode): PicturePlacement {
@@ -167,20 +158,12 @@ export interface InkEdit {
  * stay as they are.
  */
 function fitted(node: ProseMirrorNode, ink: DocxInk, strokes: readonly InkStroke[]) {
-	const tools = inkTools();
-	const bounds = tools.inkStrokesBounds(strokes);
 	const width = Number(node.attrs.widthPx) || 1;
 	const height = Number(node.attrs.heightPx) || 1;
-	const sx = width / (ink.width || 1);
-	const sy = height / (ink.height || 1);
 	const unchanged = { ...node.attrs, ink: JSON.stringify({ ...ink, strokes: [...strokes] }) };
-	if (!bounds) return unchanged;
-	const box = snap({
-		x: bounds.x * sx,
-		y: bounds.y * sy,
-		width: bounds.width * sx,
-		height: bounds.height * sy,
-	});
+	const fit = inkTools().fitInkBox(strokes, ink, { x: 0, y: 0, width, height }, true);
+	if (!fit) return unchanged;
+	const { box } = fit;
 	if (!box.x && !box.y && box.width === width && box.height === height) return unchanged;
 	const placement = inkPlacement(node);
 	return {
@@ -198,9 +181,9 @@ function fitted(node: ProseMirrorNode, ink: DocxInk, strokes: readonly InkStroke
 			: {}),
 		ink: JSON.stringify({
 			...ink,
-			strokes: tools.transformInkStrokes(strokes, -box.x / sx, -box.y / sy),
-			width: box.width / sx,
-			height: box.height / sy,
+			strokes: fit.strokes,
+			width: fit.width,
+			height: fit.height,
 		} satisfies DocxInk),
 	};
 }

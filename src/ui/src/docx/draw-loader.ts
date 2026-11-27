@@ -11,10 +11,17 @@ export const drawTab = (): DrawTab | undefined => loaded;
 
 /** Loads the Draw tab, builds its panel in `core`'s ribbon and refreshes the editor's controls. */
 export function loadDrawTab(core: EditorCore): Promise<DrawTab> {
-	loading ??= import('./draw-tab').then((module) => {
-		module.setDrawHelpers({ locateFloat, nextFloatHeight });
-		return (loaded = module);
-	});
+	loading ??= import('./draw-tab').then(
+		(module) => {
+			module.setDrawHelpers({ locateFloat, nextFloatHeight });
+			return (loaded = module);
+		},
+		(cause: unknown) => {
+			// A chunk that failed to load is tried again on the next use.
+			loading = undefined;
+			throw cause;
+		},
+	);
 	return loading.then((module) => {
 		module.mountDrawPanel(core);
 		core.refreshControls();

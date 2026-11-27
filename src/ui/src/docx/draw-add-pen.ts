@@ -49,7 +49,7 @@ function openMenu(button: HTMLButtonElement): void {
 export function addPenButton(): HTMLButtonElement {
 	const button = document.createElement('button');
 	button.type = 'button';
-	button.className = 'ribbon-large dve-add-pen';
+	button.className = 'ribbon-large dve-draw-command dve-add-pen';
 	button.dataset.draw = 'addPen';
 	button.dataset.localearialabel = 'Add Pen';
 	button.setAttribute('aria-label', 'Add Pen');

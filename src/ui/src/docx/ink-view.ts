@@ -1,9 +1,13 @@
 // Ink on the editing surface: a node view whose painting (`ink-node-view.ts`) loads with the first
-// ink a document shows, so an editor that never shows ink never downloads it.
+// ink a document shows, so an editor that never shows ink never downloads it. Once loaded it paints
+// at once, so a story preview serialized right away (a header, a note) holds its ink; only the
+// first ink of a session is painted a moment after its node.
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { NodeView } from 'prosemirror-view';
 
-let painter: Promise<typeof import('./ink-node-view')> | undefined;
+type Painter = typeof import('./ink-node-view');
+let painter: Painter | undefined;
+let loading: Promise<Painter> | undefined;
 
 export function inkNodeView(node: ProseMirrorNode): NodeView {
 	const dom = document.createElement('span');
@@ -13,7 +17,12 @@ export function inkNodeView(node: ProseMirrorNode): NodeView {
 		node = next;
 		dom.style.width = `${Number(next.attrs.widthPx) || 1}px`;
 		dom.style.height = `${Number(next.attrs.heightPx) || 1}px`;
-		void (painter ??= import('./ink-node-view')).then((module) => module.paintInk(dom, node));
+		if (painter) painter.paintInk(dom, node);
+		else
+			void (loading ??= import('./ink-node-view').then((module) => (painter = module))).then(
+				(module) => module.paintInk(dom, node),
+				() => (loading = undefined),
+			);
 	};
 	paint(node);
 	return {

@@ -43,6 +43,8 @@ function controller(core: EditorCore): Promise<DocxDrawController | undefined> {
 	if (current.controller) return Promise.resolve(current.controller);
 	current.loading ??= Promise.all([import('./draw-controller'), loadTools()]).then(
 		([{ DocxDrawController }]) => {
+			// The editor may have gone while the controller loaded: then nothing is built.
+			if (sessions.get(core) !== current) return undefined;
 			current.controller = new DocxDrawController({
 				view: () => core.view,
 				state: current.state,
@@ -71,7 +73,7 @@ function toPages(core: EditorCore): void {
 }
 
 export function handleDrawAction(core: EditorCore, action: DrawAction): void {
-	defineDrawElements();
+	void defineDrawElements();
 	const { state } = session(core);
 	switch (action.key) {
 		case 'tool':

@@ -33,8 +33,8 @@ const marker = (element: HTMLElement, key: string) => {
 };
 
 /** The pen strip's element loads with the Draw tab: an editor that never draws never downloads it. */
-export function defineDrawElements(): void {
-	void registerInkElements();
+export function defineDrawElements(): Promise<void> {
+	return registerInkElements();
 }
 
 export function buildDrawPanel(panel: HTMLElement): void {
@@ -61,7 +61,7 @@ export function buildDrawPanel(panel: HTMLElement): void {
 	);
 	const addPen = addPenButton();
 	const large = (label: string, icon: RibbonIcon, action: RibbonAction | null, key: string) =>
-		marker(tool(label, icon, action, { large: true }), key);
+		marker(tool(label, icon, action, { large: true, className: 'dve-draw-command' }), key);
 	panel.append(
 		group(
 			'Drawing Tools',
