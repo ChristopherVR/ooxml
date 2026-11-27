@@ -138,8 +138,24 @@ const {
 	'xlsx/collab/index': xlsxCollab,
 	'visio/index': _visio,
 	'visio/ui/index': _visioUi,
+	'docx/index': docx,
+	'docx/embedded': docxEmbedded,
+	'docx/load/index': docxLoad,
 	...eagerEntries
 } = shared.entry;
+
+// Word's model, embedded and loader entries each split their own ESM build, so a part only some
+// documents need (the signature verifier) is a chunk loaded on first use instead of code every
+// consumer downloads.
+const ownChunks = (name: string, file: string, chunks: string): Options => ({
+	...shared,
+	entry: { [name]: file },
+	format: ['esm'],
+	splitting: true,
+	esbuildOptions(options) {
+		options.chunkNames = `${chunks}/[name]-[hash]`;
+	},
+});
 
 export default defineConfig([
 	{
@@ -153,6 +169,9 @@ export default defineConfig([
 		splitting: false,
 	},
 	{ ...shared, format: ['cjs'], splitting: false },
+	ownChunks('docx/index', docx, 'docx/chunks'),
+	ownChunks('docx/embedded', docxEmbedded, 'docx/embedded-chunks'),
+	ownChunks('docx/load/index', docxLoad, 'docx/load/chunks'),
 	{
 		...shared,
 		entry: { 'automation/add-ins/index': addIns },

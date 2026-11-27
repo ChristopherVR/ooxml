@@ -7,7 +7,7 @@ import { defaultWordTheme } from './default-theme';
 import JSZip from 'jszip';
 import { openZip } from '../opc/zip-limits';
 import { dropAddedFolders, entryNames } from '../opc/zip-folders';
-import { stripPackageSignatures } from '../opc/signature/index';
+import { stripPackageSignatures } from '../opc/signature/package';
 import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
 import { blockCopiesOf } from './block-copies';
 import { stampModified } from './save-modified';
