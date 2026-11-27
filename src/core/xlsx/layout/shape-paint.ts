@@ -9,6 +9,7 @@ import {
 	resolveThemeLineStyle,
 } from '../../drawingml/format-scheme';
 import { officeFormatScheme } from '../office-format-scheme';
+import { escapeAttr } from '../write/xml-out';
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import { drawingSchemeColors } from '../drawing-theme';
 import type { ThemePalette } from '../model';
@@ -44,10 +45,10 @@ function gradientDef(
 	const stops = fill.stops
 		.map(
 			(stop) =>
-				`<stop offset="${at(stop.position / 1000)}%" stop-color="${shapeColor(stop.color, theme) ?? '#808080'}"/>`,
+				`<stop offset="${at(stop.position / 1000)}%" stop-color="${escapeAttr(shapeColor(stop.color, theme) ?? '#808080')}"/>`,
 		)
 		.join('');
-	return `<linearGradient id="${id}" x1="${at(0.5 - dx)}" y1="${at(0.5 - dy)}" x2="${at(0.5 + dx)}" y2="${at(0.5 + dy)}">${stops}</linearGradient>`;
+	return `<linearGradient id="${escapeAttr(id)}" x1="${at(0.5 - dx)}" y1="${at(0.5 - dy)}" x2="${at(0.5 + dx)}" y2="${at(0.5 + dy)}">${stops}</linearGradient>`;
 }
 
 /**

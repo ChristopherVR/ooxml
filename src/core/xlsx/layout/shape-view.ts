@@ -146,7 +146,7 @@ function textSvg(node: ShapeNode, rect: Box, ctx: Context): string {
 		(anchor === 'ctr' ? (rect.h - total) / 2 : anchor === 'b' ? rect.h - total - bottom : top);
 	const clip = `${ctx.prefix}c${ctx.counter.n++}`;
 	ctx.defs.push(
-		`<clipPath id="${clip}"><rect x="${round(rect.x)}" y="${round(rect.y)}" width="${round(rect.w)}" height="${round(rect.h)}"/></clipPath>`,
+		`<clipPath id="${escapeXml(clip)}"><rect x="${round(rect.x)}" y="${round(rect.y)}" width="${round(rect.w)}" height="${round(rect.h)}"/></clipPath>`,
 	);
 	const spans = lines.map((line, index) => {
 		const x =
@@ -267,7 +267,7 @@ function drawNode(node: ShapeNode, box: Box, ctx: Context): string {
 	const filter = shadow ? `${id}shadow` : undefined;
 	if (filter && shadow)
 		ctx.defs.push(
-			`<filter id="${filter}" x="-100%" y="-100%" width="300%" height="300%">${svgDropShadowElement(
+			`<filter id="${escapeXml(filter)}" x="-100%" y="-100%" width="300%" height="300%">${svgDropShadowElement(
 				{
 					...shadow,
 					dx: shadow.dx * ctx.scale,
@@ -278,7 +278,7 @@ function drawNode(node: ShapeNode, box: Box, ctx: Context): string {
 			)}</filter>`,
 		);
 	const content = body + textSvg(node, rect, ctx);
-	return `${open}${filter ? `<g filter="url(#${filter})">${content}</g>` : content}</g>`;
+	return `${open}${filter ? `<g filter="url(#${escapeXml(filter)})">${content}</g>` : content}</g>`;
 }
 
 /**
@@ -302,7 +302,8 @@ export function shapeSvg(
 	const ctx: Context = {
 		theme: options.theme,
 		scale: options.scale ?? 1,
-		prefix: options.idPrefix ?? 'xs',
+		// Ids are XML names inside `url(#...)` references: keep the prefix to name characters.
+		prefix: (options.idPrefix ?? 'xs').replace(/[^A-Za-z0-9_-]/g, '_'),
 		counter: { n: 0 },
 		defs: [],
 		equations: options.equations,

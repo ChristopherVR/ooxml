@@ -3,6 +3,7 @@ import { createEditSession } from '../../../xlsx/edit/session';
 import { createCalcEngine } from '../../../xlsx/formula/engine';
 import { book, get } from '../../../xlsx/formula/test-helpers';
 import { cellView } from '../../../xlsx/layout/cell-view';
+import { shapeSvg } from '../../../xlsx/layout/shape-view';
 import { loadXlsx } from '../../../xlsx/read/load';
 import { RICH_NS, RICH_PARTS } from '../../../xlsx/rich-values';
 import { createWorkbook } from '../../../xlsx/workbook';
@@ -60,5 +61,32 @@ export const cases: readonly SecurityCase[] = [
 			return get(workbook, 'A1');
 		},
 		expected: { error: '#BLOCKED!' },
+	},
+	{
+		name: 'a shape drawing id prefix never reaches the markup as markup',
+		limits: { ms: 1_000, heapMb: 64 },
+		run() {
+			const color = (value: string) => ({ kind: 'srgb' as const, value, transforms: [] });
+			const svg = shapeSvg(
+				{
+					kind: 'shape',
+					geometry: 'rect',
+					frame: { x: 0, y: 0, width: 0, height: 0 },
+					fill: {
+						kind: 'gradient',
+						stops: [
+							{ position: 0, color: color('FF0000') },
+							{ position: 100000, color: color('0000FF') },
+						],
+					},
+					text: { paragraphs: [{ runs: [{ text: 'A' }] }] },
+				},
+				40,
+				20,
+				{ idPrefix: 'x"><p>y</p><g data-x="' },
+			);
+			return { markup: svg.includes('<p>'), attribute: svg.includes('data-x=') };
+		},
+		expected: { markup: false, attribute: false },
 	},
 ];

@@ -65,6 +65,32 @@ describe('shapeSvg', () => {
 		expect(svg.match(/<path /g)?.length).toBe(2);
 	});
 
+	it('keeps an id prefix with markup characters out of the markup', () => {
+		const color = (value: string) => ({ kind: 'srgb' as const, value, transforms: [] });
+		const svg = shapeSvg(
+			{
+				kind: 'shape',
+				geometry: 'rect',
+				frame: { x: 0, y: 0, width: 0, height: 0 },
+				fill: {
+					kind: 'gradient',
+					stops: [
+						{ position: 0, color: color('FF0000') },
+						{ position: 100000, color: color('0000FF') },
+					],
+				},
+				text: { paragraphs: [{ runs: [{ text: 'A' }] }] },
+			},
+			40,
+			20,
+			{ idPrefix: 'x"/><script>y</script><g id="' },
+		);
+		expect(svg).not.toContain('<script');
+		expect(svg).not.toContain('id="x"');
+		expect(svg).toContain('<linearGradient id="x__');
+		expect(svg).toContain('<clipPath id="x__');
+	});
+
 	it('wraps long lines to the box width', () => {
 		expect(wrapShapeLine('one two three four five six', 60, 14).length).toBeGreaterThan(1);
 	});
