@@ -6,7 +6,7 @@ const byteLimit = 16 * 1024 * 1024;
 const overLimit = (count: number, bytes: number) => count > installLimit || bytes > byteLimit;
 const limitError = () => new Error('Add-in preference limit reached.');
 
-function openDatabase(name: string): Promise<IDBDatabase | undefined> {
+function openDatabase(name: string, closed: () => void): Promise<IDBDatabase | undefined> {
 	return new Promise<IDBDatabase | undefined>((resolve) => {
 		const request = indexedDB.open(name, 1);
 		let blocked = false;
@@ -20,7 +20,12 @@ function openDatabase(name: string): Promise<IDBDatabase | undefined> {
 			const db = request.result;
 			if (blocked) db.close();
 			else {
-				db.onversionchange = () => db.close();
+				// A newer version elsewhere closes this connection; the next request reopens it.
+				db.onversionchange = () => {
+					db.close();
+					closed();
+				};
+				db.onclose = closed;
 				resolve(db);
 			}
 		};
@@ -40,11 +45,19 @@ function transaction<T>(
 	});
 }
 
+/** Every key of one product: `${host}:` up to the next character after the colon. */
+const productRange = (host: string) => IDBKeyRange.bound(`${host}:`, `${host};`, false, true);
+
 /** A local manifest store shared by the suite and the demos. */
 export function createAddInPreferencesStore(name: string): OfficeAddInPreferences {
 	const memory = new Map<string, Uint8Array>();
 	let opening: Promise<IDBDatabase | undefined> | undefined;
-	const database = () => (opening ??= openDatabase(name));
+	const database = () => {
+		const current = (opening ??= openDatabase(name, () => {
+			if (opening === current) opening = undefined;
+		}));
+		return current;
+	};
 	return {
 		async read(host) {
 			const db = await database();
@@ -56,16 +69,16 @@ export function createAddInPreferencesStore(name: string): OfficeAddInPreference
 			return transaction(db, 'readonly', (store) => {
 				const files: Uint8Array[] = [];
 				let total = 0;
-				// Apply the same profile-wide budget to older databases with per-product limits.
-				const request = store.openCursor();
+				// Each product reads only its own records under the limits, so an older database
+				// written with per-product limits cannot let one product's add-ins hide another's.
+				const request = store.openCursor(productRange(host));
 				request.onsuccess = () => {
 					const cursor = request.result;
 					if (!cursor || files.length >= installLimit || total >= byteLimit) return;
 					const bytes: unknown = cursor.value;
 					if (bytes instanceof Uint8Array && total + bytes.byteLength <= byteLimit) {
 						total += bytes.byteLength;
-						if (typeof cursor.key === 'string' && cursor.key.startsWith(`${host}:`))
-							files.push(bytes);
+						files.push(bytes);
 					}
 					cursor.continue();
 				};

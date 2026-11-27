@@ -31,14 +31,12 @@ it('enforces one profile budget across concurrent writes and allows replacement 
 	expect(await store.read(other)).toEqual([Uint8Array.of(1)]);
 });
 
-it('reads legacy records within the same budget across products', async () => {
-	await new Promise<void>((resolve, reject) => {
+const seed = (records: Record<string, Uint8Array>) =>
+	new Promise<void>((resolve, reject) => {
 		const request = indexedDB.open(name, 1);
 		request.onupgradeneeded = () => {
 			const store = request.result.createObjectStore('installs');
-			store.put(new Uint8Array(limit - 1), 'excel:large');
-			store.put(Uint8Array.of(1, 2), 'word:oversize');
-			store.put(Uint8Array.of(3), 'word:small');
+			for (const [key, bytes] of Object.entries(records)) store.put(bytes, key);
 		};
 		request.onsuccess = () => {
 			request.result.close();
@@ -46,7 +44,32 @@ it('reads legacy records within the same budget across products', async () => {
 		};
 		request.onerror = () => reject(request.error);
 	});
+
+it('reads legacy records within each product budget, so one product never hides another', async () => {
+	await seed({
+		'excel:large': new Uint8Array(limit / 2),
+		'word:large': new Uint8Array(limit - 1),
+		'word:small': Uint8Array.of(3),
+		...Object.fromEntries(
+			Array.from({ length: 40 }, (_, index) => [`excel:many-${index}`, Uint8Array.of(1)]),
+		),
+	});
 	const store = createAddInPreferencesStore(name);
-	expect((await store.read('excel')).map(({ byteLength }) => byteLength)).toEqual([limit - 1]);
-	expect(await store.read('word')).toEqual([Uint8Array.of(3)]);
+	const excel = await store.read('excel');
+	expect(excel).toHaveLength(32);
+	expect(excel.reduce((sum, { byteLength }) => sum + byteLength, 0)).toBeLessThanOrEqual(limit);
+	expect((await store.read('word')).map(({ byteLength }) => byteLength)).toEqual([limit - 1, 1]);
+	expect(await store.read('powerpoint')).toEqual([]);
+});
+
+it('reopens the database after another connection closes it with a version change', async () => {
+	const store = createAddInPreferencesStore(name);
+	await store.write('word', 'one', Uint8Array.of(1));
+	await new Promise<void>((resolve, reject) => {
+		const request = indexedDB.deleteDatabase(name);
+		request.onsuccess = () => resolve();
+		request.onerror = () => reject(request.error);
+	});
+	await store.write('word', 'two', Uint8Array.of(2));
+	expect(await createAddInPreferencesStore(name).read('word')).toEqual([Uint8Array.of(2)]);
 });
