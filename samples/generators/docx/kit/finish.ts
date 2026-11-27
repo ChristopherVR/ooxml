@@ -15,6 +15,7 @@ import type {
 	CustomProperty,
 } from '../../../../src/core/opc/properties/types';
 import { buildPackage, readPackage, type PackageParts } from '../../lib/package';
+import { escapeRegExp } from '../../lib/regexp';
 import { SAMPLE_AUTHOR, SAMPLE_DATE_ISO } from '../../lib/types';
 
 const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -65,7 +66,7 @@ function replaceBlock(part: string, key: string, xml: string): string {
 
 /** Replaces the run that holds `key` with `xml`. */
 function replaceRun(part: string, key: string, xml: string): string {
-	const escaped = key.replace(/[[\]]/gu, '\\$&');
+	const escaped = escapeRegExp(key);
 	const pattern = new RegExp(
 		`<w:r>(?:<w:rPr>(?:(?!</w:rPr>).)*</w:rPr>)?<w:t(?: xml:space="preserve")?>${escaped}</w:t></w:r>`,
 		'u',
