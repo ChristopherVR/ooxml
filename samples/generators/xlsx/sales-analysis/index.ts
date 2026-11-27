@@ -5,7 +5,7 @@ import { buildAnalysis } from './analysis';
 import { decorateDashboard } from './charts';
 import { buildDashboard } from './dashboard';
 import { orders } from './data';
-import { buildExplorer, numberFallbackShapes } from './explorer';
+import { buildExplorer } from './explorer';
 import { FIRST, buildLookups, buildOrders } from './orders';
 import { SHEETS, createBook } from './style';
 
@@ -24,19 +24,14 @@ async function generate(): Promise<Uint8Array> {
 	session.setPrintTitles(book.sheet(SHEETS.orders).index, {
 		rows: { start: FIRST - 2, end: FIRST - 2 },
 	});
-	return finish(
-		book,
-		session,
-		{
-			title: 'Kestrelline Outfitters sales analysis 2025',
-			subject: 'Sales analysis',
-			description:
-				'An order book as an Excel table, analysed with a PivotTable, slicers, a timeline, charts and sparklines. Kestrelline Outfitters is fictitious.',
-			keywords: 'sales, table, PivotTable, slicer, timeline, charts, sparklines',
-			company: 'Kestrelline Outfitters',
-		},
-		numberFallbackShapes,
-	);
+	return finish(book, session, {
+		title: 'Kestrelline Outfitters sales analysis 2025',
+		subject: 'Sales analysis',
+		description:
+			'An order book as an Excel table, analysed with a PivotTable, slicers, a timeline, charts and sparklines. Kestrelline Outfitters is fictitious.',
+		keywords: 'sales, table, PivotTable, slicer, timeline, charts, sparklines',
+		company: 'Kestrelline Outfitters',
+	});
 }
 
 export const salesAnalysis: SampleDefinition = {

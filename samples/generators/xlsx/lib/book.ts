@@ -75,8 +75,12 @@ export class Book {
 		readonly ink: string,
 		readonly baseSize = 10,
 	) {
-		this.wb = createWorkbook({ sheets: names });
+		this.wb = createWorkbook({
+			sheets: names,
+			themeFonts: { major: FONTS.display, minor: FONTS.body },
+		});
 		this.wb.theme = {
+			...this.wb.theme,
 			colors: [
 				theme.light1,
 				theme.dark1,
@@ -86,8 +90,6 @@ export class Book {
 				theme.link,
 				theme.followedLink,
 			],
-			majorFont: FONTS.display,
-			minorFont: FONTS.body,
 		};
 		// Style 0 is what every unformatted cell and the row and column headers use.
 		const normal = this.resolve({});

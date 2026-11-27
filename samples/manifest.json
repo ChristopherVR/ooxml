@@ -20,8 +20,8 @@
 				"Comments with a reply and tracked changes"
 			],
 			"file": "docx/technical-report.docx",
-			"size": 207964,
-			"sha256": "6b064e4a57cb4998d3770fb6fd1d00e586688f34dabbaf71e7097af4a74068d0",
+			"size": 207984,
+			"sha256": "708268a3bd8dbf65580d904bdfaefb8adb938df15691c31a4df201c9ea0cc293",
 			"thumbnail": "thumbnails/technical-report.webp"
 		},
 		{
@@ -40,8 +40,8 @@
 				"Designed header and footer with page numbers"
 			],
 			"file": "docx/community-newsletter.docx",
-			"size": 151950,
-			"sha256": "34b290ae8736a7df1cc5b32db9a3ca82e5391bf5155f9f27826cb6b0b327b618",
+			"size": 151951,
+			"sha256": "a8a45c289d666825c8b5583b80a8d2406ec5aa49e274940f1d4ba968e324a5f5",
 			"thumbnail": "thumbnails/community-newsletter.webp"
 		},
 		{
@@ -60,8 +60,8 @@
 				"Signature block table"
 			],
 			"file": "docx/services-agreement-form.docx",
-			"size": 22805,
-			"sha256": "b01a05b3403fd01edae60b63dd7a16982c1e4aa5dcb32b97226c9c644c9050d8",
+			"size": 22794,
+			"sha256": "807c069731b191bd27d80dc7f9f589c5ccaf94035d25cf8fe9fda2f5dbd81210",
 			"thumbnail": "thumbnails/services-agreement-form.webp"
 		},
 		{
@@ -102,8 +102,8 @@
 				"A designed dashboard on a custom theme"
 			],
 			"file": "xlsx/sales-analysis.xlsx",
-			"size": 130710,
-			"sha256": "bf290f63d14a3521927815b7b34d922ae841e444f0a2c639052024ab3e75eef6",
+			"size": 130709,
+			"sha256": "bb70437d14d79ddc555c054344d981169241598bb8add6509330559c2c8782e8",
 			"thumbnail": "thumbnails/sales-analysis.webp"
 		},
 		{
@@ -123,8 +123,8 @@
 				"Internal, web and mail hyperlinks; an Excel table; named ranges"
 			],
 			"file": "xlsx/operations-tracker.xlsx",
-			"size": 347069,
-			"sha256": "bc3805913176c7573acbcf5caf7ba945843d6b86be2aea6166e1605b025ee359",
+			"size": 347099,
+			"sha256": "5d6f631f87409af00f2af5ebdc4bb23cc4c40eaf5eeabd975c82bdcbc5543d23",
 			"thumbnail": "thumbnails/operations-tracker.webp"
 		},
 		{
@@ -147,8 +147,8 @@
 				"Speaker notes on every slide and named sections"
 			],
 			"file": "pptx/product-launch-keynote.pptx",
-			"size": 559778,
-			"sha256": "a689dacec851216a7357a1d0085a03f289da90c381cb4b6849af7c69c379d1e3",
+			"size": 560575,
+			"sha256": "17d920f94d279f1b1b0922b3585b7e5c8a5b1c650c2be08c1ecc09f5bf51eefa",
 			"thumbnail": "thumbnails/product-launch-keynote.webp"
 		},
 		{
@@ -168,8 +168,8 @@
 				"Speaker notes on every slide and named sections"
 			],
 			"file": "pptx/data-story-ridership.pptx",
-			"size": 201037,
-			"sha256": "6e9c6033fa5e2bac739bf89bc48e6c6cfb11fc3a9c7a8d4d477870bed470b2e7",
+			"size": 201851,
+			"sha256": "5cc15ef4a52c645d51ed916857baa6ad5ed9570cc5c486bb1c4ce29d15a90d75",
 			"thumbnail": "thumbnails/data-story-ridership.webp"
 		},
 		{
@@ -191,8 +191,8 @@
 				"Speaker notes on every slide and named sections"
 			],
 			"file": "pptx/studio-portfolio.pptx",
-			"size": 334880,
-			"sha256": "9c037bc2cd923e358db13204700959f30730173f999770e029f3e6cac4e5dcd1",
+			"size": 335394,
+			"sha256": "c0c77e489d2cd4cf81587c22e59f8c5a370f44f73a8e5290131a361efac68eaa",
 			"thumbnail": "thumbnails/studio-portfolio.webp"
 		},
 		{
@@ -208,8 +208,8 @@
 				"Background page with a title block"
 			],
 			"file": "visio/order-to-delivery-flowchart.vsdx",
-			"size": 36767,
-			"sha256": "f21537c92c5711fef902611c0029a2e02673b6037bdd9c8b7522636df3038474",
+			"size": 36800,
+			"sha256": "bc205d00708debcb9f044b3ef7b14a3b2086da948bcf4c455502743f181106cc",
 			"thumbnail": "thumbnails/order-to-delivery-flowchart.webp"
 		},
 		{
@@ -225,8 +225,8 @@
 				"Callouts, text fields and a title block"
 			],
 			"file": "visio/platform-architecture.vsdx",
-			"size": 49198,
-			"sha256": "6cd7d48c1171eb53ac591917a08d62c54cbe52344c5e3cf92b06afb0315c5627",
+			"size": 49228,
+			"sha256": "b4bcda40f5d3db3ea1176caef997e7dedaf3f7461f25b5f92491f0a46aef544d",
 			"thumbnail": "thumbnails/platform-architecture.webp"
 		},
 		{
@@ -242,8 +242,8 @@
 				"Date and text fields from shape data"
 			],
 			"file": "visio/institute-org-chart.vsdx",
-			"size": 33473,
-			"sha256": "8b2a868ed868509555731e4b225e88ce6b11cecd2f2248f6ad57802b11998ad6",
+			"size": 33502,
+			"sha256": "926458a166822f4363c1c1acbc67325bd8d3d700111ced3171b1100181fcc968",
 			"thumbnail": "thumbnails/institute-org-chart.webp"
 		}
 	]

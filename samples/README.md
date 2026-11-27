@@ -115,7 +115,7 @@ and the [MS-VSDX] open specification) where the library has no writer yet.
 - Generated pictures with transparency
 - Speaker notes on every slide and named sections
 
-**[How Port Averly moved](pptx/data-story-ridership.pptx)** (196 KB). Port Averly Transit's 2025 ridership review, told as a data story: six native charts with annotations, a network map and a plan for next year, on a light editorial theme.
+**[How Port Averly moved](pptx/data-story-ridership.pptx)** (197 KB). Port Averly Transit's 2025 ridership review, told as a data story: six native charts with annotations, a network map and a plan for next year, on a light editorial theme.
 
 - Custom theme, slide master and six layouts
 - Native column, line, stacked bar, doughnut, combo and scatter charts with embedded workbooks
@@ -127,7 +127,7 @@ and the [MS-VSDX] open specification) where the library has no writer yet.
 - Gradient fills, soft shadows and custom geometry
 - Speaker notes on every slide and named sections
 
-**[Studio portfolio](pptx/studio-portfolio.pptx)** (327 KB). The portfolio of Thimblewick Studio, a small design studio: three case studies (a bakery identity, garden wayfinding and an outfitter’s field guide) told with large generated imagery, quiet typography and Morph transitions that carry each picture from thumbnail to full page.
+**[Studio portfolio](pptx/studio-portfolio.pptx)** (328 KB). The portfolio of Thimblewick Studio, a small design studio: three case studies (a bakery identity, garden wayfinding and an outfitter’s field guide) told with large generated imagery, quiet typography and Morph transitions that carry each picture from thumbnail to full page.
 
 - Custom theme, slide master and six layouts in Rubik and Noto Sans
 - Morph transitions with named shape pairs, plus fade, push, wipe, cover and split

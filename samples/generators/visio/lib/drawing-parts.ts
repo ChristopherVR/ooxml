@@ -1,12 +1,11 @@
 /**
  * What a drawing is made from, and the package parts `Drawing` writes itself because the core has
- * no writer for them: the style sheets, the masters, the theme and the recordset rows. Each
- * function here returns the parts to change; `Drawing` applies them.
+ * no writer for them: the style sheets, the masters and the theme. Each function here returns the
+ * parts to change; `Drawing` applies them.
  */
 import { readPackage } from '../../lib/package';
 import type { MasterDef, Stencil } from './masters';
 import { insertBefore, withContentTypes, withRelationship } from './parts';
-import { type RecordsetSpec, rowsetXml } from './recordset';
 import type { StyleBook, StyleDef } from './styles';
 
 export interface PageSpec {
@@ -118,33 +117,6 @@ export async function documentPartChanges(
 	}
 	changes['visio/_rels/document.xml.rels'] = documentRels;
 	changes['[Content_Types].xml'] = withContentTypes(await read('[Content_Types].xml'), types);
-	return changes;
-}
-
-/**
- * The recordset parts as Visio reads them: ids from 1 and rows that carry the row id column (the
- * core's `import-data-recordset` writes neither that way). The refresh time is the sample date,
- * which the edits are given (`drawing.ts`).
- */
-export async function recordsetChanges(
-	read: ReadPart,
-	bytes: Uint8Array,
-	recordsets: readonly RecordsetSpec[],
-): Promise<Record<string, string>> {
-	const part = 'visio/data/recordsets.xml';
-	const xml = (await read(part))
-		.replace(/NextID="\d+"/u, `NextID="${recordsets.length + 1}"`)
-		.replaceAll(
-			/<DataRecordSet ID="(\d+)"/gu,
-			(_, id: string) => `<DataRecordSet ID="${Number(id) + 1}"`,
-		);
-	const changes: Record<string, string> = { [part]: xml };
-	const parts = await readPackage(bytes);
-	recordsets.forEach((spec, index) => {
-		const name = `visio/data/data${index + 1}.xml`;
-		if (!parts.has(name)) throw new Error(`Expected the recordset part ${name}.`);
-		changes[name] = rowsetXml(spec);
-	});
 	return changes;
 }
 

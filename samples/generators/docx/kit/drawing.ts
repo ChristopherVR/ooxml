@@ -1,8 +1,8 @@
 /**
  * Equations, charts and text boxes. Equations come from the core's LaTeX converter and charts from
- * its chart model. A text box frame is written by hand (the core writes new shapes with plain
- * centred text and fixed insets only); the paragraphs inside it are still core model blocks,
- * serialized by the core's block writer.
+ * its chart model. A text box frame is written by hand (the core writes a new shape's blocks,
+ * insets and anchor, but as a styled shape with fixed wrap distances, not a `txBox` frame); the
+ * paragraphs inside it are still core model blocks, serialized by the core's block writer.
  */
 import { newChartImage, newDocxChart } from '../../../../src/core/docx/index';
 import type { Block, TextRun } from '../../../../src/core/docx/index';

@@ -1,32 +1,11 @@
 /**
- * Fixes applied to the package after the core has saved it, for gaps in the core's writers that
- * this deck runs into. Each one is reported with the sample.
+ * A fix applied to the package after the core has saved it, for a gap in the core's writers that
+ * this deck runs into.
  */
 import { FONTS } from '../../lib/fiction';
 import { patchPackage, readPackage } from '../../lib/package';
 
 const decoder = new TextDecoder();
-
-/**
- * Removes the legend of the chart that has a series called `seriesName`. The core refuses to
- * write an embedded workbook for a chart without a legend, so the chart is saved with one and
- * the legend is taken out here.
- */
-export async function removeChartLegend(
-	bytes: Uint8Array,
-	seriesName: string,
-): Promise<Uint8Array> {
-	const changes: Record<string, string> = {};
-	for (const [name, data] of await readPackage(bytes)) {
-		if (!/^ppt\/charts\/chart\d+\.xml$/u.test(name)) continue;
-		const xml = decoder.decode(data);
-		if (xml.includes(`>${seriesName}<`))
-			changes[name] = xml.replace(/<c:legend>.*?<\/c:legend>/su, '');
-	}
-	if (Object.keys(changes).length !== 1)
-		throw new Error(`Expected one chart with a series named "${seriesName}".`);
-	return patchPackage(bytes, changes);
-}
 
 export interface DiagramStyle {
 	/** Fill and text colour of each node, in order (`#RRGGBB`). */

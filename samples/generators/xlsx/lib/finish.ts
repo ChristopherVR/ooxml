@@ -11,7 +11,6 @@ import { FONTS } from '../../lib/fiction';
 import { patchPackage, readPartText, xmlEscape } from '../../lib/package';
 import { SAMPLE_AUTHOR, SAMPLE_DATE_ISO } from '../../lib/types';
 import type { Book } from './book';
-import { fitNotes } from './notes';
 
 export interface BookInfo {
 	title: string;
@@ -71,14 +70,12 @@ async function brandTheme(bytes: Uint8Array, company: string): Promise<Uint8Arra
 }
 
 /**
- * Recalculates, checks the result and writes the package. `patch` rewrites parts after the save,
- * for the few details the core writer does not cover yet.
+ * Recalculates, checks the result and writes the package.
  */
 export async function finish(
 	book: Book,
 	session: EditSession,
 	info: BookInfo,
-	patch?: (bytes: Uint8Array) => Promise<Uint8Array>,
 ): Promise<Uint8Array> {
 	session.calculateNow({ full: true });
 	const errors = formulaErrors(book);
@@ -98,6 +95,5 @@ export async function finish(
 		modified: SAMPLE_DATE_ISO,
 		application: 'ooxml-core',
 	};
-	const bytes = await brandTheme(await fitNotes(await saveXlsx(book.wb), book), info.company);
-	return patch ? patch(bytes) : bytes;
+	return brandTheme(await saveXlsx(book.wb), info.company);
 }

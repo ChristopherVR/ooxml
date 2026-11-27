@@ -1,7 +1,8 @@
 /**
- * The parts `saveDocx` does not write for a new document, written by hand: `word/numbering.xml`
- * (the standalone writer refuses numbering definitions) and `word/settings.xml` (the core only
- * patches single settings into it).
+ * Two parts written by hand in place of the core's. `word/numbering.xml`: the core's numbering
+ * catalog has no list type, theme colours or East Asian and complex script fonts on a marker.
+ * `word/settings.xml`: the core's part for a new document holds no theme font language,
+ * maths defaults, protection or Word 2013 compatibility options beyond the mode.
  */
 import { W_NS } from './builder';
 import { paragraphLook, runLook, type ParagraphLook, type RunLook } from './styles';

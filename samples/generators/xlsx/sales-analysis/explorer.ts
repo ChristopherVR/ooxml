@@ -4,7 +4,6 @@
  */
 import type { EditSession } from '../../../../src/core/xlsx/edit/types';
 import type { DrawingAnchor } from '../../../../src/core/xlsx/model';
-import { patchPackage, readPackage } from '../../lib/package';
 import type { Book } from '../lib/book';
 import { anchor } from '../lib/chart';
 import { ordersSource } from './orders';
@@ -93,24 +92,4 @@ export function buildExplorer(book: Book, session: EditSession, count: number): 
 	place(session, book, s, timeline, anchor('B6', 'G13'));
 	place(session, book, s, region, anchor('H6', 'J17'));
 	place(session, book, s, channel, anchor('K6', 'M13'));
-}
-
-/**
- * Gives the fallback shapes of the slicer and timeline frames distinct ids. The core writes each
- * with id 0, which Excel accepts and the Open XML SDK validator reports as duplicates.
- */
-export async function numberFallbackShapes(bytes: Uint8Array): Promise<Uint8Array> {
-	const decoder = new TextDecoder();
-	const changes: Record<string, string> = {};
-	for (const [name, data] of await readPackage(bytes)) {
-		if (!/^xl\/drawings\/drawing\d+\.xml$/.test(name)) continue;
-		const xml = decoder.decode(data);
-		let next = 100;
-		const fixed = xml.replaceAll(
-			'<xdr:cNvPr id="0" name=""/>',
-			() => `<xdr:cNvPr id="${++next}" name=""/>`,
-		);
-		if (fixed !== xml) changes[name] = fixed;
-	}
-	return Object.keys(changes).length ? patchPackage(bytes, changes) : bytes;
 }

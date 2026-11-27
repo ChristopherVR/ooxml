@@ -148,11 +148,9 @@ function preOrders(deck: Deck): void {
 				},
 			],
 			embedWorkbook: true,
-			hasLegend: true,
-			legendPosition: 'r',
+			hasLegend: false,
 			holeSize: 70,
 			firstSliceAngle: 0,
-			legendFont: { family: FONTS.body, size: 10, color: C.soft },
 		},
 		{ x: G.left, y: 196, width: 440, height: 440 },
 	);

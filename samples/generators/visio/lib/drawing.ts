@@ -14,7 +14,6 @@ import {
 	documentPartChanges,
 	pagePartNames,
 	pageWithShapes,
-	recordsetChanges,
 } from './drawing-parts';
 import { Stencil } from './masters';
 import { PageBuilder } from './page';
@@ -44,7 +43,8 @@ export class Drawing {
 	private readonly builders = new Map<string, PageBuilder>();
 	private readonly pageParts = new Map<string, string>();
 	private readonly layerNames = new Map<string, string[]>();
-	private readonly recordsets: RecordsetSpec[] = [];
+	/** Recordsets imported so far; the library numbers them from 1. */
+	private recordsetCount = 0;
 
 	private constructor(
 		bytes: Uint8Array,
@@ -220,8 +220,7 @@ export class Drawing {
 		spec: RecordsetSpec,
 		links: readonly (readonly [shapeId: number, row: number])[],
 	): Promise<void> {
-		const recordsetId = String(this.recordsets.length);
-		this.recordsets.push(spec);
+		const recordsetId = String(++this.recordsetCount);
 		await this.edit(
 			[
 				{
@@ -265,21 +264,9 @@ export class Drawing {
 		await this.patch({ [part]: xml });
 	}
 
-	/**
-	 * Makes the library's recordset parts ones Visio works with and that do not depend on the
-	 * clock: recordset IDs from 1 (Visio's object model refuses 0), a fixed refresh time, and the
-	 * row parts rewritten with the row ID column.
-	 */
-	private async settleRecordsets(): Promise<void> {
-		if (this.recordsets.length === 0) return;
-		const read = (part: string) => this.text(part);
-		await this.patch(await recordsetChanges(read, this.bytes, this.recordsets));
-	}
-
 	/** Adds the document properties and checks the rules every sample must keep. */
 	async finish(): Promise<Uint8Array> {
 		const { spec } = this;
-		await this.settleRecordsets();
 		await this.patch({
 			'docProps/core.xml': corePropertiesXml(spec),
 			'docProps/app.xml': APP_PROPERTIES_XML,

@@ -26,14 +26,7 @@ export function fees(doc: Doc, controls: Controls): Block[] {
 	});
 	const rule: TableBorders = { bottom: line(INK.line, 0.5) };
 	// Each priced line is one item of a repeating section: the "+" Word shows adds another row.
-	const item = (index: number) =>
-		controls.verbatim(
-			'row',
-			'repeatingSection',
-			`Fee line ${index + 1}`,
-			'fees.line',
-			'<w15:repeatingSectionItem/>',
-		);
+	const item = (index: number) => controls.repeatingItem(`Fee line ${index + 1}`, 'fees.line');
 	const lines = LINES.map(([description, quantity, rate], index) => [
 		{
 			content: controls.filled('Description', `fees.${index}.description`, description),

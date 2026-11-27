@@ -1,7 +1,7 @@
 /** The Aerie launch keynote: a dark, cinematic product deck built with the pptx SDK. */
 import type { SampleDefinition } from '../../lib/types';
 import { Deck } from '../kit/deck';
-import { removeChartLegend, restyleDiagram } from './patches';
+import { restyleDiagram } from './patches';
 import { launchSlides } from './slides-launch';
 import { openingSlides } from './slides-opening';
 import { STEP_STYLE, productSlides } from './slides-product';
@@ -14,8 +14,7 @@ async function generate(): Promise<Uint8Array> {
 	productSlides(deck);
 	proofSlides(deck);
 	launchSlides(deck);
-	const saved = await removeChartLegend(await deck.save(), 'Pre-orders');
-	return restyleDiagram(saved, STEP_STYLE);
+	return restyleDiagram(await deck.save(), STEP_STYLE);
 }
 
 export const sample: SampleDefinition = {

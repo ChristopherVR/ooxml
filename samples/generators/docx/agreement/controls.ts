@@ -99,6 +99,11 @@ export class Controls {
 		return { ...this.control(kind, alias, tag, extra), level: 'block' };
 	}
 
+	/** One item of a repeating section around a table row (`w15:repeatingSectionItem`). */
+	repeatingItem(alias: string, tag: string): ContentControl {
+		return { ...this.control('repeatingSectionItem', alias, tag), level: 'row' };
+	}
+
 	/** A control whose properties the model has no field for, given as `w:sdtPr` children. */
 	verbatim(
 		level: ContentControl['level'],
