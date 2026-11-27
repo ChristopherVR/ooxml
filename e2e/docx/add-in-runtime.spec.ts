@@ -1,6 +1,6 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright API */
 import { expect, test } from '@playwright/test';
-import { xmlManifest } from '../add-in-fixtures/manifest';
+import { addInName, jsonManifest, xmlManifest } from '../add-in-fixtures/manifest';
 import { newDocument, reveal } from './helpers';
 import {
 	addInReviewScenarios,
@@ -100,4 +100,32 @@ test('explains why an OfficeTab command is disabled', async ({ page }) => {
 	await expect(command).toHaveAccessibleDescription(
 		'This editor cannot add commands to built-in ribbon tabs.',
 	);
+});
+
+test('a session-only add-in survives moving the editor to another parent', async ({ page }) => {
+	await page.goto('/?framework=vanilla&addInsStorage=off');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	const command = editor
+		.getByRole('button', { name: 'Add-ins', exact: true })
+		.and(editor.locator('button[data-action]'));
+	await reveal(editor, command);
+	await command.click();
+	const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
+	await dialog.getByLabel('Choose a local add-in file').setInputFiles({
+		name: 'manifest.json',
+		mimeType: 'application/json',
+		buffer: Buffer.from(jsonManifest),
+	});
+	await dialog.getByRole('button', { name: 'Install Notes' }).click();
+	const tab = editor.getByRole('tab', { name: addInName, exact: true });
+	await expect(tab).toBeAttached();
+	await editor.evaluate((node) => {
+		const parent = node.ownerDocument.createElement('div');
+		node.before(parent);
+		parent.append(node);
+	});
+	await expect(tab).toBeAttached();
+	await tab.click();
+	await expect(editor.getByRole('button', { name: 'Open Notes' })).toBeVisible();
 });

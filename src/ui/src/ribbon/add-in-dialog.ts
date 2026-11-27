@@ -105,7 +105,7 @@ export function watchOfficeAddIns(
 			host.querySelector('office-ui-add-in-pane')?.remove();
 			host.querySelector('office-ui-add-ins-dialog')?.remove();
 		}
-		if (!store && !changed) return;
+		if (!store && !changed && !localAddIns(host).size) return;
 		runtimeRefresh?.abort();
 		const { signal } = (pending = new AbortController());
 		host[RESTORE] = (async () => {
