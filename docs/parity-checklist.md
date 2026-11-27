@@ -596,6 +596,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       collaborator's edit (#349, `e2e/docx/content-control-tag-caret.spec.ts`). Not measured:
       tags under multiple line spacing and in right-to-left paragraphs, whose Print Layout and PDF
       follow the open right-to-left reordering gap.
+- [ ] **P2** A table cell whose content is wrapped in tagged cell and row content controls is laid
+      out narrower in Print Layout than in Word, so a long word breaks inside the cell and the end
+      tags are clipped at the cell edge (`block-content-control-tags.docx` against Word's PDF).
 - [x] **P2** Hyperlinks to http, https, mailto, tel and ftp targets open on Ctrl+click, as in Word;
       script and disguised schemes are refused (`docx/hyperlink.test.ts`).
 - [x] **P1** AutoCorrect and AutoFormat as you type: smart quotes, automatic bulleted and numbered
