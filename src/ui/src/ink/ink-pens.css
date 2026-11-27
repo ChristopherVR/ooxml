@@ -2,7 +2,8 @@
 :host {
 	display: inline-block;
 	vertical-align: top;
-	font: var(--office-font-size-sm) / var(--office-line-height) var(--office-font);
+	/* The ribbon's own font, in the strip and its menu. */
+	font: inherit;
 	color: var(--office-foreground);
 }
 .strip {

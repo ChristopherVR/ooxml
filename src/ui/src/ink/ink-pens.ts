@@ -1,25 +1,15 @@
 import { html, nothing } from 'lit';
-import type { ThemePaletteColumn } from 'ooxml-core/color';
-import { INK_PEN_THICKNESSES_MM, inkThicknessPx, type InkPen } from 'ooxml-core/drawingml';
+import type { InkPen } from 'ooxml-core/drawingml';
 import { OfficeElement, controlStyles, flag } from '../base';
-import type { OfficeColorPickEvent } from '../form/color-grid';
 import { definer, emit } from '../registry';
 import css from './ink-pens.css?raw';
 import { DEFAULT_INK_PENS_LABELS, INK_PEN_COLORS, type InkPensLabels } from './pen-labels';
+import { inkPenThicknessMm, penMenu } from './pen-menu';
 
 export { DEFAULT_INK_PENS_LABELS, INK_PEN_COLORS, type InkPensLabels } from './pen-labels';
+export { inkPenThicknessMm } from './pen-menu';
 
 const COLOR = /^#[\da-f]{6}$/iu;
-const choices = (pen: InkPen) =>
-	pen.kind === 'highlighter' ? INK_PEN_THICKNESSES_MM.highlighter : INK_PEN_THICKNESSES_MM.pen;
-/** The nearest thickness choice of a pen, in millimetres. */
-export function inkPenThicknessMm(pen: InkPen): number {
-	return choices(pen).reduce((best, mm) =>
-		Math.abs(inkThicknessPx(mm) - pen.width) < Math.abs(inkThicknessPx(best) - pen.width)
-			? mm
-			: best,
-	);
-}
 
 /** `office-ink-pen-select`: a pen was picked (or picked again to open its settings). */
 export interface InkPenSelectDetail {
@@ -58,6 +48,8 @@ export class OfficeUiInkPens extends OfficeElement {
 	/** The pen that takes the strip's one tab stop. */
 	#focus = 0;
 	#justOpened = false;
+	/** The pen to focus once the strip has updated (after Delete Pen). */
+	#refocus = -1;
 	#listening = false;
 	readonly #outside = (event: Event) => {
 		if (!event.composedPath().includes(this)) this.close();
@@ -156,6 +148,13 @@ export class OfficeUiInkPens extends OfficeElement {
 	}
 
 	protected override updated(): void {
+		if (this.#refocus >= 0) {
+			const pen = this.renderRoot.querySelector<HTMLButtonElement>(
+				`.pen[data-index="${this.#refocus}"]`,
+			);
+			this.#refocus = -1;
+			pen?.focus();
+		}
 		const menu = this.renderRoot.querySelector<HTMLElement>('.menu');
 		if (menu && this.#justOpened) {
 			this.#justOpened = false;
@@ -220,39 +219,6 @@ export class OfficeUiInkPens extends OfficeElement {
 		buttons[next]?.focus();
 	}
 
-	/** Arrow keys move the checked thickness, as in a radio group (the checked one is the stop). */
-	#thicknessKey(event: KeyboardEvent): void {
-		const radios = [...this.renderRoot.querySelectorAll<HTMLButtonElement>('.thickness')];
-		const at = radios.indexOf(event.target as HTMLButtonElement);
-		const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
-		if (at < 0 || !step) return;
-		event.preventDefault();
-		event.stopPropagation();
-		const next = radios[(at + step + radios.length) % radios.length];
-		next?.click();
-		this.renderRoot
-			.querySelector<HTMLButtonElement>(`.thickness[data-mm="${next?.dataset.mm}"]`)
-			?.focus();
-	}
-
-	#moreColors(): void {
-		const input = this.renderRoot.querySelector<HTMLInputElement>('.more-input');
-		if (!input) return;
-		try {
-			input.showPicker();
-		} catch {
-			input.click();
-		}
-	}
-
-	/** Office's ink colours, as the colour grid's columns. */
-	#palette(): ThemePaletteColumn[] {
-		return INK_PEN_COLORS.map(({ value, name }) => {
-			const label = this.labels.colorNames?.[name] ?? name;
-			return { name: label, base: { hex: value.toLowerCase(), label }, variants: [] };
-		});
-	}
-
 	protected override render() {
 		const labels = this.labels;
 		const open = this.pens[this.#open];
@@ -283,61 +249,21 @@ export class OfficeUiInkPens extends OfficeElement {
 	}
 
 	#menu(open: InkPen) {
-		const labels = this.labels;
-		const current = inkPenThicknessMm(open);
-		return html`<div class="menu" role="dialog" aria-label=${this.#name(open)}
-			><div class="heading" id="thickness">${labels.thickness}</div
-			><div class="thicknesses" role="radiogroup" aria-labelledby="thickness"
-				>${choices(open).map((mm) => {
-					const px = inkThicknessPx(mm);
-					const on = current === mm;
-					const name = `${this.#mm(mm)} mm`;
-					return html`<button
-						type="button"
-						class="thickness"
-						role="radio"
-						data-mm=${mm}
-						tabindex=${on ? '0' : '-1'}
-						aria-checked=${String(on)}
-						aria-label=${name}
-						title=${name}
-						@keydown=${(event: KeyboardEvent) => this.#thicknessKey(event)}
-						@click=${() => this.#change({ width: px })}
-						><span style=${`height:${Math.max(1, Math.min(14, px))}px;color:${open.color}`}></span
-					></button>`;
-				})}</div
-			><office-ui-color-grid
-				class="colors"
-				.palette=${this.#palette()}
-				.value=${open.color.toLowerCase()}
-				label=${labels.colors}
-				theme-heading=${labels.colors}
-				standard-heading=${labels.standardColors ?? 'Standard Colors'}
-				more-label=${labels.moreColors}
-				@office-color-pick=${(event: OfficeColorPickEvent) =>
-					this.#change({ color: event.detail.color.toUpperCase() })}
-				@office-color-more=${() => this.#moreColors()}
-			></office-ui-color-grid
-			><input
-				class="more-input"
-				type="color"
-				tabindex="-1"
-				aria-hidden="true"
-				.value=${open.color.toLowerCase()}
-				@change=${(event: Event) =>
-					this.#change({ color: (event.target as HTMLInputElement).value.toUpperCase() })}
-			/><button
-				type="button"
-				class="remove"
-				?disabled=${this.pens.length <= 1}
-				@click=${() => {
-					const index = this.#open;
-					this.close();
-					emit(this, 'office-ink-pen-remove', { index });
-				}}
-				>${labels.remove}</button
-			></div
-		>`;
+		return penMenu({
+			labels: this.labels,
+			pen: open,
+			name: this.#name(open),
+			mm: (value) => this.#mm(value),
+			change: (change) => this.#change(change),
+			removable: this.pens.length > 1,
+			remove: () => {
+				const index = this.#open;
+				this.close();
+				// Focus goes to the pen that takes the deleted one's place.
+				this.#refocus = Math.max(0, Math.min(index, this.pens.length - 2));
+				emit(this, 'office-ink-pen-remove', { index });
+			},
+		});
 	}
 }
 

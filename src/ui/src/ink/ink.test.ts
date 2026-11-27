@@ -166,6 +166,36 @@ describe('office-ui-ink-pens', () => {
 		expect(pen.getAttribute('aria-haspopup')).toBe('dialog');
 	});
 
+	it('keeps focus in its menu and gives it to a pen after Delete Pen', () => {
+		const { pens } = strip();
+		pens.selected = 1;
+		pens.addEventListener('office-ink-pen-remove', (event) => {
+			const index = (event as CustomEvent<{ index: number }>).detail.index;
+			pens.pens = pens.pens.filter((_, at) => at !== index);
+			pens.selected = -1;
+		});
+		pens.shadowRoot!.querySelector<HTMLButtonElement>('.pen[data-index="1"]')!.click();
+		const menu = pens.shadowRoot!.querySelector<HTMLElement>('.menu')!;
+		const tab = (shiftKey = false) =>
+			(pens.shadowRoot!.activeElement as HTMLElement).dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'Tab', shiftKey, bubbles: true, composed: true }),
+			);
+		menu.querySelector<HTMLElement>('.thickness[tabindex="0"]')!.focus();
+		tab();
+		expect(pens.shadowRoot!.activeElement?.localName).toBe('office-ui-color-grid');
+		tab();
+		expect(pens.shadowRoot!.activeElement?.className).toBe('remove');
+		tab();
+		expect(pens.shadowRoot!.activeElement?.className).toBe('thickness');
+		tab(true);
+		expect(pens.shadowRoot!.activeElement?.className).toBe('remove');
+		(pens.shadowRoot!.activeElement as HTMLButtonElement).click();
+		expect(pens.pens).toHaveLength(4);
+		expect(pens.shadowRoot!.activeElement).toBe(
+			pens.shadowRoot!.querySelector('.pen[data-index="1"]'),
+		);
+	});
+
 	it('closes its menu when focus leaves the strip', () => {
 		const { pens } = strip();
 		const outside = document.createElement('button');
