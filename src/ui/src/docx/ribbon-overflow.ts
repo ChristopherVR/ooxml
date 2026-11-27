@@ -40,6 +40,7 @@ export const GROUP_ICONS: Readonly<Record<string, RibbonIcon>> = {
 	'Cell Size': 'rowAbove',
 	'Cell Alignment': 'alignCenter',
 	'Table Data': 'table',
+	Draw: 'drawTable',
 };
 
 /** Detaches whichever collapsed-group panel is open. */
