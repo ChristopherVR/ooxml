@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { localizeElement } from './localization';
 import { tool } from './ribbon-parts';
+import ribbonButtonStyles from './styles/ribbon-buttons.css?raw';
 
 const words = (button: HTMLElement) =>
 	[...button.querySelectorAll('.ribbon-caption-word')].map((word) => word.textContent);
@@ -18,8 +18,7 @@ it('writes a large caption as unbreakable words, so "Add-ins" never splits at it
 	const caption = button.querySelector(':scope > span');
 	expect(caption?.textContent).toBe('Get Add-ins');
 	expect(words(button)).toEqual(['Get', 'Add-ins']);
-	const css = readFileSync(new URL('./styles/ribbon-buttons.css', import.meta.url), 'utf8');
-	expect(css).toMatch(/\.ribbon-caption-word \{\s*white-space: nowrap;/);
+	expect(ribbonButtonStyles).toMatch(/\.ribbon-caption-word \{\s*white-space: nowrap;/);
 });
 
 it('rewrites the words when the locale changes, and back', () => {
