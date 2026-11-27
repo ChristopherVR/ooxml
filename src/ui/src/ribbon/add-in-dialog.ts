@@ -1,4 +1,5 @@
 import type { OfficeAddInHost } from 'ooxml-core/automation/add-ins';
+import { normalizeLocale } from 'ooxml-core/i18n';
 import { composedWithin } from '../composed';
 import { modalActiveElement } from '../dialog/focus';
 import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
@@ -10,6 +11,18 @@ export type AddInDialogMode = 'getAddIns' | 'myAddIns';
 export type AddInDialogProduct = OfficeAddInHost | 'visio';
 
 export type AddInDialogHost = HTMLElement | ShadowRoot;
+
+/** Kept inline: it is shown when the add-in chunks failed to load, so it cannot be one. */
+const LOAD_ERRORS = {
+	en: 'Could not load add-ins.',
+	fr: 'Impossible de charger les compléments.',
+	de: 'Add-Ins konnten nicht geladen werden.',
+	es: 'No se pudieron cargar los complementos.',
+	'zh-CN': '无法加载加载项。',
+	ja: 'アドインを読み込めませんでした。',
+	ko: '추가 기능을 불러오지 못했습니다.',
+};
+const LOAD_ERROR_LOCALES = Object.keys(LOAD_ERRORS) as (keyof typeof LOAD_ERRORS)[];
 
 const RESTORE = Symbol.for('office-ui.mounted-add-in-restore');
 const OPENING = Symbol.for('office-ui.add-ins-opening');
@@ -160,13 +173,12 @@ export async function openOfficeAddIns(
 			);
 		}
 	} catch {
-		const fallback = await import('./add-in-load-error').catch(() => undefined);
 		if (!host.isConnected) return;
 		const dialog = showOfficeServiceDialog(host, t('Office Add-ins'), t('Close'));
 		dialog.setAttribute('data-office-add-ins-fallback', '');
 		const status = host.ownerDocument.createElement('p');
 		status.setAttribute('role', 'status');
-		status.textContent = fallback?.addInLoadError(locale) ?? t('Could not load add-ins.');
+		status.textContent = LOAD_ERRORS[normalizeLocale(locale, LOAD_ERROR_LOCALES, 'en')];
 		dialog.append(status);
 		dialog.addEventListener('office-dialog-closed', (event) => {
 			if (event.target === dialog) restore();

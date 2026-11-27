@@ -19,8 +19,7 @@ import { closeRibbonPopover } from './ribbon-popover';
 import { closeWordCount } from './word-count-panel';
 import { releaseStateCaches } from './state-caches';
 import type { CollaborationConfig, ClientReceiveResult, StepBatch } from 'ooxml-core/docx/ui';
-import { watchOfficeAddIns } from '../ribbon/add-in-dialog';
-import { loadWordAddInSelection } from './add-in-selection-loader';
+import { watchWordAddIns } from './add-in-mount';
 import { normalizeEditorLocale } from './localization';
 import {
 	applyThemeColors,
@@ -265,14 +264,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		}
 		buildShell(this.core, this.shellApi);
 		renderDocument(this.core);
-		if (this.shadowRoot)
-			this.stopAddIns = watchOfficeAddIns(
-				this.shadowRoot,
-				(label) => label,
-				'word',
-				() => this.locale,
-				() => loadWordAddInSelection(() => this.core.targetView()),
-			);
+		if (this.shadowRoot) this.stopAddIns = watchWordAddIns(this.shadowRoot, this.core);
 		this.core.room.resume();
 	}
 

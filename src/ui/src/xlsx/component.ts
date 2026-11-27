@@ -14,8 +14,7 @@ import {
 	isXlsxEditorAttribute,
 	reflectAttribute,
 } from './editor-attributes';
-import { watchOfficeAddIns } from '../ribbon/add-in-dialog';
-import { excelAddInSelection } from './commands/add-in-selection';
+import { watchExcelAddIns } from './add-in-mount';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { closeContextMenu } from './context-menu';
 import { buildShell, type Shell } from './editor-shell';
@@ -104,14 +103,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 			if (this.addIns.length) this.shell.ribbon.setAddIns(this.addIns);
 		}
 		this.shell.ribbon.connect();
-		const { ctx } = this.core;
-		this.stopAddIns = watchOfficeAddIns(
-			ctx.root,
-			(label) => ctx.t(label),
-			'excel',
-			() => ctx.locale(),
-			() => excelAddInSelection(ctx),
-		);
+		this.stopAddIns = watchExcelAddIns(this.core.ctx);
 		if (firstMount) this.core.requestRender();
 	}
 
