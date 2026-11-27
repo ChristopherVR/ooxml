@@ -55,27 +55,30 @@ interface Flow {
 	host: 'Word' | 'Excel' | 'PowerPoint';
 }
 
+/** A tab cut off at `edge` sits under that edge's fade, never as a hard-clipped label. */
 export async function checkTabClipping(editor: Locator, edge: 'left' | 'right') {
 	const strip = editor.locator('office-ui-ribbon').getByRole('tablist');
 	await expect
 		.poll(() =>
 			strip.evaluate((list, side) => {
 				const bounds = list.getBoundingClientRect();
-				return [...list.querySelectorAll('[role="tab"]')].some((tab) => {
-					const label = tab.querySelector('span') ?? tab;
-					const range = list.ownerDocument.createRange();
-					range.selectNodeContents(label);
-					const box = range.getBoundingClientRect();
+				const clipped = [...list.querySelectorAll('[role="tab"]')].some((tab) => {
+					const box = tab.getBoundingClientRect();
 					return (
 						box.left < bounds.right &&
 						box.right > bounds.left &&
-						(side === 'left' ? box.left < bounds.left - 1 : box.right > bounds.right + 1) &&
-						getComputedStyle(label).opacity !== '0'
+						(side === 'left' ? box.left < bounds.left - 1 : box.right > bounds.right + 1)
 					);
 				});
+				const root = list.getRootNode();
+				const ribbon = root instanceof ShadowRoot ? root.host : null;
+				const marked = ribbon?.hasAttribute(side === 'left' ? 'data-tabs-start' : 'data-tabs-end');
+				const style = getComputedStyle(list);
+				const mask = style.maskImage || style.getPropertyValue('-webkit-mask-image');
+				return !clipped || (marked === true && mask.includes('gradient'));
 			}, edge),
 		)
-		.toBe(false);
+		.toBe(true);
 }
 
 export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor, host }: Flow) {

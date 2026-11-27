@@ -4,35 +4,21 @@ import { OfficeElement, controlStyles, flag } from '../base';
 import { glyph } from '../glyph';
 import { definer, present } from '../registry';
 import { SHORT_VIEWPORT_MEDIA, resolveCollapsed } from './auto-collapse';
+import { RibbonTabCueLoader } from './ribbon-tab-cue-loader';
+import {
+	revealTab,
+	tabForKey,
+	tabsFromItems,
+	tabsFromPanels,
+	type OfficeRibbonTabItem,
+	type RibbonTab,
+} from './ribbon-tab-model';
 import css from './ribbon-tabs.css?raw';
+
+export type { OfficeRibbonTabItem } from './ribbon-tab-model';
 
 /** Emitted when the user picks a tab; cancelable (`preventDefault()` keeps the current tab). */
 export type OfficeRibbonSelectEvent = CustomEvent<{ tab: string }>;
-
-/**
- * One tab a host gives `items` directly: the tab row then draws these instead of reading tabs off
- * the panels (a product that renders its panels elsewhere, as PowerPoint's bindings do).
- */
-export interface OfficeRibbonTabItem {
-	readonly id: string;
-	readonly label: string;
-	/** Tints the tab as a contextual tab (`--office-ribbon-contextual`). */
-	readonly contextual?: boolean;
-	readonly keytip?: string;
-	/** A tab that opens a dialog can require explicit activation after moving focus. */
-	readonly activateOnFocus?: false;
-	/** The tab's tooltip (a ScreenTip); none when absent. */
-	readonly title?: string;
-}
-
-interface RibbonTab {
-	id: string;
-	label: string;
-	contextual: boolean;
-	keytip?: string;
-	keytipPanel?: string;
-	title?: string;
-}
 
 /**
  * `<office-ui-ribbon>`: the Office tab row (Quick Access Toolbar, File, tabs, search) over the
@@ -85,7 +71,7 @@ export class OfficeUiRibbon extends OfficeElement {
 	declare collapseLabel: string | null;
 	declare items: readonly OfficeRibbonTabItem[] | null;
 	declare tabs: RibbonTab[];
-	private tabCue: AbortController | undefined;
+	private readonly tabCue = new RibbonTabCueLoader(this);
 	private chosen: string | null = null;
 
 	constructor() {
@@ -171,32 +157,7 @@ export class OfficeUiRibbon extends OfficeElement {
 
 	/** Read the tabs off the panels (on connection and whenever the slotted panels change). */
 	private build(): void {
-		if (this.items) {
-			this.tabs = this.items.map((item) => ({
-				id: item.id,
-				label: item.label,
-				contextual: item.contextual === true,
-				...(item.keytip ? { keytip: item.keytip } : {}),
-				...(item.title ? { title: item.title } : {}),
-			}));
-			return;
-		}
-		this.tabs = this.shown().map((panel) => {
-			const id = panel.dataset.ribbonTab!;
-			panel.setAttribute('role', 'tabpanel');
-			panel.setAttribute('aria-label', panel.dataset.label ?? id);
-			return {
-				id,
-				label: panel.dataset.label ?? id,
-				contextual: panel.dataset.contextual !== undefined,
-				...(panel.dataset.tabKeytip
-					? {
-							keytip: panel.dataset.tabKeytip,
-							...(panel.id ? { keytipPanel: panel.id } : {}),
-						}
-					: {}),
-			};
-		});
+		this.tabs = this.items ? tabsFromItems(this.items) : tabsFromPanels(this.shown());
 	}
 
 	/** The user's own collapse choice; it wins over the automatic one on short viewports. */
@@ -274,15 +235,7 @@ export class OfficeUiRibbon extends OfficeElement {
 		const at = focused
 			? tabs.indexOf(focused)
 			: tabs.findIndex((tab) => tab.dataset.tab === this.selected);
-		const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
-		const next =
-			event.key === 'Home'
-				? tabs[0]
-				: event.key === 'End'
-					? tabs.at(-1)
-					: step
-						? tabs[(at + step + tabs.length) % tabs.length]
-						: undefined;
+		const next = tabForKey(tabs, at, event.key);
 		if (!next) return;
 		event.preventDefault();
 		const id = next.dataset.tab!;
@@ -302,15 +255,7 @@ export class OfficeUiRibbon extends OfficeElement {
 		this.addEventListener('keydown', this.onHostKey);
 		this.shortQuery = this.ownerDocument.defaultView?.matchMedia?.(SHORT_VIEWPORT_MEDIA);
 		this.shortQuery?.addEventListener('change', this.applyAuto);
-		if (this.hasAttribute('overflow-label')) {
-			const { signal } = (this.tabCue = new AbortController());
-			void import('./ribbon-tab-cue')
-				.then(({ wireRibbonTabCue }) => {
-					if (!signal.aborted)
-						signal.addEventListener('abort', wireRibbonTabCue(this), { once: true });
-				})
-				.catch(() => {});
-		}
+		this.tabCue.ensure();
 		this.applyAuto();
 		const Observer = this.ownerDocument.defaultView?.MutationObserver;
 		this.watcher = Observer ? new Observer(() => this.build()) : undefined;
@@ -325,7 +270,7 @@ export class OfficeUiRibbon extends OfficeElement {
 		super.disconnectedCallback();
 		this.removeEventListener('keydown', this.onHostKey);
 		this.watcher?.disconnect();
-		this.tabCue?.abort();
+		this.tabCue.stop();
 		this.shortQuery?.removeEventListener('change', this.applyAuto);
 		this.ownerDocument.removeEventListener('pointerdown', this.onOutside, true);
 		this.watcher = undefined;
@@ -337,6 +282,8 @@ export class OfficeUiRibbon extends OfficeElement {
 	/** Exactly one panel shows. */
 	protected override updated(): void {
 		const selected = this.selected;
+		// A tab cue whose chunk failed to load tries again on the next update.
+		if (this.isConnected) this.tabCue.ensure();
 		const hideAll = this.collapsed && !this.peek;
 		if (!this.items)
 			for (const panel of this.panels())
@@ -345,14 +292,7 @@ export class OfficeUiRibbon extends OfficeElement {
 		// only when the selection or the tab row changed, not on every update while a deck opens.
 		if (this.revealed?.selected === selected && this.revealed.tabs === this.tabs) return;
 		this.revealed = { selected, tabs: this.tabs };
-		const active = this.tabButton(selected);
-		const list = active?.parentElement;
-		if (active && list && list.scrollWidth > list.clientWidth) {
-			const tab = active.getBoundingClientRect();
-			const view = list.getBoundingClientRect();
-			if (tab.left < view.left) list.scrollLeft -= view.left - tab.left;
-			else if (tab.right > view.right) list.scrollLeft += tab.right - view.right;
-		}
+		revealTab(this.tabButton(selected));
 	}
 
 	protected override render() {
@@ -392,7 +332,7 @@ export class OfficeUiRibbon extends OfficeElement {
 								title=${ifDefined(tab.title)}
 								aria-selected=${String(tab.id === selected)}
 								tabindex=${tab.id === selected ? 0 : -1}
-								><span class="tab-label">${tab.label}</span></button
+								>${tab.label}</button
 							>`,
 					)}
 				</div>

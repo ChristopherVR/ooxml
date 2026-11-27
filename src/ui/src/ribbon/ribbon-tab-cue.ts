@@ -3,9 +3,9 @@ import { ribbonTabCueLabel } from './ribbon-tab-cue-label';
 /**
  * A cue that the ribbon's tab strip scrolls. The shared `office-ui-ribbon` already snaps its tabs
  * and keeps the active one in view; when more tabs lie past either edge this marks the ribbon
- * with `data-tabs-start` or `data-tabs-end`, and hides partial labels at the edges. A chevron in
- * the ribbon's `end` slot scrolls the strip by a page, wrapping
- * back to the first tab from the end. Returns a disposer.
+ * with `data-tabs-start` or `data-tabs-end`, which fade that edge (ribbon-tabs.css). A chevron in
+ * the ribbon's `end` slot scrolls the strip by a page, wrapping back to the first tab from the
+ * end. Returns a disposer.
  */
 export function wireRibbonTabCue(
 	ribbon: HTMLElement,
@@ -32,14 +32,6 @@ export function wireRibbonTabCue(
 		ribbon.toggleAttribute('data-tabs-start', overflow && !atStart);
 		ribbon.toggleAttribute('data-tabs-end', overflow && !atEnd);
 		button.hidden = !overflow;
-		if (strip) {
-			const { left, right } = strip.getBoundingClientRect();
-			for (const label of strip.querySelectorAll('.tab-label')) {
-				const box = label.getBoundingClientRect();
-				label.toggleAttribute('data-clipped-start', overflow && box.left < left - 1);
-				label.toggleAttribute('data-clipped-end', overflow && box.right > right + 1);
-			}
-		}
 		const text = label();
 		button.setAttribute('aria-label', text);
 		button.title = text;
@@ -93,10 +85,6 @@ export function wireRibbonTabCue(
 		list?.removeEventListener('scroll', schedule);
 		resize?.disconnect();
 		mutation?.disconnect();
-		for (const label of list?.querySelectorAll('[data-clipped-start], [data-clipped-end]') ?? []) {
-			label.removeAttribute('data-clipped-start');
-			label.removeAttribute('data-clipped-end');
-		}
 		button.remove();
 	};
 }

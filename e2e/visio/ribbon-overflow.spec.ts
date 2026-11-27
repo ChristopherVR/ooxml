@@ -135,7 +135,11 @@ test('the tab strip shows that more tabs exist and pages through them', async ({
 	const strip = ribbon.getByRole('tablist');
 	const tab = strip.getByRole('tab', { selected: true });
 	await tab.focus();
+	// The edge with more tabs fades out rather than cutting a label off.
+	const mask = () => strip.evaluate((list) => getComputedStyle(list).maskImage);
+	await expect.poll(mask).toContain('gradient');
 	await more.click();
 	await expect(ribbon).toHaveAttribute('data-tabs-start', '');
+	await expect.poll(mask).toContain('gradient');
 	await expect(tab).toBeFocused();
 });
