@@ -61,6 +61,37 @@ describe('paragraph style editor integration', () => {
 		}
 	});
 
+	it.each([
+		['empty-numbered-paragraphs', 10],
+		['control-no-mark-size', 18],
+		['control-with-text', 10],
+	])('sizes draft markers in %s from the right font (#356)', async (name, size) => {
+		const path = `../core/docx/layout/fixtures/word-layout-reports/issue-356-${name}.docx`;
+		const { model } = await loadDocx(await readFile(path));
+		const view = new EditorView(document.createElement('div'), {
+			state: EditorState.create({
+				doc: modelToDoc(model),
+				plugins: [paragraphStylesPlugin(() => model)],
+			}),
+		});
+		try {
+			const markers = Array.from(
+				view.dom.querySelectorAll<HTMLParagraphElement>(
+					'p[data-list-marker]:not([data-list-marker=""])',
+				),
+			);
+			expect(markers).toHaveLength(12);
+			for (const marker of markers) {
+				expect(marker.style.getPropertyValue('--dve-marker-size')).toBe(`${(size * 4) / 3}px`);
+				expect(marker.style.fontSize).toBe(
+					name === 'empty-numbered-paragraphs' ? 'var(--dve-marker-size)' : '',
+				);
+			}
+		} finally {
+			view.destroy();
+		}
+	});
+
 	it('renders inherited table spacing like the direct formatting control (#353)', async () => {
 		const spacing = async (name: string) => {
 			const path = `../core/docx/layout/fixtures/word-layout-reports/issue-353-${name}.docx`;

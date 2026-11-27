@@ -51,6 +51,7 @@ export * from './run-compare';
 export * from './run-extra-mark';
 export * from './run-marks';
 export * from './run-adapter';
+export { paragraphMarkRun } from '../paragraph-mark';
 export * from './run-mark-properties';
 export * from './schema-marks';
 export * from './smartart-theme';

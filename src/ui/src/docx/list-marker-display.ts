@@ -9,6 +9,7 @@ import {
 	type TextRun,
 } from 'ooxml-core/docx';
 import { cssFontStack, type TextMeasurer } from 'ooxml-core/docx/layout';
+import { paragraphMarkRun } from 'ooxml-core/docx/ui';
 import type { Node } from 'prosemirror-model';
 import { appendInlineNode } from './run-adapter';
 import { themeFontOf } from './run-styles';
@@ -26,7 +27,8 @@ export function listMarkerDisplay(
 		return { css: '', attributes: { 'data-list-marker': '' } };
 	const runs: TextRun[] = [];
 	if (node.firstChild) appendInlineNode(runs, node.firstChild);
-	const format = resolveRunFormatting(runs[0] ?? { text: '' }, {
+	const mark = node.childCount ? undefined : paragraphMarkRun(paragraph);
+	const format = resolveRunFormatting(mark ?? runs[0] ?? { text: '' }, {
 		runCatalog: model.characterStyles,
 		paragraphCatalog: model.paragraphStyles,
 		paragraphStyleId: paragraph.style,
@@ -85,6 +87,6 @@ export function listMarkerDisplay(
 			'data-list-marker': text,
 			...(size ? { 'data-list-marker-picture': '' } : {}),
 		},
-		css: `${size && url ? `--dve-marker-image:url("${url.replace(/"/g, '%22')}");--dve-marker-pic-w:${(size.widthPt * 4) / 3}px;--dve-marker-pic-h:${(size.heightPt * 4) / 3}px;` : ''}position:relative;text-indent:${body - indent}px;--dve-marker-left:${anchor - width * factor - indent}px;--dve-marker-family:${cssFontStack(font.family)};--dve-marker-size:${font.sizePx}px;--dve-marker-weight:${font.bold ? 'bold' : 'normal'};--dve-marker-style:${font.italic ? 'italic' : 'normal'};--dve-marker-color:${safeColor}`,
+		css: `${mark?.fontSize !== undefined ? 'font-size:var(--dve-marker-size);' : ''}${size && url ? `--dve-marker-image:url("${url.replace(/"/g, '%22')}");--dve-marker-pic-w:${(size.widthPt * 4) / 3}px;--dve-marker-pic-h:${(size.heightPt * 4) / 3}px;` : ''}position:relative;text-indent:${body - indent}px;--dve-marker-left:${anchor - width * factor - indent}px;--dve-marker-family:${cssFontStack(font.family)};--dve-marker-size:${font.sizePx}px;--dve-marker-weight:${font.bold ? 'bold' : 'normal'};--dve-marker-style:${font.italic ? 'italic' : 'normal'};--dve-marker-color:${safeColor}`,
 	};
 }

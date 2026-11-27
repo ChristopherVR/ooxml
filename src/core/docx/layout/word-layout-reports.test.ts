@@ -572,3 +572,28 @@ it('leaves no line for a numbered next-page section break and restarts text on p
 			.join(''),
 	).toMatch(/^1\.\s*Item 1/);
 });
+
+it.each([
+	['issue-356-control-no-mark-size', 18, 738.5],
+	['issue-356-control-with-text', 10, 591.3],
+	['issue-356-empty-numbered-paragraphs', 10, 591.3],
+])(
+	'uses %s marker sizing and keeps the end of the list in place (#356)',
+	async (name, size, endY) => {
+		const { pages, paragraphs } = await layout(name);
+		expect(pages).toHaveLength(1);
+		const end = at(paragraphs, 13);
+		expect(
+			at(end.lines, 0)
+				.fragments.map(({ text }) => text)
+				.join(''),
+		).toMatch(/^End of list:/);
+		expect(end.yPx).toBeCloseTo(endY, 0);
+		for (const [index, paragraph] of paragraphs.slice(1, 13).entries()) {
+			expect(paragraph.lines).toHaveLength(1);
+			const line = at(paragraph.lines, 0);
+			expect(at(line.fragments, 0)).toMatchObject({ text: `${index + 1}.`, fontSizePt: size });
+			expect(line.heightPx).toBeCloseTo(size * (4 / 3) * 1.15);
+		}
+	},
+);

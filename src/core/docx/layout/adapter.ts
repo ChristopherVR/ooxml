@@ -37,8 +37,7 @@ import { resolveEastAsiaLanguage } from '../run-language';
 import { symbolOnly, symbolSegments } from '../special-characters';
 import { formFieldDisplayText } from '../form-fields';
 import { wordHighlightColors } from '../highlight';
-import { first, parseXml } from '../xml';
-import { parseDirectRunProperties } from '../run-properties';
+import { paragraphMarkRun } from '../paragraph-mark';
 import { isEmptyParagraph } from '../paragraph-content';
 import { fontOf } from './paragraph-tokens';
 import { adaptTable } from './adapt-table';
@@ -339,18 +338,8 @@ export function adaptDocumentModel(
 		};
 	}
 	const labels = computeListLabels(model);
-	/** The list label run (number or bullet plus its suffix), formatted like the paragraph's text. */
-	function labelRun(
-		paragraph: Paragraph,
-		label: ParagraphListLabel,
-		tableStyleRun?: RunFormatting,
-	): LayoutRun {
-		const first = adaptRun(
-			paragraph.runs[0] ?? { text: '' },
-			paragraph.style,
-			undefined,
-			tableStyleRun,
-		);
+	/** The list level's formatting overrides the paragraph's text or mark. */
+	function labelRun(label: ParagraphListLabel, base: LayoutRun): LayoutRun {
 		const marker = label.markerFormat;
 		const suffix = label.suffix === 'tab' ? '\t' : label.suffix === 'space' ? ' ' : '';
 		const pictureWidthPx = label.picture
@@ -358,7 +347,7 @@ export function adaptDocumentModel(
 					label.picture,
 					marker?.fontSizeHalfPoints
 						? marker.fontSizeHalfPoints / 2
-						: (first.fontSizePt ?? DEFAULT_FONT_SIZE_PT),
+						: (base.fontSizePt ?? DEFAULT_FONT_SIZE_PT),
 				).widthPt *
 					4) /
 				3
@@ -372,31 +361,15 @@ export function adaptDocumentModel(
 				...(pictureWidthPx !== undefined ? { widthPx: pictureWidthPx } : {}),
 			},
 			...definedProps({
-				bold: marker?.bold ?? first.bold,
-				italic: marker?.italic ?? first.italic,
-				fontFamily: marker?.fontFamily ?? first.fontFamily,
-				fontSizePt: marker?.fontSizeHalfPoints ? marker.fontSizeHalfPoints / 2 : first.fontSizePt,
+				bold: marker?.bold ?? base.bold,
+				italic: marker?.italic ?? base.italic,
+				fontFamily: marker?.fontFamily ?? base.fontFamily,
+				fontSizePt: marker?.fontSizeHalfPoints ? marker.fontSizeHalfPoints / 2 : base.fontSizePt,
 			}),
-			...(marker?.color || first.color ? { color: marker?.color ?? first.color! } : {}),
+			...(marker?.color || base.color ? { color: marker?.color ?? base.color! } : {}),
 		};
 	}
 	const betweenBorders = new Map<LayoutParagraph, LayoutParagraphBorders['top']>();
-	/** The saved paragraph mark supplies the font for a line with no visible runs. */
-	function emptyLineFont(paragraph: Paragraph, runs: LayoutRun[], tableStyleRun?: RunFormatting) {
-		if (runs.some((run) => !run.hidden && (run.text || run.object))) return undefined;
-		const source = paragraph.sourceParagraphPropertiesXml;
-		const props = source ? first(parseXml(source).documentElement, 'rPr') : undefined;
-		return fontOf(
-			withFontFallback(
-				adaptRun(
-					{ text: '', ...parseDirectRunProperties(props) },
-					paragraph.style,
-					undefined,
-					tableStyleRun,
-				),
-			),
-		);
-	}
 	function withFontFallback(run: LayoutRun): LayoutRun {
 		const fallback = run.fontFamily && model.fontFallbacks?.get(run.fontFamily.toLowerCase());
 		return fallback ? { ...run, fontFallback: fallback } : run;
@@ -443,6 +416,16 @@ export function adaptDocumentModel(
 		const { betweenBorder, ...box } = paragraphBox(resolved, model.theme);
 		const edges = blockTags.get(paragraph);
 		const taggedRuns = edges ? adaptBlockContentControlTags(runs, edges) : runs;
+		const mark = runs.some((run) => !run.hidden && (run.text || run.object))
+			? undefined
+			: adaptRun(paragraphMarkRun(paragraph), paragraph.style, undefined, tableStyleRun);
+		const marker = label
+			? labelRun(
+					label,
+					mark ??
+						adaptRun(paragraph.runs[0] ?? { text: '' }, paragraph.style, undefined, tableStyleRun),
+				)
+			: undefined;
 		const adapted: LayoutParagraph = {
 			kind: 'paragraph',
 			id: paragraph.id,
@@ -451,9 +434,7 @@ export function adaptDocumentModel(
 			...(compatibility.doNotExpandShiftReturn && resolved.justification !== 'distribute'
 				? { doNotExpandShiftReturn: true }
 				: {}),
-			runs: (label ? [labelRun(paragraph, label, tableStyleRun), ...taggedRuns] : taggedRuns).map(
-				withFontFallback,
-			),
+			runs: (marker ? [marker, ...taggedRuns] : taggedRuns).map(withFontFallback),
 			...(footnotes.length ? { footnotes } : {}),
 			...box,
 			...(paragraph.tabStops?.length || label?.tabStopTwips !== undefined
@@ -478,7 +459,7 @@ export function adaptDocumentModel(
 				defaultTabStopPx: model.defaultTabStopTwips
 					? twipsToPx(model.defaultTabStopTwips)
 					: undefined,
-				emptyLineFont: label ? undefined : emptyLineFont(paragraph, runs, tableStyleRun),
+				emptyLineFont: !marker && mark ? fontOf(withFontFallback(mark)) : undefined,
 				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,
 				spacingBeforeTwips: autoSpaced(resolved.spacingBeforeAuto, resolved.spacingBeforeTwips),
