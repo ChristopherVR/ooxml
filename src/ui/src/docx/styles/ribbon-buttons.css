@@ -27,6 +27,10 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+/* Word breaks a large caption only at its spaces: never after the hyphen of "Add-ins". */
+.ribbon-caption-word {
+	white-space: nowrap;
+}
 .ribbon-stack {
 	display: flex;
 	flex-direction: column;

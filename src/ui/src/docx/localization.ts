@@ -6,6 +6,7 @@ import {
 	type LocaleStrings,
 	type LocalizationKey,
 } from './localization-strings';
+import { isCaptionWord, writeLargeCaption } from './ribbon-caption';
 
 export type EditorLocale = (typeof EDITOR_LOCALES)[number];
 /** A locale code a host may pass: a canonical code (autocompleted) or any BCP 47 tag such as `de-DE`. */
@@ -110,6 +111,16 @@ export function localeOf(element: Element): EditorLocale {
 /** Translate literal UI labels in-place while retaining action data and current control state. */
 export function localizeElement(root: HTMLElement, locale: EditorLocale): void {
 	for (const element of [root, ...root.querySelectorAll<HTMLElement>('*')]) {
+		if (isCaptionWord(element)) continue;
+		const captionKey = element.dataset.captionKey;
+		if (captionKey !== undefined) {
+			writeLargeCaption(
+				element,
+				captionKey in strings.en ? translateDynamic(locale, captionKey) : captionKey,
+				captionKey,
+			);
+			continue;
+		}
 		if (element.classList.contains('ribbon-group') && element.dataset.label) {
 			const label = element.dataset.label;
 			const translated = translate(locale, label as LocalizationKey);

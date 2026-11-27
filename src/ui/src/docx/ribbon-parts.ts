@@ -5,6 +5,7 @@ import { openColorGridPopover } from './ribbon-color-grid';
 import { openSwatchPopover } from './ribbon-popover';
 import { swatchColor } from 'ooxml-core/docx/ui';
 import { strings, type LocalizationKey } from './localization-strings';
+import { writeLargeCaption } from './ribbon-caption';
 
 /** Building blocks for ribbon tabs: buttons, selects, labelled groups and rows. */
 export const button = (
@@ -201,7 +202,8 @@ export const tool = (
 	el.append(ribbonIcon(icon, options.large ? 28 : 16));
 	if (options.large || options.inline) {
 		const caption = document.createElement('span');
-		caption.textContent = options.caption ?? label;
+		if (options.large) writeLargeCaption(caption, options.caption ?? label);
+		else caption.textContent = options.caption ?? label;
 		el.append(caption);
 	}
 	return el;
