@@ -13,6 +13,7 @@ import { mainEffectWrapper, reflowAfterPrevious } from './native-animation-click
 import {
 	changeNativeAnimationStart,
 	type NativeAnimationStart,
+	type NativeAnimationStartRefusal,
 } from './native-animation-edit-start';
 import { ensureArray, isXmlObject } from './native-animation-helpers';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
@@ -36,20 +37,42 @@ function nativeTimingTarget(
 	return refs.length === 1 && ref ? { animation, ref } : undefined;
 }
 
+/** The Start changes the timing tree supports, and why the others are refused. */
+export interface NativeAnimationStartAvailability {
+	options: NativeAnimationStart[];
+	/** The reason for the first refused Start, when any is refused. */
+	refusal?: NativeAnimationStartRefusal | undefined;
+}
+
+/** Dry-run every Start change for one effect without altering the tree. */
+export function nativeAnimationStartAvailability(
+	rawTiming: XmlObject,
+	animations: readonly PptxNativeAnimation[],
+	nodeId: number,
+): NativeAnimationStartAvailability {
+	const target = nativeTimingTarget(rawTiming, animations, nodeId);
+	if (!target) return { options: [], refusal: 'nestedTiming' };
+	if (target.animation.interactiveSequence) return { options: [], refusal: 'eventTiming' };
+	const start = target.animation.startMode ?? target.animation.trigger;
+	const modes: NativeAnimationStart[] = ['onClick', 'withPrevious', 'afterPrevious'];
+	const options: NativeAnimationStart[] = [];
+	let refusal: NativeAnimationStartRefusal | undefined;
+	for (const mode of modes) {
+		if (mode === start) continue;
+		const result = changeNativeAnimationStart(rawTiming, target.ref, animations, mode, true);
+		if (result === 'ok') options.push(mode);
+		else refusal ??= result;
+	}
+	return { options, refusal };
+}
+
 /** Return the Start changes supported by the timing tree without altering it. */
 export function nativeAnimationStartOptions(
 	rawTiming: XmlObject,
 	animations: readonly PptxNativeAnimation[],
 	nodeId: number,
 ): NativeAnimationStart[] {
-	const target = nativeTimingTarget(rawTiming, animations, nodeId);
-	if (!target || target.animation.interactiveSequence) return [];
-	const start = target.animation.startMode ?? target.animation.trigger;
-	const modes: NativeAnimationStart[] = ['onClick', 'withPrevious', 'afterPrevious'];
-	return modes.filter(
-		(mode) =>
-			mode !== start && changeNativeAnimationStart(rawTiming, target.ref, animations, mode, true),
-	);
+	return nativeAnimationStartAvailability(rawTiming, animations, nodeId).options;
 }
 
 /** Patch the exact native effect and leave sibling effect and behaviour data intact. */
@@ -101,7 +124,7 @@ export function editNativeEffectTiming(
 		if (
 			animation.interactiveSequence ||
 			(animation.startMode ?? animation.trigger) === edit.value ||
-			!changeNativeAnimationStart(timing, ref, animations, edit.value)
+			changeNativeAnimationStart(timing, ref, animations, edit.value) !== 'ok'
 		)
 			return undefined;
 		cTn['@_nodeType'] = triggerToNodeType(edit.value);

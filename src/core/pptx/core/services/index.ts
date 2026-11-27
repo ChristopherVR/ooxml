@@ -62,7 +62,13 @@ export {
 	timingCurveToAccelDecel,
 } from './animation-write-mappings';
 export { resolveDirectionSubtype } from './animation-timing-surgical-behaviors';
-export { editNativeEffectTiming, nativeAnimationStartOptions } from './native-animation-edit';
+export {
+	editNativeEffectTiming,
+	nativeAnimationStartAvailability,
+	nativeAnimationStartOptions,
+	type NativeAnimationStartAvailability,
+} from './native-animation-edit';
+export type { NativeAnimationStartRefusal } from './native-animation-edit-start';
 export { nativeAnimationClickOrders } from './animation-timeline-anchors';
 export { captureNativeAnimationTemplate } from './animation-paint-template';
 export {

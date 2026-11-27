@@ -153,6 +153,14 @@ export const translations = {
 	'pptx.animations.painter': '애니메이션 복사',
 	'pptx.animations.pathAnimation': '경로 애니메이션',
 	'pptx.animations.start': '시작',
+	'pptx.animations.startRefusedEvent':
+		'이 효과는 트리거로 시작하므로 참여하거나 나갈 클릭 그룹이 없습니다.',
+	'pptx.animations.startRefusedNested':
+		'이 효과는 손실 없이 다시 그룹화할 수 없는 중첩된 타이밍 컨테이너에 있습니다.',
+	'pptx.animations.startRefusedCondition':
+		'이 효과 또는 해당 그룹은 지연 이외의 조건으로 시작하므로 다시 그룹화할 수 없습니다.',
+	'pptx.animations.startRefusedUnmeasured':
+		'이전 효과가 조건까지 반복되므로 이전 효과 다음에의 시작 시간을 측정할 수 없습니다.',
 	'pptx.animations.startUnsupported':
 		'이 효과는 시작 설정 변경이 제한되는 가져온 트리거나 공유 타이밍을 사용합니다.',
 	'pptx.animations.withPrevious': '이전 효과와 함께',

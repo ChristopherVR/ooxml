@@ -191,6 +191,14 @@ export const translations = {
 	'pptx.animations.painter': "Reproduire l'animation",
 	'pptx.animations.pathAnimation': "Trajectoire d'animation",
 	'pptx.animations.start': 'Début',
+	'pptx.animations.startRefusedEvent':
+		"Cet effet démarre sur un déclencheur : il n'a pas de groupe de clic à rejoindre ou à quitter.",
+	'pptx.animations.startRefusedNested':
+		'Cet effet se trouve dans des conteneurs de minutage imbriqués qui ne peuvent pas être regroupés sans perte.',
+	'pptx.animations.startRefusedCondition':
+		"Cet effet ou son groupe démarre sur une condition autre qu'un délai : il ne peut pas être regroupé.",
+	'pptx.animations.startRefusedUnmeasured':
+		"L'effet précédent se répète jusqu'à une condition : Après la précédente n'a pas de début mesurable.",
 	'pptx.animations.startUnsupported':
 		'Les déclencheurs importés ou le minutage partagé de cet effet limitent les changements de démarrage.',
 	'pptx.animations.withPrevious': 'Avec la précédente',

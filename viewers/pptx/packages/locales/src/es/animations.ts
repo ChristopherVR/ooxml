@@ -191,6 +191,14 @@ export const translations = {
 	'pptx.animations.painter': 'Copiar animación',
 	'pptx.animations.pathAnimation': 'Trayectoria de animación',
 	'pptx.animations.start': 'Inicio',
+	'pptx.animations.startRefusedEvent':
+		'Este efecto se inicia con un desencadenador, por lo que no tiene un grupo de clic al que unirse o del que salir.',
+	'pptx.animations.startRefusedNested':
+		'Este efecto está en contenedores de temporización anidados que no se pueden reagrupar sin pérdidas.',
+	'pptx.animations.startRefusedCondition':
+		'Este efecto o su grupo se inicia con una condición distinta de un retraso, por lo que no se puede reagrupar.',
+	'pptx.animations.startRefusedUnmeasured':
+		'El efecto anterior se repite hasta una condición, por lo que Después de la anterior no tiene un inicio medible.',
 	'pptx.animations.startUnsupported':
 		'Este efecto usa desencadenadores importados o una temporización compartida que limitan los cambios de inicio.',
 	'pptx.animations.withPrevious': 'Con la anterior',

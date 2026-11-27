@@ -138,14 +138,17 @@ describe('imported animation edits', () => {
 		const original = structuredClone(source);
 		const animations = parse(source);
 		const nodeId = must(animations[1]?.nodeId);
-		expect(nativeAnimationStartOptions(source, animations, nodeId)).toEqual(['afterPrevious']);
+		expect(nativeAnimationStartOptions(source, animations, nodeId)).toEqual([
+			'onClick',
+			'afterPrevious',
+		]);
 		expect(source).toEqual(original);
 		expect(
 			editNativeEffectTiming(source, animations, nodeId, {
 				field: 'start',
 				value: 'onClick',
 			}),
-		).toBeUndefined();
+		).toBeDefined();
 		expect(
 			editNativeEffectTiming(source, animations, nodeId, {
 				field: 'start',

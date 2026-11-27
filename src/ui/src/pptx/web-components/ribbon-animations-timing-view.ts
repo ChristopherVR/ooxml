@@ -13,6 +13,39 @@ import {
 	directionValuesForPreset,
 } from '../render/animation-direction-options';
 
+/** Why some Start values are disabled for an imported effect. */
+const START_REFUSAL_TEXT = {
+	eventTiming: [
+		'pptx.animations.startRefusedEvent',
+		'This effect starts on a trigger, so it has no click group to join or leave.',
+	],
+	nestedTiming: [
+		'pptx.animations.startRefusedNested',
+		'This effect sits in nested timing containers that cannot be regrouped without loss.',
+	],
+	conditionTiming: [
+		'pptx.animations.startRefusedCondition',
+		'This effect or its group starts on a condition other than a delay, so it cannot be regrouped.',
+	],
+	unmeasuredTiming: [
+		'pptx.animations.startRefusedUnmeasured',
+		'The previous effect repeats until a condition, so After Previous has no measurable start.',
+	],
+} as const;
+
+function startRefusalText(
+	text: (key: string, fallback: string) => string,
+	refusal: keyof typeof START_REFUSAL_TEXT | undefined,
+): string {
+	if (!refusal)
+		return text(
+			'pptx.animations.startUnsupported',
+			'This effect uses imported triggers or shared timing that limit Start changes.',
+		);
+	const [key, fallback] = START_REFUSAL_TEXT[refusal];
+	return text(key, fallback);
+}
+
 const START_LABELS = {
 	onClick: ['pptx.animations.onClick', 'On Click'],
 	withPrevious: ['pptx.animations.withPrevious', 'With Previous'],
@@ -181,10 +214,7 @@ export function createAnimationsTimingView(
 			RIBBON_ANIMATION_START_MODES.some(
 				(value) => value !== mode && !timing.startOptions.some((option) => option === value),
 			)
-				? text(
-						'pptx.animations.startUnsupported',
-						'This effect uses imported triggers or shared timing that limit Start changes.',
-					)
+				? startRefusalText(text, timing.startRefusal)
 				: '';
 		if (reason) start.setAttribute('aria-description', reason);
 		else start.removeAttribute('aria-description');

@@ -154,6 +154,14 @@ export const translations = {
 	'pptx.animations.painter': 'アニメーションのコピー/貼り付け',
 	'pptx.animations.pathAnimation': 'アニメーションの軌跡',
 	'pptx.animations.start': '開始',
+	'pptx.animations.startRefusedEvent':
+		'この効果はトリガーで開始するため、参加または離脱するクリック グループがありません。',
+	'pptx.animations.startRefusedNested':
+		'この効果は入れ子になったタイミング コンテナー内にあり、損失なしに再グループ化できません。',
+	'pptx.animations.startRefusedCondition':
+		'この効果またはそのグループは遅延以外の条件で開始するため、再グループ化できません。',
+	'pptx.animations.startRefusedUnmeasured':
+		'直前の効果は条件まで繰り返すため、直前の動作の後の開始時刻を測定できません。',
 	'pptx.animations.startUnsupported':
 		'この効果では、インポートされたトリガーや共有タイミングにより、開始設定の変更が制限されています。',
 	'pptx.animations.withPrevious': '直前の動作と同時',

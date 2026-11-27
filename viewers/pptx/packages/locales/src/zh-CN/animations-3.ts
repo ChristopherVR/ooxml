@@ -153,6 +153,11 @@ export const translations = {
 	'pptx.animations.painter': '动画刷',
 	'pptx.animations.pathAnimation': '路径动画',
 	'pptx.animations.start': '开始',
+	'pptx.animations.startRefusedEvent': '此效果由触发器启动，因此没有可加入或离开的单击组。',
+	'pptx.animations.startRefusedNested': '此效果位于嵌套的计时容器中，无法无损地重新分组。',
+	'pptx.animations.startRefusedCondition': '此效果或其组以延迟以外的条件启动，因此无法重新分组。',
+	'pptx.animations.startRefusedUnmeasured':
+		'上一效果会重复直到满足条件，因此上一动画之后没有可测量的开始时间。',
 	'pptx.animations.startUnsupported':
 		'此效果使用导入的触发器或共享计时，因此开始设置的更改受到限制。',
 	'pptx.animations.withPrevious': '与上一动画同时',

@@ -3832,6 +3832,14 @@ export const translationsEn: Record<string, string> = {
 	'pptx.animations.painter': 'Animation Painter',
 	'pptx.animations.pathAnimation': 'Path Animation',
 	'pptx.animations.start': 'Start',
+	'pptx.animations.startRefusedEvent':
+		'This effect starts on a trigger, so it has no click group to join or leave.',
+	'pptx.animations.startRefusedNested':
+		'This effect sits in nested timing containers that cannot be regrouped without loss.',
+	'pptx.animations.startRefusedCondition':
+		'This effect or its group starts on a condition other than a delay, so it cannot be regrouped.',
+	'pptx.animations.startRefusedUnmeasured':
+		'The previous effect repeats until a condition, so After Previous has no measurable start.',
 	'pptx.animations.startUnsupported':
 		'This effect uses imported triggers or shared timing that limit Start changes.',
 	'pptx.animations.withPrevious': 'With Previous',

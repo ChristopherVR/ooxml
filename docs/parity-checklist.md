@@ -1158,8 +1158,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Animation Painter and the Timing fields edit imported native effects, the Animation
       Pane chooses the effect Timing edits, and painting across slides keeps an embedded sound
       (2026-11-27).
-- [ ] **P2** Changing Start on an imported effect that would split or merge a complex click group
-      or event-driven timing is not supported.
+- [x] **P2** Changing Start on an imported effect splits a click group (On Click in its middle
+      moves the effect, its later With Previous siblings and the later wrappers to a new click) or
+      merges one into the previous group (With or After Previous on its first effect), rebasing
+      the moved offsets and recomputing After Previous starts, through save and reload
+      (`native-animation-start-regroup.ts`, `native-animation-start-regroup.test.ts`, 2026-11-27).
+- [ ] **P2** Start changes stay refused, with the reason in the Start field, for triggered
+      (interactive) effects, nested `p:seq`/`p:excl` timing, wrappers or effects that start on a
+      condition other than a delay, and After Previous after an effect whose length is not
+      measurable (repeat until next click or end of slide).
 - [x] **P1** Ink: Lasso, pen presets, Ink to Shape, Ink to Math, Ruler and Ink Replay
       (2026-11-27).
 - [ ] **P2** Ink Replay's per-point timing is lost after PowerPoint desktop saves the file again.

@@ -191,6 +191,14 @@ export const translations = {
 	'pptx.animations.painter': 'Animation übertragen',
 	'pptx.animations.pathAnimation': 'Animationspfad',
 	'pptx.animations.start': 'Start',
+	'pptx.animations.startRefusedEvent':
+		'Dieser Effekt startet über einen Auslöser und hat daher keine Klickgruppe, der er beitreten oder die er verlassen kann.',
+	'pptx.animations.startRefusedNested':
+		'Dieser Effekt liegt in verschachtelten Zeitcontainern, die sich nicht verlustfrei neu gruppieren lassen.',
+	'pptx.animations.startRefusedCondition':
+		'Dieser Effekt oder seine Gruppe startet über eine andere Bedingung als eine Verzögerung und kann daher nicht neu gruppiert werden.',
+	'pptx.animations.startRefusedUnmeasured':
+		'Der vorherige Effekt wiederholt sich bis zu einer Bedingung, daher hat Nach Vorheriger keinen messbaren Start.',
 	'pptx.animations.startUnsupported':
 		'Dieser Effekt verwendet importierte Auslöser oder gemeinsame Zeitabläufe, die Änderungen am Start einschränken.',
 	'pptx.animations.withPrevious': 'Mit Vorheriger',
