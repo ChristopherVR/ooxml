@@ -4,22 +4,23 @@
  * the background colour, four variant colour schemes, the connector format scheme, font styles
  * and variant style schemes.
  * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/cd5bb66b-7f2f-49b5-a630-9ae976bbdb26
- * The extension URIs are this project's own; Microsoft Visio acceptance of them is unverified.
+ * MS-VSDX does not list the extension URIs; they are the ones the theme parts Visio saves use
+ * (`__fixtures__/cross-functional-native-*.vsdx`), so Visio reads the extensions.
  */
 import { drawingThemeXml, THEME_COLOR_SLOTS, type DrawingTheme } from '../drawingml/index';
 import { THEME_NS } from './theme-color';
 import { visioThemeVariantColors, type VisioBuiltInTheme } from './theme-builtins';
 
 const EXTENSIONS = {
-	schemeId: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B01}',
-	background: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B02}',
-	variantColors: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B03}',
-	formatId: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B04}',
-	connectorId: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B05}',
-	connectorScheme: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B06}',
-	fontStyles: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B07}',
-	variantStyles: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B08}',
-	/** The font scheme ID extension of `a:fontScheme`; Visio's own parts use this URI. */
+	schemeId: '{2703A3B3-D2E1-43D9-8057-6E9D74E0F44A}',
+	background: '{093E89EA-6996-430E-BFF9-83A9FAAAAB73}',
+	variantColors: '{DDD2D869-C2EF-471E-B8FA-914AFA308C9F}',
+	formatId: '{27CD58D4-7086-4B73-B2AB-7AEBE2148A8C}',
+	connectorId: '{C6430689-8E98-42EC-ADBF-087148533A3F}',
+	connectorScheme: '{1342405F-259F-4C95-8CDF-A9DCE2D418A2}',
+	fontStyles: '{EBE24D50-EC5C-4D6F-A1A3-C5F0A18B936A}',
+	variantStyles: '{494CE47F-D151-47DC-95E8-85652EA8A67E}',
+	/** The font scheme ID extension of `a:fontScheme`. */
 	fontSchemeId: '{B3C0788F-89CC-4CDB-A57D-0664CFDA821B}',
 } as const;
 

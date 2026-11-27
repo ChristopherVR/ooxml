@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { editVsdx } from './edit';
 import { parseVsdx } from './parser';
@@ -39,6 +41,25 @@ async function pageSheet(bytes: Uint8Array): Promise<Map<string, string | undefi
 }
 
 describe('built-in theme parts', () => {
+	it('names each Visio extension with the URI of the theme parts Visio saves', async () => {
+		const native = await JSZip.loadAsync(
+			readFileSync(new URL('./__fixtures__/cross-functional-native-phase.vsdx', import.meta.url)),
+		);
+		const part = Object.keys(native.files).find((name) =>
+			/^visio\/theme\/theme\d+\.xml$/.test(name),
+		)!;
+		const uris = (xml: string) =>
+			new Map(
+				[...xml.matchAll(/<a:ext uri="([^"]+)">\s*<(vt:\w+)/g)].map(
+					(match) => [`${match[2]} ${match[1]}`, match[1]] as const,
+				),
+			);
+		const visio = uris(await native.file(part)!.async('string'));
+		const written = uris(visioThemeXml(visioBuiltInTheme('harbor')));
+		expect(written.size).toBeGreaterThanOrEqual(8);
+		for (const key of written.keys()) expect(visio.has(key), key).toBe(true);
+	});
+
 	it('writes a DrawingML theme with the Visio extensions the reader understands', async () => {
 		const source = visioBuiltInTheme('harbor');
 		const xml = visioThemeXml(source);
