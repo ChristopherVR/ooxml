@@ -1,91 +1,19 @@
 {
 	"version": "2.5",
+	"edition": "letter",
+	"appearance": "dark",
 	"sections": [
-		{
-			"id": "headline-features",
-			"label": "Headline features"
-		},
-		{
-			"id": "ribbon-parity-with-microsoft-365",
-			"label": "Ribbons"
-		},
-		{
-			"id": "office-add-ins",
-			"label": "Add-ins"
-		},
-		{
-			"id": "performance-and-size",
-			"label": "Performance"
-		},
-		{
-			"id": "migrating-to-25",
-			"label": "Migrating"
-		}
-	],
-	"new-features": [
-		{
-			"label": "Mail merge",
-			"product": "word",
-			"title": "Merge letters from a CSV file",
-			"image": "word-mail-merge.gif",
-			"text": "Start Mail Merge, choose recipients, insert merge fields and step through each recipient's letter.",
-			"notes": ["Word mail merge"]
-		},
-		{
-			"label": "Word views",
-			"product": "word",
-			"title": "Read, outline and focus",
-			"image": "word-views.gif",
-			"text": "Read Mode pages through columns, Outline works with headings, and Focus hides everything but the page.",
-			"notes": ["Read Mode, Outline, Web Layout and Focus"]
-		},
-		{
-			"label": "Word design",
-			"product": "word",
-			"title": "Restyle a document from the Design tab",
-			"image": "word-design.gif",
-			"text": "Themes, colours and paragraph spacing apply to the whole document in one undo step.",
-			"notes": ["Design themes, styles and references"]
-		},
-		{
-			"label": "PivotCharts",
-			"product": "excel",
-			"title": "Recommended PivotTables and PivotCharts",
-			"image": "excel-pivot-chart.gif",
-			"text": "Insert a recommended report, chart it, and filter from the chart's field buttons.",
-			"notes": ["PivotTables, PivotCharts and in-cell pictures"]
-		},
-		{
-			"label": "Ink",
-			"product": "powerpoint",
-			"title": "Draw, replay and convert ink",
-			"image": "powerpoint-ink.gif",
-			"text": "Ink with a pen, play the strokes back, then lasso a sketch and turn it into a shape.",
-			"notes": ["Ink on the Draw tab"]
-		},
-		{
-			"label": "Animation Painter",
-			"product": "powerpoint",
-			"title": "Copy an animation to another object",
-			"image": "powerpoint-animation-painter.gif",
-			"text": "Set an effect and its timing once, then paint it onto other objects.",
-			"notes": ["Animation Painter and native effects"]
-		},
-		{
-			"label": "Stencils",
-			"product": "visio",
-			"title": "Make your own stencil",
-			"image": "visio-stencil.gif",
-			"text": "Create a stencil, add the selected shape as a master and drop new instances of it.",
-			"notes": ["Visio stencils"]
-		},
-		{
-			"label": "Add-ins",
-			"product": "word",
-			"title": "Upload an add-in manifest",
-			"image": "office-add-ins.gif",
-			"text": "Get Add-ins validates a local manifest and asks for consent before installing it.",
-			"notes": ["Local add-in manifests"]
-		}
+		{ "id": "word", "label": "Word", "product": "word" },
+		{ "id": "excel", "label": "Excel", "product": "excel" },
+		{ "id": "powerpoint", "label": "PowerPoint", "product": "powerpoint" },
+		{ "id": "visio", "label": "Visio", "product": "visio" },
+		{ "id": "across-the-suite", "label": "Suite", "product": "office" },
+		{ "id": "performance-and-size", "label": "Performance" },
+		{ "id": "accessibility", "label": "Accessibility" },
+		{ "id": "security", "label": "Security" },
+		{ "id": "developer-api", "label": "Developer API" },
+		{ "id": "migrating-to-25", "label": "Migrating" },
+		{ "id": "what-is-still-open", "label": "Still open" },
+		{ "id": "every-change-by-product", "label": "Every change" }
 	]
 }

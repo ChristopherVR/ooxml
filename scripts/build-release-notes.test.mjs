@@ -297,7 +297,10 @@ for (const post of ['2.0', '2.5'])
 		assert.doesNotMatch(html, /\u2014/u);
 	});
 
-test('the 2.5 post shows its eight recordings once, from posters, with its own version', () => {
+/** The recordings the 2.5 post names, in order: [file, alt text]. */
+const RECORDING = /^!\[([^\]]+)\]\(2\.5\/assets\/([\w-]+\.gif)\)$/gmu;
+
+test('the 2.5 post shows its thirteen recordings once, lazily, from posters, under 4 MiB', () => {
 	const source = readFileSync(join(ROOT, 'docs/releases/2.5.md'), 'utf8');
 	const showcase = JSON.parse(readFileSync(join(ROOT, 'docs/releases/2.5/showcase.json'), 'utf8'));
 	const assets = join(ROOT, 'docs/releases/2.5/assets');
@@ -310,28 +313,111 @@ test('the 2.5 post shows its eight recordings once, from posters, with its own v
 	};
 	const template = readFileSync(join(ROOT, TEMPLATE), 'utf8');
 	const html = renderReleasePage(source, template, { showcase, media });
-	assert.match(html, /<html lang="en" data-appearance-default="system">/);
-	assert.match(html, /aria-label="2\.5 highlights"/);
-	assert.doesNotMatch(html, /2\.0 highlights|Before 2\.0/);
+	assert.match(html, /<html lang="en" data-appearance-default="dark">/);
 	for (const { id } of showcase.sections) assert.ok(html.includes(`<h2 id="${id}">`), id);
-	const items = showcase['new-features'];
-	assert.equal(items.length, 8);
-	for (const item of items) {
-		const gif = readFileSync(join(assets, item.image));
-		assert.equal(gif.toString('ascii', 0, 3), 'GIF', item.image);
-		assert.ok(gif.length <= 1024 * 1024, `${item.image} is ${gif.length} bytes`);
-		assert.deepEqual(imageSize(gif), { width: 1180, height: 802 }, item.image);
-		readFileSync(join(assets, item.image.replace(/\.gif$/u, '.poster.webp')));
-		// The scene draws the recording; the Markdown keeps it for GitHub, so it must not repeat.
-		assert.equal(html.split(`data-animation="assets/${item.image}"`).length - 1, 1, item.image);
-		const alt = new RegExp(
-			`!\\[([^\\]]+)\\]\\(2\\.5/assets/${item.image.replace('.', '\\.')}\\)`,
-			'u',
+	const recordings = [...source.matchAll(RECORDING)].map(([, alt, file]) => ({ alt, file }));
+	assert.equal(recordings.length, 13);
+	assert.equal(new Set(recordings.map(({ file }) => file)).size, 13);
+	let weight = 0;
+	for (const { alt, file } of recordings) {
+		const gif = readFileSync(join(assets, file));
+		weight += gif.length;
+		assert.equal(gif.toString('ascii', 0, 3), 'GIF', file);
+		assert.ok(gif.length <= 1024 * 1024, `${file} is ${gif.length} bytes`);
+		assert.deepEqual(imageSize(gif), { width: 1180, height: 802 }, file);
+		readFileSync(join(assets, file.replace(/\.gif$/u, '.poster.webp')));
+		// The alt text says what happens in the recording, not only what it is of.
+		assert.ok(alt.length >= 60, `${file}: "${alt}" is too short to describe the recording`);
+		// One still per recording, loaded when it nears the view; the GIF only once it plays.
+		const stem = file.replace(/\.gif$/u, '');
+		const still = new RegExp(
+			`<img src="assets/${stem}\\.poster\\.webp" alt="[^"]+" data-animation="assets/${stem}\\.gif" loading="lazy" decoding="async" />`,
+			'gu',
 		);
-		assert.match(source, alt, `${item.image} has alt text in the Markdown`);
+		assert.equal([...html.matchAll(still)].length, 1, file);
+		assert.doesNotMatch(html, new RegExp(`src="assets/${stem}\\.gif"`, 'u'), file);
 	}
-	assert.match(html, /class="tile tile-visio"/);
+	assert.ok(weight <= 4 * 1024 * 1024, `the recordings weigh ${weight} bytes`);
 	assert.doesNotMatch(html, /<video\b/);
+});
+
+test('the 2.5 post wears the letter edition: contents, chapters and features as entries', () => {
+	const source = readFileSync(join(ROOT, 'docs/releases/2.5.md'), 'utf8');
+	const showcase = JSON.parse(readFileSync(join(ROOT, 'docs/releases/2.5/showcase.json'), 'utf8'));
+	const media = (url) => ({ src: `assets/${url.split('/').pop()}` });
+	const template = readFileSync(join(ROOT, TEMPLATE), 'utf8');
+	const html = renderReleasePage(source, template, {
+		showcase,
+		media,
+		editionDir: join(ROOT, dirname(TEMPLATE)),
+	});
+	assert.equal(showcase.edition, 'letter');
+	assert.match(html, /<body data-edition="letter">/);
+	assert.match(html, /<link rel="stylesheet" href="\.\.\/edition-letter\.css" \/>/);
+	assert.match(html, /<script type="module" src="\.\.\/edition-letter\.js"><\/script>/);
+	assert.match(html, /<main id="post" class="post post-edition post-indexed">/);
+	// The 2.0 scenes stay with 2.0.
+	assert.doesNotMatch(html, /release-event|data-showcase=|class="release-index"|class="pillars/);
+	// The hero's contents: a line per product with its features, then the other chapters.
+	assert.match(html, /<nav class="edition-index" aria-label="In OOXML 2\.5">/);
+	for (const product of ['word', 'excel', 'powerpoint', 'visio', 'office'])
+		assert.match(html, new RegExp(`<li class="index-row" data-product="${product}">`, 'u'));
+	assert.match(
+		html,
+		/<li class="index-row" data-product="word"><a class="index-name" href="#word"><span class="tile tile-word" aria-hidden="true">W<\/span><span>Word<\/span><\/a><ul class="index-links"><li><a href="#mailings">Mailings<\/a><\/li>/,
+	);
+	assert.match(html, /<li class="index-row index-rest"><span class="index-name">More<\/span>/);
+	// A feature named after its chapter keeps a unique anchor and a short link.
+	for (const product of ['word', 'excel', 'powerpoint']) {
+		assert.match(html, new RegExp(`<li><a href="#${product}-draw">Draw</a></li>`, 'u'));
+		assert.match(html, new RegExp(`<h3 id="${product}-draw">`, 'u'));
+	}
+	// A product chapter opens with links to its features; the other chapters have none.
+	assert.match(
+		html,
+		/<section class="post-section" data-product="excel" aria-labelledby="excel">\s*<header class="chapter-head"><span class="tile tile-excel" aria-hidden="true">X<\/span><h2 id="excel">Excel<\/h2><nav class="chapter-links" aria-label="Excel features">/,
+	);
+	assert.match(
+		html,
+		/<section class="post-section" aria-labelledby="security">\s*<header class="chapter-head"><h2 id="security">Security<\/h2><\/header>/,
+	);
+	assert.equal(html.split('<nav class="chapter-links"').length - 1, 5);
+	// Every feature is wrapped, with what it does not do yet set beside its text.
+	const features = html.split('<div class="feature">').length - 1;
+	const chapters = source.slice(0, source.indexOf('## Every change, by product'));
+	assert.equal(features, [...chapters.matchAll(/^### /gmu)].length);
+	assert.equal(
+		html.split('<p class="not-yet"><strong>Not yet:</strong>').length - 1,
+		[...source.matchAll(/^\*\*Not yet:\*\* /gmu)].length,
+	);
+	// An entry reads as a letter does: its name, its opening sentences, then the recording with
+	// a caption under it.
+	assert.match(
+		html,
+		/<div class="feature"><h3 id="equation">Equation<\/h3><div class="feature-body"><div class="feature-text"><p>Press <strong>Alt\+=<\/strong>/,
+	);
+	assert.equal(
+		[
+			...html.matchAll(
+				/<figure class="post-figure reveal"><img [^>]+><figcaption>[^<]+<\/figcaption><\/figure>/gu,
+			),
+		].length,
+		13,
+	);
+	// The hero is the name of the release and one sentence.
+	assert.match(html, /<h1>OOXML <span class="post-version">2\.5<\/span><\/h1>/);
+	assert.match(
+		html,
+		/<p class="release-intro">This release fills in the ribbons of Word, Excel, PowerPoint and Visio\.<\/p>/,
+	);
+	// One h1, and no heading level is skipped on the way down.
+	const levels = [...html.matchAll(/<h([1-6])\b/gu)].map(([, level]) => Number(level));
+	assert.equal(levels.filter((level) => level === 1).length, 1);
+	for (const [i, level] of levels.entries())
+		assert.ok(i === 0 || level - levels[i - 1] <= 1, `h${levels[i - 1]} is followed by h${level}`);
+	// Notes to the author stay in the Markdown.
+	assert.match(source, /<!-- TODO\(add-ins\)/);
+	assert.doesNotMatch(html, /TODO/);
 });
 
 test('still images offer controlled playback and the release guide links back to the post', () => {
