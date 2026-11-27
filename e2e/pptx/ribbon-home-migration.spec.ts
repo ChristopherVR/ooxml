@@ -154,9 +154,9 @@ test.describe('Home font', () => {
 		await selectSubtitle(page);
 		const size = control(page, 'home.font.fontSize');
 		const readSize = () => size.evaluate((node) => Number((node as HTMLSelectElement).value));
+		await expect(pressed(page, 'bold')).toBeEnabled();
 		const before = await readSize();
 		// Keyboard activation reaches the native edit.
-		await expect(pressed(page, 'bold')).toBeEnabled();
 		await pressed(page, 'bold').focus();
 		await expect(pressed(page, 'bold')).toBeFocused();
 		await page.keyboard.press('Space');
