@@ -32,6 +32,19 @@ it('rewrites the words when the locale changes, and back', () => {
 	expect(words(host)).toEqual(['Get', 'Add-ins']);
 });
 
+it('leaves a Chinese caption breakable between its characters, as Word wraps it', () => {
+	const host = document.createElement('div');
+	host.append(
+		tool('Get Add-ins', 'addIns', { type: 'officeAddIns', mode: 'getAddIns' }, { large: true }),
+	);
+	localizeElement(host, 'zh-CN');
+	const caption = host.querySelector('button > span');
+	expect(caption?.textContent).toMatch(/\p{Script=Han}/u);
+	expect(words(host)).toEqual([]);
+	localizeElement(host, 'en');
+	expect(words(host)).toEqual(['Get', 'Add-ins']);
+});
+
 it('keeps a small command caption as plain text', () => {
 	const button = tool('Link', 'link', { type: 'link' }, { inline: true });
 	expect(button.querySelector('.ribbon-caption-word')).toBeNull();
