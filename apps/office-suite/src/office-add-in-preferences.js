@@ -1,4 +1,4 @@
-import { createAddInPreferencesStore } from '../../../src/ui/src/suite/add-in-preferences-store.ts';
+import { createAddInPreferencesStore } from 'ooxml-ui/suite';
 
 const profiles = new Map();
 

@@ -1,4 +1,4 @@
-import { setOfficeAddInPreferences } from 'ooxml-ui/suite';
+import { createAddInPreferencesStore, setOfficeAddInPreferences } from 'ooxml-ui/suite';
 import { demoAddInPreferences } from '../../add-in-preferences';
 import { initTheme } from './theme';
 import './style.css';
@@ -12,7 +12,7 @@ import { createSampleDocument } from './sample-document';
 
 const get = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 initTheme();
-setOfficeAddInPreferences(get('editor'), demoAddInPreferences());
+setOfficeAddInPreferences(get('editor'), demoAddInPreferences(createAddInPreferencesStore));
 
 const framework =
 	new URLSearchParams(location.search).get('framework') ||

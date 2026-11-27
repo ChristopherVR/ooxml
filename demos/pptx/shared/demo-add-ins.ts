@@ -1,7 +1,7 @@
-import { setOfficeAddInPreferences } from 'ooxml-ui/suite';
+import { createAddInPreferencesStore, setOfficeAddInPreferences } from 'ooxml-ui/suite';
 
 import { demoAddInPreferences } from '../../add-in-preferences';
 
 export function enableDemoAddInPreferences(host: HTMLElement) {
-	setOfficeAddInPreferences(host, demoAddInPreferences());
+	setOfficeAddInPreferences(host, demoAddInPreferences(createAddInPreferencesStore));
 }
