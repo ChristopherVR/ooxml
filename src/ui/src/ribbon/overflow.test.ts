@@ -149,6 +149,21 @@ describe('ribbon overflow', () => {
 		]);
 	});
 
+	it('never restores a lower priority while a higher priority stays folded', () => {
+		const { el, groups } = panel(200, 40, [120, 160, 70, 70]);
+		createRibbonOverflow({
+			...options,
+			groupPriority: (group) => Number(group.dataset.label === 'Styles'),
+		}).fitPanel(el);
+		// Folding Styles frees room for Editing, but Editing folds before Styles, so it stays folded.
+		expect(groups.map((group) => group.hasAttribute('data-collapsed'))).toEqual([
+			true,
+			true,
+			true,
+			true,
+		]);
+	});
+
 	it('consumes Escape while closing a dropdown from outside the ribbon', () => {
 		const { el, groups } = panel(150);
 		overflow.fitPanel(el);

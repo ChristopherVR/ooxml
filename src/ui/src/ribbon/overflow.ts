@@ -202,11 +202,21 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 			if (group.offsetWidth >= width) group.removeAttribute('data-collapsed');
 		}
 		// Restore groups from the left, even when a product prefers to fold them in another order.
+		// Priorities stay strict: a group comes back only while every higher priority is expanded,
+		// so a narrow low-priority group never takes the room a folded higher one needed.
 		if (panel.scrollWidth <= panel.clientWidth) {
-			for (const group of groups) {
+			const restoreOrder = priority
+				? [...groups].sort((a, b) => priority(b) - priority(a))
+				: groups;
+			let floor = -Infinity;
+			for (const group of restoreOrder) {
 				if (!group.hasAttribute('data-collapsed')) continue;
+				const level = priority?.(group) ?? 0;
+				if (level < floor) continue;
 				group.removeAttribute('data-collapsed');
-				if (panel.scrollWidth > panel.clientWidth) group.setAttribute('data-collapsed', '');
+				if (panel.scrollWidth <= panel.clientWidth) continue;
+				group.setAttribute('data-collapsed', '');
+				if (priority) floor = level;
 			}
 		}
 		syncScrollMore(panel, options.moreLabel);
