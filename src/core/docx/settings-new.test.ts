@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { loadDocx } from './parse';
 import { saveDocx } from './save';
 import type { DocumentModel } from './model';
+import { twips } from './units';
 
 const page = {
 	width: 816,
@@ -36,7 +37,7 @@ describe('settings part of a new document', () => {
 
 	it('keeps the model mode and tab stop, and the single-setting writers patch the part in order', async () => {
 		const bytes = await saveDocx(
-			model({ compatibilityMode: 14, defaultTabStopTwips: 360, evenAndOddHeaders: true }),
+			model({ compatibilityMode: 14, defaultTabStopTwips: twips(360), evenAndOddHeaders: true }),
 		);
 		const settings = await (
 			await JSZip.loadAsync(bytes)
