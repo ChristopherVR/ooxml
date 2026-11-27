@@ -80,10 +80,11 @@ export async function checkTabClipping(editor: Locator, edge: 'left' | 'right') 
 
 export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor, host }: Flow) {
 	const parentOrigin = new URL(page.url()).origin;
+	const client = publisherScript();
 	await page.route(`${paneOrigin}/**`, (route) => {
 		const path = new URL(route.request().url()).pathname;
 		if (path === '/client.js')
-			return route.fulfill({ contentType: 'application/javascript', body: publisherScript() });
+			return route.fulfill({ contentType: 'application/javascript', body: client });
 		if (path === '/pane')
 			return route.fulfill({
 				contentType: 'text/html',
@@ -164,7 +165,6 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 				await more.press('Enter');
 				await expect(tab).toBeInViewport();
 			}
-			await page.reload();
 			await reloadEditor();
 			await expect(tab).toBeAttached();
 			await tab.click();
@@ -195,7 +195,7 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 			}
 			await open.click();
 		}
-		await expect(pane.getByRole('heading', { name: addInName })).toBeFocused();
+		await expect(pane.getByRole('heading', { name: addInName }), file.name).toBeFocused();
 		if (host === 'Word' && page.viewportSize()?.width === 800)
 			await checkTabClipping(editor, 'right');
 		const separator = editor.getByRole('separator', { name: 'Resize add-in pane' });
@@ -220,7 +220,7 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 		expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(
 			page.viewportSize()?.width ?? 0,
 		);
-		await expect(pane.locator('iframe')).toHaveAttribute('sandbox', 'allow-scripts');
+		await expect(pane.locator('iframe'), file.name).toHaveAttribute('sandbox', 'allow-scripts');
 		await expect(pane.locator('iframe')).toHaveAttribute('referrerpolicy', 'no-referrer');
 		await expect(frame.locator('#ready')).toHaveText(
 			`${host} / ${host} / true / true / false / false`,

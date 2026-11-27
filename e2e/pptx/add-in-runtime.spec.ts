@@ -12,7 +12,6 @@ import {
 	fixture,
 	loadDeck,
 	ribbonTab,
-	SAMPLE_DECK,
 	selectElement,
 	slideStage,
 } from './support/deck';
@@ -33,17 +32,7 @@ for (const scenario of addInReviewScenarios) {
 			page,
 			editor,
 			host: 'PowerPoint',
-			async reloadEditor() {
-				const upload = page.locator('#file-input');
-				const stage = slideStage(page);
-				await expect(stage.or(upload).first()).toBeAttached();
-				if (!(await stage.isVisible())) {
-					await upload.setInputFiles(SAMPLE_DECK, { timeout: 2_000 }).catch(async (error) => {
-						if (!(await stage.isVisible())) throw error;
-					});
-				}
-				await expect(stage).toBeVisible();
-			},
+			reloadEditor: () => loadDeck(page),
 			async openDialog() {
 				const homeTab = ribbonTab(page, 'Home');
 				if ((await homeTab.getAttribute('aria-selected')) !== 'true') await homeTab.click();

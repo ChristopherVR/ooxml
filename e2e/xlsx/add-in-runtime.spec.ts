@@ -20,6 +20,7 @@ for (const scenario of addInReviewScenarios) {
 			editor,
 			host: 'Excel',
 			async reloadEditor() {
+				await page.reload();
 				await demoReady(page);
 				await newWorkbook(page);
 			},

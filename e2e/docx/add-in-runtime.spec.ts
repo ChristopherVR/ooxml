@@ -20,7 +20,10 @@ for (const scenario of addInReviewScenarios) {
 			page,
 			editor,
 			host: 'Word',
-			reloadEditor: () => newDocument(page),
+			async reloadEditor() {
+				await page.reload();
+				await newDocument(page);
+			},
 			async openDialog() {
 				await editor.getByRole('tab', { name: 'Home', exact: true }).click();
 				const home = editor.getByRole('button', { name: 'Add-ins', exact: true });
