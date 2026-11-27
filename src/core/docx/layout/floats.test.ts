@@ -137,7 +137,7 @@ describe('pictures in pagination', () => {
 		expect(at(result.pages, 1).floats?.[0]).toMatchObject({ blockId: 'late', yPx: 200 });
 	});
 
-	it('moves paragraph to next page when paragraph-anchored float crosses bottom margin', () => {
+	it('moves a wrapping float and its anchor when it crosses the bottom margin in mode 15', () => {
 		// 38 lines = 760px; content height is 800px (1000 - 100 - 100).
 		// Text line (20px) fits on page 0 (760 + 20 = 780 <= 800),
 		// but float (100px) crosses bottom margin (100 + 760 + 100 = 960 > 900).
@@ -146,10 +146,9 @@ describe('pictures in pagination', () => {
 			id: 'f',
 			runs: [{ text: Array(38).fill('x').join('\n') }],
 		};
-		const result = layoutDocument(
-			input([filler, anchoredIn('chart', { heightPx: 100, offsetYPx: 0 })]),
-			measurer,
-		);
+		const data = input([filler, anchoredIn('chart', { heightPx: 100, wrap: 'square' })]);
+		at(data.sections, 0).keepWrappingFloatsAboveBottomMargin = true;
+		const result = layoutDocument(data, measurer);
 		expect(result.pages).toHaveLength(2);
 		expect(at(result.pages, 0).floats).toBeUndefined();
 		// The anchor paragraph moved to page 1, so the float starts at page top margin (100px).
@@ -160,15 +159,60 @@ describe('pictures in pagination', () => {
 		expect(page1Ids).toEqual(['chart']);
 	});
 
+	it('keeps a wrapping float that reaches the paper edge in legacy layout', () => {
+		const filler: LayoutParagraph = {
+			kind: 'paragraph',
+			id: 'f',
+			runs: [{ text: Array(38).fill('x').join('\n') }],
+		};
+		const result = layoutDocument(
+			input([filler, anchoredIn('picture', { heightPx: 140, wrap: 'square' })]),
+			measurer,
+		);
+		expect(result.pages).toHaveLength(1);
+		const page = at(result.pages, 0);
+		const float = at(page.floats, 0);
+		expect(float.yPx + float.heightPx).toBe(page.heightPx);
+	});
+
 	it('places an oversized float on an empty page without an infinite loop', () => {
 		// Float height (1500px) is taller than the page (1000px).
 		const result = layoutDocument(
-			input([anchoredIn('huge', { heightPx: 1500, offsetYPx: 0 })]),
+			input([anchoredIn('huge', { heightPx: 1500, wrap: 'square' })]),
 			measurer,
 		);
 		expect(result.pages).toHaveLength(1);
 		expect(at(result.pages, 0).floats?.[0]).toMatchObject({ blockId: 'huge', yPx: 100 });
 	});
+
+	it.each([
+		['paragraph', false],
+		['paragraph', true],
+		['line', false],
+	] as const)(
+		'keeps a non-wrapping %s float on page 2 when it extends past the paper (behind text: %s)',
+		(relativeFromV, behindText) => {
+			const filler: LayoutParagraph = {
+				kind: 'paragraph',
+				id: 'f',
+				pageBreakBefore: true,
+				runs: [{ text: Array(38).fill('x').join('\n') }],
+			};
+			const result = layoutDocument(
+				input([
+					{ kind: 'paragraph', id: 'preface', runs: [{ text: 'Preface' }] },
+					filler,
+					anchoredIn('picture', { heightPx: 200, relativeFromV, behindText, wrap: 'none' }),
+				]),
+				measurer,
+			);
+			expect(result.pages).toHaveLength(2);
+			const page = at(result.pages, 1);
+			const float = at(page.floats, 0);
+			expect(float).toMatchObject({ blockId: 'picture', yPx: 860, heightPx: 200 });
+			expect(float.yPx + float.heightPx).toBeGreaterThan(page.heightPx);
+		},
+	);
 
 	it('moves oversized float to next page when page has content and stops without looping', () => {
 		const filler: LayoutParagraph = {
@@ -177,7 +221,7 @@ describe('pictures in pagination', () => {
 			runs: [{ text: 'hello' }],
 		};
 		const result = layoutDocument(
-			input([filler, anchoredIn('huge', { heightPx: 1500, offsetYPx: 0 })]),
+			input([filler, anchoredIn('huge', { heightPx: 1500, wrap: 'square' })]),
 			measurer,
 		);
 		expect(result.pages).toHaveLength(2);
@@ -198,6 +242,7 @@ describe('pictures in pagination', () => {
 					relativeFromV: 'page',
 					heightPx: 100,
 					offsetYPx: 920,
+					wrap: 'square',
 				}),
 			]),
 			measurer,

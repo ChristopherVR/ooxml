@@ -77,6 +77,11 @@ export function squeezesJustifiedSpaces(profile: CompatibilityProfile): boolean 
 	return profile.generation === 'modern';
 }
 
+/** Word mode 15 moves an anchor with its wrapping float when the float exceeds the text area. */
+export function keepsWrappingFloatsAboveBottomMargin(profile: CompatibilityProfile): boolean {
+	return profile.mode === 15;
+}
+
 /**
  * A `pageBreakBefore` paragraph at the top of a page keeps its space before. Measured: kept in
  * modes 12 and 14, dropped in 15; other modes (including later numbers) keep the legacy rule

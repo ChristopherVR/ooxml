@@ -6,6 +6,7 @@ import {
 	autofitOverhangsCellMargins,
 	compatibilityProfile,
 	keepsSpaceBeforePageBreak,
+	keepsWrappingFloatsAboveBottomMargin,
 	readCompatibilitySettings,
 	usesModernFootnoteLayout,
 } from './compatibility';
@@ -65,6 +66,14 @@ describe('readCompatibilitySettings', () => {
 });
 
 describe('compatibilityProfile', () => {
+	it.each([undefined, 11, 12, 14, 15])(
+		'uses the measured wrapping float limit in mode %s',
+		(mode) => {
+			const profile = compatibilityProfile(mode === undefined ? {} : { compatibilityMode: mode });
+			expect(keepsWrappingFloatsAboveBottomMargin(profile)).toBe(mode === 15);
+		},
+	);
+
 	it('is modern from mode 15 and legacy for 11 to 14 or no mode', () => {
 		expect(compatibilityProfile({ compatibilityMode: 15 }).generation).toBe('modern');
 		expect(compatibilityProfile({ compatibilityMode: 16 }).generation).toBe('modern');

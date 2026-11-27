@@ -380,6 +380,9 @@ export class SectionFlow {
 					footnotes,
 					spacingBeforePx,
 					...(this.section.keepSpaceBeforePageBreak ? { keepSpaceBeforePageBreak: true } : {}),
+					...(this.section.keepWrappingFloatsAboveBottomMargin
+						? { keepWrappingFloatsAboveBottomMargin: true }
+						: {}),
 					...(this.spacingAfterSuppressed(index) ? { spacingAfterPx: 0 } : {}),
 					...(this.section.modernFootnoteSeparator || this.section.legacyFootnoteColumns
 						? { trimLeadingColumnBreak: true }

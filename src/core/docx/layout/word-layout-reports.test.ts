@@ -472,3 +472,33 @@ it('preserves the soft line break setting through a document edit (#358)', async
 	expect(saved.model.doNotExpandShiftReturn).toBe(true);
 	expect(at(saved.model.blocks, 0)).toMatchObject({ runs: [{ text: 'Edited' }] });
 });
+
+it.each([
+	['issue-354-float-wrap-none-crosses-bottom-margin', true],
+	['issue-354-float-wrap-square-crosses-bottom-margin', true],
+	['issue-354-float-fits-above-bottom-margin-control', false],
+] as const)(
+	'keeps the anchor paragraph and picture on page one in %s (#354)',
+	async (name, overlapsMargin) => {
+		const { page, pages, paragraphs } = await layout(name);
+		expect(pages).toHaveLength(1);
+		expect(paragraphs.slice(-2).map((block) => block.blockId)).toEqual(['p24', 'p25']);
+		expect(page.floats).toHaveLength(1);
+		const picture = at(page.floats, 0);
+		expect(picture.blockId).toBe('p24');
+		expect(picture.yPx).toBeCloseTo(862.47);
+		const bottom = picture.yPx + picture.heightPx;
+		expect(bottom).toBeLessThan(page.heightPx);
+		expect(bottom > page.heightPx - page.marginBottomPx).toBe(overlapsMargin);
+	},
+);
+
+it.each([
+	['issue-354-float-wrap-none-crosses-bottom-margin', 1],
+	['issue-354-float-wrap-square-crosses-bottom-margin', 2],
+] as const)('paginates %s in compatibility mode 15 (#354)', async (name, pageCount) => {
+	const { model } = await load(name);
+	const { pages } = layoutDocumentModel({ ...model, compatibilityMode: 15 }, measurer);
+	expect(pages).toHaveLength(pageCount);
+	expect(at(at(pages, pageCount - 1).floats, 0).blockId).toBe('p24');
+});

@@ -1,6 +1,6 @@
 import type { PageCursor } from './page-cursor';
 import { adjustForWidowOrphan, widowControlEnabled } from './keep-rules';
-import { floatCrossesBottomMargin } from './floats';
+import { floatExceedsBottomLimit } from './floats';
 import type { ParagraphLayoutResult } from './paragraph-layout';
 import type { LayoutParagraph } from './input';
 import type { LayoutColumnBox, LayoutFootnoteBox, LayoutLine, LayoutParagraphBox } from './result';
@@ -17,6 +17,7 @@ export interface ParagraphPlacement {
 	spacingBeforePx: number;
 	/** Compatibility modes before 15 keep the space before of a paragraph that starts a page by `pageBreakBefore`. */
 	keepSpaceBeforePageBreak?: boolean;
+	keepWrappingFloatsAboveBottomMargin?: true;
 	/** Spacing-after in px when it differs from the paragraph's own (contextual spacing). */
 	spacingAfterPx?: number;
 	/**
@@ -81,7 +82,7 @@ export function placeParagraph(
 	if (
 		cursor.hasPageContent &&
 		paragraph.floats?.some((float) =>
-			floatCrossesBottomMargin(
+			floatExceedsBottomLimit(
 				cursor.page,
 				cursor.column,
 				{
@@ -90,6 +91,7 @@ export function placeParagraph(
 				},
 				layout.lines,
 				float,
+				placement.keepWrappingFloatsAboveBottomMargin,
 			),
 		)
 	) {

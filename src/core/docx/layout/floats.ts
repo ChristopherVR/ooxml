@@ -1,5 +1,6 @@
 import type { LayoutFloat } from './input';
 import type { LayoutColumnBox, LayoutFloatBox, LayoutLine, LayoutPageBox } from './result';
+import { wrapsText } from './wrap';
 
 export const FLOAT_WRAP_NOTE =
 	'Text wraps around floating pictures on their largest side, or on both sides of a square, tight or through picture whose wrapText is bothSides (all use the picture’s rectangle, not its outline); lines continuing onto a later page keep their wrapped widths.';
@@ -182,21 +183,25 @@ export function floatOrigin(
 }
 
 /**
- * Whether a paragraph-anchored float would extend beyond the page's bottom margin
- * if placed at `paragraph`.
+ * Only a wrapping float positioned from its paragraph or line can force its anchor to the
+ * next page. Legacy modes allow the bottom margin; beyond the paper edge this check defers
+ * the anchor because it does not model Word's upward repositioning and rewrap.
  */
-export function floatCrossesBottomMargin(
+export function floatExceedsBottomLimit(
 	page: LayoutPageBox,
 	column: Pick<LayoutColumnBox, 'xPx' | 'widthPx'>,
 	paragraph: { topPx: number; heightPx: number },
 	lines: readonly LayoutLine[],
 	float: LayoutFloat,
+	keepWrappingFloatsAboveBottomMargin = false,
 ): boolean {
-	if (!isParagraphAnchoredV(float)) return false;
+	if (!wrapsText(float) || !isParagraphAnchoredV(float)) return false;
 	const frames = pageFrames(page, column, paragraph, anchorPoint(lines, float.sourceOffset));
 	const { yPx } = placeInFrames(float, frames);
-	const bottomMarginTopPx = page.heightPx - page.marginBottomPx;
-	return yPx + float.heightPx > bottomMarginTopPx;
+	const limit = keepWrappingFloatsAboveBottomMargin
+		? page.heightPx - page.marginBottomPx
+		: page.heightPx;
+	return yPx + float.heightPx > limit;
 }
 
 /**

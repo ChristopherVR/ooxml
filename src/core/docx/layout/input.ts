@@ -375,6 +375,8 @@ export interface LayoutSection {
 	addParagraphSpacing?: boolean;
 	/** Compatibility mode before 15: `pageBreakBefore` keeps the space before at the page top. */
 	keepSpaceBeforePageBreak?: boolean;
+	/** Mode 15 limits paragraph-relative wrapping floats to the body text area. */
+	keepWrappingFloatsAboveBottomMargin?: true;
 	/** Space after (px) of the previous section's last paragraph, which collapses with this one's first. */
 	leadingSpacingAfterPx?: number;
 	/** Measured Word compatibility modes 12 and 14 attach notes to body columns. */

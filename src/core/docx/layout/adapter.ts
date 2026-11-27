@@ -53,6 +53,7 @@ import {
 	compatibilityProfile,
 	honoursLayoutInCell,
 	keepsSpaceBeforePageBreak,
+	keepsWrappingFloatsAboveBottomMargin,
 	usesModernFootnoteLayout,
 	squeezesJustifiedSpaces,
 } from '../compatibility';
@@ -155,6 +156,7 @@ export function adaptDocumentModel(
 	const addParagraphSpacing = addsParagraphSpacing(compatibility);
 	const squeeze = squeezesJustifiedSpaces(compatibility);
 	const keepSpaceBeforePageBreak = keepsSpaceBeforePageBreak(compatibility);
+	const keepWrappingFloatsAboveBottomMargin = keepsWrappingFloatsAboveBottomMargin(compatibility);
 	/** HTML auto spacing is 14 pt when the compatibility option is off; otherwise the twips are used. */
 	const autoSpaced = (auto: boolean | undefined, twipsValue: Twips | undefined) =>
 		auto && !addParagraphSpacing ? HTML_AUTO_SPACING_TWIPS : twipsValue;
@@ -582,6 +584,9 @@ export function adaptDocumentModel(
 					...(footnoteSeparators ? { footnoteSeparators } : {}),
 					...(addParagraphSpacing ? { addParagraphSpacing: true } : {}),
 					...(keepSpaceBeforePageBreak ? { keepSpaceBeforePageBreak: true } : {}),
+					...(keepWrappingFloatsAboveBottomMargin
+						? { keepWrappingFloatsAboveBottomMargin: true }
+						: {}),
 					...(modernFootnoteSeparator ? { modernFootnoteSeparator: true } : {}),
 					...(legacyFootnoteColumns ? { legacyFootnoteColumns: true } : {}),
 					blocks: blocks.filter((block) => !folded.has(block)),
@@ -674,6 +679,7 @@ export function adaptDocumentModel(
 				: {}),
 			...(addParagraphSpacing ? { addParagraphSpacing: true } : {}),
 			...(keepSpaceBeforePageBreak ? { keepSpaceBeforePageBreak: true } : {}),
+			...(keepWrappingFloatsAboveBottomMargin ? { keepWrappingFloatsAboveBottomMargin: true } : {}),
 			...(sectionStart && { break: sectionStart }),
 			...(section.verticalAlign ? { verticalAlign: section.verticalAlign } : {}),
 			// Empty text break markers share the preceding line. The mandatory
