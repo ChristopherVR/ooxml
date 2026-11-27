@@ -157,9 +157,11 @@ const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
 	--office-launcher-inset-end: -2px; --office-launcher-inset-bottom: 1px; --office-launcher-width: 14px;
 	--office-launcher-height: 14px; --office-ribbon-collapse-x: var(--pptx-collapse-x, 8px);
 	--office-ribbon-collapse-y: var(--pptx-collapse-y, 120px); }
-:host([data-collapsed][data-ribbon-group^="insert."]) .face {
-	width: 50px; min-width: 50px; padding-inline: 2px; white-space: normal; overflow-wrap: anywhere;
-}`,
+/* Insert folds most of its groups at narrow widths: each face is as wide as its caption (at least
+   50px) and the group's own side padding gives way to the face's, so a long caption never spills
+   over its neighbour and the groups still shown keep their room. */
+:host([data-collapsed][data-ribbon-group^="insert."]) .group { padding-inline: 3px; }
+:host([data-collapsed][data-ribbon-group^="insert."]) .face { min-width: 50px; padding-inline: 2px; }`,
 	// The tab row's Comments and Share at the pptx tab-row scale (11px labels, 24px controls).
 	'pptx-ui-ribbon-actions': `:host { --office-font-size: 11px; --office-control-height-md: 24px;
 	--office-icon-size-md: 14px; --office-font-size-2xs: 8px; padding-inline-start: 0; }`,

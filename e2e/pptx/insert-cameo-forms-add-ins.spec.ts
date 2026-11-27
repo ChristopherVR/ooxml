@@ -25,6 +25,19 @@ test('keeps focus on Add-ins when the Insert ribbon refits', async ({ page }) =>
 	await expect(get).toBeFocused();
 	await page.setViewportSize({ width: 800, height: 900 });
 	await expect(group).toHaveAttribute('data-scale', 'small');
+	// Each folded group's face is as wide as its caption, so no caption spills onto a neighbour.
+	const spilled = await page
+		.locator('pptx-ui-ribbon-insert [data-ribbon-group][data-collapsed]')
+		.evaluateAll((groups) =>
+			groups.flatMap((folded) => {
+				const face = folded.shadowRoot?.querySelector('.face');
+				const caption = face?.querySelector('span');
+				return face && caption && caption.scrollWidth > face.getBoundingClientRect().width
+					? [folded.getAttribute('data-ribbon-group')]
+					: [];
+			}),
+		);
+	expect(spilled).toStrictEqual([]);
 	await expect(get).toBeFocused();
 	await get.press('Enter');
 	await expect(dialog.getByRole('searchbox')).toBeFocused();
