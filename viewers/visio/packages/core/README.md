@@ -1,17 +1,14 @@
 # visio-core
 
-Read, inspect and edit Visio drawings in Node or the browser, with no DOM. The document API behind every Visio viewer package.
+**The DOM-free Visio document API: read, inspect, create and edit `.vsdx` drawings in Node.js, browsers and workers.**
 
 [![npm version](https://img.shields.io/npm/v/visio-core.svg)](https://www.npmjs.com/package/visio-core)
 [![license](https://img.shields.io/npm/l/visio-core.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/LICENSE)
 [![types](https://img.shields.io/npm/types/visio-core.svg)](https://www.npmjs.com/package/visio-core)
-[![status: beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md)
 
-[Live demo](https://christophervr.github.io/ooxml/visio/demo/) · [Docs](https://christophervr.github.io/ooxml/visio/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/core/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
+[Live demo](https://christophervr.github.io/ooxml/visio/demo/) · [Documentation](https://christophervr.github.io/ooxml/visio/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/core/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-> **Beta.** The API changes only with a changelog note. Edits are validated and bounded, but saving is not yet guaranteed to keep everything a file contains, and rendering does not match Microsoft Visio. The [capability ledger](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/docs/parity.md) lists what works and what is missing.
-
-`visio-core` re-exports `ooxml-core/visio`. It adds no parser or editor of its own, so it always matches the `ooxml-core` it installs.
+`visio-core` re-exports `ooxml-core/visio`, the Visio area of [`ooxml-core`](https://www.npmjs.com/package/ooxml-core). It adds no parser or editor of its own, so it always matches the `ooxml-core` it installs, and it is the API every Visio viewer package and the MCP server use.
 
 ## Install
 
@@ -19,40 +16,54 @@ Read, inspect and edit Visio drawings in Node or the browser, with no DOM. The d
 npm install visio-core
 ```
 
+`ooxml-core` is installed with it. There are no peer dependencies.
+
 ## Quick start
 
 ```js
 import { readFile, writeFile } from 'node:fs/promises';
-import { editVsdx, parseVsdx } from 'visio-core';
+import { createVsdx, editVsdx, parseVsdx } from 'visio-core';
 
+// Read: pages, shapes and diagnostics for what was approximated or left out.
 const bytes = await readFile('flow.vsdx');
 const drawing = await parseVsdx(bytes);
-
 for (const page of drawing.pages) console.log(page.name, page.shapes.length, 'shapes');
 for (const note of drawing.diagnostics) console.warn(note.code, note.message);
 
+// Edit: one atomic batch; a refused edit changes nothing.
 const page = drawing.pages[0];
 const result = await editVsdx(bytes, [
 	{ type: 'replace-plain-text', pageId: page.id, shapeId: page.shapes[0].id, text: 'Approved' },
 ]);
 await writeFile('flow-approved.vsdx', result.bytes);
+
+// Create: a blank landscape Letter page (dimensions are inches; the default is portrait Letter).
+await writeFile('blank.vsdx', await createVsdx({ width: 11, height: 8.5 }));
 ```
 
-`parseVsdx` and `editVsdx` take a `Uint8Array` or `ArrayBuffer`. `loadVisio` detects the format and also reads legacy binary `.vsd` files, read-only.
+`parseVsdx` and `editVsdx` take a `Uint8Array` or `ArrayBuffer`. Coordinates are drawing inches with the origin at the bottom left of the page. `editVsdx` returns `{ bytes, changedParts, diagnostics }`.
 
-## What you get
+## API overview
 
-- **A document model.** Pages, background pages, shapes, groups and connectors with master inheritance, geometry, text, styles, themes, layers, shape data, hyperlinks, comments and embedded pictures, plus diagnostics for what was approximated or left out.
-- **Validated edits.** `editVsdx` applies a batch of edits atomically and returns `{ bytes, changedParts, diagnostics }`: text, formatting, create, move, resize, rotate and delete, ordering, pages, page setup, shape data, layers, containers, connectors and charts. Unsupported or unsafe edits are refused, never half applied.
-- **New drawings.** `createVsdx` writes a blank drawing.
-- **Formats.** `.vsdx` and its macro-enabled and template kinds (`.vsdm`, `.vstx`, `.vstm`); `readVisioStencil` reads stencils; `parseLegacyVsd` previews Visio 2003 `.vsd`. An edit keeps a VBA project byte for byte and never runs it.
-- **Bounded by default.** Every read and edit has a time limit and one memory budget sized from the host's heap. Pages of up to about 10,000 shapes as Visio saves them fit the default limits; a file that would exhaust memory is refused with `LIMIT_XML_MEMORY`, and `parseVsdx` reports `edit-size-limit` first when a drawing is too large to edit.
+| Entry point                                                                     | What it does                                                                                                                                                                  |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `parseVsdx(bytes, options?)`                                                    | Reads `.vsdx`, `.vsdm`, `.vstx` and `.vstm` into a typed scene: pages, shapes, groups, connectors, master inheritance, geometry, text, styles, themes, layers and shape data. |
+| `loadVisio(bytes, options?)`                                                    | Detects the format; legacy binary `.vsd` becomes a read-only preview (`parseLegacyVsd`).                                                                                      |
+| `editVsdx(bytes, edits, options?)`                                              | Applies a batch of `VisioEdit` commands atomically: text, formatting, shapes, connectors, containers, pages, layers, shape data, data and charts.                             |
+| `createVsdx(options?)`                                                          | Writes a blank, editable one-page drawing.                                                                                                                                    |
+| `readVisioStencil(bytes)`, `loadVisioStencilEditor()`                           | Reads `.vssx` and `.vssm` stencils; lazily loads the stencil authoring API.                                                                                                   |
+| `convertVsdxToTemplate(bytes)`                                                  | Converts a drawing (`.vsdx`, `.vsdm`) into a template (`.vstx`, `.vstm`).                                                                                                     |
+| `parseVsdxPages`, `mergeVisioPages`                                             | Re-reads only the pages that changed.                                                                                                                                         |
+| `captureVisioClipboard`, `serializeVisioClipboard`, `deserializeVisioClipboard` | Bounded, versioned shape clipboard text (experimental; never touches the system clipboard).                                                                                   |
+| `parseVisioFormula`, `evaluateVisioFormula`                                     | The bounded ShapeSheet formula interpreter (an AST, never JavaScript evaluation).                                                                                             |
+| `visioTextExtents`, `setVisioTextMeasurer`                                      | Text measuring used to keep text-sized shapes in step; a UI can supply its own measurer.                                                                                      |
+| `VisioPackageError`                                                             | Thrown for unsafe, malformed or over-limit packages, with a `code` such as `LIMIT_XML_MEMORY`.                                                                                |
 
-**Not supported yet:** general ShapeSheet recalculation (only bounded numeric dependencies of admitted edits are recomputed); most EMF records, EMF+, WMF and OLE objects; VDX files; older binary Visio versions. Plain-text editing and the shape clipboard are experimental.
+The full edit catalogue, limits and module map are in the [area overview](https://github.com/ChristopherVR/ooxml/blob/main/src/core/visio/README.md); the viewer-facing contract is the [viewer API](https://christophervr.github.io/ooxml/visio/api).
 
-## Limits
+### Limits
 
-Pass `limits` to tighten what one read or edit may use:
+Every read and edit has a ten-second cooperative deadline and one memory budget, `maxXmlHeapBytes`, which by default follows the host's heap (480 MiB where the runtime reports none). Pass `limits` to tighten it:
 
 ```js
 import { parseVsdx, VisioPackageError } from 'visio-core';
@@ -65,26 +76,34 @@ try {
 }
 ```
 
-By default `maxXmlHeapBytes` follows the host's heap (the limit Node or a Chromium page reports, less 256 MiB, divided by 1.6; 480 MiB where the runtime reports none). Set it lower when the same heap holds other large data or runs several reads at once. A page of 10,000 shapes needs a Node heap limit of about 1,000 MiB (`--max-old-space-size=820` or more).
+Pages of up to about 10,000 shapes as Visio saves them fit the defaults; such a page needs a Node heap limit of about 1,000 MiB (`--max-old-space-size=820` or more). When a drawing is too large to edit, `parseVsdx` reports an `edit-size-limit` diagnostic first.
 
-## Supported environments
+## Status and limits
 
-- Node.js 22.3 or newer.
-- Browsers and web workers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+**Beta.** The API changes only with a changelog note.
+
+- Untouched package parts are kept byte for byte and edited parts semantically, but there is no written preservation guarantee yet; signatures are removed on edit (as Visio does) and a VBA project is carried, never run.
+- Each edit command has its own admission rules; anything outside them is refused with a diagnostic, never half applied.
+- There is no general ShapeSheet recalculation: only the bounded dependencies of admitted edits are recomputed.
+- Plain-text editing and the shape clipboard are experimental.
+- Most EMF records, EMF+, WMF and OLE objects, VDX files and older binary Visio versions are not supported.
+
+See the [capability ledger](https://christophervr.github.io/ooxml/visio/parity) and the [parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md).
 
 ## Privacy and network use
 
-The Visio packages make no network request when opening, editing or saving a drawing: linked pictures are not fetched and linked data is not refreshed. This package never downloads fonts; the viewers do so only when the host or the reader turns Google Fonts on. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+The package makes no network request: it reads and writes the bytes you pass. Linked pictures are not fetched, data record sets and linked chart data are never refreshed, macros never run, and fonts are never downloaded (only the viewers can, when the host or reader turns Google Fonts on). Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#word-excel-and-visio).
 
-## Related packages
+## Environments
 
-| Package                                                                                                                                                                                                                                                                                                                                                                                                                                                          | What it is                                                       |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [`visio-react-viewer`](https://www.npmjs.com/package/visio-react-viewer), [`visio-vue-viewer`](https://www.npmjs.com/package/visio-vue-viewer), [`visio-angular-viewer`](https://www.npmjs.com/package/visio-angular-viewer), [`visio-svelte-viewer`](https://www.npmjs.com/package/visio-svelte-viewer), [`visio-solid-viewer`](https://www.npmjs.com/package/visio-solid-viewer), [`visio-vanilla-viewer`](https://www.npmjs.com/package/visio-vanilla-viewer) | The browser viewer for each framework; each re-exports this API. |
-| [`visio-viewer-mcp`](https://www.npmjs.com/package/visio-viewer-mcp)                                                                                                                                                                                                                                                                                                                                                                                             | Visio inspection and edits as MCP tools for agents.              |
-| [`ooxml-core`](https://www.npmjs.com/package/ooxml-core)                                                                                                                                                                                                                                                                                                                                                                                                         | The Office logic this package re-exports.                        |
+- Node.js 22.3 or newer.
+- Browsers and web workers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)). Run large reads and edits in a worker to keep a page responsive.
 
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme), with viewers for [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme), [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme), [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) and [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme).
+## Documentation
+
+- [Visio documentation](https://christophervr.github.io/ooxml/visio/) and the [viewer API](https://christophervr.github.io/ooxml/visio/api).
+- [Area overview](https://github.com/ChristopherVR/ooxml/blob/main/src/core/visio/README.md) of `ooxml-core/visio`.
+- Browser viewers that re-export this API: [`visio-react-viewer`](https://www.npmjs.com/package/visio-react-viewer), [`visio-vue-viewer`](https://www.npmjs.com/package/visio-vue-viewer), [`visio-angular-viewer`](https://www.npmjs.com/package/visio-angular-viewer), [`visio-svelte-viewer`](https://www.npmjs.com/package/visio-svelte-viewer), [`visio-solid-viewer`](https://www.npmjs.com/package/visio-solid-viewer) and [`visio-vanilla-viewer`](https://www.npmjs.com/package/visio-vanilla-viewer); MCP tools: [`visio-viewer-mcp`](https://www.npmjs.com/package/visio-viewer-mcp).
 
 ## License
 

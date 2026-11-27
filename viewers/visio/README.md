@@ -1,48 +1,25 @@
-<div align="center">
+# Visio for the web
 
-# Visio viewer
+**View and edit Visio drawings in the browser from React, Vue, Angular, Svelte, Solid or plain JavaScript: one SVG renderer, one `<visio-viewer>` element, and nothing uploaded.** For web apps that need to open, review or lightly edit `.vsdx` diagrams without Microsoft Visio installed, and for Node or agent workflows that read and change them.
 
-**View and edit Visio drawings in the browser, from any framework. One SVG renderer, one `<visio-viewer>` element, a native component for React, Vue, Angular, Svelte and Solid, and nothing uploaded.**
-
-[![npm version](https://img.shields.io/npm/v/visio-react-viewer.svg)](https://www.npmjs.com/package/visio-react-viewer)
-[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![status: beta](https://img.shields.io/badge/status-beta-orange.svg)](../../docs/stability.md)
-[![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
-
-[**Live demo**](https://christophervr.github.io/ooxml/visio/demo/) &nbsp;&middot;&nbsp;
-[**Documentation**](https://christophervr.github.io/ooxml/visio/) &nbsp;&middot;&nbsp;
-[**Changelog**](CHANGELOG.md) &nbsp;&middot;&nbsp;
-[**Report a bug**](https://github.com/ChristopherVR/ooxml/issues)
-
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#readme) &middot; [Word](../docx#readme) &middot; [Excel](../xlsx#readme) &middot; [PowerPoint](../pptx#readme) &middot; **Visio** &middot; [OpenTeams](../teams#readme) &middot; [Core](../../src/core#readme)
+[Live demo](https://christophervr.github.io/ooxml/visio/demo/) · [Docs](https://christophervr.github.io/ooxml/visio/) · [Samples](https://christophervr.github.io/ooxml/samples/) · [Packages](#packages) · [Changelog](CHANGELOG.md)
 
 ![The Visio viewer rendering a workflow diagram with its ribbon, Shapes window and page tabs](docs/public/hero-viewer.webp)
 
-</div>
-
-> **Beta.** The API changes only with a changelog note. The viewer does not match Microsoft Visio, and saving is not yet guaranteed to keep everything a file contains. The [capability ledger](docs/parity.md) separates implemented code, tested evidence and missing functionality, and the [verification record](docs/verification.md) holds the native Visio checks.
-
-## Why this viewer
-
-- **One viewer, every framework.** The `<visio-viewer>` element owns the renderer, ribbon, page tabs, status bar, selection, search, layers and editing. Each framework package only maps its props, events, refs and reactivity onto it, so a fix reaches all six at once.
-- **One document model.** Loading, the ShapeSheet, editing and saving live in the `visio` area of [`ooxml-core`](../../src/core#readme), shared with the MCP tools and the Office suite. Every edit is validated there before it is applied.
-- **Local by default.** Drawings are parsed in a worker with a time limit and a memory budget, document XML never reaches the DOM, and nothing is uploaded. Storage such as OneDrive is connected only by the host.
-- **Honest limits.** Unsupported features are reported, not hidden: unavailable commands say why, and loads and edits return diagnostics.
-
 ## Packages
 
-| Package                                           | For                                                                                     |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [`visio-react-viewer`](packages/react#readme)     | React 18 or later: a `forwardRef` component, `useVisioViewerState` and building blocks. |
-| [`visio-vue-viewer`](packages/vue#readme)         | Vue 3.5 or later: a component with emits, an exposed handle and composables.            |
-| [`visio-angular-viewer`](packages/angular#readme) | Angular 21 or 22: a standalone component with inputs, outputs and signals.              |
-| [`visio-svelte-viewer`](packages/svelte#readme)   | Svelte 5: a component with exported methods and stores.                                 |
-| [`visio-solid-viewer`](packages/solid#readme)     | `solid-js` 1.9: a component with a `viewerRef` and accessors.                           |
-| [`visio-vanilla-viewer`](packages/vanilla#readme) | No framework: `mountViewer` and the `<visio-viewer>` element.                           |
-| [`visio-core`](packages/core#readme)              | The DOM-free document API (parse, inspect, edit), for Node and the browser.             |
-| [`visio-viewer-mcp`](mcp#readme)                  | MCP tools that let an agent inspect and edit `.vsdx` files in one folder.               |
+| Package                                    | Framework        | npm                                                       | What it is                                                          |
+| ------------------------------------------ | ---------------- | --------------------------------------------------------- | ------------------------------------------------------------------- |
+| [`visio-react-viewer`](packages/react)     | React 18+        | [npm](https://www.npmjs.com/package/visio-react-viewer)   | `forwardRef` component, `useVisioViewerState`, building blocks.     |
+| [`visio-vue-viewer`](packages/vue)         | Vue 3.5+         | [npm](https://www.npmjs.com/package/visio-vue-viewer)     | Component with emits, an exposed handle and composables.            |
+| [`visio-angular-viewer`](packages/angular) | Angular 21 or 22 | [npm](https://www.npmjs.com/package/visio-angular-viewer) | Standalone component with inputs, outputs and a state signal.       |
+| [`visio-svelte-viewer`](packages/svelte)   | Svelte 5         | [npm](https://www.npmjs.com/package/visio-svelte-viewer)  | Component with exported handle methods and a state store.           |
+| [`visio-solid-viewer`](packages/solid)     | `solid-js` 1.9   | [npm](https://www.npmjs.com/package/visio-solid-viewer)   | Component with a `viewerRef` and state accessors.                   |
+| [`visio-vanilla-viewer`](packages/vanilla) | None             | [npm](https://www.npmjs.com/package/visio-vanilla-viewer) | `mountViewer` and the `<visio-viewer>` element.                     |
+| [`visio-core`](packages/core)              | None (DOM-free)  | [npm](https://www.npmjs.com/package/visio-core)           | Parse, create and edit drawings in Node, browsers and workers.      |
+| [`visio-viewer-mcp`](mcp)                  | Node.js          | [npm](https://www.npmjs.com/package/visio-viewer-mcp)     | MCP tools that let an agent inspect and edit `.vsdx` in one folder. |
 
-Each viewer package is self-contained: it ships the shared viewer, its adapter and both browser workers, re-exports the `visio-core` API, and installs `ooxml-core`, `ooxml-ui` and `emf-converter` for you.
+Each viewer package is self-contained: it ships the shared viewer, its adapter and both browser workers, re-exports the `visio-core` API, and installs `ooxml-core`, `ooxml-ui` and `emf-converter`. The logic lives in the core's [`visio` area](../../src/core/visio/README.md) and the element in `ooxml-ui/visio` (`src/ui/src/visio`); this folder holds the thin framework adapters, the docs site and the package build.
 
 ## Quick start
 
@@ -72,84 +49,64 @@ export function Diagram() {
 }
 ```
 
-Give the viewer a height and load a `File`, `Blob`, `Uint8Array` or `ArrayBuffer` through the handle. Every package README has the same quick start for its framework, and each framework has a live demo running the same workspace: [React](https://christophervr.github.io/ooxml/visio/demo-react/), [Vue](https://christophervr.github.io/ooxml/visio/demo-vue/), [Angular](https://christophervr.github.io/ooxml/visio/demo-angular/), [Svelte](https://christophervr.github.io/ooxml/visio/demo-svelte/), [Solid](https://christophervr.github.io/ooxml/visio/demo-solid/) and [vanilla](https://christophervr.github.io/ooxml/visio/demo/).
+Every framework has the same shape: the same properties, the same events and the same handle (`load`, `exportVsdx`, `applyEdits`, `undo` and the rest), in that framework's own idiom. Saving is the application's job: `exportVsdx()` returns `{ bytes, dirty, diagnostics }` and `controller.markClean()` marks them saved, or pass `storage` and File > Save hands you the bytes. Each [package](#packages) README has the quick start for its framework, and each framework has a live demo: [React](https://christophervr.github.io/ooxml/visio/demo-react/), [Vue](https://christophervr.github.io/ooxml/visio/demo-vue/), [Angular](https://christophervr.github.io/ooxml/visio/demo-angular/), [Svelte](https://christophervr.github.io/ooxml/visio/demo-svelte/), [Solid](https://christophervr.github.io/ooxml/visio/demo-solid/) and [vanilla](https://christophervr.github.io/ooxml/visio/demo/).
 
-Saving is the application's job: `exportVsdx()` returns `{ bytes, dirty, diagnostics }`, and `controller.markClean()` marks them saved. Or pass `storage` and File > Save hands you the bytes.
+## Features
 
-## Features and limitations
+- **A Visio-style window:** ribbon with File backstage, Tell me and KeyTips, Shapes window, page tabs, rulers, Pan & Zoom, Find, layers, shape data, comments and Presentation Mode. Unavailable commands say why.
+- **Editing:** text and shape formatting, multi-selection, align and distribute, ordering, duplicate, create, move, resize, rotate and delete, connectors with glue, containers, pages and page setup. The core validates each atomic edit; undo and redo cover them all.
+- **Files:** `.vsdx`, `.vsdm`, `.vstx` and `.vstm` open as drawings; `.vssx` and `.vssm` stencils open in the Shapes window; legacy `.vsd` previews read-only. Saving writes a new copy, and a VBA project is kept, never run.
+- **Objects:** master inheritance, groups, background pages, paths, arcs, splines and bounded NURBS, themes and variants, rich text, pictures, a subset of EMF, and embedded charts (including ChartEx) with Edit Data.
+- **Export and print:** SVG, PNG and PDF export (vector pages with extractable standard-font text), print preview and frozen print artifacts.
+- **Collaboration:** the `collaboration` property shares the open drawing in a room, merged per page and shape ([collaboration](docs/collaboration.md)).
+- **Host integration:** `--office-*` theming, `customization` capabilities and hidden tabs, host-owned `storage` and `fileProviders` (such as OneDrive), ribbon add-in tabs, and [building blocks](docs/building-blocks.md) for your own layout.
+- **Bounded and local:** drawings parse in a worker with a time limit and a memory budget; pages of up to about 10,000 shapes open, and a drawing too large to edit opens read-only with the reason.
 
-|                      |                                                                                                                                                                                                                                                                  |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Window**           | Visio-style ribbon with File backstage, Tell me and KeyTips, Shapes window, page tabs, rulers, Pan & Zoom, status-bar zoom slider, Find, layers, shape data, comments, Presentation Mode and full screen. Unavailable commands say why.                          |
-| **Editing**          | Text and shape formatting, multi-selection, align and distribute, ordering, duplicate, create, move, resize, rotate and delete, connectors with glue, containers, pages and page setup. The core validates each atomic edit; undo and redo cover them all.       |
-| **File formats**     | `.vsdx`, `.vsdm`, `.vstx` and `.vstm` open as drawings; `.vssx` and `.vssm` stencils open in the Shapes window; legacy `.vsd` (Visio 2003) previews read-only. Saving writes a new copy and never overwrites the source; a VBA project is kept and never run.    |
-| **Objects**          | Shapes with master inheritance, groups, background pages, paths, arcs, splines and bounded NURBS, line and fill styles, themes and variants, arrowheads, rich text, embedded PNG, JPEG and GIF pictures, a subset of EMF, and 2-D and 3-D charts with Edit Data. |
-| **Export and print** | File > Export writes SVG, PNG and PDF (vector pages with extractable standard-font text; host fonts embed as subsets). Print preview and frozen print artifacts. Saved printer and layer print settings are not applied.                                         |
-| **Collaboration**    | The `collaboration` property shares the open drawing in a room, merged per page and shape; File > Share connects windows of one browser, and a host server connects people elsewhere ([collaboration](docs/collaboration.md)).                                   |
-| **Scale and safety** | Pages of up to about 10,000 shapes open inside a memory budget sized from the host's heap; a file that would exhaust it is refused, and a drawing too large to edit opens read-only with the reason.                                                             |
-| **Localization**     | English, German, Spanish, French and Simplified Chinese interface text through `locale` (or the `lang` attribute). Diagram content is never translated.                                                                                                          |
-| **Not supported**    | General ShapeSheet recalculation, most EMF records, EMF+, WMF and OLE, VDX, legacy binary stencils, ChartEx charts and macros (kept, never run). Visio's own connector routing and Re-Layout are partial; native visual equivalence is not established.          |
+## Status and limits
 
-Plain-text editing and the shape clipboard are experimental ([viewer API](docs/api.md)).
+**Beta** ([stability labels](../../docs/stability.md#current-labels)). The API changes only with a changelog note.
 
-## Configuration
+- There is no written preservation guarantee yet: saving is not guaranteed to keep everything a file contains.
+- Plain-text editing and the shape clipboard are experimental ([viewer API](docs/api.md)).
+- There is no general ShapeSheet recalculation; each edit has its own admission rules and other edits are refused.
+- Most EMF records, EMF+, WMF and OLE objects, VDX files and legacy binary stencils are not supported.
+- Visio's connector routing and Re-Layout are partial, and native visual equivalence is not established.
 
-Every binding takes the same properties: `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `locale`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders` and `customization`, and reports the same events, from `document-change` to the cancelable `file-command`.
-
-- **Theme:** shared `--office-*` tokens, `data-office-theme="dark"` or `--office-color-scheme: dark`, and `--vv-*` overrides for this viewer alone ([theming](docs/theming.md)).
-- **Capabilities and chrome:** `customization.capabilities` removes every route to `edit`, `open`, `save`, `export`, `print`, `share`, `copy`, `comment`, `find` or `settings`; `customization.ribbon.hiddenTabs` removes native tabs, File included ([customization](docs/api.md#customization)).
-- **Storage and OneDrive:** `storage` takes over Save, Open and AutoRecover, and `fileProviders` adds places to File > Open. The optional `ooxml-core/embedding/onedrive` connection uses sign-in the host supplies and does not provide Microsoft coauthoring or automatic merging ([OneDrive](docs/onedrive.md), [integration reference](../../docs/onedrive-integration.md#visio-vsdx)).
-- **Your own layout:** the [composable building blocks](docs/building-blocks.md) give you the canvas, toolbar, page navigation, inspector and Shapes pane separately, read-only until you pass `canEdit: true`.
-
-The [viewer API](docs/api.md) is the full reference, and the [bindings guide](docs/bindings.md) lists each framework's native forms.
-
-## Supported environments
-
-- Browsers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](../../docs/browser-support.md)).
-- Node.js 22.3 or newer for the published packages (builds, tests, server rendering and `visio-core`).
+The [capability ledger](docs/parity.md) separates implemented code, tested evidence and missing functionality; the [verification record](docs/verification.md) holds the native Visio checks, and open gaps are tracked in the [parity checklist](../../docs/parity-checklist.md).
 
 ## Privacy and network use
 
-Visio opens, renders, edits and saves drawings locally. The browser can load the bundled TIFF decoder or equation renderer from the app's origin when it first needs them. When the host or reader enables Google Fonts, only public font family names are requested. Linked pictures are not fetched, linked data is not refreshed, and nothing collects analytics or telemetry. [PRIVACY.md](../../PRIVACY.md) lists every request the repository's packages can make.
+Drawings open, render, edit and save on the device; nothing is uploaded, linked pictures and data are never fetched, and nothing collects telemetry. Font downloads (the `googleFonts` element property or the reader's Trust Center toggle) are off by default, bundled decoders and stencil tools load only from the app's own origin, and sharing reaches a server only when the host or reader configures one. [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio) lists every request and what is kept on the device.
 
-In a Vite consumer, set `worker.format` to `'es'` to keep the TIFF decoder in an on-demand worker chunk.
+## Samples
 
-The Shapes pane menus are in the app bundle. Opening a local stencil file or running a stencil
-authoring command can load bundled translations, editing code and a worker from the app's origin.
-
-## Development
-
-The viewer is part of the `ooxml` monorepo (a Bun workspace). Install once at the repository root, then work from `viewers/visio` with Node.js 22.12 or newer and Bun. `ooxml-core` (`src/core/visio`) and `ooxml-ui` (`src/ui/src/visio`) resolve to the same checkout, so there is nothing to link.
-
-```bash
-bun install                 # once, at the repository root
-cd viewers/visio
-bun run dev                 # docs landing page and /demo/ workspace
-bun run typecheck           # viewer and demo TypeScript
-bun run test                # controller, renderer, scene safety and binding tests
-bun run check:bindings      # native adapter types, lifecycle and SSR
-bun run check:core          # core TypeScript and focused Visio tests
-bun run test:docs           # VitePress docs build, ledger and theme tests
-bun run docs:build          # the VitePress docs and every demo in docs/.vitepress/dist
-bun run build               # ESM/declarations and the playground in site-dist/
-bun run check               # all non-browser checks and production build
-bun run build:packages      # the seven framework and core distributions
-bun run test:packages:workspace  # packed distributions against this checkout's core and ui (what CI runs)
-bun run test:browser        # Playwright Chromium workflows, then the packed-package browser check
-bun run fmt                 # oxfmt
-```
-
-`CHROMIUM_PATH` selects an explicit Chromium for the browser tests; otherwise install Playwright's Chromium. `bun run test:corpus -- LIBVISIO_CHECKOUT POI_CHECKOUT` runs optional hash-pinned real and security fixture regressions (see [corpus setup](docs/corpus.md)). The demos are in `demos/visio/` and the browser tests in `e2e/visio/`, at the repository root. `packages/bindings` holds the framework adapters; it is private and bundled into each framework package at build time.
-
-Releases are automated from Conventional Commits by the repository's release flow, published with npm trusted publishing and provenance ([release policy](docs/releasing.md)). Never run `npm publish` or push release tags by hand.
+Sample files to try: https://christophervr.github.io/ooxml/samples/
 
 ## Documentation
 
-[Guide](https://christophervr.github.io/ooxml/visio/) &middot; [Viewer API](docs/api.md) &middot; [Bindings](docs/bindings.md) &middot; [Architecture](docs/architecture.md) &middot; [Building blocks](docs/building-blocks.md) &middot; [Collaboration](docs/collaboration.md) &middot; [Theming](docs/theming.md) &middot; [Capability ledger](docs/parity.md) &middot; [Verification record](docs/verification.md) &middot; [Corpus setup](docs/corpus.md)
+[Guide](https://christophervr.github.io/ooxml/visio/) · [Getting started](docs/getting-started.md) · [Viewer API](docs/api.md) · [Bindings](docs/bindings.md) · [Framework guides](docs/frameworks/) · [Building blocks](docs/building-blocks.md) · [Theming](docs/theming.md) · [Collaboration](docs/collaboration.md) · [OneDrive](docs/onedrive.md) · [Architecture](docs/architecture.md) · [Capability ledger](docs/parity.md) · [Verification record](docs/verification.md) · [Corpus setup](docs/corpus.md) · [Releasing](docs/releasing.md)
 
-## Contributing
+## Development
 
-The repository is trunk-based and uses [Conventional Commits](https://www.conventionalcommits.org); the commit type sets the version bump and the touched paths decide which packages release. Format logic belongs in `src/core/visio` and shared Office controls in `src/ui`; read [`AGENTS.md`](AGENTS.md) before changing code here.
+The viewer is part of the `ooxml` Bun workspace. Install once at the repository root, then work from `viewers/visio` (Node.js 22.12 or newer and Bun); `ooxml-core` and `ooxml-ui` resolve to the same checkout. Read [`AGENTS.md`](AGENTS.md) before changing code.
+
+```bash
+bun install                      # once, at the repository root
+cd viewers/visio
+bun run dev                      # docs landing page and the /demo/ workspace
+bun run typecheck                # viewer and demo TypeScript
+bun run test                     # viewer unit and DOM tests
+bun run check:bindings           # native adapter types, lifecycle and SSR
+bun run check:core               # core TypeScript and focused Visio tests
+bun run test:docs                # VitePress docs build, ledger and theme tests
+bun run build                    # ESM, declarations and the playground in site-dist/
+bun run build:packages           # the seven framework and core distributions
+bun run test:packages:workspace  # packed distributions with this checkout's core and ui (what CI runs)
+bun run test:browser             # Playwright workflows, then the packed-package browser check
+bun run check                    # every non-browser check and the production build
+```
+
+The demos are in `demos/visio/` and the browser tests in `e2e/visio/`, at the repository root. `CHROMIUM_PATH` selects a Chromium for the browser tests. `bun run test:corpus -- LIBVISIO_CHECKOUT POI_CHECKOUT` runs the optional hash-pinned corpus ([corpus setup](docs/corpus.md)). Releases are automated from Conventional Commits ([release policy](docs/releasing.md)); never run `npm publish` or push release tags by hand.
 
 ## License
 

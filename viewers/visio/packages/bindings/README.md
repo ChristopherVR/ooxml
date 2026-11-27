@@ -1,157 +1,35 @@
-# Native Visio viewer bindings
+# @christophervr/visio-viewer-bindings
 
-Six thin native integrations use one browser element and one `mountViewer` implementation:
+**Private source for the six native framework adapters of the Visio viewer. It is not published to npm.**
 
-- Vanilla: `src/vanilla.ts`, `mountViewer`
-- React: `src/react.ts`, `VisioViewer`
-- Vue 3: `src/vue.ts`, `VisioViewer`
-- Angular: `src/angular.ts`, `VisioViewerComponent` (`visio-viewer-host`)
-- Svelte 5: `src/VisioViewer.svelte`, default `VisioViewer`
-- Solid: `src/solid.tsx`, `VisioViewer`
+`bun run build:packages` (in `viewers/visio`) bundles each entry point into its framework distribution under `packages/{react,vue,angular,svelte,solid,vanilla}`, and those packages are what is published. Install one of them instead; see the [Visio viewer README](../../README.md) and the [bindings guide](../../docs/bindings.md).
 
-This package is private source inside the repository and is never published itself. `bun run build:packages` bundles each entry point into its framework distribution (`packages/{react,vue,angular,svelte,solid,vanilla}`), and those are what is published; `bun run test:packages` checks the packed tarballs in a clean consumer. Import a specific framework entry point to avoid loading unrelated framework runtimes.
+## Entry points
 
-The contract (`VIEWER_CONTRACT` and the property and event keys) and the revision-aware forwarding (`mountFrameworkViewer`) are in `src/common.ts`. React and Vue are built from the `ooxml-ui/bindings` factories, Angular installs its handle members from the contract, and Solid mounts the element with JSX. `tests/contract-parity.test.ts` checks every adapter against the contract.
+| Export path | File                     | Native surface                                                                  |
+| ----------- | ------------------------ | ------------------------------------------------------------------------------- |
+| `./vanilla` | `src/vanilla.ts`         | `mountViewer`, `createViewerBuildingBlocks`                                     |
+| `./react`   | `src/react.ts`           | `VisioViewer` (`forwardRef`), `useVisioViewerState`                             |
+| `./vue`     | `src/vue.ts`             | `VisioViewer` (props, emits, exposed handle), `useVisioViewerState`             |
+| `./angular` | `src/angular.ts`         | `VisioViewerComponent` (`visio-viewer-host`: inputs, outputs, `state()` signal) |
+| `./svelte`  | `src/VisioViewer.svelte` | `VisioViewer` (exported handle methods, `getHandle()`, `getState()` store)      |
+| `./solid`   | `src/solid.tsx`          | `VisioViewer` (`viewerRef`), `createVisioViewerState`                           |
 
-## Shared contract
+Import a specific entry point so a host never loads an unrelated framework runtime. `src/building-blocks.ts`, `src/vanilla-building-blocks.ts` and `src/toolbar-controls.ts` hold the framework-neutral parts of the composable building blocks.
 
-Every handle exposes `createBlankDrawing(options?: CreateVsdxOptions)` through
-the shared element. Width and height are physical inches; omission creates a
-Letter page. Accepted creation replaces source, selection and history and updates
-each framework's existing state hook. The Svelte component forwards this method
-directly as well as through `getHandle()`.
+## How the adapters fit together
 
-All adapters accept the same properties:
-
-- `document`: a `VisioDocument` or `null` to clear it
-- `pageIndex`: zero-based page index
-- `zoom`: scale, where `1` means 100%
-- `showToolbar`: toolbar visibility
-- `canEdit`: editing permission. The full viewer defaults to editable; `false` makes it read-only (selection, search, zoom and export keep working). The building blocks default to read-only instead, see [building blocks](../../docs/building-blocks.md)
-- `readOnly`: a restriction of its own. `true` makes the drawing read-only and wins over `canEdit`; `false` or omitted lifts only that restriction
-- `locale`: interface language, such as `fr` or `zh-CN`; empty lets the viewer choose (File > Options, then `lang`, the page's language and the browser's)
-- `ribbonAddIns`: tabs the host adds after Help (see [Ribbon add-in tabs](../../docs/api.md#ribbon-add-in-tabs))
-- `collaboration`: shares the open drawing in a room while set, `null` leaves it (see [collaboration](../../docs/collaboration.md))
-- `storage` and `customization`: host-owned save and open, and the shared customization object (see [Customization](../../docs/api.md#customization))
-- `fileProviders`: cloud places for File > Open, such as OneDrive (see [OneDrive](../../docs/onedrive.md))
-- `events`: typed callback map using literal event names
-
-The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` and `file-command`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
-
-During an interactive zoom (Ctrl+wheel, a pinch, the zoom slider, the + and - keys) the drawing is
-scaled as a preview, and the zoom is applied once input pauses for 300 ms, the gesture ends, or a
-pointer press or scroll needs the rendered page. `zoom-change` fires then, once per gesture, with
-the zoom the gesture ended at; until then the `zoom` property and the controller state still hold
-the zoom the gesture started from, up to 300 ms behind what the user sees.
-
-Property updates are partial. Native framework snapshots are diffed so unrelated rerenders do not undo an imperative load or a user-changed viewport. Omitted or `undefined` properties preserve current viewer state. `null` explicitly clears the document. Removing the `events` prop clears callback-map handlers. Supply a new document object for an external replacement; in-place mutation is not a supported reactivity mechanism. Page and zoom interactions may update internal viewer state; the props request changes when their framework updates them.
-
-`document-change` carries `{ document, dirty, kind }` where kind is `edit`, `undo`, `redo`, `remote` (a collaborator's change) or `save` (after `markClean()`). The imperative `ViewerHandle` exposes `element`, `controller`, `load(bytesOrBlob)` and `fit()`. Editing methods include `applyEdits(edits)`, `replacePlainText(pageId, shapeId, text)`, `duplicateSelection()`, `copySelection()`, `cutSelection()`, `pasteSelection()`, `undo()`, `redo()`, `cancelEdit()` and `exportVsdx()`. After the host has saved the exported bytes it calls `controller.markClean()`. Collaboration is driven through the property; `element.collaborationState`, `element.reconnectCollaboration()` and `element.stopCollaboration()` are on the handle's `element`. Clipboard preparation state is available at `controller.state.clipboard` through each native reactive subscription; clipboard methods require a browser user gesture and support the bounded viewer shape format. They forward to the same source-backed worker-isolated implementation. `ViewerEditState` and `VsdxExportResult` are shared exported types; state is available at `controller.state.edit`. Angular exposes the native `documentChange` output; every adapter supports the `document-change` callback map. Read access and operations through a framework handle fail clearly before mounting or after unmounting. A retained controller or element is also disposed when the owner unmounts. Vanilla returns the full shared binding with `update()` and idempotent `destroy()`.
-
-The editor itself mounts on the client. Separate Node tests verify all six entry points import without browser globals; React, Vue, Svelte and Solid also render empty native hosts on the server. React and Vue have tests hydrating their actual server markup before mounting the shared element. Angular server rendering and Solid/Svelte hydration remain unverified, as does cross-document mounting. These checks use the installed versions and do not imply full SSR-framework integration coverage.
-
-## Native usage
-
-React uses a forwarded ref and ordinary props:
-
-```tsx
-const ref = useRef<ViewerHandle>(null);
-<VisioViewer ref={ref} document={diagram} events={{ 'document-error': reportError }} />;
-```
-
-Vue exposes the same handle on its component ref and also emits the native kebab-case events:
-
-```vue
-<VisioViewer ref="viewer" :document="diagram" @document-error="reportError" />
-```
-
-Angular exposes native inputs and outputs. Add the standalone component to the application's imports:
-
-```html
-<visio-viewer-host [document]="diagram" (documentError)="reportError($event)" />
-```
-
-Angular outputs are `documentLoad`, `documentChange`, `documentError`, `pageChange`, `zoomChange`, `shapeSelect`, `selectionChange`, `ribbonAddIn`, `collaborationChange` and `fileCommand` (notification only; cancel through `events['file-command']`). The complete `events` callback map is also accepted as an input. Vue and Angular invoke the callback-map handler and then emit their native output; use either API unless both notifications are intended.
-
-For large immutable document models, use Vue `shallowRef`/`markRaw` and Svelte `$state.raw` rather than deeply proxying a newly constructed options object on every update. Rewrapping a document in a new reactive proxy changes its identity and requests an external replacement. In-place mutation is not supported.
-
-Svelte uses native callback props through `events`. Its component exports `load`, `fit`, and `getHandle` so the complete typed handle is accessible without exposing private DOM:
-
-```svelte
-<VisioViewer bind:this={viewer} document={diagram}
-  events={{ 'document-error': reportError }} />
-```
-
-Solid supplies a ref callback with the handle on mount and `undefined` on unmount or ref replacement:
-
-```tsx
-<VisioViewer
-	document={diagram()}
-	viewerRef={setViewer}
-	events={{ 'document-error': reportError }}
-/>
-```
-
-Vanilla owns only the child it creates:
-
-```ts
-const viewer = mountViewer(host, { document: diagram, zoom: 1 });
-viewer.update({ events: { 'document-error': reportError } });
-// Later:
-viewer.destroy();
-```
-
-Style hooks are native to each framework: React `className`/`style`, Vue inherited attributes, Angular host attributes, Svelte `class`/`style`, and Solid `class`/`style`. The application must give the host a usable height. Shared viewer styling and accessibility live in the custom element.
-
-## Native state
-
-Viewer state includes page, zoom, selection, search, editing and undo availability. Each framework subscribes to the shared controller rather than polling the element:
-
-| Framework | State API                                                               |
-| --------- | ----------------------------------------------------------------------- |
-| React     | `useVisioViewerState(viewerRef)` returns `ViewerState` or `null`        |
-| Vue       | `useVisioViewerState(templateRef)` returns a read-only shallow ref      |
-| Angular   | `viewer.state()` reads the component's read-only signal                 |
-| Svelte    | `viewer.getState()` returns a read-only store                           |
-| Solid     | `createVisioViewerState(handleAccessor)` returns an accessor            |
-| Vanilla   | `viewer.controller.subscribe(listener)` returns an unsubscribe function |
-
-Native hooks follow viewer replacement and conditional remounts, detach old controller subscriptions and expose `null` while no viewer is mounted. Vanilla consumers own their subscription cleanup: call the returned unsubscribe function before destroying or replacing the mounted viewer. Old controller updates cannot change a replacement viewer's state. These lifecycle checks cover all six adapters, including React StrictMode effect replay.
-
-`state.selectedShapes` is an ordered, immutable array. Its first item is the primary `selectedShape`, and the existing `shape-select` callback retains that primary-selection payload. `selection-change` reports the complete array. Vue exposes a native `selection-change` event, Angular exposes `selectionChange`, and every adapter accepts the shared `events['selection-change']` callback.
-
-All six handles provide `selectShapes(targets)`, `selectAll()` and `clearSelection()`. Shift, Ctrl or Meta clicking toggles a shape; clicking the background clears the selection. Hidden or deleted targets are removed, selected groups exclude their descendants, and switching pages or documents clears selection. Single-target text and geometry panels require exactly one selected shape.
+- `src/common.ts` holds the Visio contract: `VIEWER_CONTRACT` (every property is forwarded manually, the handle members and their kinds), `mountFrameworkViewer` (sends only changed properties as revision-aware patches, so a re-render never undoes an imperative load or the user's zoom), `viewerStateSource` (the subscription every state hook builds on) and `withEventEmitter` (calls the `events` callback first, so `false` can cancel `file-command`, then emits the native output).
+- The property and event keys come from `src/core/visio/ui/contract.ts` (`propertyKeys`, `eventKeys`); the viewer itself is `<visio-viewer>` in `ooxml-ui/visio` (`src/ui/src/visio`).
+- React and Vue are built from the shared factories in `ooxml-ui/bindings`; Angular installs its handle members from the contract; Svelte and Solid mount the shared element directly.
+- A fix in one adapter almost always belongs in all six: change `common.ts` or the shared element where possible, and add the regression to each adapter's tests.
 
 ## Checks
 
-Install the workspace once from the repository root (`bun install`), then run the checks from `viewers/visio`:
+From `viewers/visio` (after `bun install` at the repository root):
 
 ```sh
-bun run check:bindings   # runs `bun run --cwd packages/bindings check`
+bun run check:bindings   # TypeScript, svelte-check, jsdom and SSR tests in this package
 ```
 
-`ooxml-core` and `ooxml-ui` resolve to the workspace packages in this repository. This package does not replace or fork the parser.
-
-Checks include TypeScript, `svelte-check`, native runtime lifecycle tests and real-element integration:
-
-- Contract parity: every adapter receives every property, reports every event through the callback map and the native output, and exposes every handle member
-
-- React StrictMode mount, cleanup and remount
-- Native state subscription replacement, conditional remount and stale-controller isolation
-- Native prop diffing preserves imperative documents/user zoom across unrelated updates
-- Late Blob success and failure after unmount/remount cannot affect the new viewer
-- Throwing ref-release callbacks cannot prevent Solid resource cleanup
-- No-DOM SSR imports and server rendering; React/Vue server-markup hydration
-- Native Vue, Angular zoneless, Svelte and Solid mounting and reactive updates
-- All property names, every event key, latest callbacks and callback removal
-- Retained handle rejection after unmount
-- Actual shared custom-element rendering and malformed-load rejection through all six adapters
-- Disposal clears the real element, listeners and owned DOM
-
-The focused lifecycle tests mock only the shared mount to isolate framework wiring. The integration matrix uses the real controller, parser and custom element. These tests run in jsdom and do not replace real-browser visual, accessibility, layout or framework-version compatibility tests. Only the installed versions are currently verified.
-
-## Editing scope
-
-Editing is experimental and source-backed. Load package bytes before editing; assigning a `VisioDocument` model alone remains read-only. `applyEdits()` forwards atomic geometry, text, formatting and ordering commands to the shared core. Plain-text replacement rejects master-linked text, rich text and fields; other commands have their own admission rules. Signed packages and macro content remain unsupported. The shared Home ribbon supports multi-selection formatting, alignment/distribution and deletion. History is bounded. Native Visio save/reopen evidence covers specific formatting and arrangement captures, not general fidelity; see `docs/verification.md` and `docs/parity.md` for current limits. `exportVsdx()` returns copy bytes and diagnostics without downloading or overwriting a file; consumers choose an explicit save/download action. A `document-change` callback reports `{ document, dirty, kind }`, with kind `edit`, `undo`, `redo`, `remote` or `save`. Unrelated framework rerenders must not replace an edited model with stale props.
-
-A chart inserted with Insert > Chart is an embedded workbook object, and its shortcut menu offers Edit Data and Format Chart (the shared `office-ui-chart-data-sheet` and `office-ui-chart-format-pane`). Effects, 3-D and text formatting are not editable there; the limits are in `docs/parity.md`.
+`tests/contract-parity.test.ts` checks that every adapter receives every property, reports every event through the callback map and its native output, and exposes every handle member. Other tests cover React StrictMode, state subscriptions across remounts, prop diffing, retained handles rejecting after unmount, server imports and React/Vue hydration. They run in jsdom; real-browser behaviour is covered by the Playwright suites in `e2e/visio/` (`bun run test:browser`). Angular server rendering and Solid/Svelte hydration are not verified.

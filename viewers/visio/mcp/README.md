@@ -1,15 +1,12 @@
 # visio-viewer-mcp
 
-Give an AI agent safe, local access to Visio drawings: an MCP server that inspects `.vsdx` files and applies validated edits, confined to one folder.
+**An MCP server that lets an AI agent inspect `.vsdx` drawings and apply validated edits, confined to one folder on your machine.**
 
 [![npm version](https://img.shields.io/npm/v/visio-viewer-mcp.svg)](https://www.npmjs.com/package/visio-viewer-mcp)
 [![license](https://img.shields.io/npm/l/visio-viewer-mcp.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/LICENSE)
 [![types](https://img.shields.io/npm/types/visio-viewer-mcp.svg)](https://www.npmjs.com/package/visio-viewer-mcp)
-[![status: beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md)
 
-[Docs](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/mcp/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
-
-> **Beta.** The tool names and schemas change only with a changelog note. Edits are experimental: they are validated before anything is written, but a saved drawing is not yet guaranteed to keep everything the file contains.
+[MCP guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/mcp/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
 ## Install
 
@@ -17,11 +14,11 @@ Give an AI agent safe, local access to Visio drawings: an MCP server that inspec
 npm install visio-viewer-mcp
 ```
 
-`ooxml-core` is installed with it. The package ships plain JavaScript and needs no build step.
+`ooxml-core` and `@modelcontextprotocol/sdk` are installed with it. The package ships plain JavaScript and needs no build step. Node.js 22.3 or newer.
 
-## Quick start
+## Client configuration
 
-Add the server to your MCP client, with the folder it may use:
+The package's command is `visio-tools`. It serves over stdio and takes the folder it may use as `--root <dir>` (or `--root=<dir>`, or a bare first argument). Without one it uses the current directory and says so on stderr.
 
 ```json
 {
@@ -34,58 +31,48 @@ Add the server to your MCP client, with the folder it may use:
 }
 ```
 
-The `visio-tools` command serves over stdio. Without `--root` (or a bare folder argument) it uses the current directory and says so on stderr.
-
-## Tools
-
-| Tool            | What it does                                                                                                                                                                                                                          |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `visio_inspect` | Reads a `.vsdx` file: pages, shape ids, text, geometry and the core's diagnostics. Never writes.                                                                                                                                      |
-| `visio_edit`    | Applies a batch of 1 to 1,000 edits atomically: `replace-plain-text`, `move-shape`, `resize-shape`, `delete-shape` and `create-rectangle`. Coordinates are in inches from the bottom-left of the page. Unsupported edits are refused. |
-
-Each tool takes a `filePath` under the root. `visio_edit` replaces the source atomically unless `outputPath` names a new file with the same extension; it never overwrites an existing file there. Results and errors come back as JSON text, with diagnostics that describe any fidelity limits. There is no tool that creates a drawing from nothing.
-
-## Safety
-
-- **Confined to the root.** Paths are checked on their text before any filesystem call, then again after links are resolved. UNC and device paths are refused everywhere, and on Windows so are names the system would reinterpret (`:`, `<`, `>`, `"`, `|`, `?`, `*`, a trailing dot or space, device names such as `NUL`).
-- **Bounded.** Files are limited to 64 MiB in and out, and every read or edit has one memory budget sized from the heap Node reports. A drawing that does not fit is refused with `LIMIT_XML_MEMORY`. A page of 10,000 shapes needs a heap limit of about 1,000 MiB, so start Node with `--max-old-space-size=820` or more if your agents open drawings that large.
-- **Atomic writes.** Output is written to a temporary file and moved into place only after the core has validated every edit in the batch.
-
-## Use it from code
+To use the tools from your own Node code, `createServer({ rootDir })` returns a new server with them, and `registerTools(server, { rootDir })` adds them to a server you already have. Importing the package starts no transport; connect one yourself.
 
 ```js
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createServer, registerTools } from 'visio-viewer-mcp';
 
-// A new server with the Visio tools:
 const server = createServer({ rootDir: '/path/to/drawings' });
 
-// Or add them to a server you already have:
 const mine = new McpServer({ name: 'my-tools', version: '1.0.0' });
 registerTools(mine, { rootDir: '/path/to/drawings' });
 ```
 
-Importing the package starts no transport; connect the server to one yourself. Install `@modelcontextprotocol/sdk` in your own project when you import it. The tools themselves are `visioTools` in `ooxml-core/automation`, registered with `registerAutomationTools` from `ooxml-core/automation/node`; the combined [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp) server registers the same definitions. See the [MCP guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md).
+Import `@modelcontextprotocol/sdk` only if your project declares it as its own dependency.
 
-## Supported environments
+## Tools
 
-- Node.js 22.3 or newer.
-- Any MCP client that starts stdio servers.
+| Tool            | What it does                                                                                                                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visio_inspect` | Reads a `.vsdx` file: pages, shape ids, text, geometry and the core's diagnostics. Never writes.                                                                                                  |
+| `visio_edit`    | Applies 1 to 1,000 edits as one atomic batch: `replace-plain-text`, `move-shape`, `resize-shape`, `delete-shape` and `create-rectangle`. Coordinates are inches from the bottom left of the page. |
+
+Each tool takes a `filePath` under the root. `visio_edit` replaces the source atomically unless `outputPath` names a new file with the same extension; it never overwrites an existing file there. Results and errors come back as JSON text, with diagnostics that describe any fidelity limits. There is no tool that creates a drawing from nothing.
+
+The tools are `visioTools` in `ooxml-core/automation`, registered with `registerAutomationTools` from `ooxml-core/automation/node`; the combined [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp) server and the Office suite's assistant run the same definitions. See the [MCP guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md).
+
+## Safety and limits
+
+- **Confined to the root.** Paths are checked as text before any filesystem call, then again after links are resolved. UNC and device paths are refused, and on Windows so are names the system would reinterpret (`:`, `<`, `>`, `"`, `|`, `?`, `*`, a trailing dot or space, device names such as `NUL`).
+- **Bounded.** Files are limited to 64 MiB in and out, and every read or edit has one memory budget sized from the heap Node reports; a drawing that does not fit is refused with `LIMIT_XML_MEMORY`. A page of 10,000 shapes needs a heap limit of about 1,000 MiB, so start Node with `--max-old-space-size=820` or more for drawings that large.
+- **Validated and atomic.** The core checks every edit in a batch before anything is written; unsupported edits are refused. Output goes to a temporary file and is moved into place only on success.
+- **Beta.** Tool names and schemas change only with a changelog note. Edits are experimental: a saved drawing is not yet guaranteed to keep everything the file contains ([capability ledger](https://christophervr.github.io/ooxml/visio/parity)).
 
 ## Privacy and network use
 
-The server makes no network request. It reads and writes only files under its root, sends nothing anywhere and collects no telemetry; what your MCP client does with tool results is up to that client. It does not sign in to Microsoft or sync OneDrive: an application that stores drawings in OneDrive can fetch them with `ooxml-core/embedding/onedrive` and hand the bytes to its own tool workflow ([OneDrive guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)). See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+The server makes no network request of its own: it reads and writes only files under its root, answers over stdio and collects no telemetry. On Windows, a path naming a network share can make the system contact that host while the path is checked, before it is refused. What your MCP client does with tool results is up to that client. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#mcp-servers-mcp-and-the-viewers-mcp-packages).
 
-## Related packages
+## Documentation
 
-| Package                                                                                                                                                                       | What it is                                                   |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp)                                                                                                                        | One server with the Word, Excel, PowerPoint and Visio tools. |
-| [`visio-core`](https://www.npmjs.com/package/visio-core)                                                                                                                      | The Visio document API, for your own Node code.              |
-| [`visio-react-viewer`](https://www.npmjs.com/package/visio-react-viewer) and the other [Visio viewers](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) | Show and edit the same drawings in a browser.                |
-| [`ooxml-core`](https://www.npmjs.com/package/ooxml-core)                                                                                                                      | The Office logic behind the tools.                           |
-
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme).
+- [MCP guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md) for every server in the repository.
+- [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp): one server with the Word, Excel, PowerPoint and Visio tools.
+- [`visio-core`](https://www.npmjs.com/package/visio-core): the Visio document API for your own Node code.
+- The [Visio viewers](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) show and edit the same drawings in a browser.
 
 ## License
 
