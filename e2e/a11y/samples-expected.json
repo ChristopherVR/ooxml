@@ -62,19 +62,11 @@
 		],
 		"order-to-delivery-flowchart": [
 			{
-				"notice": "render: Arrowhead style 13 is not rendered in this build.",
-				"gap": "Arrowhead styles outside the common set are not drawn"
-			},
-			{
 				"notice": "render: Text exceeds its saved text-box height.",
 				"gap": "Shape text is measured and wrapped with browser fonts"
 			}
 		],
 		"platform-architecture": [
-			{
-				"notice": "render: Arrowhead style 13 is not rendered in this build.",
-				"gap": "Arrowhead styles outside the common set are not drawn"
-			},
 			{
 				"notice": "render: Text exceeds its saved text-box height.",
 				"gap": "Shape text is measured and wrapped with browser fonts"
