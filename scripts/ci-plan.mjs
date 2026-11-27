@@ -414,9 +414,12 @@ export function pptxPlan(files, { everything, reaches, reference = false, reach 
  * Revisit with the first CI timings.
  */
 export const A11Y_SHARDS = { withPowerPoint: 2, suiteOnly: 1 };
-/** What the gates run against: the suite's sources and shell, the viewers and their demos. */
+/**
+ * What the gates run against: the suite's sources and shell, the viewers and their demos, and the
+ * sample files the gallery spec opens in each editor.
+ */
 const A11Y_REACH =
-	/^(src\/ui\/|apps\/office-suite\/|site\/|viewers\/|demos\/|e2e\/a11y\/|scripts\/(build-suite|bundle-suite|build-pwa|preview-site|browser-performance)\.mjs$)/;
+	/^(src\/ui\/|apps\/office-suite\/|site\/|samples\/|viewers\/|demos\/|e2e\/a11y\/|scripts\/(build-suite|build-samples-page|bundle-suite|build-pwa|preview-site|browser-performance)\.mjs$)/;
 
 /**
  * What the byte budgets measure (scripts/perf-budgets.mjs): the built core and ooxml-ui, and the
@@ -661,10 +664,11 @@ export function plan(changed, { full = false, testFiles, reference = false, reac
 	// src/core is the library, one folder per area; src/ui is ooxml-ui, a package of its own.
 	const src = live.filter((file) => file.startsWith('src/core/'));
 	const ui = live.some((file) => file.startsWith('src/ui/'));
-	// `.release-notes/` is checked by major-notes.test.mjs, so a note runs the script tests.
+	// `.release-notes/` is checked by major-notes.test.mjs, so a note runs the script tests; so do
+	// the samples, which samples.test.mjs regenerates and compares.
 	const scripts =
 		files.some((file) => CHANGELOG.test(file)) ||
-		live.some((file) => /^(scripts|\.github|site|\.release-notes)\//.test(file));
+		live.some((file) => /^(scripts|\.github|site|samples|\.release-notes)\//.test(file));
 	const mcp = live.some(
 		(file) => file.startsWith('mcp/') || file.startsWith('src/core/automation/'),
 	);

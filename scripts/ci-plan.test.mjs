@@ -855,6 +855,16 @@ test('a release note runs the script tests that check it, and nothing else', () 
 	assert.equal(result.viewerBrowser.length, 0);
 });
 
+test('a sample or its generator runs the script tests that check the samples', () => {
+	for (const file of ['samples/generators/xlsx/index.ts', 'samples/manifest.json']) {
+		const result = plan([file]);
+		assert.equal(result.scripts, true, file);
+		assert.equal(result.typecheck.strict, false, file);
+		assert.equal(result.pptx.run, false, file);
+		assert.equal(result.viewerBrowser.length, 0, file);
+	}
+});
+
 test('the accessibility gates run for the suite, the shared UI, the viewers and the gates', () => {
 	const suiteOnly = ['suite'];
 	const all = ['suite', ...PPTX_BINDINGS.map((binding) => `pptx-${binding}`)];
@@ -865,6 +875,8 @@ test('the accessibility gates run for the suite, the shared UI, the viewers and 
 		'src/ui/src/docx/schema.ts',
 		'viewers/docx/packages/react/src/index.ts',
 		'demos/xlsx/src/main.ts',
+		'samples/docx/technical-report.docx',
+		'scripts/build-samples-page.mjs',
 	]) {
 		assert.equal(gates([file]).run, true, file);
 		assert.deepEqual(gates([file]).projects, suiteOnly, file);
