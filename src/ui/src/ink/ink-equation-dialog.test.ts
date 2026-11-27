@@ -44,7 +44,7 @@ describe('the shared ink math recognizer', () => {
 describe('the Ink Equation dialog', () => {
 	it('sends only the strokes to the recognizer and inserts the equation it recognized', async () => {
 		vi.useFakeTimers();
-		const recognizer = vi.fn<InkMathRecognizer>(async () => '\frac{1}{2}');
+		const recognizer = vi.fn<InkMathRecognizer>(async () => '\\frac{1}{2}');
 		const insert = vi.fn(() => true);
 		const closed = vi.fn();
 		openInkEquationDialog({
@@ -77,11 +77,11 @@ describe('the Ink Equation dialog', () => {
 			[{ x: 5, y: 6 }],
 		]);
 		const source = dialog.querySelector('textarea')!;
-		expect(source.value).toBe('\frac{1}{2}');
+		expect(source.value).toBe('\\frac{1}{2}');
 		dialog
 			.querySelector('office-ui-dialog-footer')!
 			.dispatchEvent(new CustomEvent('office-dialog-footer-request', { detail: { id: 'insert' } }));
-		expect(insert).toHaveBeenCalledWith(expect.objectContaining({ latex: '\frac{1}{2}' }));
+		expect(insert).toHaveBeenCalledWith(expect.objectContaining({ latex: '\\frac{1}{2}' }));
 	});
 
 	it('aborts a pending recognition when the pad is cleared and says when nothing was recognized', async () => {

@@ -63,7 +63,9 @@ describe('the ink ruler', () => {
 		expect(ruler.getAttribute('tabindex')).toBe('0');
 		expect(ruler.getAttribute('aria-label')).toBe('Règle, 0 degrés');
 		// Without a tool only the ruler takes the pointer.
-		expect(canvas.getAttribute('tool')).toBe('');
+		// A canvas created without a tool has no tool attribute until one is set.
+		expect(canvas.getAttribute('tool') ?? '').toBe('');
+		expect(canvas.tool).toBe('');
 		canvas.tool = 'pen';
 		const strokes: InkStrokeDetail[] = [];
 		canvas.addEventListener('office-ink-stroke', (event) =>
@@ -71,7 +73,9 @@ describe('the ink ruler', () => {
 		);
 		// The jsdom canvas has no size: the ruler lies across the middle of 600 x 300 at y = 150.
 		canvas.dispatchEvent(pointer('pointerdown', 100, 140));
+		// A stroke's samples are its press and moves; the release adds none (see ink.test.ts).
 		canvas.dispatchEvent(pointer('pointermove', 200, 160));
+		canvas.dispatchEvent(pointer('pointermove', 300, 141));
 		canvas.dispatchEvent(pointer('pointerup', 300, 141));
 		expect(strokes[0]?.samples.map(({ x, y }) => [x, y])).toEqual([
 			[100, 150],
@@ -80,6 +84,7 @@ describe('the ink ruler', () => {
 		]);
 		// One begun away from the edge is drawn as it is.
 		canvas.dispatchEvent(pointer('pointerdown', 100, 40));
+		canvas.dispatchEvent(pointer('pointermove', 120, 60));
 		canvas.dispatchEvent(pointer('pointerup', 120, 60));
 		expect(strokes[1]?.samples.at(-1)).toMatchObject({ x: 120, y: 60 });
 		// Shift and an arrow key turn it.
