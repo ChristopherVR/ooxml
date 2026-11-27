@@ -128,7 +128,7 @@ it('closes the preceding channel when another pane replaces it or the pane is re
 });
 
 it('removes a disconnected pane when its host reconnects', () => {
-	const { host, pane, frame } = mount();
+	const { host, frame } = mount();
 	const { close } = connect(frame);
 	host.remove();
 	document.body.append(host);
