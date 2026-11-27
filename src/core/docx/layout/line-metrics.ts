@@ -40,15 +40,18 @@ export function tokenExtent(
 
 /**
  * A line's height and baseline: the tallest extent above and below the baseline over its tokens
- * (inline pictures sit on the baseline), scaled by the paragraph's line spacing. Word adds extra
- * spacing above the text, so the baseline sits one descent above the line's bottom.
+ * (inline pictures sit on the baseline), scaled by the paragraph's line spacing. Exact and
+ * at-least spacing add their extra space above the text, so the baseline sits one descent above
+ * the line's bottom. Multiple spacing above single (`w:lineRule="auto"`, `w:line` > 240) adds it
+ * below the text instead: Word keeps the baseline one ascent below the line's top and lets that
+ * extra space (`extraBelowPx`) of a page's last line run past the bottom margin (#360).
  */
 export function lineMetrics(
 	placed: PlacedToken[],
 	fonts: LayoutFontSpec[],
 	paragraph: LayoutParagraph,
 	measurer: TextMeasurer,
-): { heightPx: number; baselinePx: number } {
+): { heightPx: number; baselinePx: number; extraBelowPx: number } {
 	const empty = placed.length
 		? undefined
 		: fontMetrics(measurer, paragraph.emptyLineFont ?? fonts[0] ?? fontOf({ text: '' }));
@@ -90,13 +93,16 @@ export function lineMetrics(
 	const natural = above + below;
 	const rule = paragraph.lineSpacingRule ?? 'auto';
 	const spacingTwips = paragraph.lineSpacingTwips;
+	if (rule !== 'exact' && rule !== 'atLeast') {
+		const heightPx = Math.max(objectAscent + below, natural * ((spacingTwips ?? 240) / 240));
+		const extraBelowPx = Math.max(0, heightPx - natural);
+		return { heightPx, baselinePx: heightPx - below - extraBelowPx, extraBelowPx };
+	}
 	const heightPx =
 		rule === 'exact'
 			? spacingTwips != null
 				? twipsToPx(spacingTwips)
 				: natural
-			: rule === 'atLeast'
-				? Math.max(natural, spacingTwips != null ? twipsToPx(spacingTwips) : 0)
-				: Math.max(objectAscent + below, natural * ((spacingTwips ?? 240) / 240));
-	return { heightPx, baselinePx: heightPx - below };
+			: Math.max(natural, spacingTwips != null ? twipsToPx(spacingTwips) : 0);
+	return { heightPx, baselinePx: heightPx - below, extraBelowPx: 0 };
 }

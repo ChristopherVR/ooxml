@@ -22,13 +22,19 @@ Word 16.0.20625 exported each fixture through `Document.ExportAsFixedFormat`. Th
 | [#349](https://github.com/ChristopherVR/ooxml/issues/349)                                                            | Inline title and closing tags occupy space in both dimensions. The tagged file occupies three pages and the default-appearance control occupies two.                                                                                                                                                                                                        |
 | [#353](https://github.com/ChristopherVR/ooxml/issues/353)                                                            | TableGrid supplies single spacing with zero after-spacing inside its cell. The table matches the height of the direct-formatting control and fits on one page.                                                                                                                                                                                              |
 | [#359](https://github.com/ChristopherVR/ooxml/issues/359)                                                            | Contextual spacing drops only the flagged paragraph's own space beside a paragraph of the same style. The one-sided sample has two pages (33 paragraphs on page one) and the control one.                                                                                                                                                                   |
+| [#360](https://github.com/ChristopherVR/ooxml/issues/360)                                                            | Multiple line spacing puts its extra space below the text: the first 1.15 line after a single line steps 14.64 pt, later ones 16.80 or 16.92 pt. The last line's extra space may pass the bottom margin, so 42 lines fit on page one, and the control fits too.                                                                                             |
 
 `issue-359-contextual-spacing-rows.docx` is a synthetic file with eleven pairs of Normal
 paragraphs that set contextual spacing, space before and space after on either side. Word's gaps
 for each pair, from `Range.Information(6)`, are in `issue-359-contextual-spacing-rows.json`. When the
 upper paragraph drops its space after, Word still subtracts that space after from the lower
-paragraph's space before. Regenerate it with
-`python src/core/docx/layout/fixtures/word-layout-reports/generate-contextual-spacing-rows.py`.
+paragraph's space before. `issue-360-line-spacing-rules.docx` has three one-line paragraphs for each of single, 1.15,
+1.5, double and 0.8 spacing, exact 20 pt and at least 20 and 10 pt, in Times New Roman.
+`issue-360-triple-spacing-page-fit.docx` has 120 one-line paragraphs at triple spacing: Word
+puts 17 on each page because the extra space of each page's last line passes the bottom margin.
+Word's PDF baselines for both and for the reporter's #360 samples are in
+`issue-360-line-spacing.json`. Regenerate the synthetic files with
+`python src/core/docx/layout/fixtures/word-layout-reports/generate-spacing-fixtures.py`.
 
 `issue-353-table-style-precedence.docx` is a synthetic Lorem ipsum document without personal
 metadata. Normal sets 12 pt after and left justification, while the table style sets zero after

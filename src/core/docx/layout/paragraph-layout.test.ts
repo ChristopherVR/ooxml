@@ -241,7 +241,7 @@ describe('layoutParagraph baselines', () => {
 		lineHeightOf: (font) => font.sizePx * 1.25,
 	};
 
-	it('aligns fragments of different sizes on one baseline, with extra spacing above', () => {
+	it('aligns fragments of different sizes on one baseline, with extra spacing below (#360)', () => {
 		const result = layoutParagraph(
 			paragraph(
 				[
@@ -258,13 +258,33 @@ describe('layoutParagraph baselines', () => {
 			noop,
 		);
 		const line = at(result.lines, 0);
-		// 24pt = 32px → 40px natural (32 above, 8 below); double spacing doubles it to 80px.
+		// 24pt = 32px → 40px natural (32 above, 8 below); double spacing doubles it to 80px and,
+		// as in Word, puts the extra 40px below the text.
 		expect(line.heightPx).toBe(80);
-		expect(line.baselinePx).toBe(72);
+		expect(line.baselinePx).toBe(32);
+		expect(line.extraBelowPx).toBe(40);
 		const big = at(line.fragments, 0);
 		const small = at(line.fragments, 2);
-		expect(big.topPx! + big.boxHeightPx! * 0.8).toBe(72);
-		expect(small.topPx! + small.boxHeightPx! * 0.8).toBe(72);
+		expect(big.topPx! + big.boxHeightPx! * 0.8).toBe(32);
+		expect(small.topPx! + small.boxHeightPx! * 0.8).toBe(32);
+	});
+
+	it('keeps at-least spacing above the text (#360)', () => {
+		const line = at(
+			layoutParagraph(
+				paragraph([{ text: 'Big', fontSizePt: 24 }], {
+					lineSpacingTwips: signedTwips(1200),
+					lineSpacingRule: 'atLeast',
+				}),
+				400,
+				sized,
+				noop,
+			).lines,
+			0,
+		);
+		expect(line.heightPx).toBe(80);
+		expect(line.baselinePx).toBe(72);
+		expect(line.extraBelowPx).toBeUndefined();
 	});
 
 	it('raises superscripts and sits inline pictures on the baseline', () => {

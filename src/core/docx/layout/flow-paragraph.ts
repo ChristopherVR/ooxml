@@ -191,8 +191,14 @@ export function placeParagraph(
 				cumulative + height + (firstSegment ? spacingBeforePx : 0),
 			);
 			const budget = cursor.remainingHeightPx() - (firstSegment ? spacingBeforePx : 0);
-			// A line that does not fit waits for the next column, unless the column is empty.
-			if (cumulative + height > budget + 1e-6 && (end > lineCursor || !cursor.atColumnTop)) break;
+			// A line that does not fit waits for the next column, unless the column is empty. Multiple
+			// spacing's extra space below the text may run past the bottom margin (#360).
+			const overhang = lineHeight(line, i) ? (line.extraBelowPx ?? 0) : 0;
+			if (
+				cumulative + height - overhang > budget + 1e-6 &&
+				(end > lineCursor || !cursor.atColumnTop)
+			)
+				break;
 			cumulative += height;
 			end = i + 1;
 			if (layout.pageBreakAfterLine.has(i)) {

@@ -45,6 +45,11 @@ export interface LayoutLine {
 	baselinePx?: number;
 	/** Space skipped above this line to clear a picture wrapped top-and-bottom; `yPx` is below it. */
 	gapBeforePx?: number;
+	/**
+	 * Multiple line spacing's extra space below the text, included in `heightPx`. Word lets it run
+	 * past the bottom margin on the last line of a page or column.
+	 */
+	extraBelowPx?: number;
 	/** Character range within the paragraph's concatenated run text, for hit-testing. */
 	sourceStart: number;
 	sourceEnd: number;

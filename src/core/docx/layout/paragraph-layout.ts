@@ -277,7 +277,7 @@ function measureParagraph(
 			? globalOffset(last, last.kind === 'word' || last.kind === 'space' ? last.text.length : 1)
 			: start;
 		const gapBeforePx = boxFor(lineIndex).gapBeforePx;
-		const { heightPx, baselinePx } = lineMetrics(placed, fonts, paragraph, measurer);
+		const { heightPx, baselinePx, extraBelowPx } = lineMetrics(placed, fonts, paragraph, measurer);
 		// Each fragment's box is placed so its baseline sits on the line's.
 		rendered.forEach(({ token }, index) => {
 			const extent = tokenExtent(token, paragraph, fonts, measurer);
@@ -308,6 +308,7 @@ function measureParagraph(
 				? { firstToken }
 				: { firstToken: firstToken.index, firstTokenOffset: firstToken.offset }),
 			...(gapBeforePx ? { gapBeforePx } : {}),
+			...(extraBelowPx ? { extraBelowPx } : {}),
 		});
 		runningY += gapBeforePx + heightPx;
 		if (forcedByBreak === 'page') pageBreakAfterLine.add(lineIndex);

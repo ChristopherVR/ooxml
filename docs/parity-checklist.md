@@ -809,6 +809,16 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       of all 2,238 body and table lines of the anonymized #330 contract, and on all 600 lines of
       its two single-spacing controls. Regressions cover Word's breaks at dashes, authored
       indentation, overlong words across formatting runs and modern justification.
+- [x] **P2** Contextual spacing drops only the flagged paragraph's own space beside a paragraph of
+      the same style, in Print Layout and the editing view, and multiple line spacing puts its extra
+      space below the text, which may pass the bottom margin on a page's last line. Checked against
+      Word 16 COM and PDF baselines with the #359 and #360 fixtures in
+      `src/core/docx/layout/fixtures/word-layout-reports/`.
+- [ ] **P2** Exact line spacing puts the baseline 80% down the line in Word 16 (16 pt for a 20 pt
+      line in Calibri and Times New Roman); Print Layout puts it one descent above the bottom.
+      Multiple spacing below single shrinks the ascent and descent in proportion in Word; Print
+      Layout takes it all from above the text. The editing view's CSS line height still splits the
+      extra space of multiple spacing above and below the text.
 - [ ] **P2** Word's justification near a line's fitting threshold is still approximated. Font
       substitutions can also shift line breaks. Literal U+00AD in a text run and the discretionary
       `w:softHyphen` element still share the same representation in Print Layout.

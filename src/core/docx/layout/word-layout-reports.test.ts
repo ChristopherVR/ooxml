@@ -384,6 +384,101 @@ it('drops contextual spacing only from the flagged paragraph (#359)', async () =
 	expect(next.yPx).toBeCloseTo(consectetur.yPx + consectetur.heightPx);
 });
 
+/** Each line's text, page and baseline in points from the top of its page. */
+function lineBaselines(pages: ReturnType<typeof layoutDocumentModel>['pages']) {
+	return pages.flatMap((page) =>
+		page.columns.flatMap((column) =>
+			column.blocks.flatMap((block) =>
+				block.kind === 'paragraph'
+					? block.lines.map((line) => ({
+							text: line.fragments.map((part) => part.text ?? '').join(''),
+							page: page.index,
+							pt: (page.marginTopPx + block.yPx + line.yPx + (line.baselinePx ?? 0)) * 0.75,
+						}))
+					: [],
+			),
+		),
+	);
+}
+
+const wordLineSpacing = async () =>
+	JSON.parse(
+		await readFile(
+			new URL('./fixtures/word-layout-reports/issue-360-line-spacing.json', import.meta.url),
+			'utf8',
+		),
+	) as {
+		lineSpacingRules: { baselinesPt: Record<string, number> };
+		tripleSpacingPageFit: { pages: number; linesPerPage: number[]; firstBaselinePt: number };
+		lastLine: { linesOnPageOne: number; baselinesPt: number[] };
+		lastLineControl: { linesOnPageOne: number };
+	};
+
+// Calibri's single line at 12 pt is 14.64 pt in Word; the fake measurer's default is 13.8 pt.
+const calibriLike = createFakeMeasurer({ lineHeightFactor: 14.64 / 12 });
+
+it('puts the extra space of multiple line spacing below the text (#360)', async () => {
+	const word = await wordLineSpacing();
+	const { pages } = await layout('issue-360-multiple-line-spacing-last-line', calibriLike);
+	expect(pages).toHaveLength(1);
+	const lines = lineBaselines(pages);
+	expect(lines).toHaveLength(word.lastLine.linesOnPageOne);
+	const steps = (values: number[]) =>
+		values.slice(1).map((value, index) => value - at(values, index));
+	const ours = steps(lines.map((line) => line.pt));
+	const theirs = steps(word.lastLine.baselinesPt);
+	// Line 4, the first 1.15 line, steps like a single line; Word's PDF rounds to 0.12 pt.
+	expect(at(theirs, 2)).toBeCloseTo(14.64, 2);
+	ours.forEach((step, index) => expect(Math.abs(step - at(theirs, index))).toBeLessThan(0.13));
+	const control = await layout('issue-360-multiple-line-spacing-last-line-control', calibriLike);
+	expect(control.pages).toHaveLength(1);
+	expect(lineBaselines(control.pages)).toHaveLength(word.lastLineControl.linesOnPageOne);
+});
+
+it('keeps Word baselines for auto and at-least line spacing (#360)', async () => {
+	const word = (await wordLineSpacing()).lineSpacingRules.baselinesPt;
+	const { pages } = await layout('issue-360-line-spacing-rules');
+	const ours = new Map(lineBaselines(pages).map((line) => [line.text, line.pt]));
+	const labels = Object.keys(word);
+	// Steps into and within single, multiple and at-least groups. Word puts an exact line's baseline
+	// 80% down the line and shrinks both extents below single spacing; those groups (m080, exact20
+	// and the lines after them) are known gaps, outside #360.
+	const known = new Set([
+		'm0800',
+		'm0801',
+		'm0802',
+		'm080s',
+		'exact200',
+		'exact201',
+		'exact202',
+		'exact20s',
+		'least200',
+	]);
+	for (const [index, label] of labels.slice(1).entries()) {
+		if (known.has(label)) continue;
+		const previous = at(labels, index);
+		const step = (ours.get(label) ?? NaN) - (ours.get(previous) ?? NaN);
+		expect(
+			Math.abs(step - (at(Object.values(word), index + 1) - at(Object.values(word), index))),
+		).toBeLessThan(0.13);
+	}
+});
+
+it('lets the extra space of the last line on a page pass the bottom margin (#360)', async () => {
+	const word = (await wordLineSpacing()).tripleSpacingPageFit;
+	const { pages } = await layout('issue-360-triple-spacing-page-fit');
+	expect(pages).toHaveLength(word.pages);
+	const lines = lineBaselines(pages);
+	expect(pages.map((page) => lines.filter((line) => line.page === page.index).length)).toEqual(
+		word.linesPerPage,
+	);
+	// The first line of each page sits one ascent below the top margin, as at single spacing.
+	for (const page of pages) {
+		const first = lines.find((line) => line.page === page.index);
+		expect(Math.abs((first?.pt ?? NaN) - word.firstBaselinePt)).toBeLessThan(0.13);
+	}
+});
+
 it('lays out zero character scale at natural width and preserves the source value (#348)', async () => {
 	const loaded = await load('issue-348-character-scale-zero');
 	const control = await load('issue-348-character-scale-zero-control');
