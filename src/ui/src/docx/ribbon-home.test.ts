@@ -24,6 +24,10 @@ describe('Home tab layout', () => {
 		const mine = ribbon.querySelector<HTMLElement>(
 			'[data-panel="Insert"] [aria-label="My Add-ins"]',
 		)!;
+		const folded = document.createElement('button');
+		folded.className = 'ribbon-overflow-button';
+		folded.setAttribute('aria-label', 'Add-ins');
+		mine.closest('.ribbon-group')?.append(folded);
 		expect(ribbonControlId(button)).toBe('add-ins');
 		applyRibbonVisibility(ribbon, true, ['my-add-ins']);
 		expect(button.hasAttribute('data-dve-hidden')).toBe(false);
@@ -31,6 +35,7 @@ describe('Home tab layout', () => {
 		applyRibbonVisibility(ribbon, true, ['add-ins']);
 		expect(button.hasAttribute('data-dve-hidden')).toBe(true);
 		expect(mine.hasAttribute('data-dve-hidden')).toBe(false);
+		expect(folded.hasAttribute('data-dve-hidden')).toBe(false);
 	});
 
 	it('moves paragraph spacing to the Layout tab', () => {

@@ -2,7 +2,8 @@ import { panelsOf, setTabHidden } from './ribbon-tab-api';
 import { ribbonActionIdForLabel, type RibbonActionId } from 'ooxml-core/docx/ui';
 
 const HIDDEN = 'data-dve-hidden';
-const CONTROLS = 'button[aria-label], select[aria-label], input[aria-label]';
+const CONTROLS =
+	'button[aria-label]:not(.ribbon-overflow-button), select[aria-label], input[aria-label]';
 const lastSettings = new WeakMap<HTMLElement, [boolean, readonly RibbonActionId[]]>();
 
 export function reapplyRibbonVisibility(toolbar: HTMLElement): void {
