@@ -135,6 +135,7 @@ test.describe('inspector reset and clear actions', () => {
 		await expect(clear).toHaveCount(before - 1);
 
 		await undoButton(page).click();
+		await expect(page.getByRole('button', { name: 'Redo', exact: true }).first()).toBeEnabled();
 		await select(page, CHART);
 		await expect(clear).toHaveCount(before);
 	});
