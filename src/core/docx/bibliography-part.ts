@@ -7,7 +7,7 @@ import {
 	ensureRelationship,
 	relationshipsPartFor,
 } from '../opc/index';
-import { parseXml } from './xml';
+import { parseXml, type XmlElement } from './xml';
 
 export const BIBLIOGRAPHY_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/bibliography';
 export const BIBLIOGRAPHY_XML_LIMIT = 2_000_000;
@@ -21,6 +21,22 @@ export interface BibliographyPart {
 const CUSTOM_XML = 'http://schemas.openxmlformats.org/officeDocument/2006/customXml';
 const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
+/**
+ * The `<Sources>` root of a bibliography part, or undefined for any other custom XML. The parsed
+ * root's namespace decides; text that merely mentions the namespace never does.
+ */
+export function bibliographySourcesRoot(xml: string): XmlElement | undefined {
+	// A cheap skip for parts that cannot hold a `<Sources>` root.
+	if (xml.length > BIBLIOGRAPHY_XML_LIMIT || !xml.includes('Sources')) return undefined;
+	try {
+		const root = parseXml(xml).documentElement;
+		if (root?.namespaceURI === BIBLIOGRAPHY_NS && root.localName === 'Sources') return root;
+	} catch {
+		// Other custom XML parts stay opaque.
+	}
+	return undefined;
+}
+
 export async function readBibliographyPart(
 	zip: JSZip,
 	parts: string[],
@@ -29,14 +45,7 @@ export async function readBibliographyPart(
 		const file = zip.file(part);
 		if (!file || declaredEntrySize(file) > BIBLIOGRAPHY_XML_LIMIT) continue;
 		const xml = await file.async('string');
-		if (xml.length > BIBLIOGRAPHY_XML_LIMIT || !xml.includes(BIBLIOGRAPHY_NS)) continue;
-		try {
-			const root = parseXml(xml).documentElement;
-			if (root?.namespaceURI === BIBLIOGRAPHY_NS && root.localName === 'Sources')
-				return { part, xml };
-		} catch {
-			// Other custom XML parts stay opaque.
-		}
+		if (bibliographySourcesRoot(xml)) return { part, xml };
 	}
 	return undefined;
 }

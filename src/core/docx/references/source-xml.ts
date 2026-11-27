@@ -1,5 +1,9 @@
-import { buildXml, children, first, parseXml, type XmlElement } from '../../xml/index';
-import { BIBLIOGRAPHY_NS, BIBLIOGRAPHY_XML_LIMIT } from '../bibliography-part';
+import { buildXml, children, first, type XmlElement } from '../../xml/index';
+import {
+	BIBLIOGRAPHY_NS,
+	BIBLIOGRAPHY_XML_LIMIT,
+	bibliographySourcesRoot,
+} from '../bibliography-part';
 import {
 	SOURCE_FIELDS,
 	SOURCE_LIMIT,
@@ -15,17 +19,6 @@ const STYLE_NAMES: Record<BibliographyStyle, { file: string; version: string }> 
 	MLA: { file: 'MLASeventhEditionOfficeOnline.xsl', version: '7' },
 	Chicago: { file: 'CHICAGO.XSL', version: '15' },
 };
-
-function rootOf(xml: string) {
-	if (xml.length > BIBLIOGRAPHY_XML_LIMIT || !xml.includes(BIBLIOGRAPHY_NS)) return undefined;
-	try {
-		const root = parseXml(xml, { label: 'Bibliography' }).documentElement;
-		if (root?.namespaceURI === BIBLIOGRAPHY_NS && root.localName === 'Sources') return root;
-	} catch {
-		// Opaque custom XML is retained even when it cannot be read as a source list.
-	}
-	return undefined;
-}
 
 const entries = (element: XmlElement, local: string) => children(element, local, BIBLIOGRAPHY_NS);
 const child = (element: XmlElement, local: string) => first(element, local, BIBLIOGRAPHY_NS);
@@ -53,7 +46,7 @@ function authorOf(source: XmlElement): BibliographyAuthor | undefined {
 }
 
 export function readBibliographyXml(xml: string): Bibliography | undefined {
-	const root = rootOf(xml);
+	const root = bibliographySourcesRoot(xml);
 	if (!root) return undefined;
 	const sources = entries(root, 'Source');
 	if (sources.length > SOURCE_LIMIT) return undefined;
@@ -129,8 +122,10 @@ function patchAuthor(element: XmlElement, author: BibliographyAuthor | undefined
 /** Keep unrecognized source properties, author roles, and style attributes from the input part. */
 export function writeBibliographyXml(data: Bibliography, original?: string): string {
 	const root =
-		(original && rootOf(original)) ||
-		rootOf(`<?xml version="1.0" encoding="UTF-8"?><b:Sources xmlns:b="${BIBLIOGRAPHY_NS}"/>`);
+		(original && bibliographySourcesRoot(original)) ||
+		bibliographySourcesRoot(
+			`<?xml version="1.0" encoding="UTF-8"?><b:Sources xmlns:b="${BIBLIOGRAPHY_NS}"/>`,
+		);
 	if (!root) throw new Error('Could not create bibliography source list');
 	const before = original && readBibliographyXml(original);
 	const previous = new Map((before ? before.sources : []).map((source) => [source.tag, source]));
