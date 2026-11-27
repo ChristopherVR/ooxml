@@ -292,7 +292,8 @@ test.describe('home tab commands act on the deck', () => {
 		// the same marker in three of the five bindings, so an unscoped count is a
 		// different number per binding for reasons unrelated to the slide.
 		const elements = slideElements(page);
-		expect(await elements.count()).toBeGreaterThan(1);
+		const before = await elements.count();
+		expect(before).toBeGreaterThan(1);
 
 		await page.getByRole('button', { name: 'Select', exact: true }).first().click();
 		// No skip: Svelte's Select was a button that selected everything with no
@@ -304,6 +305,9 @@ test.describe('home tab commands act on the deck', () => {
 			.or(page.getByRole('button', { name: 'Select All', exact: true }))
 			.first()
 			.click();
+		await expect
+			.poll(() => page.evaluate(() => window.__pptxViewer.getSelectedElementIds().length))
+			.toBe(before);
 
 		// Delete is the second, independent signal: a command that only LOOKS
 		// like it selected everything leaves survivors behind.
