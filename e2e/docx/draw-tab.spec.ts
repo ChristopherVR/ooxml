@@ -452,10 +452,12 @@ test('Draw > Ruler: a stroke drawn along its edge is straight, and it turns from
 	await expect(ruler).toHaveAttribute('aria-label', 'Ruler, 0 degrees');
 	await draw.getByRole('button', { name: 'Pen: 0.5 mm, Red' }).click();
 	const box = (await ruler.boundingBox())!;
-	// A wavy stroke begun just above the edge follows it.
-	await page.mouse.move(box.x + 40, box.y - 6);
+	// A wavy stroke begun just above the edge follows it. The ruler is wider than the page, so the
+	// stroke starts near its middle: ink begun off the page is not kept.
+	const x = box.x + box.width / 2 - 80;
+	await page.mouse.move(x, box.y - 6);
 	await page.mouse.down();
-	for (const [dx, dy] of wave) await page.mouse.move(box.x + 40 + dx, box.y - 6 + dy / 3);
+	for (const [dx, dy] of wave) await page.mouse.move(x + dx, box.y - 6 + dy / 3);
 	await page.mouse.up();
 	await expect(inkFloats(page)).toHaveCount(1);
 	const ys = await inkFloats(page)
