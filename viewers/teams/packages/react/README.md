@@ -1,18 +1,18 @@
 # openteams-react-viewer
 
-**A complete team workspace for React: channels, chat, presence and video meetings in one component, on a server you run.**
+**OpenTeams for React: a team workspace (channels, chat, presence and meetings) in one component, connected to a server you run.**
 
 [![npm](https://img.shields.io/npm/v/openteams-react-viewer.svg)](https://www.npmjs.com/package/openteams-react-viewer)
 [![license](https://img.shields.io/npm/l/openteams-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/LICENSE)
+[![types](https://img.shields.io/npm/types/openteams-react-viewer.svg)](https://www.npmjs.com/package/openteams-react-viewer)
 [![status: beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md)
 
-[Live demo](https://christophervr.github.io/ooxml/teams/demo-react/) · [React guide](https://christophervr.github.io/ooxml/teams/frameworks/react) · [Docs](https://christophervr.github.io/ooxml/teams/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/packages/react/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
+[Live demo](https://christophervr.github.io/ooxml/teams/demo-react/) · [Documentation](https://christophervr.github.io/ooxml/teams/) · [React guide](https://christophervr.github.io/ooxml/teams/frameworks/react) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/packages/react/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
 ![The OpenTeams workspace: a channel list, a conversation with reactions and a quoted reply, and the composer](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/teams/docs/public/hero-workspace.webp)
 
-OpenTeams is an open-source, bring-your-own-server team workspace. It is in **beta**, it is not
-Microsoft Teams and is not affiliated with Microsoft, and it has no end-to-end encryption: your
-server can read chat and files.
+OpenTeams is not Microsoft Teams and is not affiliated with Microsoft. There is no end-to-end
+encryption: your server can read chat and files.
 
 ## Install
 
@@ -20,9 +20,10 @@ server can read chat and files.
 npm install openteams-react-viewer
 ```
 
-`react` 18 or later is a peer dependency. [`ooxml-core`](https://www.npmjs.com/package/ooxml-core)
-(the workspace logic, `ooxml-core/teams`), [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui)
-(the `<teams-app>` element) and `lit` come with it as regular dependencies.
+Peer dependency: `react` `>=18`. [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) (the
+workspace logic), [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui) (the `<teams-app>`
+element) and `lit` come with it. Use one OpenTeams binding per page: they register the same custom
+elements.
 
 ## Quick start
 
@@ -50,12 +51,39 @@ export function Workspace() {
 }
 ```
 
-`<Teams>` fills its container, so give the container a height. Leave out `config` and the
-workspace runs in local mode: tabs of one browser share chat, presence and calls over
-`BroadcastChannel`, with no server at all. When the server requires accounts, the workspace asks
-the person to sign in.
+`<Teams>` fills its container, so give the container a height. `config` points at a server that
+speaks the OpenTeams contracts, such as [`openteams-server`](https://www.npmjs.com/package/openteams-server)
+(locally: `npx openteams-server --insecure-dev`, then `ws://127.0.0.1:8787/sync` and
+`ws://127.0.0.1:8787/signal`). When the server requires accounts, the workspace asks the person to
+sign in. Leave `config` out and the app uses the settings saved in its dialog, or runs in local
+mode, where tabs of one browser share the workspace over `BroadcastChannel`.
 
-## Build your own UI
+## Props
+
+| Prop          | Type                                                  | Notes                                                                                                                      |
+| ------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `workspaceId` | `string`                                              | The shared room: 1 to 100 letters, digits, `-` or `_`. Default `demo`.                                                     |
+| `userName`    | `string`                                              | Display name.                                                                                                              |
+| `userId`      | `string`                                              | Stable id for authorship; by default one remembered in this browser.                                                       |
+| `config`      | `TeamsServerConfig \| null`                           | `mode`, `syncUrl`, `signalingUrl`, `iceServers`; optional `iceTransportPolicy`, `token`, `sessionToken`. `null` clears it. |
+| `locale`      | `string`                                              | BCP 47 tag such as `de` or `zh-CN`; empty or unknown means English.                                                        |
+| `uploadFile`  | `(file, { workspaceId, signal }) => Promise<{ url }>` | Where attachments go; by default the server's `/files` endpoint.                                                           |
+| `openers`     | `{ docx?, xlsx?, pptx?, vsdx?, other? }`              | One function per file kind, called with the open-file detail.                                                              |
+| `embeds`      | `{ docx?, xlsx?, pptx?, vsdx?, other? }`              | One function per file kind returning a viewer page URL for the preview pane.                                               |
+| `className`   | `string`                                              | Classes for the `<teams-app>` element.                                                                                     |
+
+A `ref` gives you the `<teams-app>` element, with its read-only `client` (the core client) and
+`previewContent(detail)`. Full reference: [element API](https://christophervr.github.io/ooxml/teams/api).
+
+## Events
+
+| Prop             | Called with       | When                                                                             |
+| ---------------- | ----------------- | -------------------------------------------------------------------------------- |
+| `onOpenFile`     | `(detail, event)` | Someone opened an attachment; call `event.preventDefault()` to open it yourself. |
+| `onReady`        | `({ user })`      | The workspace is up and knows who the user is.                                   |
+| `onConfigChange` | `({ config })`    | The person saved new server settings in the app.                                 |
+
+## Your own UI
 
 The raw hooks give you the same client without the bundled UI: state in, plain actions out.
 
@@ -77,95 +105,80 @@ function Channels() {
 ```
 
 `useTeams(options)` is `useTeamsClient(options)` (a client recreated when the workspace, user or
-server change, destroyed on unmount) plus `useTeamsState(client)` (the current immutable state,
-through `useSyncExternalStore`). Both return `null` until mounted, and pass `null` as options to
-hold off connecting.
+server change, destroyed on unmount) plus `useTeamsState(client)` (the current immutable state).
+Both return `null` until mounted; pass `null` as options to hold off connecting. The actions are
+listed under [the raw client](https://christophervr.github.io/ooxml/teams/api#the-raw-client).
 
-## What you get
+## Theming
 
-| Area                | In the workspace                                                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Channels and chat   | Posts with replies, 1:1 and group chats in rooms only their members can join, reactions, pins, author-only edit and delete, search.  |
-| Presence            | Who is online and typing, a status you set, a status message and automatic away when idle.                                           |
-| Meetings            | Pre-join screen, audio, video, screen share and raise hand over WebRTC, plus a calendar with repeats, reminders and `.ics` export.   |
-| Files               | Attachments go to your server or your own `uploadFile`; Word, Excel, PowerPoint and Visio files are recognised so you can open them. |
-| Languages           | English, German, Spanish, French and Simplified Chinese (`locale`); text people wrote is never translated.                           |
-| Keyboard and themes | F6 moves between regions, dialogs keep focus; colours come from the shared `--office-*` tokens.                                      |
+The element styles itself in its shadow root, so there is no stylesheet to import. Colours,
+spacing and radii come from the shared `--office-*` tokens; the OpenTeams ones are prefixed
+`--office-teams-` (such as `--office-teams-brand`, `--office-teams-rail` and
+`--office-teams-panel`). Override them on `teams-app` or an ancestor. The app follows the system
+colour scheme or `data-office-theme="light"` / `"dark"` on the page, and each person can pick
+System, Light or Dark in its settings. See
+[theming](https://christophervr.github.io/ooxml/teams/theming).
 
-Everything a peer sends is validated again and rendered as text, never as markup.
+## Localisation
 
-## Props
+The UI ships in English, German, Spanish, French and Simplified Chinese: set `locale` to `de`,
+`es`, `fr` or `zh-CN`; an empty or unknown tag means English. Text people wrote is never
+translated.
 
-| Prop             | Type                                                  | Notes                                                                                    |
-| ---------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `workspaceId`    | `string`                                              | The shared room: 1 to 100 letters, digits, `-` or `_`. Default `demo`.                   |
-| `userName`       | `string`                                              | Display name.                                                                            |
-| `userId`         | `string`                                              | Stable id for authorship; by default one remembered in this browser.                     |
-| `locale`         | `string`                                              | BCP 47 tag such as `de` or `zh-CN`; empty or unknown means English.                      |
-| `config`         | `TeamsServerConfig \| null`                           | Server settings (below). Omit for the settings dialog or local mode; `null` clears them. |
-| `uploadFile`     | `(file, { workspaceId, signal }) => Promise<{ url }>` | Where attachments go; by default the server's `/files` endpoint.                         |
-| `openers`        | `{ docx?, xlsx?, pptx?, vsdx?, other? }`              | One function per file kind, called with the open-file detail.                            |
-| `embeds`         | `{ docx?, xlsx?, pptx?, vsdx?, other? }`              | One function per file kind returning a URL to embed in the preview pane.                 |
-| `onReady`        | `({ user }) => void`                                  | The workspace is up and knows who the user is.                                           |
-| `onOpenFile`     | `(detail, event) => void`                             | A file was opened; call `event.preventDefault()` to take over.                           |
-| `onConfigChange` | `({ config }) => void`                                | The person changed the server settings in the app.                                       |
-| `className`      | `string`                                              | Classes for the `<teams-app>` element. A `ref` gives you the element itself.             |
+## Status and limits
 
-## Connect a server
+OpenTeams is **Beta** ([stability](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md)).
 
-`config` is a `TeamsServerConfig` from `ooxml-core/teams`: `mode` (`'server'` or `'local'`),
-`syncUrl` and `signalingUrl` (the room is appended), `iceServers` (STUN and TURN), and optionally
-`iceTransportPolicy`, a shared `token` and a `sessionToken` your own sign-in obtained.
+- No end-to-end encryption: the server stores and can read every message and file.
+- Calls are full mesh with no media server, comfortable up to about a dozen people; strict
+  networks need a TURN server you run.
+- No SSO, password reset, recording, background blur, live captions, or push and email
+  notifications (notifications work only while the app is open).
+- Markdown is a safe subset, not full CommonMark or GFM.
 
-The reference server is [`openteams-server`](https://www.npmjs.com/package/openteams-server), one
-Node process for sync, call signaling and file storage. Use the release with the same major version
-as this package: both speak the same Teams protocol, and the server closes clients that speak
-another. Any server that follows the same three contracts works too; see
-[bring your own server](https://christophervr.github.io/ooxml/teams/server).
-
-```bash
-npx openteams-server --insecure-dev   # local development only: no accounts, 127.0.0.1:8787
-```
-
-Calls are full mesh with no media server, which is comfortable up to about a dozen people; add a
-TURN server for strict networks.
-
-## Supported environments
-
-- Browsers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at
-  least. Cameras and microphones need `localhost` or HTTPS.
-- Node.js 22.3 or newer for builds and tests.
-- Use one OpenTeams binding per page: they register the same custom elements.
+See [limitations](https://christophervr.github.io/ooxml/teams/limitations),
+[teams-parity.md](https://github.com/ChristopherVR/ooxml/blob/main/docs/teams-parity.md) and
+[parity-checklist.md](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md).
 
 ## Privacy and network use
 
-Chat, presence and session data go only to the `syncUrl` and `signalingUrl` you configure; local
-mode stays in the browser. Calls use Google's public STUN server (`stun:stun.l.google.com:19302`)
-unless you set `iceServers` to your own STUN or TURN servers (or to `[]`). A website tab loads the
-URL a member added. Nothing collects analytics or telemetry. See
-[PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+- **Sync and signaling** go only to the `syncUrl` and `signalingUrl` that you or the person
+  configure; local mode stays in the browser. Call signaling carries each participant's network
+  addresses to the others in the call.
+- **Calls** use Google's public STUN server (`stun:stun.l.google.com:19302`) when no `iceServers`
+  are set, which learns each participant's IP address. Set `iceServers` to your own STUN or TURN
+  servers, or to `[]` for none.
+- **Website tabs** load the URL a member added, for everyone who opens the tab.
+- **On the device:** chat snapshots, read state, drafts and the server settings in localStorage;
+  session tokens stay in memory. Nothing collects analytics or telemetry.
 
-## OneDrive
+See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#teams-ooxml-coreteams-ooxml-uiteams-the-openteams--packages).
 
-A host can connect OneDrive storage through the optional `ooxml-core/embedding/onedrive`
-connection with its own Microsoft sign-in. See the
-[integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#sharing-and-openteams)
-and the [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md).
-OneDrive storage does not provide Microsoft Office coauthoring or automatic merging.
+## Browser support
 
-## Related packages
+The last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least
+([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+Cameras and microphones need `localhost` or HTTPS. React 18 or later; Node.js 22.3 or newer for
+builds and tests.
 
-- Other frameworks: [`openteams-vue-viewer`](https://www.npmjs.com/package/openteams-vue-viewer),
-  [`openteams-angular-viewer`](https://www.npmjs.com/package/openteams-angular-viewer),
-  [`openteams-svelte-viewer`](https://www.npmjs.com/package/openteams-svelte-viewer),
-  [`openteams-solid-viewer`](https://www.npmjs.com/package/openteams-solid-viewer),
-  [`openteams-vanilla-viewer`](https://www.npmjs.com/package/openteams-vanilla-viewer).
-- Server: [`openteams-server`](https://www.npmjs.com/package/openteams-server).
-- Underneath: [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) and
-  [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui). OpenTeams is part of
-  [ooxml](https://github.com/ChristopherVR/ooxml#readme), next to the Word, Excel, PowerPoint and
-  Visio viewers.
+## Documentation and demos
+
+- [Documentation](https://christophervr.github.io/ooxml/teams/),
+  [React guide](https://christophervr.github.io/ooxml/teams/frameworks/react) and
+  [React demo](https://christophervr.github.io/ooxml/teams/demo-react/).
+- Server: [`openteams-server`](https://www.npmjs.com/package/openteams-server) and
+  [bring your own server](https://christophervr.github.io/ooxml/teams/server). Use the same major
+  version as this package: both speak the same Teams protocol.
+- Other frameworks: [Vue](https://www.npmjs.com/package/openteams-vue-viewer) ·
+  [Angular](https://www.npmjs.com/package/openteams-angular-viewer) ·
+  [Svelte](https://www.npmjs.com/package/openteams-svelte-viewer) ·
+  [Solid](https://www.npmjs.com/package/openteams-solid-viewer) ·
+  [vanilla](https://www.npmjs.com/package/openteams-vanilla-viewer).
+- [OneDrive links](https://christophervr.github.io/ooxml/teams/onedrive) in a workspace.
+- Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme), next to the Word, Excel,
+  PowerPoint and Visio viewers.
 
 ## License
 
-[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/LICENSE).
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/LICENSE); see
+[NOTICE](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/NOTICE).
