@@ -82,7 +82,7 @@ test('Data tab imports a CSV, links a dragged row, refreshes it and adds data gr
 	// External data links require explicit unlinking before shape deletion.
 	await viewer.evaluate(async (node) => {
 		await (node as VisioViewerElement).applyEdits([
-			{ type: 'unlink-data-rows', pageId: '1', recordsetId: '0', shapeIds: ['1'] },
+			{ type: 'unlink-data-rows', pageId: '1', recordsetId: '1', shapeIds: ['1'] },
 		]);
 	});
 	await viewer.locator('.viewport').press('Delete');

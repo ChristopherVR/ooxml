@@ -112,7 +112,7 @@ export class DataPackageParts {
 	/** A new empty DataRecordSets root. */
 	createRecordsets(path: string): Element {
 		const root = parseXml(
-			`<DataRecordSets xmlns="${VISIO_NS}" xmlns:r="${NS.r}" NextID="0"/>`,
+			`<DataRecordSets xmlns="${VISIO_NS}" xmlns:r="${NS.r}" NextID="1"/>`,
 		).documentElement;
 		this.xml.set(path, root);
 		this.bytes.delete(path);

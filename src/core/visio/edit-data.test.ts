@@ -62,18 +62,19 @@ describe('external data recordsets', () => {
 			'Target="data1.xml"',
 		);
 		const rowset = await text(bytes, 'visio/data/data1.xml');
+		// Visio's data API finds rows by the row id column it saves first, as c0.
+		expect(rowset).toContain('<z:row c0="1" c1="Web" c2="10" c3="2024-01-05T00:00:00"/>');
+		expect(rowset).toContain('<z:row c0="2" c1="Database" c2="25.5"/>');
 		expect(rowset).toContain(
-			'<z:row c0="Web" c1="10" c2="2024-01-05T00:00:00" _Visio_RowID_="1"/>',
+			'<s:ElementType name="row" content="eltOnly" rs:updatable="true"><s:AttributeType name="c0" rs:name="_Visio_RowID_" rs:number="1"',
 		);
-		// Visio's data API finds rows by the row id column it saves after the data columns.
-		expect(rowset).toMatch(
-			/<s:AttributeType name="c2"[^>]*>.*?<\/s:AttributeType><s:AttributeType name="_Visio_RowID_" rs:number="4"/,
+		expect(await text(bytes, 'visio/data/recordsets.xml')).toMatch(
+			/<DataRecordSets [^>]*NextID="2"[^>]*>(?:(?!<\/DataRecordSets>).)*<DataRecordSet ID="1"/s,
 		);
-		expect(rowset).toContain('<z:row c0="Database" c1="25.5" _Visio_RowID_="2"/>');
 		const document = await parseVsdx(bytes);
 		expect(document.dataRecordsets).toEqual([
 			expect.objectContaining({
-				id: '0',
+				id: '1',
 				name: 'servers.csv',
 				columns,
 				rows: [
@@ -90,7 +91,7 @@ describe('external data recordsets', () => {
 			{
 				type: 'link-data-rows',
 				pageId: '0',
-				recordsetId: '0',
+				recordsetId: '1',
 				links: [
 					{ shapeId: '1', rowId: '1' },
 					{ shapeId: '2', rowId: '2' },
@@ -119,7 +120,7 @@ describe('external data recordsets', () => {
 			{
 				type: 'link-data-rows',
 				pageId: '0',
-				recordsetId: '0',
+				recordsetId: '1',
 				links: [{ shapeId: '1', rowId: '2' }],
 			},
 		]);
@@ -136,7 +137,7 @@ describe('external data recordsets', () => {
 			{
 				type: 'link-data-rows',
 				pageId: '0',
-				recordsetId: '0',
+				recordsetId: '1',
 				links: [
 					{ shapeId: '1', rowId: '1' },
 					{ shapeId: '2', rowId: '2' },
@@ -147,7 +148,7 @@ describe('external data recordsets', () => {
 			{
 				type: 'refresh-data-recordset',
 				pageId: '0',
-				recordsetId: '0',
+				recordsetId: '1',
 				columns,
 				rows: [['Web 2', '11', '']],
 			},
@@ -162,13 +163,13 @@ describe('external data recordsets', () => {
 		expect(document.pages[0]!.shapes[1]!.shapeData![0]).toMatchObject({ value: 'Database' });
 		expect(document.pages[0]!.shapes[1]!.shapeData![0]!.dataLinked).toBeUndefined();
 		const unlinked = await editVsdx(refreshed.bytes, [
-			{ type: 'unlink-data-rows', pageId: '0', recordsetId: '0', shapeIds: ['1'] },
+			{ type: 'unlink-data-rows', pageId: '0', recordsetId: '1', shapeIds: ['1'] },
 		]);
 		document = await parseVsdx(unlinked.bytes);
 		expect(document.dataRecordsets![0]!.links).toEqual([]);
 		expect(document.pages[0]!.shapes[0]!.shapeData![0]).toMatchObject({ value: 'Web 2' });
 		const deleted = await editVsdx(unlinked.bytes, [
-			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '0' },
+			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '1' },
 		]);
 		const pkg = await VisioPackage.open(deleted.bytes);
 		expect(pkg.has('visio/data/recordsets.xml')).toBe(false);
@@ -188,19 +189,19 @@ describe('external data recordsets', () => {
 				rows: [['X']],
 			},
 		]);
-		expect((await parseVsdx(two.bytes)).dataRecordsets!.map((set) => set.id)).toEqual(['0', '1']);
+		expect((await parseVsdx(two.bytes)).dataRecordsets!.map((set) => set.id)).toEqual(['1', '2']);
 		const one = await editVsdx(two.bytes, [
-			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '0' },
+			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '1' },
 		]);
 		expect((await parseVsdx(one.bytes)).dataRecordsets!.map((set) => [set.id, set.name])).toEqual([
-			['1', 'more'],
+			['2', 'more'],
 		]);
 		await expect(
 			editVsdx(one.bytes, [
 				{
 					type: 'link-data-rows',
 					pageId: '0',
-					recordsetId: '1',
+					recordsetId: '2',
 					links: [{ shapeId: '1', rowId: '5' }],
 				},
 			]),
@@ -218,7 +219,7 @@ describe('external data recordsets', () => {
 		).rejects.toMatchObject({ code: 'INVALID_EDIT' });
 		await expect(
 			editVsdx(one.bytes, [
-				{ type: 'delete-data-recordset', pageId: '0', recordsetId: '1' },
+				{ type: 'delete-data-recordset', pageId: '0', recordsetId: '2' },
 				{ type: 'move-shape', pageId: '0', shapeId: '1', x: 1, y: 1 },
 			]),
 		).rejects.toMatchObject({ code: 'EDIT_MIXED_DATA_TRANSACTION' });
@@ -270,11 +271,11 @@ describe('external data recordsets', () => {
 		expect(sets[1]!.primaryKey).toBeUndefined();
 		// The connection stays until the last recordset using it goes.
 		const one = await editVsdx(bytes, [
-			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '0' },
+			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '1' },
 		]);
 		expect(await text(one.bytes, 'visio/data/connections.xml')).toContain('<DataConnection ');
 		const none = await editVsdx(one.bytes, [
-			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '1' },
+			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '2' },
 		]);
 		expect((await VisioPackage.open(none.bytes)).has('visio/data/connections.xml')).toBe(false);
 		expect(await text(none.bytes, '[Content_Types].xml')).not.toContain('connections');
@@ -298,7 +299,7 @@ describe('external data recordsets', () => {
 			{
 				type: 'link-data-rows',
 				pageId: '0',
-				recordsetId: '0',
+				recordsetId: '1',
 				links: [
 					{ shapeId: '1', rowId: '1' },
 					{ shapeId: '2', rowId: '2' },
@@ -317,7 +318,7 @@ describe('external data recordsets', () => {
 			unmatched: [{ shapeId: '1', rowId: '1' }],
 		});
 		const refreshed = await editVsdx(keyed.bytes, [
-			{ type: 'refresh-data-recordset', pageId: '0', recordsetId: '0', columns, rows: table },
+			{ type: 'refresh-data-recordset', pageId: '0', recordsetId: '1', columns, rows: table },
 		]);
 		const document = await parseVsdx(refreshed.bytes);
 		// By order Web would have become New; by key it is unlinked and Database updates.
@@ -330,7 +331,7 @@ describe('external data recordsets', () => {
 			{
 				type: 'refresh-data-recordset',
 				pageId: '0',
-				recordsetId: '0',
+				recordsetId: '1',
 				columns,
 				rows: [rows[1]!.map((v, i) => (i === 1 ? '99' : v)), rows[0]!],
 			},
@@ -346,7 +347,7 @@ describe('external data recordsets', () => {
 				{
 					type: 'refresh-data-recordset',
 					pageId: '0',
-					recordsetId: '0',
+					recordsetId: '1',
 					columns: [columns[1]!],
 					rows: [['1']],
 				},

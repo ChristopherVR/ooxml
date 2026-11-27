@@ -178,7 +178,7 @@ it('custom imports a chosen range, links automatically and refreshes through a s
 	view.data({ type: 'data', command: 'refresh' });
 	await vi.waitFor(() => expect(view.shape().shapeData?.[1]?.value).toBe(55), { timeout: 5000 });
 	await view.done();
-	expect(view.edits.at(-1)![0]).toMatchObject({ type: 'refresh-data-recordset', recordsetId: '0' });
+	expect(view.edits.at(-1)![0]).toMatchObject({ type: 'refresh-data-recordset', recordsetId: '1' });
 	view.pane().querySelector<HTMLButtonElement>('[data-data-action="remove"]')!.click();
 	await vi.waitFor(() => expect(view.controller.state.document!.dataRecordsets).toBeUndefined());
 	expect(view.shape().shapeData?.[1]?.value).toBe(55);

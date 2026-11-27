@@ -241,8 +241,9 @@ export async function editVsdxData(
 				await store.override(recordsetsPart, DATA_RECORDSETS_TYPE);
 			}
 			if (sets.size >= 64) fail('LIMIT_DATA', 'A drawing holds at most 64 data recordsets.');
-			const next = Number(attribute(root, 'NextID') ?? '0');
-			let id = Number.isSafeInteger(next) && next >= 0 ? next : 0;
+			// Visio numbers recordsets from 1; its object model refuses a recordset 0.
+			const next = Number(attribute(root, 'NextID') ?? '1');
+			let id = Number.isSafeInteger(next) && next >= 1 ? next : 1;
 			while (sets.has(String(id))) id++;
 			root.setAttribute('NextID', String(id + 1));
 			const dataPart = store.freeName('visio/data/data');

@@ -91,7 +91,7 @@ export async function linked(
 			{
 				type: 'link-data-rows',
 				pageId: '0',
-				recordsetId: '0',
+				recordsetId: '1',
 				links: [
 					{ shapeId: '1', rowId: '1' },
 					{ shapeId: '2', rowId: '2' },
@@ -135,7 +135,7 @@ describe('data graphics', () => {
 		expect(new Set(deleteIds).size).toBe(deleteIds.length);
 		// Linked external data must be explicitly unlinked before deleting any owner.
 		const unlinked = await apply(state.bytes, [
-			{ type: 'unlink-data-rows', pageId: page.id, recordsetId: '0', shapeIds: ['1'] },
+			{ type: 'unlink-data-rows', pageId: page.id, recordsetId: '1', shapeIds: ['1'] },
 		]);
 		const deleted = await apply(
 			unlinked.bytes,

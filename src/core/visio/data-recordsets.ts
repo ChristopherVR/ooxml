@@ -87,8 +87,8 @@ const escape = (value: string) =>
 	);
 
 /**
- * The column Visio keeps each row's identity in (the RowID a RowMap names), after the data
- * columns of every recordset it saves; its data API reads rows by it.
+ * The column Visio keeps each row's identity in (the RowID a RowMap names), first in every
+ * recordset it saves; its data API (DataRecordset.GetDataRowIDs) reads rows by it.
  */
 export const VISIO_ROW_ID_COLUMN = '_Visio_RowID_';
 
@@ -97,24 +97,25 @@ export function adoRecordsetXml(
 	columns: readonly VisioDataColumn[],
 	rows: readonly VisioDataRow[],
 ) {
+	// The row id is column c0, the data columns c1 onward.
+	const rowIdColumn = `<s:AttributeType name="c0" rs:name="${VISIO_ROW_ID_COLUMN}" rs:number="1" rs:nullable="true" rs:maydefer="true" rs:write="true"><s:datatype dt:type="int" dt:maxLength="4" rs:precision="0" rs:fixedlength="true"/></s:AttributeType>`;
 	const schema = columns
 		.map(
 			(column, index) =>
-				`<s:AttributeType name="c${index}" rs:name="${escape(column.name)}" rs:number="${index + 1}" rs:nullable="true" rs:write="true"><s:datatype dt:type="${ADO_TYPES[column.type]}"${column.type === 'string' ? ' dt:maxLength="4096"' : ''}/></s:AttributeType>`,
+				`<s:AttributeType name="c${index + 1}" rs:name="${escape(column.name)}" rs:number="${index + 2}" rs:nullable="true" rs:write="true"><s:datatype dt:type="${ADO_TYPES[column.type]}"${column.type === 'string' ? ' dt:maxLength="4096"' : ''}/></s:AttributeType>`,
 		)
 		.join('');
-	const rowIdColumn = `<s:AttributeType name="${VISIO_ROW_ID_COLUMN}" rs:number="${columns.length + 1}" rs:nullable="true" rs:write="true"><s:datatype dt:type="int" dt:maxLength="4" rs:precision="10" rs:fixedlength="true"/></s:AttributeType>`;
 	const data = rows
 		.map(
 			(row) =>
-				`<z:row${row.values
-					.map((value, index) => (value === '' ? '' : ` c${index}="${escape(value)}"`))
-					.join('')} ${VISIO_ROW_ID_COLUMN}="${escape(row.id)}"/>`,
+				`<z:row c0="${escape(row.id)}"${row.values
+					.map((value, index) => (value === '' ? '' : ` c${index + 1}="${escape(value)}"`))
+					.join('')}/>`,
 		)
 		.join('');
 	return (
 		`<?xml version="1.0" encoding="utf-8"?>\n<xml xmlns:s="${ADO_NS.s}" xmlns:dt="${ADO_NS.dt}" xmlns:rs="${ADO_NS.rs}" xmlns:z="${ADO_NS.z}">` +
-		`<s:Schema id="RowsetSchema"><s:ElementType name="row" content="eltOnly" rs:updatable="true">${schema}${rowIdColumn}<s:extends type="rs:rowbase"/></s:ElementType></s:Schema>` +
+		`<s:Schema id="RowsetSchema"><s:ElementType name="row" content="eltOnly" rs:updatable="true">${rowIdColumn}${schema}<s:extends type="rs:rowbase"/></s:ElementType></s:Schema>` +
 		`<rs:data>${data}</rs:data></xml>`
 	);
 }
@@ -158,11 +159,15 @@ export function readAdoRecordset(
 	const all = (node: Element, local: string, ns: string): Element[] =>
 		Array.from(node.getElementsByTagNameNS(ns, local));
 	const columns: { name: string; type?: VisioDataColumnType; key: string }[] = [];
+	let rowIdKey: string | undefined;
 	for (const type of all(root, 'AttributeType', ADO_NS.s)) {
 		check();
 		const key = type.getAttribute('name') ?? '';
-		if (key === VISIO_ROW_ID_COLUMN) continue;
 		const name = type.getAttributeNS(ADO_NS.rs, 'name') || key;
+		if (name === VISIO_ROW_ID_COLUMN) {
+			rowIdKey = key;
+			continue;
+		}
 		if (!key || name.length > 255) invalid('Invalid recordset column.');
 		const adoType = typeFromAdo(
 			all(type, 'datatype', ADO_NS.s)[0]?.getAttributeNS(ADO_NS.dt, 'type') ?? undefined,
@@ -189,7 +194,7 @@ export function readAdoRecordset(
 				values.set(column.name, value);
 			}
 			rows.push(values);
-			const rowId = row.getAttribute(VISIO_ROW_ID_COLUMN);
+			const rowId = rowIdKey === undefined ? null : row.getAttribute(rowIdKey);
 			rowIds.push(rowId && /^[1-9]\d{0,9}$/.test(rowId) ? rowId : undefined);
 		}
 	return { columns: columns.map(({ key: _key, ...column }) => column), rows, rowIds };
