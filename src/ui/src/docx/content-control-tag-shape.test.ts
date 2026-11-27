@@ -4,6 +4,7 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { describe, expect, it } from 'vitest';
 import { loadDocx } from 'ooxml-core/docx';
+import { contentControlTagMetrics } from 'ooxml-core/docx/layout';
 import { contentControlPlugin } from 'ooxml-core/docx/ui';
 import { contentControlViewPlugin } from './content-control-view';
 import { modelToDoc } from './model-adapter';
@@ -84,5 +85,28 @@ describe('content control tag shape in the editing view', () => {
 			[0, 2],
 		]);
 		expect(block.map((tag) => tag.style.paddingInline)).toEqual(['9pt 4.5pt', '5.04pt 8.46pt']);
+	});
+
+	it("reserves Print Layout's tagged line ascent and descent on every tag", async () => {
+		const all = [
+			...(await tags('measured-inline-content-control-tags')),
+			...(await tags('block-content-control-tags')),
+		];
+		expect(all.length).toBeGreaterThan(6);
+		const { lineAscentPt, lineDescentPt, fontSizePt } = contentControlTagMetrics;
+		const points = (value: string) => {
+			expect(value).toMatch(/^-?[\d.]+pt$/);
+			return Number.parseFloat(value);
+		};
+		for (const tag of all) {
+			const { height, lineHeight, verticalAlign, marginTop, marginBottom } = tag.style;
+			// A one-line box puts its baseline half the line height plus half of Tahoma's
+			// ascent less its descent (1 and 0.207 em) below its top.
+			const baseline = points(lineHeight) / 2 + ((1 - 0.207) * fontSizePt) / 2;
+			const above = points(verticalAlign) + baseline + points(marginTop);
+			const below = points(height) - baseline - points(verticalAlign) + points(marginBottom);
+			expect(above).toBeCloseTo(lineAscentPt, 2);
+			expect(below).toBeCloseTo(lineDescentPt, 2);
+		}
 	});
 });
