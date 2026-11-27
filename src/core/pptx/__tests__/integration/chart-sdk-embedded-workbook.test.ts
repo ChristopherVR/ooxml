@@ -215,6 +215,21 @@ describe('new charts with an embedded workbook', () => {
 		expect(zip.file(WORKBOOK)).not.toBeNull();
 	});
 
+	it('writes the workbook of a chart without a legend, even with a legend font', async () => {
+		const { handler, slides } = await build('doughnut', {
+			categories: CATEGORIES,
+			series: [{ name: 'Orders', values: [4, 3, 2, 1] }],
+			hasLegend: false,
+			legendFont: { family: 'Arial', size: 10, color: '#222222' },
+		});
+		const result = await saved(handler, slides);
+		expectWorkbookPackage(result);
+		expect(result.xml).not.toContain('<c:legend>');
+		expect(result.cells.get('B2')).toBe('4');
+		const reloaded = await new PptxHandler().load(result.bytes.buffer as ArrayBuffer);
+		expect(chartOf(reloaded.slides[0])!.chartData!.style?.hasLegend ?? false).toBe(false);
+	});
+
 	it('refuses a chart the shared chart core cannot write instead of dropping the workbook', async () => {
 		const { handler, slides } = await build('stock', {
 			categories: CATEGORIES,

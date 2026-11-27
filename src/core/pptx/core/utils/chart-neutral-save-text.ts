@@ -42,7 +42,12 @@ export function planNeutralChartText(
 	] as const) {
 		if (same(before.style?.[key], probe.style?.[key])) continue;
 		const edit = neutralTextEdit(before.style?.[key], probe.style?.[key]);
-		edits.push((space) => setChartTargetText(space, { kind: target }, edit));
+		// A chart that shows no legend has no legend text to format; PowerPoint keeps none either.
+		edits.push((space) =>
+			target === 'legend' && !space.legend
+				? space
+				: setChartTargetText(space, { kind: target }, edit),
+		);
 		revertStyle(probe, before, [key]);
 	}
 	const title = (data: PptxChartData): PptxChartLegendTextStyle => ({
@@ -72,7 +77,7 @@ export function planNeutralChartText(
 				entry.textStyle,
 			),
 		}));
-		edits.push((space) => setChartLegendEntries(space, entries));
+		edits.push((space) => (space.legend ? setChartLegendEntries(space, entries) : space));
 		revertStyle(probe, before, ['legendEntries']);
 	}
 	const keys = ['fontFamily', 'eastAsiaFontFamily', 'fontSize', 'fontBold', 'fontColor'] as const;
