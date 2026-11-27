@@ -234,8 +234,7 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);
 	const editor = page.locator('docx-editor');
-	const insert = editor.getByRole('tab', { name: 'Insert', exact: true });
-	await insert.click();
+	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
 	const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
 	const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
 	await reveal(editor, get);
@@ -273,9 +272,9 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await expect(consent.getByRole('heading')).toBeFocused();
 	await install.press('Enter');
 	await expect(preview).toBeHidden();
-	await expect(editor.getByRole('tab', { name: 'Notes', exact: true })).toBeFocused();
+	await expect(editor.getByRole('tab', { name: 'Notes', exact: true })).toHaveCount(0);
+	await expect(get).toBeFocused();
 
-	await insert.click();
 	await reveal(editor, get);
 	await get.click();
 	await select(source.replace('https://notes.example.test/pane', 'javascript:alert(1)'));
@@ -301,7 +300,6 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	).toBeVisible();
 	await preview.getByRole('button', { name: 'Update Revised Notes', exact: true }).click();
 
-	await insert.click();
 	await reveal(editor, get);
 	await get.click();
 	await select(
@@ -313,7 +311,6 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await expect(preview.getByText('Update from 1.0.0 to 1.0.1', { exact: true })).toBeVisible();
 	await preview.getByRole('button', { name: 'Update Updated Notes', exact: true }).click();
 
-	await insert.click();
 	await reveal(editor, mine);
 	await mine.click();
 	await expect(installed).toContainText('Updated Notes (1.0.1)');
