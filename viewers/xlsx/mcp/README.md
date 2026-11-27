@@ -1,14 +1,14 @@
 # xlsx-viewer-mcp
 
-**Excel workbooks for AI agents: an MCP server that inspects, reads, creates and edits `.xlsx` files on disk, with bounded reads and reviewable edits.**
+**An MCP server that lets AI agents inspect, read, create and edit Excel workbooks on disk, confined to one folder, with bounded reads and reviewable edits.**
 
 [![npm version](https://img.shields.io/npm/v/xlsx-viewer-mcp.svg)](https://www.npmjs.com/package/xlsx-viewer-mcp)
-[![license](https://img.shields.io/npm/l/xlsx-viewer-mcp.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
-[![docs](https://img.shields.io/badge/docs-christophervr.github.io-1f9d63.svg)](https://christophervr.github.io/ooxml/xlsx/)
+[![license](https://img.shields.io/npm/l/xlsx-viewer-mcp.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/mcp/LICENSE)
+[![types](https://img.shields.io/npm/types/xlsx-viewer-mcp.svg)](https://www.npmjs.com/package/xlsx-viewer-mcp)
 
-[Documentation](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/mcp/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
+[MCP guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md) · [Documentation](https://christophervr.github.io/ooxml/xlsx/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/mcp/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-The tools themselves (names, schemas, bounds and operations) are `xlsxTools` in `ooxml-core/automation`, the same definitions the OOXML Office assistant and the combined `ooxml-mcp` server use. This package registers them on an MCP server, confined to one folder, and ships the `xlsx-tools` stdio command.
+The tools (names, schemas, bounds and operations) are `xlsxTools` in `ooxml-core/automation`, the same definitions the combined [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp) server and the OOXML Office assistant use. This package registers them on an MCP server and ships the `xlsx-tools` stdio command.
 
 ## Install
 
@@ -16,11 +16,9 @@ The tools themselves (names, schemas, bounds and operations) are `xlsxTools` in 
 npm install xlsx-viewer-mcp
 ```
 
-Or run it straight from an MCP client without installing.
+Or let your MCP client run it with `npx`, as below. Node.js 22.3 or newer, on Windows, macOS and Linux; the package is plain JavaScript and needs no build step.
 
-## Quick start
-
-Add the server to your MCP client's configuration and give it the folder it may work in:
+## Client configuration
 
 ```json
 {
@@ -33,69 +31,62 @@ Add the server to your MCP client's configuration and give it the folder it may 
 }
 ```
 
-Without `--root` (or a bare folder as the first argument) the server uses the current working directory.
+The command is `xlsx-tools`. Its one option is `--root <dir>` (or `--root=<dir>`, or the folder as a bare first argument): the folder the tools may read and write. Without it the server uses the current working directory and says so on stderr.
 
-## Tools
-
-| Tool                     | Kind   | What it does                                                                                                    |
-| ------------------------ | ------ | --------------------------------------------------------------------------------------------------------------- |
-| `xlsx_inspect`           | read   | Sheets with their state and used range, tables, the active sheet and defined names. Start here.                 |
-| `xlsx_read_range`        | read   | Values, formulas, displayed text and number formats of a range (at most 10,000 cells).                          |
-| `xlsx_read_filled_cells` | read   | The filled cells of one sheet or all of them, up to a cap (default 2,000, at most 10,000), with omitted counts. |
-| `xlsx_find`              | read   | Searches as Excel's Find does, with wildcards and options; at most 1,000 matches plus the total.                |
-| `xlsx_read_table`        | read   | A table by name: range, header and totals rows, column names and cells.                                         |
-| `xlsx_create`            | create | Creates a workbook with the named sheets. Never overwrites a file.                                              |
-| `xlsx_set_cells`         | edit   | Writes up to 10,000 cell inputs and recalculates.                                                               |
-| `xlsx_propose_edits`     | read   | Returns the diff of a list of edits and a sealed proposal, without saving.                                      |
-| `xlsx_apply_proposal`    | edit   | Applies an approved proposal, refusing if the workbook changed in between.                                      |
-
-Every read is bounded, reads never return file bytes, and every tool reports the core's warnings.
-
-## How it keeps files safe
-
-- **Confined to the root.** Paths are judged on their text before any filesystem call. A path outside the root, a UNC or device path, and on Windows a drive-relative path, an alternate data stream or a device name such as `NUL` all get the same error. Use a path relative to the root, or an absolute path inside it.
-- **No accidental overwrites.** Creation never overwrites. Edits replace the source atomically after validation, unless `outputPath` names a new file.
-- **Formulas stay inside the workbook.** `xlsx_set_cells`, `xlsx_propose_edits` and `xlsx_apply_proposal` refuse a formula that could fetch data, run code, call an add-in, send cell data to an AI service or refer to another file when the workbook is opened in a spreadsheet application. The error names the cell, defined names are checked too, and no tool parameter turns the check off.
-- **Bounded work.** Workbooks are read through a guarded zip reader and calculated under a per-formula work budget, so a crafted file cannot exhaust memory or stall a call.
-
-## Use it from code
+From code, `createServer({ rootDir })` returns a ready server and `registerTools(server, { rootDir })` adds the Excel tools to a server you already have. Importing the package never starts a transport; add `@modelcontextprotocol/sdk` to your own dependencies when you use it:
 
 ```ts
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createServer, registerTools } from 'xlsx-viewer-mcp';
 
-// A ready server:
 await createServer({ rootDir: '/path/to/workbooks' }).connect(new StdioServerTransport());
 
-// Or add the Excel tools to a server you already have:
+// Or, on your own server:
 const server = new McpServer({ name: 'my-tools', version: '1.0.0' });
 registerTools(server, { rootDir: '/path/to/workbooks' });
 ```
 
-Importing the package never starts a transport. Add `@modelcontextprotocol/sdk` to your own dependencies when you import it, as above. A host whose callers are all trusted can allow every formula by registering `createXlsxTools({ formulas: 'unrestricted' })` from `ooxml-core/automation` with `registerAutomationTools` from `ooxml-core/automation/node` instead of calling `registerTools`.
+## Tools
 
-## Supported environments
+Every tool takes a `filePath` (relative to the root, or absolute inside it); edit tools also take an optional `outputPath`. Reads accept `.xlsx` and `.xlsm`.
 
-Node.js 22.3 or newer, on Windows, macOS and Linux. The package ships plain JavaScript and needs no build step.
+| Tool                     | Kind   | What it does                                                                                                                              |
+| ------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `xlsx_inspect`           | read   | Sheets (state, used range and size, tables), the active sheet, defined names, properties and warnings. Start here.                        |
+| `xlsx_read_range`        | read   | Value, formula, displayed text and number format of each cell in an A1 range (at most 10,000 cells).                                      |
+| `xlsx_read_filled_cells` | read   | The filled cells of one sheet or all, up to `maxCells` (default 2,000, at most 10,000), with omitted counts.                              |
+| `xlsx_find`              | read   | Searches as Excel's Find does (wildcards on by default); at most `maxResults` matches (default 100, up to 1,000) and the total.           |
+| `xlsx_read_table`        | read   | A table by name: sheet, range, header and totals rows, column names and cells (at most 10,000 cells).                                     |
+| `xlsx_create`            | create | Creates an `.xlsx` with the named sheets (up to 100). Never overwrites a file.                                                            |
+| `xlsx_set_cells`         | edit   | Writes up to 10,000 cell inputs and recalculates.                                                                                         |
+| `xlsx_propose_edits`     | read   | Returns the diff of a list of edits (cells, clear, format, merge, rows and columns, sheets, names) and a sealed proposal, without saving. |
+| `xlsx_apply_proposal`    | edit   | Applies an approved proposal; refused, changing nothing, if the workbook or the proposal changed in between.                              |
 
-## Limitations
+Reads never return file bytes, and every tool reports the core's warnings. Each tool carries a schema version in `_meta.schemaVersion`. See the [MCP guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md).
 
-The tools cover the operations listed above, not all of Excel. Unsupported operations are refused with an error, and preservation limits are reported in the core's warnings. Saving is not lossless for features the model does not cover; see the [preservation guarantee](https://christophervr.github.io/ooxml/xlsx/preservation).
+## Safety and limits
+
+- **Confined to the root.** Paths are judged on their text before any filesystem call, then again after resolving links. A path outside the root, a UNC or device path, and on Windows a drive-relative path, an alternate data stream or a device name such as `NUL` all get the same error.
+- **No accidental overwrites.** `xlsx_create` never overwrites. Edits replace the source atomically after validation, unless `outputPath` names another file.
+- **Formulas stay inside the workbook.** The edit tools refuse a formula that could fetch data or open links (`WEBSERVICE`, `IMAGE`, `HYPERLINK`, `RTD`, cube functions), call an AI service (`COPILOT`, `TRANSLATE`), run a macro function or call an add-in, or refer to another file. Defined names are checked too, and no tool parameter turns the check off. A host whose callers are all trusted can register `createXlsxTools({ formulas: 'unrestricted' })` from `ooxml-core/automation` with `registerAutomationTools` from `ooxml-core/automation/node` instead.
+- **Bounded work.** Files over 64 MiB are refused, workbooks are read through a guarded zip reader and calculated under a per-formula work budget, so a crafted file cannot exhaust memory or stall a call.
+- **Not all of Excel.** Only the operations above exist; anything else is refused. Saving is not lossless for features the model does not cover; see the [preservation guarantee](https://christophervr.github.io/ooxml/xlsx/preservation).
+
+The tool names, inputs and kinds are part of the Stable API under the [stability policy](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md).
 
 ## Privacy and network use
 
-The server makes no network request of its own: it reads and writes files under the root it is given and answers over stdio. On Windows, a path naming a network share can make the system contact that host while the path is checked, before it is refused. Formulas that would make a spreadsheet application fetch data, open links or call an AI service are refused, so a workbook the tools write does not phone out when it is opened. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+The server makes no network request of its own: it reads and writes files under its root and answers over stdio. On Windows, a path naming a network share can make the system contact that host while the path is checked, before it is refused. Because formulas that would fetch data, open links or call an AI service are refused, a workbook the tools write does not contact anything when it is later opened in a spreadsheet application. The server does not sign in to Microsoft or sync OneDrive; an application with access can fetch the bytes through `ooxml-core/embedding/onedrive` and hand the tools a local file ([OneDrive integration](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)). Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#mcp-servers-mcp-and-the-viewers-mcp-packages).
 
-The server does not sign in to Microsoft or sync OneDrive. An application that already has access can fetch the bytes through `ooxml-core/embedding/onedrive` and hand the tools a local file; see the [OneDrive integration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md).
+## Documentation
 
-## Related packages
-
+- The [MCP guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md) and the [Excel documentation](https://christophervr.github.io/ooxml/xlsx/).
 - [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp): one server with the Word, Excel, PowerPoint and Visio tools.
 - [`@christophervr/xlsx-core`](https://www.npmjs.com/package/@christophervr/xlsx-core): the workbook model for your own headless code.
 - The Excel editor for [React](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer), [Vue](https://www.npmjs.com/package/xlsx-vue-viewer), [Angular](https://www.npmjs.com/package/xlsx-angular-viewer), [Svelte](https://www.npmjs.com/package/xlsx-svelte-viewer), [Solid](https://www.npmjs.com/package/xlsx-solid-viewer) and [plain JavaScript](https://www.npmjs.com/package/xlsx-vanilla-viewer).
-- [`ooxml-core`](https://www.npmjs.com/package/ooxml-core): the engine and the tool definitions.
+- Source: the [ooxml repository](https://github.com/ChristopherVR/ooxml).
 
 ## License
 
-[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/mcp/LICENSE).

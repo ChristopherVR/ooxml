@@ -1,12 +1,12 @@
 # xlsx-solid-viewer
 
-**The Excel editor for Solid: open, edit, calculate and save `.xlsx` workbooks entirely in the browser.**
+**The Excel spreadsheet editor as a Solid component: open, edit, calculate and save `.xlsx`, `.xlsm`, `.xltx`, legacy `.xls` and `.csv` files in the browser.**
 
 [![npm version](https://img.shields.io/npm/v/xlsx-solid-viewer.svg)](https://www.npmjs.com/package/xlsx-solid-viewer)
 [![license](https://img.shields.io/npm/l/xlsx-solid-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
-[![docs](https://img.shields.io/badge/docs-christophervr.github.io-1f9d63.svg)](https://christophervr.github.io/ooxml/xlsx/)
+[![types](https://img.shields.io/npm/types/xlsx-solid-viewer.svg)](https://www.npmjs.com/package/xlsx-solid-viewer)
 
-[Live demo](https://christophervr.github.io/ooxml/xlsx/demo-solid/) · [Documentation](https://christophervr.github.io/ooxml/xlsx/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/solid/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
+[Live demo](https://christophervr.github.io/ooxml/xlsx/demo-solid/) · [Documentation](https://christophervr.github.io/ooxml/xlsx/) · [Solid guide](https://christophervr.github.io/ooxml/xlsx/frameworks/solid) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/solid/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
 ![The Excel editor with its ribbon, formula bar, grid and sheet tabs](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/xlsx/docs/public/hero-editor.webp)
 
@@ -16,29 +16,11 @@
 npm install xlsx-solid-viewer solid-js
 ```
 
-One install is enough. The package bundles the editor and its Solid adapter, and brings the workbook model (`@christophervr/xlsx-core`, re-exported from this package), `ooxml-core` and `ooxml-ui` with it. The peer dependency is `solid-js` 1.9.
+- Peer dependency: `solid-js` `^1.9.0` (Solid 2 is not supported yet).
+- Bundled: the `<xlsx-editor>` web component and the Solid adapter. Installed with it: `@christophervr/xlsx-core` (the workbook model, re-exported from this package), `ooxml-core` and `ooxml-ui`.
+- Use one Excel editor package per application: each registers the same `<xlsx-editor>` element.
 
 ## Quick start
-
-```tsx
-import { createSignal } from 'solid-js';
-import { createWorkbook, SpreadsheetEditor } from 'xlsx-solid-viewer';
-
-export function Editor() {
-	const [workbook, setWorkbook] = createSignal(createWorkbook());
-	return (
-		<div style={{ height: '100vh' }}>
-			<SpreadsheetEditor workbook={workbook()} onWorkbookChange={setWorkbook} />
-		</div>
-	);
-}
-```
-
-Give the editor a height: the grid fills its container and scrolls inside it. Use one Excel editor package per application, since each registers the same `<xlsx-editor>` element.
-
-## Open and save files
-
-Pass `bytes` (with `fileName`) or a `src` URL to open a file, and use the handle to save:
 
 ```tsx
 import { SpreadsheetEditor, type EditorHandle } from 'xlsx-solid-viewer';
@@ -52,7 +34,7 @@ export function Budget() {
 				editorRef={(handle) => (editor = handle)}
 				src="/files/budget.xlsx"
 				fileName="Budget.xlsx"
-				class="sheet" // give .sheet a height in your CSS
+				class="sheet"
 				onDirtyChange={(dirty) => console.log('unsaved edits:', dirty)}
 			/>
 		</>
@@ -60,78 +42,99 @@ export function Budget() {
 }
 ```
 
-The editor opens `.xlsx`, `.xlsm`, `.xltx`, password-protected workbooks, legacy `.xls` and `.csv`. `save()` resolves to an `.xlsx` Blob, `saveBytes('csv')` exports the active sheet, and `download()` saves and marks the workbook clean. For headless work, the package also exports the model API: `createWorkbook`, `loadWorkbook`, `saveWorkbook`, `detectWorkbookFormat` and the rest of `@christophervr/xlsx-core`.
+Give the host a height in your CSS (for example `.sheet { height: 80vh }`): the editor fills the `<div>` that `class` styles and scrolls inside it. There is no stylesheet to import: the element carries its own styles. Without `src`, `bytes` or `workbook` the editor starts with a blank workbook.
 
-## What you get
+## Props
 
-- **The Excel window.** Ribbon with Tell me, Name Box, formula bar, grid with frozen panes, sheet tabs, a status bar with sum, average and count, the File backstage, Find and Replace, and undo and redo.
-- **A calculation engine.** More than 500 functions, dynamic arrays, `LET` and `LAMBDA`, automatic or manual calculation and iterative calculation. Each formula has a work budget, and a slow calculation on open runs in a worker, so a workbook cannot freeze the page.
-- **Formatting.** Fonts, fills, borders, number formats, merged cells, tables, outline groups, data validation and conditional formatting with colour scales, data bars and icon sets.
-- **Objects.** Charts drawn from live values and edited from the Chart Design tab and Format pane, SmartArt, shapes, pictures, sparklines, worksheet PivotTables and slicers, and form controls linked to cells.
-- **Collaboration.** Optional real-time co-editing between tabs of one browser, or across machines through a y-websocket compatible server you run.
-- **Five interface languages.** English, French, German, Spanish and Simplified Chinese through `locale`. Workbook content is never translated.
-- **Keyboard and screen reader support.** F6 regions, Excel's shortcuts, a grid that reads as a table, and forced-colours support.
+| Prop                                   | What it does                                                                                                                       |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `workbook`, `bytes`, `src`, `fileName` | What to show: a workbook model, file bytes or a URL, and the name used by the title bar, Save and Download (default `Book1.xlsx`). |
+| `readOnly`                             | Opens in Viewing mode (default `false`).                                                                                           |
+| `locale`                               | Interface language (see [Localisation](#localisation)).                                                                            |
+| `theme`, `themeColors`                 | `light`, `dark` or `auto` (default), and `--xve-*` token overrides (see [Theming](#theming)).                                      |
+| `showToolbar`, `showFormulaBar`        | Show or hide the ribbon and the formula bar (both default `true`).                                                                 |
+| `hiddenActions`, `ribbonAddIns`        | Hide ribbon commands by stable id, or add your own tabs after Excel's.                                                             |
+| `customization`                        | Capabilities, hidden ribbon tabs (File included), extra File pages and context-menu commands.                                      |
+| `storage`, `fileProviders`             | Send File > Save and Open to your own storage, and add OneDrive or your own cloud places to File > Open.                           |
+| `collaboration`                        | Join a shared room while set; `null` leaves it.                                                                                    |
+| `imageProvider`                        | Opt in to `IMAGE` formulas with your own fetcher (without one they show `#BLOCKED!`).                                              |
+| `authorName`, `validateReplace`        | The author of new comments (default `Author`), and whether Replace applies data validation (default `false`).                      |
+| `class`, `editorRef`                   | Class of the host `<div>`, and a callback that receives the editor handle.                                                         |
 
-## Solid notes
+Props are forwarded only when their value changes, so a re-render never undoes what the user changed inside the editor (Editing or Viewing, theme, language, Customize Ribbon). Keep `customization`, `fileProviders` and `ribbonAddIns` stable between renders.
 
-- `editorRef` receives the [handle](#the-handle), and `class` styles the host `<div>`. Callbacks are `onWorkbookChange`, `onSelectionChange`, `onDirtyChange`, `onFileCommand` and the others in the [bindings guide](https://christophervr.github.io/ooxml/xlsx/bindings#callbacks-and-events).
-- The component renders during server rendering and the browser reuses the server's element when it hydrates. The Solid owner destroys the editor and its listeners when the component unmounts.
-- Props are forwarded only when their value changes, so a re-render never undoes what the user changed inside the editor.
-- Solid 2 is not supported yet, because the stable Solid compiler plugin for Vite does not support it.
+`editorRef` receives the editor handle. The Solid owner destroys the editor and its listeners on unmount. The handle has `load(bytes, fileName?)`, `newWorkbook()`, `save()`, `saveBytes('xlsx' | 'csv')`, `download(fileName?)`, `markClean()`, `openCloudFile(file)`, `select(ref)`, `getSelection()`, `setActiveSheet(index)`, `share()`, and the `dirty` and `element` properties. A method called before the editor has mounted throws `Editor is not mounted`.
 
-## Configuration
+Full reference: [framework bindings](https://christophervr.github.io/ooxml/xlsx/bindings) and the [element API](https://christophervr.github.io/ooxml/xlsx/api).
 
-Every binding takes the same settings (the [bindings guide](https://christophervr.github.io/ooxml/xlsx/bindings) has the full list):
+## Events
 
-| Setting                                | What it does                                                                                                                 |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `workbook`, `bytes`, `src`, `fileName` | What to show: a model, file bytes or a URL, and the name used by the title bar, Save and Download.                           |
-| `readOnly`                             | Opens in Viewing mode.                                                                                                       |
-| `locale`                               | `en`, `fr`, `de`, `es` or `zh-CN` (tags such as `de-DE` map to one).                                                         |
-| `theme`, `themeColors`                 | `light`, `dark` or `auto`, and `--xve-*` token overrides. See [theming](https://christophervr.github.io/ooxml/xlsx/theming). |
-| `showToolbar`, `showFormulaBar`        | Show or hide the ribbon and the formula bar.                                                                                 |
-| `hiddenActions`, `ribbonAddIns`        | Hide ribbon commands by id, or add your own tabs after Excel's.                                                              |
-| `customization`                        | Capabilities, hidden ribbon tabs (`ribbon.hiddenTabs`, including File), extra backstage pages and menu items.                |
-| `storage`, `fileProviders`             | Send Save and Open to your own storage, and offer OneDrive or your own cloud places in File > Open.                          |
-| `collaboration`                        | Join a shared room. See [collaboration](https://christophervr.github.io/ooxml/xlsx/collaboration).                           |
-| `authorName`, `validateReplace`        | The author of new comments, and whether Replace applies data validation.                                                     |
+| Callback                | Receives                                                                                                                |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `onWorkbookChange`      | The edited `Workbook`.                                                                                                  |
+| `onDirtyChange`         | `true` while there are unsaved edits.                                                                                   |
+| `onWorkbookError`       | An `Error` when a file or a `src` fetch fails to open.                                                                  |
+| `onFileCommand`         | The cancelable `file-command` event: call `event.preventDefault()` to run New, Open, Save, Print and the rest yourself. |
+| `onSelectionChange`     | `{ sheet, ref, active }`.                                                                                               |
+| `onSheetChange`         | `{ index, name }` of the new active sheet.                                                                              |
+| `onReadOnlyChange`      | `(readOnly, { readOnly, locked, hostReadOnly })`; a controlled parent stores `hostReadOnly`.                            |
+| `onWorkbookWarning`     | The loader's notes about content it could not read.                                                                     |
+| `onRibbonAction`        | `{ id }` of a command that ran.                                                                                         |
+| `onRibbonCustomize`     | The new hidden-action list after Customize Ribbon.                                                                      |
+| `onRibbonAddIn`         | `{ tab, command }` of a host tab command.                                                                               |
+| `onCollaborationChange` | The sharing state.                                                                                                      |
+| `onReady`               | The `<xlsx-editor>` element, once mounted.                                                                              |
 
-### The handle
+See [callbacks and events](https://christophervr.github.io/ooxml/xlsx/bindings#callbacks-and-events).
 
-The handle has `load(bytes, fileName?)`, `newWorkbook()`, `save()`, `saveBytes(format?)`, `download(fileName?)`, `markClean()`, `openCloudFile(file)`, `select(ref)`, `getSelection()`, `setActiveSheet(index)`, `share()`, and the `dirty` and `element` properties.
+## Open and save files
 
-### Building blocks
+The editor opens `.xlsx`, `.xlsm` (macros never run), `.xltx`, password-protected workbooks, legacy `.xls` and `.csv`; `.xls` and `.csv` are saved as `.xlsx`. `save()` resolves to an `.xlsx` Blob and does not clear `dirty`: call `markClean()` once you have stored it, or use `download()`, which does both. `saveBytes('csv')` exports the active sheet. The model API (`createWorkbook`, `loadWorkbook`, `saveWorkbook`, `detectWorkbookFormat` and the rest of `@christophervr/xlsx-core`) is re-exported here, so headless work needs no second install. The component renders during server rendering and the browser reuses the server's element when it hydrates.
 
-To build your own interface around the grid, use `createViewerBuildingBlocks` with the `SpreadsheetCanvas`, `Toolbar`, `FormulaBar` and `SheetTabs` components. No title bar, ribbon, backstage or dialog is mounted, and the surface is read-only until you pass `canEdit: true`. See the [building blocks guide](https://christophervr.github.io/ooxml/xlsx/building-blocks).
+## Theming
 
-## Supported environments
+`theme` picks `light`, `dark` or `auto`, and `themeColors` sets `--xve-*` tokens on the editor (for example `{ primary: '#1f9d63', radius: '6px' }`). The chrome also follows the shared `--office-*` tokens and a `data-office-theme` attribute on any ancestor; install them once with `installOfficeUiTheme()` from `ooxml-ui/theme`. Theme changes never alter workbook colours. See [theming](https://christophervr.github.io/ooxml/xlsx/theming).
 
-- **Browsers:** the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
-- **Node.js:** 22.3 or newer for builds, tests and server rendering. The package imports without a DOM; the editor itself runs in the browser.
-- **Workers:** a workbook that needs a long calculation on open is calculated in a module worker that bundlers pick up from `new Worker(new URL(..., import.meta.url))`. A Content Security Policy must allow `worker-src 'self'`; without workers the calculation runs on the page under the same time limit.
+## Localisation
 
-## Limitations
+The interface is available in English (`en`, the default, built in), French (`fr`), German (`de`), Spanish (`es`) and Simplified Chinese (`zh-CN`), set with `locale`. A tag that maps to one (`de-DE`, `zh-Hans`) works; any other falls back to English. Other languages load on demand. Workbook content and function names are never translated. See [localization](https://christophervr.github.io/ooxml/xlsx/localization).
 
-This is not Microsoft Excel. Content the model does not cover is kept through a save or reported, as the [preservation guarantee](https://christophervr.github.io/ooxml/xlsx/preservation) describes, and the [features page](https://christophervr.github.io/ooxml/xlsx/features) lists what is supported.
+## Status and limits
 
-- `.xlsb` and `.ods` do not open. Legacy `.xls` workbooks are read and saved as `.xlsx`.
-- Macros never run; a `.xlsm` keeps its VBA project on save.
-- External links, Power Query, OLAP and external-source PivotTables are kept but never refreshed, and `WEBSERVICE` is not evaluated.
-- A few functions are not implemented (`ASC`, `DBCS`, `JIS`, `PHONETIC`, `INFO`, `WEBSERVICE`) and show `#NAME?`.
-- Ink is drawn, erased, lassoed, replayed and turned into shapes from the Draw tab, and saves as Excel ink (Ink to Math is not available). OLE objects show as placeholders. In a shared room, pictures, ink, other drawings and page setup stay local.
+Excel is **Stable** under the [stability policy](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md): a frozen API under semver, a [preservation guarantee](https://christophervr.github.io/ooxml/xlsx/preservation) and native Excel save and reopen checks. It does not match Microsoft Excel feature for feature.
+
+- `.xlsb` and `.ods` do not open.
+- Macros never run (a `.xlsm` keeps its VBA project). External links, data connections and Power Query are kept with their cached values and never refreshed.
+- PivotTables from external or OLAP sources and advanced pivot filters are kept but not editable; the sparkline style gallery is missing.
+- Ink is drawn, erased and saved as Excel ink from the Draw tab (Ink to Math is not available). Older OLE objects show as placeholders; form controls cannot be moved or resized, and buttons run no macro.
+- In a shared room, pictures, ink, other drawings, page setup and PivotTables are not shared.
+
+See [features and limitations](https://christophervr.github.io/ooxml/xlsx/features) and the [parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md).
 
 ## Privacy and network use
 
-The editor makes no network request when it opens, renders, edits or saves a workbook. Linked pictures are not fetched, external workbook links and linked data are not refreshed, and fonts come from the device and the file. Fonts are downloaded only when the reader turns on the Trust Center option (off by default) or the host sets `googleFonts`, and then only public font family names are sent, never the workbook. Workers load from your own origin. Hyperlinks open only when the reader follows them. Collaboration talks only to the server you configure (without one it stays in the browser), and OneDrive only when you connect it. Preferences such as the font-download choice (`ooxml.xlsx.allowFontDownloads`) stay in the browser's localStorage. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+Workbooks open, calculate, render, edit and save on the device. Nothing is uploaded, and nothing collects analytics or telemetry.
 
-## Related packages
+- **Same-origin assets.** Workers, the selected non-English language, and chart, PivotTable, picture and shape tool code load on demand from your app's origin, carrying only the asset URL. Keep `locale` at `en` to skip language requests.
+- **Fonts.** Off by default. Fonts the device lacks are downloaded from `fonts.googleapis.com` and `fonts.gstatic.com` only when the reader turns on File > Options > Trust Center "Download fonts that are not installed or embedded", or the host sets the element's `googleFonts` property (reach it through the handle's `element`): `false` turns downloads off and locks the toggle, `{ baseUrl }` points at Google Fonts or your own mirror. Only public font family names are sent.
+- **Linked content.** Linked pictures are not fetched, external links and linked data are not refreshed, and `WEBSERVICE` is not evaluated. `IMAGE` formulas fetch only through an `imageProvider` you pass.
+- **Destinations you choose.** `src` fetches the URL you pass; `collaboration` talks only to the server you configure; OneDrive and other `fileProviders` only when you add them. Hyperlinks and the Forms link open only when the reader follows them.
+- **On the device.** Small preferences, such as the font-download choice (`ooxml.xlsx.allowFontDownloads`), stay in localStorage.
 
-- Other frameworks: [React](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer) (`@christophervr/xlsx-react-viewer`), [Vue](https://www.npmjs.com/package/xlsx-vue-viewer) (`xlsx-vue-viewer`), [Angular](https://www.npmjs.com/package/xlsx-angular-viewer) (`xlsx-angular-viewer`), [Svelte](https://www.npmjs.com/package/xlsx-svelte-viewer) (`xlsx-svelte-viewer`), [Vanilla JS](https://www.npmjs.com/package/xlsx-vanilla-viewer) (`xlsx-vanilla-viewer`).
-- [`@christophervr/xlsx-core`](https://www.npmjs.com/package/@christophervr/xlsx-core): the workbook model on its own, for servers and scripts.
-- [`xlsx-viewer-mcp`](https://www.npmjs.com/package/xlsx-viewer-mcp): Excel tools for AI agents over MCP.
-- [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) and [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui): the engine and the shared editor elements underneath.
-- The same approach for [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme), [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) and [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme), or the whole [OOXML Office suite](https://github.com/ChristopherVR/ooxml#readme).
+See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#word-excel-and-visio).
+
+## Browser support
+
+The last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)). Solid 1.9. Node.js 22.3 or newer for builds, tests and server rendering. A slow calculation on open runs in a module worker from your origin, so a Content Security Policy must allow `worker-src 'self'`; without workers it runs on the page under the same time limit.
+
+## Documentation and demos
+
+- [Documentation](https://christophervr.github.io/ooxml/xlsx/), the [Solid guide](https://christophervr.github.io/ooxml/xlsx/frameworks/solid) and the [live demo](https://christophervr.github.io/ooxml/xlsx/demo-solid/).
+- Your own interface around the grid: `createViewerBuildingBlocks` with `SpreadsheetCanvas`, `Toolbar`, `FormulaBar` and `SheetTabs` ([building blocks](https://christophervr.github.io/ooxml/xlsx/building-blocks)).
+- Other frameworks: [`@christophervr/xlsx-react-viewer`](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer) · [`xlsx-vue-viewer`](https://www.npmjs.com/package/xlsx-vue-viewer) · [`xlsx-angular-viewer`](https://www.npmjs.com/package/xlsx-angular-viewer) · [`xlsx-svelte-viewer`](https://www.npmjs.com/package/xlsx-svelte-viewer) · [`xlsx-vanilla-viewer`](https://www.npmjs.com/package/xlsx-vanilla-viewer).
+- Headless and agents: [`@christophervr/xlsx-core`](https://www.npmjs.com/package/@christophervr/xlsx-core) (the workbook model) and [`xlsx-viewer-mcp`](https://www.npmjs.com/package/xlsx-viewer-mcp) (MCP tools).
+- Source: the [ooxml repository](https://github.com/ChristopherVR/ooxml).
 
 ## License
 
-[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE). See [NOTICE](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/NOTICE) for attributions.
