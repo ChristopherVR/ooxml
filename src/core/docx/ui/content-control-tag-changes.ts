@@ -68,6 +68,8 @@ function replacementChangesControls(
 	hasTags: boolean,
 ): boolean {
 	if (hasTags && step instanceof ReplaceStep) {
+		// A whole-document replacement, such as Yjs sync, invalidates the existing positions.
+		if (step.from === 0 && step.to === doc.content.size) return true;
 		const textEdit = textEditChangesControls(doc, step);
 		if (textEdit !== undefined) return textEdit;
 	}

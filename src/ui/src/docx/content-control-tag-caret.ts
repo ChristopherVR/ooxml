@@ -1,6 +1,7 @@
 import type { Mark, ResolvedPos } from 'prosemirror-model';
 import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import type { Decoration, DecorationSet } from 'prosemirror-view';
+import { controlOfMark, isWordYjsRemoteTransaction } from 'ooxml-core/docx/ui';
 import { inlineTagsAt, type TagEdge } from './content-control-tag-widgets';
 
 const controlMark = (mark: Mark) => mark.type.name === 'contentControl';
@@ -23,11 +24,19 @@ export function inlineCaretSide(
 
 	if (prior?.state.selection instanceof TextSelection && prior.state.selection.empty) {
 		const { $head } = prior.state.selection;
+		const { inside } = prior;
+		// A Yjs replacement restores the selection independently of the step mapping.
+		if (isWordYjsRemoteTransaction(prior.tr)) {
+			if (!inside || !has(inside)) return undefined;
+			const id = controlOfMark(markAt($head, inside))?.id;
+			return id !== undefined && controlOfMark(markAt($pos, inside))?.id === id
+				? inside
+				: undefined;
+		}
 		const previous = prior.tr.mapping.map($head.pos, -1);
 		// Text typed at the inside end moves the caret with the end tag: it stays inside.
 		const followed = prior.tr.mapping.map($head.pos, 1);
-		if ((previous === $pos.pos || followed === $pos.pos) && prior.inside && has(prior.inside))
-			return prior.inside;
+		if ((previous === $pos.pos || followed === $pos.pos) && inside && has(inside)) return inside;
 		if (previous !== $pos.pos && $pos.sameParent($pos.doc.resolve(previous))) {
 			const edge = previous > $pos.pos ? 'start' : 'end';
 			const approach = markAt($head, opposite(edge));
