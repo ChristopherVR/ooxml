@@ -33,8 +33,9 @@ describe('Picture Style 3-D in the grid', () => {
 		const face = node.querySelector<HTMLElement>('.xg-pic3d');
 		expect(face?.firstElementChild).toBe(surface);
 		expect(face?.style.transform).toMatch(/matrix3d|rotate/);
-		expect(face?.style.filter).toMatch(/^url\(#bevel-light-xlsx-picture-\d+\)$/);
-		const id = face?.style.filter.slice(5, -1) ?? '';
+		// Browsers quote the URL when they serialise it; jsdom may not.
+		const id = /^url\("?#(bevel-light-xlsx-picture-\d+)"?\)$/.exec(face?.style.filter ?? '')?.[1];
+		expect(id).toBeDefined();
 		expect(node.querySelector(`filter[id="${id}"] feSpecularLighting`)).not.toBeNull();
 	});
 
