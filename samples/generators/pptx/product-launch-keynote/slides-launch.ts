@@ -1,5 +1,5 @@
 /** Slides 11 to 13: price and availability, the pre-orders (a doughnut chart) and the close. */
-import { FONTS, REGIONS } from '../../lib/fiction';
+import { REGIONS } from '../../lib/fiction';
 import type { Deck } from '../kit/deck';
 import { card, head, tx } from './parts';
 import { C, G, T, body, col, display, label, noLine } from './style';
