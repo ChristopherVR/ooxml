@@ -82,7 +82,6 @@ export const enText: Readonly<Record<string, string>> = {
 	Half: 'Half',
 	Full: 'Full',
 	touching: 'touching',
-	'More tabs': 'More tabs',
 	More: 'More',
 	File: 'File',
 	'Collapse the ribbon': 'Collapse the ribbon',

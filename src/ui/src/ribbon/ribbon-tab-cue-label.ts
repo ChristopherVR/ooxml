@@ -1,4 +1,7 @@
-const cueLabels: Readonly<Record<string, string>> = {
+import { normalizeLocale } from 'ooxml-core/i18n';
+
+const cueLabels = {
+	en: 'More tabs',
 	fr: 'Autres onglets',
 	de: 'Weitere Registerkarten',
 	es: 'Más pestañas',
@@ -7,4 +10,7 @@ const cueLabels: Readonly<Record<string, string>> = {
 	ko: '탭 더 보기',
 };
 
-export const ribbonTabCueLabel = (locale: string) => cueLabels[locale] ?? 'More tabs';
+const locales = Object.keys(cueLabels) as (keyof typeof cueLabels)[];
+
+export const ribbonTabCueLabel = (locale: string) =>
+	cueLabels[normalizeLocale(locale, locales, 'en')];

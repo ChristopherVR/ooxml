@@ -79,7 +79,6 @@ export const zhCNText: Readonly<Record<string, string>> = {
 	Half: '半',
 	Full: '全',
 	touching: '接触',
-	'More tabs': '更多选项卡',
 	More: '更多',
 	File: '文件',
 	'Collapse the ribbon': '折叠功能区',

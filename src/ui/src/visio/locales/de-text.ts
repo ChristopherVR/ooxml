@@ -88,7 +88,6 @@ export const deText: Readonly<Record<string, string>> = {
 	Half: 'Halb',
 	Full: 'Voll',
 	touching: 'berührend',
-	'More tabs': 'Weitere Registerkarten',
 	More: 'Mehr',
 	File: 'Datei',
 	'Collapse the ribbon': 'Menüband reduzieren',

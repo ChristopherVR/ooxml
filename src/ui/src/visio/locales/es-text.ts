@@ -84,7 +84,6 @@ export const esText: Readonly<Record<string, string>> = {
 	Half: 'Media',
 	Full: 'Completa',
 	touching: 'tocando',
-	'More tabs': 'Más pestañas',
 	More: 'Más',
 	File: 'Archivo',
 	'Collapse the ribbon': 'Contraer la cinta de opciones',

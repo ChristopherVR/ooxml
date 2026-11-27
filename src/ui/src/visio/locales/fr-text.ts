@@ -87,7 +87,6 @@ export const frText: Readonly<Record<string, string>> = {
 	Half: 'Moitié',
 	Full: 'Complète',
 	touching: 'contigu',
-	'More tabs': 'Autres onglets',
 	More: 'Plus',
 	File: 'Fichier',
 	'Collapse the ribbon': 'Réduire le ruban',
