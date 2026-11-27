@@ -26,6 +26,121 @@ asks for ASK and FILL-IN answers and can cancel the entire merge from a prompt. 
 Check for Errors use the saved defaults. Field insertion targets a paragraph in the document
 body, and the Mailings controls require an editable, unshared document.
 
+## Filling a template
+
+`listMergeFields` and `mergeFields` fill the MERGEFIELD fields of one document from values, for
+a service that generates documents from `.docx` templates in Node or a worker, without a DOM or
+an editor. Both load their code on first use, so they return promises.
+
+```ts
+import { loadDocx } from 'ooxml-core/docx';
+import { listMergeFields, mergeFields } from 'ooxml-core/docx/mail-merge';
+
+const template = await loadDocx(templateBytes);
+const { fields, regions } = await listMergeFields(template.model);
+const { model, results } = await mergeFields(
+	template.model,
+	{
+		values: { 'First name': 'Ada', 'client.2.name': 'Lovelace', Notes: '<p>Hi <b>you</b></p>' },
+		regions: {
+			Items: [
+				{ Name: 'Pen', Price: '10' },
+				{ Name: 'Ink', Price: '20' },
+			],
+		},
+		html: ['Notes'],
+	},
+	{ unlink: true },
+);
+const bytes = await template.save(model);
+```
+
+`listMergeFields(model)` returns `fields`, one entry per MERGEFIELD in story order (the body with
+its table cells and text boxes, then headers and footers, footnotes and endnotes): its `name` as
+written, its `instruction`, `story`, `kind` (`simple` for `w:fldSimple`, `complex` for
+`w:fldChar`), its `switches` as written, the `region` it repeats in, whether it is `locked` and
+whether it is `nested` in the code of another field. `regions` lists each region with its name,
+`kind` (`rows` or `paragraphs`) and story.
+
+`mergeFields(model, data, options)` returns a new model for the loaded template's `save()` (the
+input model is not changed), with:
+
+- `results`: one entry per MERGEFIELD evaluated, with its `name`, `story`, `status` (`filled`,
+  `missing`, `invalid`, `locked` or `unsupported`) and, inside a region, the `region` and the
+  zero-based `row`;
+- `regions`: each region with the number of `rows` written for it;
+- `htmlIssues`: what HTML values lost on the way in (`image-refused`, `link-refused`,
+  `nested-table-flattened`).
+
+Save the returned model with the template's own `save()`: repeated blocks and table rows are
+written as copies of their source XML, which only that writer has.
+
+### Values
+
+Names match exactly as written in the field, including dots, digits, underscores, hyphens and
+quoted names with spaces (`MERGEFIELD "First name"`). A value is text: a line break in it is
+written as `w:br` and a tab as `w:tab`. Fields are filled in every story: the body, tables
+(nested ones too), headers and footers of every type, footnotes, endnotes, DrawingML text
+boxes and content controls, whose `w:sdt` and tags are kept. Simple and complex fields are
+filled, including a code split across several `w:instrText` runs and a result split across
+several runs. The MERGEFIELD switches apply as in the editor's merge (`\b`, `\f`, `\*`, `\@`
+with `options.locale`, `\#`), and the result takes its formatting as described under
+[Fields and settings](#fields-and-settings).
+
+| Option                  | Default   | Effect                                                                                                                                                                                  |
+| ----------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unlink`                | `false`   | `true` replaces each field by its result, as Word's Unlink Fields (Ctrl+Shift+F9). `false` keeps each field and gives it a new cached result.                                           |
+| `missing`               | `'empty'` | A field whose name has no value shows nothing; `'keep'` keeps the result it has (unlinked, that result becomes the text).                                                               |
+| `removeEmptyParagraphs` | `false`   | Removes the paragraphs whose merge fields were all empty and that show nothing else (a table cell keeps one paragraph).                                                                 |
+| `updateFields`          | `true`    | Refreshes the computed fields afterwards (DOCPROPERTY, document information, IF, `=`, numbering fields). PAGE, NUMPAGES, TOC and REF keep their saved results: they need Word's layout. |
+| `locale`                | `'en-US'` | The locale of `\@` date pictures.                                                                                                                                                       |
+
+Locked fields (`w:fldLock`) are left as they are and reported as `locked`. A MERGEFIELD in the
+code of an IF field is filled and the IF evaluated, as in the editor's merge; in the code of any
+other field (QUOTE, for instance) the outer field keeps its result and the merge field is
+reported as `unsupported`.
+
+A kept field (`unlink: false`) holds the value as its cached result, and Word shows it on
+opening. Word's Update Field (F9) on such a document shows `«Name»`, because the document has no
+data source attached (checked with Word 16); unlink the fields when the output must survive F9.
+
+### Repeating regions
+
+A region opens with `MERGEFIELD TableStart:<name>` and closes with `MERGEFIELD TableEnd:<name>`.
+Its content repeats once per row of `regions[<name>]`; each row's keys fill the fields inside it,
+and a name the row does not have falls back to `values`, then to `missing`. The markers never
+show in the output.
+
+- Markers in the rows of one table (in one row, or spanning rows) repeat those rows. Each copy
+  is a copy of the source row's XML, so its properties, borders, shading and merges are kept.
+- Markers in the paragraphs of one story (the body, a header, a footer, a note or a text box)
+  repeat the blocks from the paragraph holding `TableStart` to the one holding `TableEnd`,
+  including when both are in the same paragraph.
+- An empty or missing row list removes the region with its markers. A table that loses every
+  row is removed; the rest of a table stays valid.
+
+Regions inside other regions are not supported: the inner markers are only removed.
+
+### HTML values
+
+Only the names listed in `html` are read as HTML; any other value is text, whatever it holds.
+HTML is read without a DOM and nothing is fetched. It goes through an allow-list: paragraphs and
+headings (`Heading1` to `Heading6` when the document has those styles, bold otherwise), bold,
+italic, underline, strikethrough, superscript, subscript, colour, line breaks, links (`http`,
+`https`, `mailto` and `#anchor`), bulleted and numbered lists (each a new list definition) and
+tables (`border` gives the table Word's default borders, `colspan` spans columns; `rowspan` is
+not read). Every other element gives only its text; scripts, styles and comments are dropped,
+and pictures and other links are refused and reported. Invalid HTML gives its text, never a
+failed merge. One merge takes at most 1,024 distinct HTML values (more throw a `RangeError`)
+and reads at most 20,000 tokens of each; the rest of a longer value is kept as text.
+
+- Inline HTML (no block element) replaces the field in place, keeps the text around it and
+  takes the field's run formatting where it sets none.
+- Block HTML replaces the host paragraph when the field is alone in it, and is inserted after the
+  paragraph otherwise. A field holding block HTML is unlinked even when fields are kept, since a
+  field result here cannot hold paragraphs. Inside a table cell or a text box, an HTML table
+  becomes one paragraph per row, its cells separated by tabs.
+
 ## Envelopes and labels
 
 Headless hosts can call `await loadMailMergeStationery()` for the same label catalogue and
@@ -159,8 +274,10 @@ string to use that answer or return `undefined` to use the saved default. For an
 prompt handler, use `resolveMailMergePrompts(model, data, ask)` first and pass its returned
 options to Finish. An `undefined` answer from the asynchronous handler cancels the merge.
 
-General `\*` switches reuse the Word field code's case and number formats. Merge results
-take the cached result run's formatting, or the instruction run's formatting for `CHARFORMAT`.
+General `\*` switches reuse the Word field code's case and number formats. A merge result
+takes its formatting as Word gives it (measured with Word 16's Update Field): with
+`\* MERGEFORMAT` the formatting of the old result, with `\* CHARFORMAT` that of the first
+letter of the field name, and otherwise that of the last run of the field code.
 `\@` accepts ISO dates and times, `M/d/yyyy` text, and JavaScript `Date` values. Date pictures
 use UTC, with `options.locale` for month and day names. `\#` supports numeric padding, decimal
 and grouping marks, signs, literals, and sections for positive, negative, and zero values.

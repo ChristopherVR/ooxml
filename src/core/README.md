@@ -49,6 +49,23 @@ loaded.model.blocks; // paragraphs and tables
 const saved = await loaded.save(); // parts the model does not cover are kept
 ```
 
+**Fill a Word template**
+
+```ts
+import { loadDocx } from 'ooxml-core/docx';
+import { mergeFields } from 'ooxml-core/docx/mail-merge';
+
+const template = await loadDocx(bytes);
+const { model, results } = await mergeFields(
+	template.model,
+	{ values: { Name: 'Ada' }, regions: { Items: [{ Item: 'Pen' }, { Item: 'Ink' }] } },
+	{ unlink: true },
+);
+const filled = await template.save(model); // MERGEFIELD values, TableStart/TableEnd regions, HTML
+```
+
+See [filling a template](https://github.com/ChristopherVR/ooxml/blob/main/docs/docx-mail-merge.md#filling-a-template).
+
 **Build a PowerPoint deck**
 
 ```ts
