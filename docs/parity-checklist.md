@@ -1279,19 +1279,22 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** In Word, Excel and PowerPoint, Get Add-ins installs from the host catalog and opens
       Microsoft Marketplace for browsing. My Add-ins opens installed tabs and removes catalog
       add-ins when enabled by the host.
-- [x] **P1** Word, Excel and PowerPoint validate local XML and unified add-in manifests (and
-      `.zip` packages, with size, ratio and path limits) and install them for the session after
-      a consent dialog that lists the requested permissions (`src/core/automation/add-ins/`,
-      2026-11-26).
+- [x] **P1** Word, Excel and PowerPoint install add-in-only XML manifests, unified JSON manifests
+      and .zip app packages after a consent step, and keep them in the suite's and demos' profile
+      preferences (session memory elsewhere). When the host turns the runtime on, enforces a frame
+      policy and approves publisher origins, supported custom ribbon commands open sandboxed task
+      panes; Word and Excel get a text selection bridge. Hosts can resolve Marketplace links or
+      asset ids to packages; the Store stays hidden unless a host links a marketplace.
 - [x] **P1** Home: the header Comments button toggles a docked Comments task pane (the slide
       keeps at least 320px), Drawing > Arrange is a vertical menu with Order, Group, Position, Align
       and Rotate, and the Selection Pane docks as a task pane, in all five bindings (2026-11-27).
 - [x] **P1** Get Add-ins opens the shared Office Add-ins dialog in Word, Excel, PowerPoint and
       Visio: My Add-ins, admin-managed entries and Upload My Add-in with a consent step. The Store
       pivot appears only when the host links a marketplace (2026-11-27).
-- [ ] **P1** Office.js runtime, manifest-defined ribbon commands and Microsoft Marketplace
-      installation for Word, Excel and PowerPoint; the plan, including a configurable storefront
-      (off, Microsoft handoff, bring-your-own), is `docs/office-addins-plan.md`.
+- [ ] **P1** Still open: the CDN Office.js script (the bridge is a custom protocol), requirement
+      sets beyond Selection and TextCoercion 1.1, a PowerPoint selection bridge, ExecuteFunction
+      (function commands), commands placed on built-in Office tabs, identity and SSO, content
+      add-ins, and full XSD and JSON Schema validation (see `docs/office-addins-plan.md`).
 - [x] **P1** Video Format, Audio Format, Playback and SmartArt Format tabs (2026-11-27).
 - [ ] **P2** SmartArt Format's shape and style galleries are disabled, with a reason, for diagrams
       without editable drawing shapes.
