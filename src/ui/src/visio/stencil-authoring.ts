@@ -2,6 +2,7 @@ import { interpolate } from 'ooxml-core/i18n';
 import type { VisioStencilEdit } from 'ooxml-core/visio';
 import { createStencil, editStencil } from './stencil-client';
 import { ViewerDialog } from './viewer-dialog';
+import { askMasterFormat } from './stencil-master-dialog';
 import { MY_SHAPES_ID, MY_SHAPES_NAME, type StencilFiles } from './stencil-files';
 
 type Translate = (text: string) => string;
@@ -78,9 +79,9 @@ export async function runStencilAction(
 		} else {
 			const shape = master.shapes[0];
 			if (!shape) return;
-			const text = await ask(pane, 'Edit Master', 'Default shape text', shape.text.plainText, t);
-			if (text !== undefined)
-				edit = { type: 'edit-master-text', id: master.id, shapeId: shape.id, text };
+			const format = await askMasterFormat(pane, shape, t);
+			if (format && Object.keys(format).length)
+				edit = { type: 'edit-master-format', id: master.id, shapeId: shape.id, format };
 		}
 	}
 	if (!edit || files.get(stencil.id) !== stencil) return;
@@ -133,13 +134,12 @@ function ask(
 ): Promise<string | undefined> {
 	return new Promise((resolve) => {
 		const ok = t('OK');
-		const isText = heading === 'Edit Master';
 		const form = pane.ownerDocument.createElement('form');
 		const field = pane.ownerDocument.createElement('label');
-		const input = pane.ownerDocument.createElement(isText ? 'textarea' : 'input');
+		const input = pane.ownerDocument.createElement('input');
 		form.addEventListener('submit', (event) => {
 			event.preventDefault();
-			if (!isText && !input.value.trim()) {
+			if (!input.value.trim()) {
 				input.setAttribute('aria-invalid', 'true');
 				input.setAttribute('aria-describedby', dialog.error.id);
 				dialog.error.textContent = t('Enter a name.');
@@ -160,7 +160,7 @@ function ask(
 			},
 		);
 		dialog.error.id = `stencil-name-error-${++nextNameError}`;
-		input.maxLength = isText ? 4096 : 255;
+		input.maxLength = 255;
 		input.value = initial;
 		input.setAttribute('aria-label', t(label));
 		input.addEventListener('input', () => {

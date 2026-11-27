@@ -92,6 +92,8 @@ export function bindStencilMenus(
 						: undefined,
 				),
 			);
+		if (inDrawing && !file && !found)
+			items.push(disabled('edit-document', 'Edit Master', source?.editMasterReason(id)));
 		if (file && current?.editable) {
 			const active = editing.has(current.id);
 			const reason = active ? undefined : 'Turn on Edit Stencil to change its masters.';
@@ -175,6 +177,29 @@ export function bindStencilMenus(
 			else if (found) run({ type: 'collect', draft: () => ({ type: 'add-built-in', id: master }) });
 			else if (source && drawing?.sourceAvailable())
 				run({ type: 'collect', draft: () => drawing.captureMaster(source.id) });
+			return;
+		}
+		if (command === 'edit-document') {
+			const drawing = drawingSource();
+			const source = drawing?.documentMaster(master);
+			const shape = source?.shapes[0];
+			if (!drawing || !source || !shape || drawing.editMasterReason(master)) return;
+			pending = pending
+				.then(async () => {
+					options.error('');
+					const [{ askMasterFormat }] = await Promise.all([
+						import('./stencil-master-dialog'),
+						loadStencilStrings(),
+					]);
+					const format = await askMasterFormat(
+						pane,
+						shape,
+						t,
+						'Shapes that inherit from this master change with it.',
+					);
+					if (format && Object.keys(format).length) await drawing.editMaster(master, format);
+				})
+				.catch((error: unknown) => options.error(stencilErrorMessage(error, t)));
 			return;
 		}
 		if (

@@ -1,6 +1,8 @@
 /** VSDX parsing/editing and conservative legacy VSD preview scenes. */
 export const loadVisioStencilEditor = () => import('./stencil-editor');
 export type { VisioStencilEdit, VisioStencilEditOptions, VisioStencilSave } from './stencil-editor';
+export type { VisioMasterFormat } from './master-format';
+export type { VisioDocumentMasterEdit } from './edit-document-master';
 
 export type * from './model';
 export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata';

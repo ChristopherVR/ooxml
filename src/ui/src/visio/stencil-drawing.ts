@@ -1,4 +1,4 @@
-import type { VisioStencilEdit } from 'ooxml-core/visio';
+import type { VisioMasterFormat, VisioStencilEdit } from 'ooxml-core/visio';
 import type { ViewerController } from './controller';
 import { documentMaster } from './shapes-document';
 
@@ -32,6 +32,27 @@ export function stencilDrawing(controller: ViewerController) {
 		sourceAvailable,
 		documentMaster: (id: string) => documentMaster(controller.state.document, id),
 		captureMaster,
+		/** Why Edit Master cannot change this Document Stencil master now, or undefined. */
+		editMasterReason(id: string): string | undefined {
+			const master = documentMaster(controller.state.document, id);
+			if (!controller.canEdit || !sourceAvailable())
+				return 'Open the drawing for editing to change its masters.';
+			return master?.rootCount === 1 && master.shapes[0]?.kind === 'shape'
+				? undefined
+				: 'Edit Master changes a master with one top-level shape.';
+		},
+		/** Edit Master on a Document Stencil master: the master and the shapes inheriting it change. */
+		editMaster(id: string, format: VisioMasterFormat): Promise<void> {
+			const state = controller.state;
+			const page = state.document?.pages[state.pageIndex];
+			const master = documentMaster(state.document, id);
+			if (!page || !master) return Promise.resolve();
+			return controller
+				.applyEdits([
+					{ type: 'edit-document-master', pageId: page.id, masterId: master.id, format },
+				])
+				.then(() => undefined);
+		},
 		selectionReason: () =>
 			controller.canEdit && sourceAvailable() && selectedShape() ? undefined : SELECTION_REASON,
 		selection(name: string): VisioStencilEdit {

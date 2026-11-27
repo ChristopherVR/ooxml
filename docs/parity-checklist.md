@@ -1432,9 +1432,23 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P1** New Stencil, Add to My Shapes, Edit Stencil (add, rename, delete with confirmation,
       undo) and Save Stencil write `.vssx` packages with master ShapeSheets, connection points
       and icons that Visio 16 opens for editing (`src/core/visio/stencil-editor.ts`, 2026-11-26).
-- [ ] **P1** Stencil master editing is limited to default plain text, adding a selected instance
-      as a master drops its local overrides, and built-in masters lack the native ShapeSheet
-      behaviours (smart tags, actions, formulas) of Visio's own stencils.
+- [x] **P1** Edit Master changes a master's default text, size, fill, line and text formatting
+      (colour, size, bold, italic, underline, alignment) in one dialog: in a stencil the master is
+      saved with a new UniqueID, cells computed as a ratio of its size follow a resize; on a
+      drawing's Document Stencil the master changes and every instance shows it where it inherits
+      the cell, keeping its own formatting, as Visio does (`visio/master-format.ts`,
+      `edit-document-master.ts`, `src/ui/src/visio/stencil-master-dialog.ts`). Built-in masters
+      carry Visio's own ShapeSheet behaviours where Visio 16's stencils have them (read over the
+      documented object model): the control handle of Triangle, Right triangle, Parallelogram,
+      Trapezoid and Chevron driving their outline through Geometry formulas, and on the Basic
+      Flowchart masters User.DefaultWidth/DefaultHeight with the Set to Default Size action
+      (`visio/stencil-master-behaviours.ts`). These stencils have no smart tags.
+- [ ] **P1** Stencil master remainders: resizing a Document Stencil master whose instances take
+      their size from it is refused (their pins, text blocks and glued connectors would need to be
+      laid out again), Edit Master does not draw geometry (no shape editing window) or change a
+      group master, adding a selected instance as a master drops its local overrides, and the
+      built-in masters lack Visio's Resize with Text and Properties actions, the Subprocess, Can,
+      Cube, Cross and rounded-rectangle handles and the Off-page reference appearance actions.
 - [x] **P1** Controls, Actions, User-defined and Scratch cells and tab stops are in the model
       (`controls`, `actions`, `userCells`, `scratch`, paragraph `tabs`). Control handles are drawn
       yellow on a selected shape and dragging one writes `Controls.Row_N.X/Y` as Visio does and

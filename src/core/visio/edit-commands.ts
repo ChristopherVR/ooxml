@@ -1,3 +1,4 @@
+import { snapshotDocumentMasterEdit, type VisioDocumentMasterEdit } from './edit-document-master';
 import { fail } from './package-common';
 import { isVisioOutlineShape, type VisioOutlineShape } from './stencil-shapes';
 import {
@@ -308,7 +309,8 @@ export type VisioEdit =
 	| VisioSetDataGraphicEdit
 	| VisioGuideEdit
 	| VisioContainerEdit
-	| VisioPictureEdit;
+	| VisioPictureEdit
+	| VisioDocumentMasterEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -406,6 +408,8 @@ export function snapshotVisioEdits(
 	return Array.from(edits, (edit) => {
 		// Snap & Glue belongs to the drawing, not to a page.
 		if (edit?.type === 'set-snap-glue') return snapshotPageSetupEdit(edit);
+		// Edit Master changes a master of the drawing, not a page.
+		if (edit?.type === 'edit-document-master') return snapshotDocumentMasterEdit(edit);
 		if (!edit || typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
 			fail('INVALID_EDIT', 'Invalid edit target.');
 		if (edit.type === 'duplicate-shapes') return snapshotDuplicateShapes(edit);

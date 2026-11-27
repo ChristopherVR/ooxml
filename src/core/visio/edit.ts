@@ -11,6 +11,7 @@ import { measuresOwnText, refreshTextSizes, type TextSizeTarget } from './edit-t
 import { takeDeferredTextSizes } from './edit-text-size-formula';
 import { refreshLineJumpCaches } from './edit-line-jump-cache';
 import { registerConnectorSpacing } from './edit-connector-spacing';
+import { editVsdxDocumentMaster, isVisioDocumentMasterEdit } from './edit-document-master';
 import {
 	applyInstanceGeometryEdit,
 	isGlueTarget,
@@ -415,6 +416,22 @@ async function runTransaction(
 		if (allCommands.length !== 1)
 			fail('EDIT_MIXED_SUBPROCESS_TRANSACTION', 'A subprocess requires its own transaction.');
 		return editVsdxSubprocess(original, subprocess, options);
+	}
+	const masterEdit = allCommands.find(isVisioDocumentMasterEdit);
+	if (masterEdit) {
+		if (allCommands.length !== 1)
+			fail('EDIT_MIXED_MASTER_TRANSACTION', 'Edit Master requires its own transaction.');
+		const opened = await openEditablePackage(original, limits, check);
+		return editVsdxDocumentMaster(
+			opened.pkg,
+			opened.parts,
+			opened.pages,
+			masterEdit,
+			limits,
+			maxOutput,
+			deadline,
+			check,
+		);
 	}
 	if (allCommands.some(isVisioMasterDrop))
 		return editVsdxMasterDrops(
@@ -945,7 +962,8 @@ async function runTransaction(
 			command.type !== 'assign-layers' &&
 			command.type !== 'set-layer-properties' &&
 			!isVisioMasterDrop(command) &&
-			!isVisioDataGraphicEdit(command)
+			!isVisioDataGraphicEdit(command) &&
+			!isVisioDocumentMasterEdit(command)
 		) {
 			// A group may have been created or pasted earlier in this transaction. Its member
 			// writes were not visible to the initial package proof; check the current tree too.

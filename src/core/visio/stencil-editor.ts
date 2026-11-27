@@ -4,9 +4,12 @@ import { elements, NS } from '../xml/index';
 import { createVisioPackage } from './create-document';
 import { addMasterToDrawing, copy, shapesOf } from './edit-master-add';
 import { importStencilMaster } from './edit-stencil-import';
-import { assertShapeLocks } from './edit-style-admission';
 import { fail } from './package-common';
-import { decodeVisioPlainText, encodeVisioPlainText } from './plain-text';
+import {
+	applyVisioMasterFormat,
+	snapshotVisioMasterFormat,
+	type VisioMasterFormat,
+} from './master-format';
 import { indexedPart, related, visioXml } from './parts';
 import { attribute, child, children } from './sheet';
 import { addSelectedStencilShape } from './stencil-from-shape';
@@ -28,7 +31,9 @@ export type VisioStencilEdit =
 	| { type: 'add-shape'; drawing: Uint8Array; pageId: string; shapeId: string; name: string }
 	| { type: 'rename-master'; id: string; name: string }
 	| { type: 'delete-master'; id: string }
-	| { type: 'edit-master-text'; id: string; shapeId: string; text: string };
+	| { type: 'edit-master-text'; id: string; shapeId: string; text: string }
+	/** Edit Master: default text, size, fill, line and text formatting of the master's shape. */
+	| { type: 'edit-master-format'; id: string; shapeId: string; format: VisioMasterFormat };
 
 export interface VisioStencilSave {
 	bytes: Uint8Array;
@@ -157,30 +162,16 @@ export async function editVisioStencil(
 		masters.removeChild(entry);
 		dirty.set(relPart, rels);
 	} else {
+		const format = snapshotVisioMasterFormat(
+			edit.type === 'edit-master-text' ? { text: edit.text } : edit.format,
+		);
 		const contents = copy(await visioXml(pkg, path, 'MasterContents'));
 		const shape = shapesOf(contents).find((node) => attribute(node, 'ID') === edit.shapeId);
 		if (!shape || shape.hasAttribute('Master') || attribute(shape, 'Type') !== 'Shape')
 			fail('UNSUPPORTED_TEXT_EDIT', 'Select a top-level shape with editable plain text.');
 		const documentPart = (await related(pkg, '', 'document'))!;
-		assertShapeLocks(shape, await visioXml(pkg, documentPart, 'VisioDocument'), ['LockTextEdit']);
-		const text = child(shape, 'Text');
-		if (
-			children(shape, 'Text').length > 1 ||
-			(text && elements(text).length) ||
-			children(shape, 'Section').some((section) => attribute(section, 'N') === 'Field')
-		)
-			fail('UNSUPPORTED_TEXT_EDIT', 'Select a top-level shape with editable plain text.');
-		if (
-			edit.text.length > 4096 ||
-			/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/u.test(edit.text)
-		)
-			fail('UNSUPPORTED_TEXT_EDIT', 'Enter plain text of up to 4096 characters.');
-		const value = edit.text.replace(/\r\n?/g, '\n');
-		if (decodeVisioPlainText(text?.textContent ?? '') === value) return finish(workspace.source);
-		const doc = contents.ownerDocument!;
-		const node = text ?? doc.createElementNS(contents.namespaceURI, 'Text');
-		node.textContent = encodeVisioPlainText(value);
-		if (!text) shape.appendChild(node);
+		const document = await visioXml(pkg, documentPart, 'VisioDocument');
+		if (!applyVisioMasterFormat(shape!, document, format).changed) return finish(workspace.source);
 		dirty.set(path, contents);
 	}
 	// Visio distinguishes revised copies by UniqueID and keeps the family's BaseID.
