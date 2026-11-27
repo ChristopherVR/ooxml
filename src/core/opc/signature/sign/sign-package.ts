@@ -4,7 +4,8 @@
 // signed properties, all protected by one RSA-SHA256 `SignedInfo` that the host's signer signs.
 // Signatures already in the package are kept, so several people can sign one document.
 // DOM-free and platform-neutral: digests are synchronous, the signature is the host's.
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
+import { openZip } from '../../zip-limits';
 import { encodeBase64 } from '../../../digest/base64';
 import { contentTypeForPart, parseContentTypes } from '../../content-types';
 import { isPartName, MEDIA_TYPES_ITEM } from '../../part-names';
@@ -194,7 +195,7 @@ export async function signPackage(
 	const certificate = await signer.certificate();
 	const fields = readCertificate(certificate);
 	if (!fields?.rsaPublicKey) throw new Error('The signing certificate is not an RSA certificate.');
-	const zip = await JSZip.loadAsync(bytes);
+	const zip = await openZip(bytes);
 	const { origin, signature } = await prepareOrigin(zip);
 	await registerSignature(zip, origin, signature);
 	const signingTime = signingTimeOf(options.now ?? new Date());

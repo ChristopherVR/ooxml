@@ -12,7 +12,6 @@ import {
 	structureLocked,
 	target,
 	type Command,
-	type EditorContext,
 } from 'ooxml-core/xlsx/ui';
 import { pivotEditing, selectedPivot } from './pivot-availability';
 
