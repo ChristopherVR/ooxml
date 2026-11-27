@@ -13,6 +13,7 @@ import {
 } from 'ooxml-core/xlsx/ui';
 import { DrawState, inkPensLabels } from '../../ink/draw-state';
 import type { InkPenChangeDetail, InkPenSelectDetail, OfficeUiInkPens } from '../../ink/ink-pens';
+import { inkMathRecognizer } from '../../ink/math-recognizer';
 import { registerInkElements } from '../../ink/register';
 
 const states = new WeakMap<EditorContext, DrawState>();
@@ -161,10 +162,18 @@ export function drawCommands(): Command[] {
 			description: 'Turn handwritten math into an equation.',
 			label: 'Ink to Math',
 			icon: icon('inkToMath'),
-			unavailable:
-				'Ink to Math needs a handwriting recognizer, which this editor does not include.',
-			enabled: () => false,
-			run: () => undefined,
+			lock: 'objects',
+			unavailable: () =>
+				inkMathRecognizer()
+					? 'An editable sheet that allows objects is required.'
+					: 'Ink to Math needs a handwriting recognizer, which this editor does not include.',
+			enabled: () => Boolean(inkMathRecognizer()),
+			run: async (ctx) => {
+				const recognizer = inkMathRecognizer();
+				if (!recognizer) return;
+				const { openInkEquation } = await import('./equation');
+				await openInkEquation(ctx, recognizer);
+			},
 		}),
 		viewing({
 			id: 'draw.replay',

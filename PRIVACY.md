@@ -87,11 +87,19 @@ avoid a separate request.
 
 ### Ink to Math
 
-The recognizer is off by default. A host can opt in with `configurePptxDraw` and supply its
-own `recognizeMath` callback. Clicking Ink to Math passes the selected strokes' slide-local
-X/Y coordinates to that callback. The host chooses where it runs and any destination it uses.
-The viewer makes no recognition requests itself. Cancelling, changing slides, or closing Draw
-aborts the request. Remove the callback to disable recognition.
+The recognizer is off by default, and none is built in. A host can opt in once for every
+product with `setInkMathRecognizer` (`ooxml-ui`, also exported by `ooxml-ui/pptx`), and
+PowerPoint can still be given its own with `configurePptxDraw` and a `recognizeMath` callback,
+which takes precedence for that viewer. The callback receives the strokes only: each stroke's X/Y
+points in CSS pixels, with no document content, file name, colours or timing. In PowerPoint,
+clicking Ink to Math sends the selected strokes' slide-local coordinates. In Word (Draw > Ink to
+Math and Equation > Ink Equation) and Excel (Draw > Ink to Math), the Ink Equation dialog sends
+the strokes written on its pad, a moment after each stroke; the recognized LaTeX is shown for
+checking before anything is inserted. The host chooses where the callback runs and any
+destination it uses; the products make no recognition requests themselves. Cancelling, clearing
+the pad, writing another stroke, changing slides, or closing the dialog or Draw aborts the
+pending request. Remove the recognizer (`setInkMathRecognizer(undefined)`) to disable the
+commands again.
 
 Picture Format reads the selected local PNG or JPEG, or an embedded picture's
 local object URL, when a picture editing command is invoked. The browser loads

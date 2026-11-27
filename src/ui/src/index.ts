@@ -103,6 +103,18 @@ export const OFFICE_UI_TAGS = [
 export { registerInkElements } from './ink/register';
 
 /**
+ * The host's handwriting recognizer for Ink to Math in Word, Excel and PowerPoint and Word's Ink
+ * Equation: set once, used by every product (see `PRIVACY.md`, "Ink to Math").
+ */
+export {
+	inkMathRecognizer,
+	onInkMathRecognizerChange,
+	setInkMathRecognizer,
+	type InkMathRecognizer,
+	type InkMathStrokes,
+} from './ink/math-recognizer';
+
+/**
  * Install the theme tokens and define every element. Idempotent and safe to call from every
  * viewer binding; a no-op where there is no DOM (SSR).
  */

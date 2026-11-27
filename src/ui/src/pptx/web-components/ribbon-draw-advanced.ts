@@ -15,6 +15,7 @@ import { createDrawPens } from './draw-pens';
 import { createDrawReplay } from './draw-replay';
 import { createDrawRibbonControls } from './draw-ribbon-controls';
 import { drawRulerFor } from './draw-ruler';
+import { inkMathRecognizer, onInkMathRecognizerChange } from '../../ink/math-recognizer';
 
 export function mountRibbonDrawAdvanced(
 	host: HTMLElement,
@@ -43,6 +44,8 @@ export function mountRibbonDrawAdvanced(
 	const rulerModel = root && drawRulerFor(root);
 	const port = () => (root ? drawCanvasPort(root) : undefined);
 	const settings = () => (root ? drawHostOptions(root) : undefined);
+	// This viewer's own recognizer, else the one the host set for every product.
+	const recognizer = () => settings()?.recognizeMath ?? inkMathRecognizer();
 	const listeners = new AbortController();
 	const viewport = root?.querySelector('[data-pptx-viewport]');
 	const observer = viewport
@@ -94,7 +97,7 @@ export function mountRibbonDrawAdvanced(
 	});
 	const mathReason = () =>
 		unavailable() ||
-		(!settings()?.recognizeMath ? 'pptx.draw.mathUnavailable' : '') ||
+		(!recognizer() ? 'pptx.draw.mathUnavailable' : '') ||
 		selectionReason() ||
 		(pending ? 'pptx.draw.recognizing' : '');
 	button(convert, 'convert.inkToMath', 'pptx.draw.inkToMath', mathReason, () => {
@@ -203,7 +206,7 @@ export function mountRibbonDrawAdvanced(
 	}
 	async function inkToMath() {
 		const slide = port()?.getSlide();
-		const provider = settings()?.recognizeMath;
+		const provider = recognizer();
 		const strokes = canvas?.selection;
 		const start = strokes?.[0]?.points[0];
 		if (!root || !slide || !provider || !strokes || !start) return;
@@ -217,7 +220,7 @@ export function mountRibbonDrawAdvanced(
 			const { recognizeDrawEquation } = await import('./draw-math');
 			const isCurrent = () =>
 				!abort.signal.aborted &&
-				settings()?.recognizeMath === provider &&
+				recognizer() === provider &&
 				port()?.getSlide()?.elements === slide.elements;
 			const opened = await recognizeDrawEquation({
 				root,
@@ -260,13 +263,14 @@ export function mountRibbonDrawAdvanced(
 		angle.value = String(rulerModel?.angle ?? 0);
 		rulerModel?.setLabels(t('pptx.draw.ruler'), t('pptx.draw.rulerKeys'));
 		angle.setAttribute('aria-label', t('pptx.draw.rulerAngle'));
-		angle.setAttribute('aria-valuetext', `${angle.value}Ãƒâ€šÃ‚Â°`);
+		angle.setAttribute('aria-valuetext', `${angle.value}°`);
 		seek.setAttribute('aria-label', t('pptx.draw.seek'));
 		play.hidden = close.hidden = seek.hidden = !replay;
 		launch.hidden = Boolean(replay);
 	}
 	host.append(...groups);
 	const unsubscribeRuler = rulerModel?.subscribe(sync);
+	const unsubscribeMath = onInkMathRecognizerChange(sync);
 	root?.addEventListener(DRAW_CANVAS_CHANGE, sync, { signal: listeners.signal });
 	if (viewport) observer?.observe(viewport, { childList: true, subtree: true });
 	sync();
@@ -282,6 +286,7 @@ export function mountRibbonDrawAdvanced(
 		dispose() {
 			observer?.disconnect();
 			unsubscribeRuler?.();
+			unsubscribeMath();
 			listeners.abort();
 			canvas?.dispose();
 			stopReplay();

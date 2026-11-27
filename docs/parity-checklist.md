@@ -382,9 +382,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 ### Ribbon
 
 - [ ] **P1** Missing tabs: Chart Format (a pane instead).
-- [ ] **P2** Draw tab: Ruler (Stencils) and Ink to Math are disabled with their reason (no ruler
-      stencil, no handwriting recognizer); drawing, the eraser, the lasso, Ink to Shape and Ink
-      Replay work and save as Excel ink (`xlsx/edit/ink.test.ts`, `e2e/xlsx/draw-tab.spec.ts`).
+- [ ] **P2** Draw tab: Ruler (Stencils) is disabled with its reason (no ruler stencil); drawing,
+      the eraser, the lasso, Ink to Shape and Ink Replay work and save as Excel ink
+      (`xlsx/edit/ink.test.ts`, `e2e/xlsx/draw-tab.spec.ts`). Ink to Math opens the Ink Equation
+      dialog with the host's recognizer (`setInkMathRecognizer`, none built in; disabled with its
+      reason without one) and inserts an equation text box (`xlsx/commands/ink-math.test.ts`).
       Ink is shared in a shared workbook, last writer wins per drawing
       (`xlsx/collab/share-ink.test.ts`).
 - [x] **P1** PivotTable Analyze and PivotTable Design contextual tabs: options, field settings,
@@ -899,16 +901,18 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Equation tab: Insert New Equation and Alt+=, the built-in gallery, Convert
       (Professional and Linear), Normal Text, Unicode and LaTeX input, symbol and structure
       galleries, and in-place editing of linear text that rebuilds the equation exactly.
-- [ ] **P2** Equation: Ink Equation is disabled (no handwriting recognition); an equation whose
-      linear text cannot hold it (mixed run formatting, tracked changes inside it, properties its
-      notation cannot spell) opens read-only and the editor says which. A display paragraph with
-      several equations is edited one equation at a time, the others kept byte for byte
-      (`math/equation-parts.ts`, 2026-11-27).
+- [ ] **P2** Equation: an equation whose linear text cannot hold it (mixed run formatting,
+      tracked changes inside it, properties its notation cannot spell) opens read-only and the
+      editor says which. A display paragraph with several equations is edited one equation at a
+      time, the others kept byte for byte (`math/equation-parts.ts`). Ink Equation opens the Ink
+      Equation dialog with the host's recognizer (`setInkMathRecognizer`, none built in; disabled
+      with its reason without one; `docx/ink-equation.test.ts`).
 - [ ] **P1** Missing tabs: Picture Format has only Wrap Text, Crop and Format.
-- [ ] **P2** Draw tab: Ruler (Stencils) and Ink to Math are disabled with their reason (no ruler
-      stencil, no handwriting recognizer); drawing, the eraser, the lasso, Ink to Shape, Ink
-      Replay and the clipboard work and save as Word ink (`docx/ink.test.ts`,
-      `e2e/docx/draw-tab.spec.ts`).
+- [ ] **P2** Draw tab: Ruler (Stencils) is disabled with its reason (no ruler stencil); drawing,
+      the eraser, the lasso, Ink to Shape, Ink Replay and the clipboard work and save as Word ink
+      (`docx/ink.test.ts`, `e2e/docx/draw-tab.spec.ts`). Ink to Math opens the Ink Equation dialog
+      with the host's recognizer, as Ink Equation does, and inserts at the caret; the selected ink
+      on the page is not sent (write on the dialog's pad).
 - [x] **P1** Layout and Shape Format: the Arrange group (Position, Wrap Text, Bring Forward, Send
       Backward, Selection Pane with rename, Align, Group, Rotate) and Text Direction, with canvas
       multi-selection (`docx/arrange-controller.ts`, 2026-11-26).

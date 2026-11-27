@@ -1,6 +1,6 @@
 // Insert > Equation: new equations from LaTeX or the gallery, and editing the selected one.
 import { closeHistory } from 'prosemirror-history';
-import { NodeSelection, type EditorState } from 'prosemirror-state';
+import { NodeSelection, TextSelection, type EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { convertOmmlToLatex, parseOmml } from 'ooxml-core/math';
 import { schema } from './schema';
@@ -84,6 +84,20 @@ export function insertEquationXml(
 	if (tr.doc.nodeAt(pos)?.type !== schema.nodes.equation) return undefined;
 	view.dispatch(tr.setSelection(NodeSelection.create(tr.doc, pos)).scrollIntoView());
 	return pos;
+}
+
+/**
+ * Ink to Math and Ink Equation: a new equation from recognized LaTeX at the caret, or after the
+ * selected equation (which is never replaced), selected so its editor opens on it.
+ */
+export function insertEquationAfterSelection(view: EditorView, latex: string): boolean {
+	if (!view.editable) return false;
+	const { selection } = view.state;
+	if (selection instanceof NodeSelection && selection.node.type === schema.nodes.equation)
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, selection.to)));
+	const display = aloneOnItsLine(view.state);
+	const omml = equationMarkup(latex, display);
+	return Boolean(omml && insertEquationXml(view, omml, display) !== undefined);
 }
 
 /** Sets the markup of the equation at `pos`, keeping it selected; false when none is there. */

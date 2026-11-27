@@ -23,7 +23,8 @@ import type { EditorState } from 'prosemirror-state';
 import { emit } from './events';
 import { focusView } from './focus-view';
 import type { RibbonAction } from './ribbon-action';
-import type { EditorLocale } from './localization';
+import { translate, type EditorLocale, type LocalizationKey } from './localization';
+import { inkMathRecognizer } from '../ink/math-recognizer';
 
 type EquationAction = Extract<RibbonAction, { type: 'equation' }>;
 
@@ -42,7 +43,15 @@ export function syncEquationTab(
 	toolbar: HTMLElement,
 	state: EditorState,
 	editable: boolean,
-	status: { format: 'unicode' | 'latex'; normalText: boolean; canEdit: boolean },
+	status: {
+		format: 'unicode' | 'latex';
+		normalText: boolean;
+		canEdit: boolean;
+		/** Why Ink Equation cannot run (no recognizer), translated; undefined when it can. */
+		inkUnavailable?: string | undefined;
+		/** Ink Equation's tooltip while it can run, translated. */
+		inkTitle?: string;
+	},
 ): void {
 	const panel = panelOf(toolbar, 'equation');
 	if (!panel) return;
@@ -62,6 +71,11 @@ export function syncEquationTab(
 		// A read-only equation still takes the gallery and Convert > All, which leave it alone.
 		control.disabled =
 			!selected || !editable || (!status.canEdit && !control.closest('[data-equation-any]'));
+	const ink = panel.querySelector<HTMLButtonElement>('[data-equation-ink]');
+	if (ink) {
+		if (status.inkUnavailable) ink.disabled = true;
+		ink.title = status.inkUnavailable ?? status.inkTitle ?? ink.title;
+	}
 	for (const button of panel.querySelectorAll<HTMLElement>('[data-equation-format]'))
 		button.setAttribute('aria-pressed', String(button.dataset.equationFormat === status.format));
 	panel
@@ -113,6 +127,19 @@ export class EquationSession {
 		const { box } = this;
 		const attached =
 			box.attachedAt !== undefined && box.attachedAt === selectedEquationPos(view.state);
+		if (key === 'ink') {
+			const toolbar = this.host.toolbar();
+			const root = toolbar?.getRootNode();
+			void import('./ink-equation').then(({ openWordInkEquation }) =>
+				openWordInkEquation({
+					host: root instanceof ShadowRoot ? root : (toolbar ?? document.body),
+					view: () => this.host.view(),
+					locale: () => this.host.locale(),
+					heading: 'Ink Equation',
+				}),
+			);
+			return;
+		}
 		if (key === 'new') {
 			if (insertNewEquation(view) !== undefined) this.sync(true);
 		} else if (key === 'builtIn') {
@@ -164,6 +191,13 @@ export class EquationSession {
 				format: this.format,
 				normalText: this.box.normalText,
 				canEdit: this.box.editable,
+				inkUnavailable: inkMathRecognizer()
+					? undefined
+					: translate(
+							this.host.locale(),
+							'Ink Equation needs handwriting recognition, which this editor does not have.' as LocalizationKey,
+						),
+				inkTitle: translate(this.host.locale(), 'Ink Equation' as LocalizationKey),
 			});
 	}
 

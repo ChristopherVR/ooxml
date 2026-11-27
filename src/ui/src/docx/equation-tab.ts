@@ -16,7 +16,8 @@ export type EquationCommand =
 	| 'symbol'
 	| 'convert'
 	| 'normalText'
-	| 'format';
+	| 'format'
+	| 'ink';
 
 /** Structure galleries in Word's order, with their English labels and icons. */
 export const STRUCTURE_BUTTONS: ReadonlyArray<[string, string, RibbonIcon]> = [
@@ -60,7 +61,15 @@ export function equationSplit(): HTMLElement {
 }
 
 export function buildEquationPanel(panel: HTMLElement): void {
-	const ink = tool('Ink Equation', 'inkEquation', null, { large: true });
+	// Available once the host sets a handwriting recognizer (`syncEquationTab`).
+	const ink = tool(
+		'Ink Equation',
+		'inkEquation',
+		{ type: 'equation', key: 'ink' },
+		{ large: true },
+	);
+	ink.dataset.equationInk = '';
+	ink.disabled = true;
 	ink.title = 'Ink Equation needs handwriting recognition, which this editor does not have.';
 	const builtIn = opensGallery(
 		tool('Equation', 'equation', gallery('builtIn'), { large: true }),

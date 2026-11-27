@@ -1,6 +1,7 @@
 import type { InkPen } from 'ooxml-core/drawingml';
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
+import type { InkMathRecognizer } from '../../ink/math-recognizer';
 import type { ViewerMode } from '../types';
 
 export const DRAW_CANVAS_SCOPE = '[data-pptx-theme-root]';
@@ -58,11 +59,11 @@ export interface PptxDrawHostOptions {
 		read(): unknown;
 		write(presets: readonly DrawPenPreset[]): void;
 	};
-	/** Called only on an explicit Ink to Math request, with selected slide-local coordinates. */
-	recognizeMath?: (
-		strokes: ReadonlyArray<ReadonlyArray<Readonly<{ x: number; y: number }>>>,
-		signal: AbortSignal,
-	) => Promise<string | undefined>;
+	/**
+	 * Called only on an explicit Ink to Math request, with selected slide-local coordinates. Overrides
+	 * for this viewer the recognizer set for every product with `setInkMathRecognizer`.
+	 */
+	recognizeMath?: InkMathRecognizer;
 }
 
 const canvases = new WeakMap<HTMLElement, DrawCanvasPort>();

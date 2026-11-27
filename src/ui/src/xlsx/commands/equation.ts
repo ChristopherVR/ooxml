@@ -2,6 +2,7 @@ import { pictureAnchorAt } from 'ooxml-core/xlsx';
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { createEquationFields } from '../../math/equation-fields';
 import { equationPreview } from '../../math/equation-render';
+import type { InkMathRecognizer } from '../../ink/math-recognizer';
 import { showDialog } from '../dialogs/frame';
 
 export async function openEquation(ctx: EditorContext, edit: boolean) {
@@ -100,4 +101,31 @@ export async function openEquation(ctx: EditorContext, edit: boolean) {
 			if (confirm) confirm.disabled = !current.fields.draft;
 		},
 	);
+}
+
+/**
+ * Draw > Ink to Math: the shared Ink Equation dialog with the host's recognizer, as Excel opens its
+ * Math Input Control; the equation goes in a new equation text box at the active cell.
+ */
+export async function openInkEquation(ctx: EditorContext, recognizer: InkMathRecognizer) {
+	const t = target(ctx);
+	if (!t) return;
+	const { openInkEquationDialog } = await import('../../ink/ink-equation-dialog');
+	openInkEquationDialog({
+		host: ctx.root,
+		recognizer,
+		locale: ctx.locale(),
+		heading: 'Ink to Math',
+		insert: (draft) => {
+			const live = target(ctx);
+			if (live?.session !== t.session || !ctx.commands.isEnabled('draw.ink-to-math')) return false;
+			const added = live.session.addShape(live.sheet, pictureAnchorAt(live.active, 240, 72), {
+				kind: 'equation',
+				name: ctx.t('Equation'),
+				equation: { omml: draft.omml, fallback: draft.latex },
+			});
+			ctx.selection.set({ drawing: added });
+			return true;
+		},
+	});
 }

@@ -2,6 +2,7 @@
 // first use. Picking a drawing tool switches to Print Layout, as Word does, since ink floats on the
 // pages.
 import { DrawState } from '../ink/draw-state';
+import { inkMathRecognizer } from '../ink/math-recognizer';
 import { loadTools } from '../ink/tools';
 import type { DocxDrawController } from './draw-controller';
 import { defineDrawElements, syncDrawRibbon, type DrawAvailability } from './draw-ribbon';
@@ -113,6 +114,14 @@ export function handleDrawAction(core: EditorCore, action: DrawAction): void {
 			});
 			return;
 		case 'inkToMath':
+			void import('./ink-equation').then(({ openWordInkEquation }) =>
+				openWordInkEquation({
+					host: core.element.shadowRoot ?? core.element,
+					view: () => core.view,
+					locale: () => core.locale,
+					heading: 'Ink to Math',
+				}),
+			);
 			return;
 		case 'replay':
 			toPages(core);
@@ -150,7 +159,12 @@ function availability(core: EditorCore, draw: DocxDrawController | undefined): D
 			reason ??
 			(draw?.hasSelection() ? undefined : 'Select ink with Lasso Select or select an ink drawing.'),
 		replaying: draw?.replaying ?? false,
-		inkToMath: 'Ink to Math needs a handwriting recognizer, which this editor does not include.',
+		// Ink to Math opens the Ink Equation dialog: it needs the host's recognizer, not a selection.
+		inkToMath:
+			reason ??
+			(inkMathRecognizer()
+				? undefined
+				: 'Ink to Math needs a handwriting recognizer, which this editor does not include.'),
 		replay:
 			core.pages.viewMode === 'print' && !(draw ? draw.hasInk() || draw.replaying : hasInk(core))
 				? 'There is no ink on the pages to replay.'

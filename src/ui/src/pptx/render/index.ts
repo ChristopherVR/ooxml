@@ -1732,6 +1732,12 @@ export {
 	notifyDrawCanvas,
 } from './draw-canvas';
 export type { DrawCanvasPort, DrawPenPreset, PptxDrawHostOptions } from './draw-canvas';
+// The recognizer every product's Ink to Math shares (`recognizeMath` above overrides it here).
+export {
+	setInkMathRecognizer,
+	type InkMathRecognizer,
+	type InkMathStrokes,
+} from '../../ink/math-recognizer';
 // Toolbar action / ribbon-tab visibility: the ToolbarActionId catalogue and
 // TOOLBAR_TABS registry each binding's `hiddenActions` prop is built on.
 export * from './toolbar-actions';
