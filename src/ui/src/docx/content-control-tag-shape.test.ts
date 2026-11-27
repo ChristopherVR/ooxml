@@ -9,7 +9,7 @@ import { contentControlPlugin } from 'ooxml-core/docx/ui';
 import { contentControlViewPlugin } from './content-control-view';
 import { modelToDoc } from './model-adapter';
 
-async function tags(name: string): Promise<HTMLElement[]> {
+async function tags(name: string, edit?: (view: EditorView) => void): Promise<HTMLElement[]> {
 	const { model } = await loadDocx(
 		await readFile(
 			new URL(
@@ -26,6 +26,7 @@ async function tags(name: string): Promise<HTMLElement[]> {
 		}),
 	});
 	try {
+		edit?.(view);
 		return [...view.dom.querySelectorAll<HTMLElement>('.dve-sdt-tag')].map(
 			(tag) => tag.cloneNode(true) as HTMLElement,
 		);
@@ -33,6 +34,23 @@ async function tags(name: string): Promise<HTMLElement[]> {
 		view.destroy();
 		host.remove();
 	}
+}
+
+const points = (value: string) => {
+	expect(value).toMatch(/^-?[\d.]+pt$/);
+	return Number.parseFloat(value);
+};
+
+/** How far a tag's margin box reaches above and below the body baseline, in points. */
+function lineExtent(tag: HTMLElement): { above: number; below: number } {
+	const { height, lineHeight, verticalAlign, marginTop, marginBottom } = tag.style;
+	// A one-line box puts its baseline half the line height plus half of Tahoma's
+	// ascent less its descent (1 and 0.207 em) below its top.
+	const baseline = points(lineHeight) / 2 + ((1 - 0.207) * contentControlTagMetrics.fontSizePt) / 2;
+	return {
+		above: points(verticalAlign) + baseline + points(marginTop),
+		below: points(height) - baseline - points(verticalAlign) + points(marginBottom),
+	};
 }
 
 const ends = (tag: HTMLElement) =>
@@ -93,20 +111,35 @@ describe('content control tag shape in the editing view', () => {
 			...(await tags('block-content-control-tags')),
 		];
 		expect(all.length).toBeGreaterThan(6);
-		const { lineAscentPt, lineDescentPt, fontSizePt } = contentControlTagMetrics;
-		const points = (value: string) => {
-			expect(value).toMatch(/^-?[\d.]+pt$/);
-			return Number.parseFloat(value);
-		};
+		const { lineAscentPt, lineDescentPt } = contentControlTagMetrics;
 		for (const tag of all) {
-			const { height, lineHeight, verticalAlign, marginTop, marginBottom } = tag.style;
-			// A one-line box puts its baseline half the line height plus half of Tahoma's
-			// ascent less its descent (1 and 0.207 em) below its top.
-			const baseline = points(lineHeight) / 2 + ((1 - 0.207) * fontSizePt) / 2;
-			const above = points(verticalAlign) + baseline + points(marginTop);
-			const below = points(height) - baseline - points(verticalAlign) + points(marginBottom);
+			const { above, below } = lineExtent(tag);
 			expect(above).toBeCloseTo(lineAscentPt, 2);
 			expect(below).toBeCloseTo(lineDescentPt, 2);
+		}
+	});
+
+	it('keeps an exact line height once a paragraph is set to exact spacing', async () => {
+		// Set after the view is drawn, as the Paragraph dialog does, so the tags must be redrawn.
+		const exact = (view: EditorView) => {
+			let tr = view.state.tr;
+			view.state.doc.descendants((node, pos) => {
+				if (node.type.name !== 'paragraph') return;
+				tr = tr.setNodeAttribute(pos, 'lineSpacingRule', 'exact');
+				tr = tr.setNodeAttribute(pos, 'lineSpacingTwips', 240);
+			});
+			view.dispatch(tr);
+		};
+		const all = [
+			...(await tags('measured-inline-content-control-tags', exact)),
+			...(await tags('block-content-control-tags', exact)),
+		];
+		expect(all.length).toBeGreaterThan(6);
+		for (const tag of all) {
+			// The margin box collapses onto the baseline, inside the line's own height.
+			const { above, below } = lineExtent(tag);
+			expect(above).toBeCloseTo(0, 2);
+			expect(below).toBeCloseTo(0, 2);
 		}
 	});
 });

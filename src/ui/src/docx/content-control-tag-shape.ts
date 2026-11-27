@@ -91,8 +91,14 @@ export function tagEnds(doc: Document, edge: TagEdge, inline: boolean): Element[
  * The tag box's own style: Word's advance (title offset, padding and minimum), a box that puts
  * the outline 1.68 pt below the body baseline and the title 3 pt above it, and margins that give
  * a tagged line the same minimum height as in Print Layout, so lines do not jump between views.
+ * Under exact line spacing Print Layout keeps the line's fixed height, so the margins cancel the
+ * box instead and the tag takes no room above or below the baseline.
  */
-export function tagBoxStyle(edge: TagEdge, inline: boolean): Partial<CSSStyleDeclaration> {
+export function tagBoxStyle(
+	edge: TagEdge,
+	inline: boolean,
+	exact = false,
+): Partial<CSSStyleDeclaration> {
 	const metrics = contentControlTagMetrics;
 	const style = contentControlTagStyle;
 	const labelled = edge === 'start' || !inline;
@@ -109,8 +115,8 @@ export function tagBoxStyle(edge: TagEdge, inline: boolean): Partial<CSSStyleDec
 		height: pt(boxHeight),
 		lineHeight: pt(lineHeight),
 		verticalAlign: pt(metrics.labelRisePt),
-		marginTop: pt(metrics.lineAscentPt - above),
-		marginBottom: pt(metrics.lineDescentPt - below),
+		marginTop: pt(exact ? -above : metrics.lineAscentPt - above),
+		marginBottom: pt(exact ? -below : metrics.lineDescentPt - below),
 		...(labelled
 			? {
 					minInlineSize: pt(metrics.minLabelWidthPt),

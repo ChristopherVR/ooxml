@@ -20,13 +20,21 @@ function paragraphEdge(doc: ProseMirrorNode, position: number, edge: TagEdge): n
 	return edge === 'start' ? start + 1 : start + node.nodeSize - 1;
 }
 
+/** Exact line spacing fixes the line's height, so a tag there must not stretch it. */
+function exactLineAt(doc: ProseMirrorNode, position: number): boolean {
+	const { attrs } = doc.resolve(position).parent;
+	return attrs.lineSpacingRule === 'exact' && Number.isSafeInteger(attrs.lineSpacingTwips);
+}
+
 function tagWidget(
+	doc: ProseMirrorNode,
 	position: number,
 	edge: TagEdge,
 	title: string,
 	side: number,
 	inline: boolean,
 ): Decoration {
+	const exact = exactLineAt(doc, position);
 	return Decoration.widget(
 		position,
 		(view) => {
@@ -40,7 +48,7 @@ function tagWidget(
 			Object.assign(tag.style, {
 				fontFamily: cssFontStack(metrics.fontFamily),
 				fontSize: `${metrics.fontSizePt}pt`,
-				...tagBoxStyle(edge, inline),
+				...tagBoxStyle(edge, inline, exact),
 			});
 			tag.append(...tagEnds(tag.ownerDocument, edge, inline));
 			return tag;
@@ -51,7 +59,7 @@ function tagWidget(
 			title,
 			inline,
 			marks: [],
-			key: JSON.stringify([edge, title, side, inline]),
+			key: JSON.stringify([edge, title, side, inline, exact]),
 			ignoreSelection: true,
 		},
 	);
@@ -76,8 +84,8 @@ export function contentControlTagWidgets(doc: ProseMirrorNode): DecorationSet {
 		const openSide = isInline ? 0.5 : -2 + 1 / (start - from + 1);
 		const closeSide = isInline ? -0.5 : 2 - 1 / (to - end + 1);
 		widgets.push(
-			tagWidget(start, 'start', title, openSide, isInline),
-			tagWidget(end, 'end', isInline ? '' : title, closeSide, isInline),
+			tagWidget(doc, start, 'start', title, openSide, isInline),
+			tagWidget(doc, end, 'end', isInline ? '' : title, closeSide, isInline),
 		);
 	}
 	return DecorationSet.create(doc, widgets);
@@ -98,5 +106,7 @@ export function widgetsWithCaretInside(
 	if (!widget) return widgets;
 	// Keep an adjacent control's closing tag before the next one's opening tag.
 	const side = edge === 'start' ? -0.25 : 0.25;
-	return widgets.remove([widget]).add(doc, [tagWidget(pos, edge, widget.spec.title, side, true)]);
+	return widgets
+		.remove([widget])
+		.add(doc, [tagWidget(doc, pos, edge, widget.spec.title, side, true)]);
 }

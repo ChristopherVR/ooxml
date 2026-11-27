@@ -1,7 +1,8 @@
 // How the editor shows and operates content controls: the active outline, a click on a check box,
 // and the list and calendar popups of drop-down, combo box and date picker controls, inline or
 // around a table cell.
-import { Plugin, TextSelection } from 'prosemirror-state';
+import { Plugin, TextSelection, type Transaction } from 'prosemirror-state';
+import { AttrStep } from 'prosemirror-transform';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import {
 	changesContentControlTags,
@@ -88,6 +89,14 @@ function operate(
 	return false;
 }
 
+/** Paragraph attributes a tag's box depends on (`tagBoxStyle`), which mapping alone keeps stale. */
+const changesTagBoxes = (tr: Transaction) =>
+	tr.steps.some(
+		(step) =>
+			step instanceof AttrStep &&
+			(step.attr === 'lineSpacingRule' || step.attr === 'lineSpacingTwips'),
+	);
+
 interface TagState {
 	widgets: DecorationSet;
 	inside: TagEdge | undefined;
@@ -103,11 +112,12 @@ export function contentControlViewPlugin(): Plugin {
 			apply: (tr, tags, state) => {
 				const { widgets: previous } = tags;
 				const hasTags = previous !== DecorationSet.empty;
-				const widgets = changesContentControlTags(tr, hasTags)
-					? contentControlTagWidgets(tr.doc)
-					: tr.docChanged && hasTags
-						? previous.map(tr.mapping, tr.doc)
-						: previous;
+				const widgets =
+					changesContentControlTags(tr, hasTags) || (hasTags && changesTagBoxes(tr))
+						? contentControlTagWidgets(tr.doc)
+						: tr.docChanged && hasTags
+							? previous.map(tr.mapping, tr.doc)
+							: previous;
 				if (widgets === DecorationSet.empty && !hasTags) return tags;
 				const inside = inlineCaretSide(
 					widgets,
