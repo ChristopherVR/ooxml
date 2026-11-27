@@ -2,8 +2,10 @@
 /**
  * Keeps the accessibility baselines honest: they may only shrink.
  *
- *   node check-baseline.mjs --base <ref>    fail if baseline/axe.json allows more than at <ref>, or
- *                                           expected-failures.json lists a gap <ref> did not
+ *   node check-baseline.mjs --base <ref>    fail if baseline/axe.json allows more than at <ref>,
+ *                                           expected-failures.json lists a gap <ref> did not, or
+ *                                           samples-expected.json excuses a notice <ref> did not
+ *                                           or one that names no open item of the parity checklist
  *   node check-baseline.mjs --update [--from <dir>]
  *                                           lower baseline/axe.json to what a run found (its
  *                                           axe.json files); never raises an entry. The counts are
@@ -21,6 +23,8 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const AXE = join(HERE, 'baseline', 'axe.json');
 const GAPS = join(HERE, 'expected-failures.json');
+const NOTICES = join(HERE, 'samples-expected.json');
+const CHECKLIST = join(HERE, '..', '..', 'docs', 'parity-checklist.md');
 const read = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
 const git = (...args) =>
@@ -78,6 +82,54 @@ export function loosenedGaps(before, now) {
 		else if (!gap.fails) problems.push(`${key} does not say which failure it expects`);
 		else if (was.fails !== undefined && gap.fails !== was.fails)
 			problems.push(`${key} expects a different failure`);
+	}
+	return problems;
+}
+
+const oneLine = (text) => text.replace(/\s+/gu, ' ').trim();
+
+/** The open items of the parity checklist (`- [ ] ...`), each as one line of text. */
+export function openGaps(markdown) {
+	return markdown
+		.split(/^(?=- \[[ x]\] )/mu)
+		.filter((item) => item.startsWith('- [ ] '))
+		.map(oneLine);
+}
+
+/**
+ * Every load notice a sample is allowed (samples-expected.json) that does not quote an open item
+ * of the parity checklist: a notice is excused only while the gap behind it is on the list.
+ */
+export function unmappedNotices(expected, markdown) {
+	const gaps = openGaps(markdown);
+	const problems = [];
+	for (const [sample, entries] of Object.entries(expected.notices ?? {}))
+		for (const entry of entries) {
+			if (!entry?.notice) problems.push(`${sample}: an entry has no notice`);
+			else if (!entry.gap || !gaps.some((gap) => gap.includes(oneLine(entry.gap))))
+				problems.push(
+					`${sample}: "${entry.notice}" quotes no open item of docs/parity-checklist.md`,
+				);
+		}
+	return problems;
+}
+
+/**
+ * Every way `now` excuses more load notices than `before`: a standing note it newly ignores, or a
+ * notice a sample was not allowed at the base. A sample the base did not list is new and brings
+ * its own notices (each must still quote an open gap).
+ */
+export function grownNotices(before, now) {
+	const problems = [];
+	const ignored = new Set(before.informational ?? []);
+	for (const start of now.informational ?? [])
+		if (!ignored.has(start)) problems.push(`informational "${start}" is new`);
+	for (const [sample, entries] of Object.entries(now.notices ?? {})) {
+		const was = before.notices?.[sample];
+		if (!was) continue;
+		const known = new Set(was.map((entry) => entry.notice));
+		for (const entry of entries)
+			if (!known.has(entry.notice)) problems.push(`${sample}: "${entry.notice}" is new`);
 	}
 	return problems;
 }
@@ -140,6 +192,17 @@ function main(argv) {
 	if (gapsBefore)
 		problems.push(
 			...loosenedGaps(gapsBefore, read(GAPS)).map((p) => `expected-failures.json: ${p}`),
+		);
+	const notices = read(NOTICES);
+	problems.push(
+		...unmappedNotices(notices, readFileSync(CHECKLIST, 'utf8')).map(
+			(p) => `samples-expected.json: ${p}`,
+		),
+	);
+	const noticesBefore = atCommit(commit, NOTICES);
+	if (noticesBefore)
+		problems.push(
+			...grownNotices(noticesBefore, notices).map((p) => `samples-expected.json: ${p}`),
 		);
 	if (problems.length) {
 		console.error(
