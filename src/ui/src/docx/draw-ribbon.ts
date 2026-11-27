@@ -12,7 +12,8 @@ import type { DrawKey } from './locales/draw';
 /** A Draw tab string: the editor's own or one of the tab's (merged when the tab loads). */
 export type DrawText = LocalizationKey | DrawKey;
 import type { RibbonAction } from './ribbon-action';
-import { group, menuSelect, tool } from './ribbon-parts';
+import { group, tool } from './ribbon-parts';
+import { addPenButton } from './draw-add-pen';
 import type { RibbonIcon } from './ribbon-icons';
 
 /** Why a Draw command cannot run now, or undefined when it can. */
@@ -58,18 +59,7 @@ export function buildDrawPanel(panel: HTMLElement): void {
 			index: (event as CustomEvent<{ index: number }>).detail.index,
 		}),
 	);
-	const addPen = menuSelect(
-		'Add Pen',
-		'addPen',
-		[
-			['pen', 'Pen'],
-			['pencil', 'Pencil'],
-			['highlighter', 'Highlighter'],
-		],
-		(value) => ({ type: 'draw', key: 'addPen', value: value as 'pen' | 'pencil' | 'highlighter' }),
-		{ momentary: true },
-	);
-	addPen.dataset.draw = 'addPen';
+	const addPen = addPenButton();
 	const large = (label: string, icon: RibbonIcon, action: RibbonAction | null, key: string) =>
 		marker(tool(label, icon, action, { large: true }), key);
 	panel.append(
@@ -104,7 +94,7 @@ const DESCRIPTIONS: Record<string, DrawText> = {
 };
 
 function describe(
-	control: HTMLButtonElement | HTMLSelectElement,
+	control: HTMLButtonElement,
 	locale: EditorLocale,
 	reason: DrawText | undefined,
 ): void {
@@ -160,7 +150,7 @@ export function syncDrawRibbon(
 	button('replay')?.setAttribute('aria-pressed', String(availability.replaying ?? false));
 	const pens = panel.querySelector<OfficeUiInkPens>('office-ui-ink-pens[data-draw="pens"]');
 	if (pens) {
-		pens.labels = inkPensLabels(t);
+		pens.labels = inkPensLabels(t, locale);
 		pens.pens = snapshot.pens;
 		pens.selected = snapshot.tool === 'pen' ? snapshot.pen : -1;
 		pens.disabled = Boolean(availability.draw);
@@ -168,7 +158,7 @@ export function syncDrawRibbon(
 	}
 	const ruler = button('ruler');
 	if (ruler) describe(ruler, locale, 'The ruler is not available in this editor.');
-	const addPen = panel.querySelector<HTMLSelectElement>('[data-draw="addPen"] select');
+	const addPen = button('addPen');
 	if (addPen)
 		describe(
 			addPen,

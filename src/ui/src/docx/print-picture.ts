@@ -87,7 +87,7 @@ export function pictureElement(
 		contentType: string;
 		widthPx: number;
 		heightPx: number;
-		chart?: { svg?: string; label: string; shape?: true; textColor?: string };
+		chart?: { svg?: string; label: string; shape?: true; textColor?: string; ink?: true };
 		textBox?: TextBoxContent;
 		textBoxLayout?: TextBoxLayout;
 		noteSeparator?: 'separator' | 'continuationSeparator';

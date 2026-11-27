@@ -14,6 +14,8 @@ export interface PrintEditingBridge {
 	select(blockId: string, offset: number, extend?: boolean, affinity?: CaretAffinity): boolean;
 	/** Place the caret on the line nearest a viewport point (the gutter beside the pages). */
 	selectNearest(clientX: number, clientY: number): boolean;
+	/** The document position of `offset` in the paragraph `blockId` (a line's source offset). */
+	position(blockId: string, offset: number): number | undefined;
 }
 
 /** Keep native ProseMirror input, composition, clipboard and history behind the page projection. */
@@ -114,10 +116,12 @@ export function createPrintEditingBridge(
 			}
 			const settle = skipScroll;
 			skipScroll = false;
+			// While a Draw tool is on, ink edits change the document without moving the view.
 			if (
 				!dragging &&
 				!settle &&
 				!view.composing &&
+				!scrollContainer.classList.contains('dve-inking') &&
 				(previousDoc !== view.state.doc || previousHead !== head)
 			)
 				marker.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
@@ -319,6 +323,7 @@ export function createPrintEditingBridge(
 	paper.addEventListener('focusout', refresh, { signal: listeners.signal });
 	paper.addEventListener('compositionend', refresh, { signal: listeners.signal });
 	return {
+		position,
 		setActive(value) {
 			if (destroyed) return;
 			active = value;

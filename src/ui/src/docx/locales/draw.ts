@@ -143,6 +143,29 @@ const entries = [
 		'按绘制顺序重新观看墨迹的绘制过程。',
 	],
 	['More Colors...', 'Plus de couleurs...', 'Weitere Farben...', 'Más colores...', '其他颜色...'],
+	// Word's own table eraser wording, kept the same (that table loads with the Table tabs only).
+	['Eraser', 'Gomme', 'Radierer', 'Borrador', '擦除'],
+	[
+		'Editing is unavailable.',
+		'La modification est indisponible.',
+		'Die Bearbeitung ist nicht verfügbar.',
+		'La edición no está disponible.',
+		'无法编辑。',
+	],
+	[
+		'Ink can only be drawn on a page with text.',
+		'L’encre ne peut être dessinée que sur une page contenant du texte.',
+		'Freihand kann nur auf einer Seite mit Text gezeichnet werden.',
+		'La entrada de lápiz solo se puede dibujar en una página con texto.',
+		'只能在有文字的页面上绘制墨迹。',
+	],
+	[
+		'Ink to Shape did not recognize a shape in the selected ink.',
+		'Convertir l’encre en forme n’a reconnu aucune forme dans l’encre sélectionnée.',
+		'Freihand in Form hat in der ausgewählten Freihand keine Form erkannt.',
+		'Entrada de lápiz a forma no reconoció ninguna forma en la entrada de lápiz seleccionada.',
+		'“将墨迹转换为形状”未在所选墨迹中识别出形状。',
+	],
 ] as const;
 
 /** A Draw tab string (English text). */

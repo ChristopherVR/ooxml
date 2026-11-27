@@ -176,7 +176,7 @@ function renderSpec(node: ProseMirrorNode): HTMLElement {
  */
 export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOptions = {}) {
 	return (node: ProseMirrorNode, view: EditorView, getPos: () => number | undefined): NodeView => {
-		if (node.attrs.ink) return inkNodeView(node);
+		if (node.attrs.ink) return inkNodeView(node, options.locale?.());
 		if (node.attrs.shape)
 			return shapeNodeView(
 				node,

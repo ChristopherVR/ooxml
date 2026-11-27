@@ -255,6 +255,8 @@ export const enRibbon = {
 	'tab.home': 'Home',
 	'tab.insert': 'Insert',
 	'tab.draw': 'Draw',
+	// An ink drawing's name for assistive technology when it has none of its own.
+	'draw.ink': 'Ink',
 	'tab.references': 'References',
 	'tab.layout': 'Layout',
 	'tab.review': 'Review',

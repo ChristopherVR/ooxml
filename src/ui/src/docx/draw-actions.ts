@@ -7,6 +7,7 @@ import type { DocxDrawController } from './draw-controller';
 import { defineDrawElements, syncDrawRibbon, type DrawAvailability } from './draw-ribbon';
 import type { EditorCore } from './editor-core';
 import { emit } from './events';
+import { translate, type LocalizationKey } from './localization';
 import type { RibbonAction } from './ribbon-action';
 
 type DrawAction = Extract<RibbonAction, { type: 'draw' }>;
@@ -48,6 +49,8 @@ function controller(core: EditorCore): Promise<DocxDrawController | undefined> {
 				scroller: () => core.shell.canvas,
 				pages: () => core.shell.printLayout?.element,
 				active: () => core.canEditBody() && core.pages.viewMode === 'print',
+				locale: () => core.locale,
+				position: (blockId, offset) => core.shell.printEditing?.position(blockId, offset),
 				reportError: (error) => report(core, error),
 				refresh: () => core.refreshControls(),
 			});
@@ -85,7 +88,11 @@ export function handleDrawAction(core: EditorCore, action: DrawAction): void {
 			break;
 		case 'addPen':
 			toPages(core);
-			if (!state.addPen(action.value)) report(core, new Error('The pen gallery is full.'));
+			if (!state.addPen(action.value))
+				report(
+					core,
+					new Error(translate(core.locale, 'The pen gallery is full.' as LocalizationKey)),
+				);
 			break;
 		case 'penColor':
 			state.updatePen({ color: action.value });
@@ -128,7 +135,7 @@ function availability(core: EditorCore, draw: DocxDrawController | undefined): D
 }
 
 function hasInk(core: EditorCore): boolean {
-	return Boolean(core.shell.printLayout?.element.querySelector('.dve-print-float[data-ink]'));
+	return Boolean(core.shell.printLayout?.element.querySelector('.dve-print-page [data-ink]'));
 }
 
 /** Refreshes the Draw tab and the drawing surface (after every transaction and layout). */

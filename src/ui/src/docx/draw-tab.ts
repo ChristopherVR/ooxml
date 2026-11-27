@@ -6,7 +6,10 @@ import { buildDrawPanel, defineDrawElements } from './draw-ribbon';
 import type { EditorCore } from './editor-core';
 import { localizeElement } from './localization';
 import { refitRibbon } from './ribbon-overflow';
-import './draw-icons';
+import { injectDrawStyles } from './draw-replay-run';
+import { attachRibbonHistoryKeys } from './ribbon-history-keys';
+import { emit } from './events';
+import { registerDrawIcons } from './draw-icons';
 
 for (const [table, entries] of [
 	[strings.en, enDraw],
@@ -19,10 +22,16 @@ for (const [table, entries] of [
 
 /** Builds the Draw panel once, in the editor's language, and defines its pen strip. */
 export function mountDrawPanel(core: EditorCore): void {
+	registerDrawIcons();
 	defineDrawElements();
 	const toolbar = core.shell.toolbar;
 	const panel = toolbar?.querySelector<HTMLElement>('[data-ribbon-tab="draw"]');
 	if (!toolbar || !panel || panel.childElementCount) return;
+	injectDrawStyles(toolbar);
+	// After a Draw command (Ink to Shape) focus stays on the ribbon, where Ctrl+Z still undoes.
+	attachRibbonHistoryKeys(toolbar, (key) =>
+		emit(toolbar, 'ribbon-action', { type: 'history', key }),
+	);
 	buildDrawPanel(panel);
 	localizeElement(panel, core.locale);
 	refitRibbon(toolbar);

@@ -1,4 +1,5 @@
-/* The Draw tab's pointer surface over the pages, the lasso's selection and Ink Replay. */
+/* The Draw tab's pointer surface over the pages, the lasso's selection, Ink Replay and the tab's own
+   ribbon commands, added with the tab. */
 .dve-ink-surface {
 	position: absolute;
 	left: 0;
@@ -24,4 +25,37 @@
 }
 .dve-canvas.dve-inking {
 	position: relative;
+}
+
+/* The Draw tab's commands size to their captions, which wrap between words and never clip
+   ("Mit Toucheingabe zeichnen" in German), as Excel's do. */
+.ribbon-panel[data-panel='Draw'] .ribbon-group button.ribbon-large {
+	width: auto;
+	min-width: 52px;
+	max-width: 112px;
+}
+.ribbon-panel[data-panel='Draw'] .ribbon-large > span {
+	overflow: visible;
+	text-overflow: clip;
+	overflow-wrap: normal;
+}
+.ribbon-popover.dve-add-pen-menu {
+	grid-template-columns: minmax(120px, max-content);
+	gap: 0;
+	padding: 4px;
+}
+.dve-add-pen-item {
+	min-height: 28px;
+	padding: 6px 12px;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.dve-add-pen-item:is(:hover, :focus-visible) {
+	background: var(--accent-soft);
+	outline: none;
 }

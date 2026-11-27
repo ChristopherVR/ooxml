@@ -158,29 +158,107 @@ export interface InkEdit {
 	strokes: readonly InkStroke[];
 }
 
-function editInk(tr: Transaction, edits: readonly InkEdit[]): Transaction {
+/**
+ * The attributes of ink drawing `node` holding `strokes` (its own coordinates), its box fitted
+ * to them as appendInk fits a growing one: erasing the edge of a drawing shrinks its box and
+ * moves its offsets, so it never keeps a frame larger than its ink. Offsets set by an alignment
+ * stay as they are.
+ */
+function fitted(node: ProseMirrorNode, ink: DocxInk, strokes: readonly InkStroke[]) {
+	const tools = inkTools();
+	const bounds = tools.inkStrokesBounds(strokes);
+	const width = Number(node.attrs.widthPx) || 1;
+	const height = Number(node.attrs.heightPx) || 1;
+	const sx = width / (ink.width || 1);
+	const sy = height / (ink.height || 1);
+	const unchanged = { ...node.attrs, ink: JSON.stringify({ ...ink, strokes: [...strokes] }) };
+	if (!bounds) return unchanged;
+	const box = snap({
+		x: bounds.x * sx,
+		y: bounds.y * sy,
+		width: bounds.width * sx,
+		height: bounds.height * sy,
+	});
+	if (!box.x && !box.y && box.width === width && box.height === height) return unchanged;
+	const placement = inkPlacement(node);
+	return {
+		...node.attrs,
+		widthPx: box.width,
+		heightPx: box.height,
+		...(node.attrs.anchored && placement
+			? {
+					placement: JSON.stringify({
+						...placement,
+						...(placement.align ? {} : { offsetXPx: (placement.offsetXPx ?? 0) + box.x }),
+						...(placement.alignV ? {} : { offsetYPx: (placement.offsetYPx ?? 0) + box.y }),
+					}),
+				}
+			: {}),
+		ink: JSON.stringify({
+			...ink,
+			strokes: tools.transformInkStrokes(strokes, -box.x / sx, -box.y / sy),
+			width: box.width / sx,
+			height: box.height / sy,
+		} satisfies DocxInk),
+	};
+}
+
+function inkPlacement(node: ProseMirrorNode): PicturePlacement | undefined {
+	try {
+		return JSON.parse(String(node.attrs.placement)) as PicturePlacement;
+	} catch {
+		return undefined;
+	}
+}
+
+function editInk(tr: Transaction, edits: readonly InkEdit[], fit: boolean): Transaction {
 	// Last first, so a deleted drawing does not move the ones before it.
 	for (const { pos, strokes } of [...edits].sort((a, b) => b.pos - a.pos)) {
 		const node = tr.doc.nodeAt(pos);
 		const ink = node && inkOf(node);
 		if (!node || !ink) continue;
-		if (strokes.length)
-			tr.setNodeMarkup(pos, undefined, {
-				...node.attrs,
-				ink: JSON.stringify({ ...ink, strokes: [...strokes] } satisfies DocxInk),
-			});
-		else tr.delete(pos, pos + node.nodeSize);
+		if (!strokes.length) tr.delete(pos, pos + node.nodeSize);
+		else
+			tr.setNodeMarkup(
+				pos,
+				undefined,
+				fit
+					? fitted(node, ink, strokes)
+					: { ...node.attrs, ink: JSON.stringify({ ...ink, strokes: [...strokes] }) },
+			);
 	}
 	return tr;
 }
 
 /**
- * Applies stroke edits as one step; `group` lets an eraser gesture's edits join one undo step
- * (they are dispatched while the pointer moves).
+ * Applies stroke edits as one step, each drawing's box fitted to what it keeps. An eraser gesture
+ * passes `group` after its first edit, so the gesture is one undo step, and `fit: false` while the
+ * pointer moves (the pages still show the boxes it is erasing against); `fitInk` fits them at the
+ * end. Returns the transaction, to map positions through.
  */
-export function applyInkEdits(view: EditorView, edits: readonly InkEdit[], group = false): void {
-	const tr = editInk(view.state.tr, edits);
-	if (tr.docChanged) view.dispatch(group ? tr : closeHistory(tr));
+export function applyInkEdits(
+	view: EditorView,
+	edits: readonly InkEdit[],
+	options: { group?: boolean; fit?: boolean } = {},
+): Transaction | undefined {
+	const tr = editInk(view.state.tr, edits, options.fit ?? true);
+	if (!tr.docChanged) return undefined;
+	view.dispatch(options.group ? tr : closeHistory(tr));
+	return tr;
+}
+
+/**
+ * Fits the boxes of the ink drawings at `positions` to their strokes, in the undo step of the
+ * edit dispatched at `time` (the eraser gesture's last), however long the pointer rested since.
+ */
+export function fitInk(view: EditorView, positions: Iterable<number>, time: number): void {
+	const tr = view.state.tr.setTime(time);
+	for (const pos of positions) {
+		const node = tr.doc.nodeAt(pos);
+		const ink = node && inkOf(node);
+		if (node && ink) tr.setNodeMarkup(pos, undefined, fitted(node, ink, ink.strokes));
+	}
+	if (tr.docChanged) view.dispatch(tr);
 }
 
 function shapeNode(shape: InkShape, doc: ProseMirrorNode): ProseMirrorNode {
@@ -212,7 +290,7 @@ export function convertInkToShapes(
 	shapes: readonly { shape: InkShape; blockId: string }[],
 ): boolean {
 	if (!view.editable || !shapes.length) return false;
-	const tr = editInk(view.state.tr, edits);
+	const tr = editInk(view.state.tr, edits, true);
 	for (const { shape, blockId } of shapes) {
 		const at = paragraphStart(tr.doc, blockId);
 		if (at !== undefined) tr.insert(at, shapeNode(shape, tr.doc));
