@@ -9,6 +9,7 @@ import {
 	hostOwnedSessionUrl,
 	requireCustomHostShell,
 	saveHostOwnedPresentation,
+	waitForCollaborativeEditing,
 	waitForHostEditing,
 } from './support/host-owned-session';
 
@@ -46,22 +47,37 @@ async function box(target: Locator) {
 	return value!;
 }
 
+async function center(target: Locator): Promise<{ x: number; y: number }> {
+	const bounds = await box(target);
+	return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+}
+
 async function drag(page: Page, target: Locator, dx: number, dy: number): Promise<void> {
-	const before = await box(target);
-	const x = before.x + before.width / 2;
-	const y = before.y + before.height / 2;
-	await page.mouse.click(x, y);
+	const initial = await center(target);
+	await page.mouse.click(initial.x, initial.y);
+	const { x, y } = await center(target);
 	await page.mouse.move(x, y);
 	await page.mouse.down();
 	await page.mouse.move(x + dx, y + dy, { steps: 8 });
 	await page.mouse.up();
 }
 
-function geometry(target: Locator): Promise<number[]> {
-	return target.evaluate((element) => {
-		const style = getComputedStyle(element);
-		return [style.left, style.top, style.width, style.height].map(Number.parseFloat);
-	});
+async function geometry(target: Locator): Promise<number[]> {
+	let bounds: number[] = [];
+	await expect
+		.poll(async () => {
+			// Resolve and measure within one browser task so a remount cannot detach the measured node.
+			bounds = await target.evaluateAll(([element]) => {
+				if (!element) {
+					return [];
+				}
+				const style = getComputedStyle(element);
+				return [style.left, style.top, style.width, style.height].map(Number.parseFloat);
+			});
+			return bounds.length === 4 && bounds.every(Number.isFinite);
+		})
+		.toBe(true);
+	return bounds;
 }
 
 async function samePosition(first: Locator, second: Locator): Promise<void> {
@@ -318,12 +334,17 @@ test.describe('host-owned collaboration', () => {
 		try {
 			await open(page, room, { sample: '1' });
 			await open(peer, room, { name: 'Peer' });
+			await Promise.all([waitForCollaborativeEditing(page), waitForCollaborativeEditing(peer)]);
 			await expect(elements(peer)).toHaveCount(await elements(page).count());
-			const beforeA = await box(shape(page, 6));
-			const beforeB = await box(shape(peer, 8));
+			const [beforeA] = await geometry(shape(page, 6));
+			const [beforeB] = await geometry(shape(peer, 8));
 			await Promise.all([drag(page, shape(page, 6), 45, 30), drag(peer, shape(peer, 8), 35, 25)]);
-			await expect.poll(async () => (await box(shape(page, 6))).x - beforeA.x).toBeGreaterThan(35);
-			await expect.poll(async () => (await box(shape(peer, 8))).x - beforeB.x).toBeGreaterThan(25);
+			await expect
+				.poll(async () => (await geometry(shape(page, 6)))[0]! - beforeA!)
+				.toBeGreaterThan(35);
+			await expect
+				.poll(async () => (await geometry(shape(peer, 8)))[0]! - beforeB!)
+				.toBeGreaterThan(25);
 			await samePosition(shape(page, 6), shape(peer, 6));
 			await samePosition(shape(page, 8), shape(peer, 8));
 			await Promise.all([
