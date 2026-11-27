@@ -12,6 +12,19 @@ export interface TrueTypeFont {
 	/** `hhea` ascent and descent in font units (descent is negative). */
 	readonly ascent: number;
 	readonly descent: number;
+	/** `hhea` line gap in font units. */
+	readonly lineGap: number;
+	/**
+	 * `OS/2` `usWinAscent` and `usWinDescent` in font units (both positive), the metrics Windows
+	 * applications such as Word lay a line out on; `undefined` without an `OS/2` table.
+	 */
+	readonly winAscent: number | undefined;
+	readonly winDescent: number | undefined;
+	/**
+	 * `OS/2` typographic ascender, descender (negative) and line gap, when `fsSelection` sets
+	 * `USE_TYPO_METRICS` (bit 7): the font asks for them instead of the Windows metrics.
+	 */
+	readonly typoMetrics: { ascent: number; descent: number; lineGap: number } | undefined;
 	readonly bbox: readonly [number, number, number, number];
 	readonly italicAngle: number;
 	/** Cap height in font units, when the `OS/2` table has it. */
@@ -145,6 +158,17 @@ export function parseTrueType(data: Uint8Array): TrueTypeFont | undefined {
 		glyphCount,
 		ascent: i16(view, hhea.offset + 4),
 		descent: i16(view, hhea.offset + 6),
+		lineGap: i16(view, hhea.offset + 8),
+		winAscent: os2 && os2.length >= 78 ? u16(view, os2.offset + 74) : undefined,
+		winDescent: os2 && os2.length >= 78 ? u16(view, os2.offset + 76) : undefined,
+		typoMetrics:
+			os2 && os2.length >= 78 && u16(view, os2.offset + 62) & 0x80
+				? {
+						ascent: i16(view, os2.offset + 68),
+						descent: i16(view, os2.offset + 70),
+						lineGap: i16(view, os2.offset + 72),
+					}
+				: undefined,
 		bbox: [
 			i16(view, head.offset + 36),
 			i16(view, head.offset + 38),
