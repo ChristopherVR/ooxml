@@ -55,15 +55,17 @@ interface Flow {
 	host: 'Word' | 'Excel' | 'PowerPoint';
 }
 
-async function checkTabClipping(editor: Locator, edge: 'left' | 'right') {
+export async function checkTabClipping(editor: Locator, edge: 'left' | 'right') {
 	const strip = editor.getByRole('tablist').first();
 	await expect
 		.poll(() =>
 			strip.evaluate((list, side) => {
 				const bounds = list.getBoundingClientRect();
-				const labels = Array.from(list.querySelectorAll('[role="tab"] > span'));
-				return labels.some((label) => {
-					const box = label.getBoundingClientRect();
+				return [...list.querySelectorAll('[role="tab"]')].some((tab) => {
+					const label = tab.querySelector('span') ?? tab;
+					const range = list.ownerDocument.createRange();
+					range.selectNodeContents(label);
+					const box = range.getBoundingClientRect();
 					return (
 						box.left < bounds.right &&
 						box.right > bounds.left &&
