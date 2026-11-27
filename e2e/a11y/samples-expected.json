@@ -1,0 +1,68 @@
+{
+	"about": "The load notices each sample may show when it opens (samples.spec.ts). An entry is the start of a notice. Remove an entry in the commit that closes its gap; add one only for a gap listed in docs/parity-checklist.md.",
+	"notices": {
+		"technical-report": [
+			"Fields show the result Word last saved while editing",
+			"Formatting-change revisions retain their prior run-properties snapshots and support acceptance, rejection and Original display",
+			"Paragraph and character styles resolve supported formatting through basedOn chains and document defaults",
+			"Theme colors and fonts resolve for rendering through a separate layer",
+			"Numbering is resolved for decimal, Roman numeral, letter, ordinal, cardinal/ordinal text and bullet formats, including multilevel lvlText and legal numbering",
+			"Table grid widths, merges, borders, shading, cell alignment/margins and table style conditional formatting resolve for rendering",
+			"PAGE, NUMPAGES, SECTIONPAGES, DATE and TIME fields are recalculated in Print Layout",
+			"Merged, nested, or complex tables can be read, but their row and column structure cannot be edited safely",
+			"Comment ranges are modeled at run granularity",
+			"Inline pictures render from their original bytes and can be deleted or newly inserted",
+			"Floating pictures follow their text wrapping approximately",
+			"Chart content is rendered as a labeled placeholder and is not editable",
+			"Bookmark names are read-only"
+		],
+		"community-newsletter": [
+			"Paragraph and character styles resolve supported formatting through basedOn chains and document defaults",
+			"Theme colors and fonts resolve for rendering through a separate layer",
+			"Numbering is resolved for decimal, Roman numeral, letter, ordinal, cardinal/ordinal text and bullet formats, including multilevel lvlText and legal numbering",
+			"Table grid widths, merges, borders, shading, cell alignment/margins and table style conditional formatting resolve for rendering",
+			"Columns render in Print Layout and, for single-section documents, on the editing surface",
+			"PAGE, NUMPAGES, SECTIONPAGES, DATE and TIME fields are recalculated in Print Layout",
+			"Inline pictures render from their original bytes and can be deleted or newly inserted",
+			"Floating pictures follow their text wrapping approximately",
+			"Text box content is rendered as a labeled placeholder and is not editable"
+		],
+		"services-agreement-form": [
+			"Fields show the result Word last saved while editing",
+			"Legacy form fields (text, check box and drop-down) are filled, toggled and picked",
+			"Complex HYPERLINK field codes",
+			"Paragraph and character styles resolve supported formatting through basedOn chains and document defaults",
+			"Theme colors and fonts resolve for rendering through a separate layer",
+			"Numbering is resolved for decimal, Roman numeral, letter, ordinal, cardinal/ordinal text and bullet formats, including multilevel lvlText and legal numbering",
+			"Table grid widths, merges, borders, shading, cell alignment/margins and table style conditional formatting resolve for rendering",
+			"Columns render in Print Layout and, for single-section documents, on the editing surface",
+			"PAGE, NUMPAGES, SECTIONPAGES, DATE and TIME fields are recalculated in Print Layout",
+			"Merged, nested, or complex tables can be read, but their row and column structure cannot be edited safely",
+			"Inline pictures render from their original bytes and can be deleted or newly inserted",
+			"Bookmark names are read-only"
+		],
+		"financial-model": [],
+		"sales-analysis": [],
+		"operations-tracker": [],
+		"product-launch-keynote": [],
+		"data-story-ridership": [],
+		"studio-portfolio": [],
+		"order-to-delivery-flowchart": [
+			"cached-values-only: ",
+			"render: Text metrics and automatic wrapping use browser fonts",
+			"render: Text exceeds its saved text-box height",
+			"render: Arrowhead style 13 "
+		],
+		"platform-architecture": [
+			"cached-values-only: ",
+			"render: Text metrics and automatic wrapping use browser fonts",
+			"render: Arrowhead style 13 ",
+			"render: Text exceeds its saved text-box height"
+		],
+		"institute-org-chart": [
+			"cached-values-only: ",
+			"render: Text metrics and automatic wrapping use browser fonts",
+			"render: Text exceeds its saved text-box height"
+		]
+	}
+}
