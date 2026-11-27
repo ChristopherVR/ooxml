@@ -294,6 +294,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       requests: when a host does not supply a provider, cached results survive initial loading and
       newly entered formulas return `#NAME?`. `TRIMRANGE` now also returns a trimmed `RefValue`
       for single-area references.
+- [ ] **P2** `EDATE` (and likely `EOMONTH`) over a spill range (`EDATE(A2#, 1)`): the engine lifts
+      the call over each element and spills dates, where the samples saw Excel show 0. The cause
+      is not established (Excel's handling of ranges in these Analysis ToolPak arguments, or how
+      the saved formula is flagged as dynamic); confirm with a file Excel saves before changing
+      the lift (`xlsx/formula/functions/datetime.ts`).
 
 ### Editing and behaviour
 
