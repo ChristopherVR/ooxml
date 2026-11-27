@@ -3,15 +3,8 @@
 // registers the grid's `edit.*` commands and attaches the GridController to the context.
 import type { CellRange } from 'ooxml-core/xlsx';
 import { createGridClipboard } from '../clipboard';
-import type {
-	EditorContext,
-	GridController,
-	GridInk,
-	GridInkTool,
-	Selection,
-} from 'ooxml-core/xlsx/ui';
-import type { InkLayer } from './ink-layer';
-import { EarlyInk } from './ink-early';
+import type { EditorContext, GridController, Selection } from 'ooxml-core/xlsx/ui';
+import { wireGridInk } from './ink-wiring';
 import { CellEditor } from './cell-editor';
 import { ensureStyle } from './dom';
 import { drawingKeyDown } from './drawing-keys';
@@ -127,11 +120,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 				ctx.session()?.fill(view.sheetIndex(), source, target);
 				selection.set({ ...selection.get(), ranges: [target] });
 			},
-			inking: (event) => {
-				if (inkTool === undefined || ctx.readOnly()) return false;
-				if (!inkLayer) earlyInk.press(event, inkTool);
-				return true;
-			},
+			inking: (event) => inkWiring.inking(event),
 		}),
 		wireTooltips(view),
 		installNotePopups(view),
@@ -218,45 +207,8 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => view.schedule());
 	resize?.observe(view.root);
 
-	// The Draw tab's surface loads on first use.
-	let inkLayer: InkLayer | undefined;
-	let inkLoading: Promise<InkLayer> | undefined;
-	let inkTool: GridInkTool | undefined;
-	let destroyed = false;
-	const earlyInk = new EarlyInk(view);
-	const loadInk = () =>
-		(inkLoading ??= Promise.all([
-			import('./ink-layer'),
-			import('../../ink/tools').then((tools) => tools.loadTools()),
-		]).then(
-			([{ InkLayer }]) => {
-				// The grid may have gone while the surface loaded: then nothing is built.
-				if (destroyed) throw new Error('The grid was destroyed.');
-				const layer = new InkLayer(view);
-				inkLayer = layer;
-				layer.setTool(inkTool);
-				// Strokes drawn while it loaded, in order, then any finished afterwards.
-				for (const stroke of earlyInk.take()) layer.stroke(stroke);
-				earlyInk.deliver = (stroke) => layer.stroke(stroke);
-				return layer;
-			},
-			(cause: unknown) => {
-				// A chunk that failed to load is tried again on the next use.
-				inkLoading = undefined;
-				throw cause;
-			},
-		));
-	const ink: GridInk = {
-		setTool(tool) {
-			inkTool = tool;
-			if (inkLayer) inkLayer.setTool(tool);
-			else if (tool) void loadInk();
-		},
-		hasSelection: () => inkLayer?.hasSelection() ?? false,
-		inkToShape: async () => (await loadInk()).inkToShape(),
-		replay: () => void loadInk().then((layer) => layer.replay()),
-		replaying: () => inkLayer?.replaying() ?? false,
-	};
+	// The Draw tab's surface, loaded on first use.
+	const inkWiring = wireGridInk(view);
 
 	const controller: GridControllerExt = {
 		focus: () => editor.focus(),
@@ -284,7 +236,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 			filters.close();
 			drawings.closeDropDown();
 		},
-		ink: () => ink,
+		ink: () => inkWiring.ink,
 	};
 	ctx.attachGrid(controller);
 	if (ctx.selection.get().sheet !== view.sheetIndex()) restoreSelection();
@@ -302,8 +254,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		list.close();
 		filters.destroy();
 		drawings.destroy();
-		destroyed = true;
-		inkLayer?.destroy();
+		inkWiring.destroy();
 		editor.destroy();
 		a11y.destroy();
 		removeRemote();

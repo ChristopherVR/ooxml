@@ -105,7 +105,7 @@ export class InkLayer implements GridInk {
 	}
 
 	/** Adds a pen stroke (canvas coordinates), drawn on the canvas or before it had loaded. */
-	stroke(detail: InkStrokeDetail): void {
+	stroke(detail: InkStrokeDetail, pen?: { color: string; width: number }): void {
 		const tool = this.#tool;
 		if (!this.#view.ctx.session() || !tool || !this.#view.sheet() || this.#view.ctx.readOnly())
 			return;
@@ -118,8 +118,8 @@ export class InkLayer implements GridInk {
 		const tools = inkTools();
 		const stroke = tools.inkStrokeFromSamples(samples, {
 			kind: detail.tool,
-			color: tool.color,
-			width: tool.width,
+			color: pen?.color ?? tool.color,
+			width: pen?.width ?? tool.width,
 		});
 		const bounds = stroke && tools.inkStrokesBounds([stroke]);
 		if (!stroke || !bounds) return;
@@ -183,9 +183,15 @@ export class InkLayer implements GridInk {
 
 	/** A new drawing's name, as Excel numbers them: Ink 1, Ink 2 (in the editor's language). */
 	#newName(): string {
-		const count =
-			this.#view.sheet()?.drawings.filter((drawing) => drawing.kind === 'ink').length ?? 0;
-		return `${this.#view.ctx.t('Ink')} ${count + 1}`;
+		const word = this.#view.ctx.t('Ink');
+		const numbers = (this.#view.sheet()?.drawings ?? []).flatMap((drawing) => {
+			const match =
+				drawing.kind === 'ink' &&
+				drawing.name?.startsWith(`${word} `) &&
+				/\d+$/u.exec(drawing.name);
+			return match ? [Number(match[0])] : [];
+		});
+		return `${word} ${Math.max(0, ...numbers) + 1}`;
 	}
 
 	/** Eraser moves are applied once a frame; the gesture is one undo step. */
