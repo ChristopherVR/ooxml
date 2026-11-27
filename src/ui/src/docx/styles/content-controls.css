@@ -33,6 +33,11 @@
 .dve-sdt-tag::before {
 	content: attr(data-tag-title);
 }
+/* An inline end tag has no title: a zero-width character gives it a text baseline like the start tag's,
+   so both ends sit at the same height (an empty inline-block rests on its bottom margin edge). */
+.dve-sdt-tag[data-tag-edge='end'][data-inline-tag]::before {
+	content: '\200b';
+}
 .dve-sdt-tag-end {
 	position: absolute;
 	top: 0;
