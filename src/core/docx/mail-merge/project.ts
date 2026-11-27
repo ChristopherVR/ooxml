@@ -1,15 +1,18 @@
 import { computedFields, type ComputedFieldResult } from '../computed-fields';
-import {
-	fieldResultSpans,
-	withFieldCodeFormatting,
-	type FieldResultSpan,
-} from '../field-result-spans';
+import { fieldResultSpans, type FieldResultSpan } from '../field-result-spans';
 import { fieldName } from '../field-runs';
 import { withStoryBlocks } from '../field-stories';
 import type { Block, DocumentModel, Paragraph, TextRun } from '../model';
 import { mapMergeStory, markSpaces } from './cross-paragraph';
+import { keptField, resultRun } from './result-runs';
 import type { MailMergeData } from './data-source';
-import { isMergeField, MergeFields, type MailMergeOptions } from './field-values';
+import {
+	isMergeField,
+	mergeFieldColumn,
+	MergeFields,
+	type MailMergeOptions,
+	type MergeHooks,
+} from './field-values';
 
 interface FieldNode {
 	span: FieldResultSpan;
@@ -43,26 +46,6 @@ function cachedText(runs: readonly TextRun[], span: FieldResultSpan): string {
 	return span.runs.map((index) => runs[index]?.text ?? '').join('');
 }
 
-function resultRun(
-	paragraph: Paragraph,
-	span: FieldResultSpan,
-	text: string,
-	charFormat: boolean,
-): TextRun {
-	const code = paragraph.runs[span.name ?? span.code ?? span.from];
-	const source = paragraph.runs[span.runs[0] ?? -1] ?? code ?? { text: '' };
-	const formatted = charFormat && code ? withFieldCodeFormatting(source, code, text) : source;
-	const {
-		field: _field,
-		fieldInstanceId: _fieldInstanceId,
-		fieldChar: _fieldChar,
-		fieldCode: _fieldCode,
-		fieldFlags: _fieldFlags,
-		...run
-	} = formatted;
-	return { ...run, text: text.replace(/\r\n?/g, '\n') };
-}
-
 function projectParagraph(
 	paragraph: Paragraph,
 	fields: MergeFields,
@@ -90,7 +73,11 @@ function projectParagraph(
 		nested: boolean,
 	): ComputedFieldResult | undefined => {
 		const { span } = node;
-		if (span.locked || span.removed) return undefined;
+		if (span.locked || span.removed) {
+			const column = span.locked && mergeFieldColumn(span.instr);
+			if (column) fields.hooks.observe?.({ blockId: paragraph.id, name: column, status: 'locked' });
+			return undefined;
+		}
 		if (depth > 64) return fields.issue('invalid-instruction', paragraph.id, fieldName(span.instr));
 		const codeEnd = span.insertAt - (span.resultless ? 0 : 1);
 		const codeChildren = node.children.filter((child) => child.span.to < codeEnd);
@@ -141,7 +128,9 @@ function projectParagraph(
 			const result = evaluate(node, 0, false);
 			if (result) {
 				next.push(...runs.slice(cursor, span.from));
-				if (result.text)
+				if (fields.hooks.keepFields && !('unlink' in result && result.unlink))
+					next.push(...keptField(paragraph, span, result, result.charFormat === true));
+				else if (result.text)
 					next.push(resultRun(paragraph, span, result.text, result.charFormat === true));
 				cursor = span.to + 1;
 				changed = true;
@@ -179,8 +168,9 @@ export function projectMerge(
 	start: number,
 	sequence: number,
 	options: MailMergeOptions,
+	hooks: MergeHooks = {},
 ) {
-	const fields = new MergeFields(data, start, sequence, options);
+	const fields = new MergeFields(data, start, sequence, options, hooks);
 	const computed = computedFields(model);
 	let storyIndex = 0;
 	const textBoxes = (value: Paragraph): Paragraph => {

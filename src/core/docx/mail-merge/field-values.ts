@@ -3,6 +3,8 @@ import { compareFieldValues, evaluateIfField } from '../conditional-field';
 import { applyFieldFormat, parseFieldInstruction, type FieldFormat } from '../field-format';
 import { fieldName } from '../field-runs';
 import type { MailMergeData, MailMergeValue } from './data-source';
+import type { MergeHooks } from './merge-hooks';
+export type { MergeFieldEvent, MergeHooks } from './merge-hooks';
 import { formatMergeNumber } from './number-picture';
 import type { MailMergeFieldMapping } from './settings';
 import { mailMergeFieldMap } from './authoring';
@@ -64,9 +66,17 @@ export interface MailMergePrompt {
 	once: boolean;
 }
 
-interface FieldResult {
+export interface FieldResult {
 	text: string;
 	charFormat?: true;
+	/** Replace the field by its result even when the merge keeps fields (`MergeHooks.keepFields`). */
+	unlink?: true;
+}
+
+/** The column a MERGEFIELD instruction names (quoted names keep their spaces). */
+export function mergeFieldColumn(instruction: string): string | undefined {
+	const field = parseFieldInstruction(instruction, MERGE_SWITCHES, { numberPictures: true });
+	return field?.name === 'MERGEFIELD' && field.args.length === 1 ? field.args[0] : undefined;
 }
 
 function textOf(value: MailMergeValue): string {
@@ -136,6 +146,7 @@ export class MergeFields {
 		start: number,
 		private readonly sequence: number,
 		private readonly options: MailMergeOptions,
+		readonly hooks: MergeHooks = {},
 	) {
 		this.index = start;
 		const fields = data.fields ?? [...new Set(data.records.flatMap(Object.keys))];
@@ -145,6 +156,12 @@ export class MergeFields {
 
 	issue(code: FieldIssueCode, blockId: string, field: string): undefined {
 		this.issues.push({ code, recordNumber: this.index + 1, blockId, field });
+		if (code === 'invalid-instruction' || code === 'unsupported-field')
+			this.hooks.observe?.({
+				blockId,
+				name: field,
+				status: code === 'invalid-instruction' ? 'invalid' : 'unsupported',
+			});
 		return undefined;
 	}
 
@@ -214,14 +231,21 @@ export class MergeFields {
 			const column = field.switches.has('m')
 				? (this.mappings.get(lookup.toLowerCase()) ?? lookup)
 				: lookup;
-			if (!this.fields.has(column)) issue('unknown-field', column);
-			const record = this.data.records[this.index];
+			const hooks = this.hooks;
+			const record = hooks.record ? hooks.record(blockId) : this.data.records[this.index];
+			const known = hooks.record ? Object.hasOwn(record ?? {}, column) : this.fields.has(column);
+			if (!known) {
+				issue('unknown-field', column);
+				hooks.observe?.({ blockId, name: column, status: 'missing' });
+				if (hooks.missing === 'keep') return hooks.keepFields ? undefined : { text: cached };
+			} else hooks.observe?.({ blockId, name: column, status: 'filled' });
 			const value = record && Object.hasOwn(record, column) ? (record[column] ?? null) : null;
 			if (!textOf(value)) return result('');
 			const text = format(value);
-			return result(
+			const merged = result(
 				`${before === undefined ? '' : resolve(before)}${field.switches.has('v') ? verticalText(text) : text}${after === undefined ? '' : resolve(after)}`,
 			);
+			return hooks.unlink?.(merged.text) ? { ...merged, unlink: true } : merged;
 		}
 		if (isPrompt) {
 			const fallback = field.switches.get('d');
