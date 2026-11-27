@@ -5,7 +5,7 @@ const LOCALES = ['en', 'fr', 'de', 'es', 'zh-CN'] as const;
 const SHOTS =
 	process.env.LOCALE_SHOT_DIR ??
 	'/tmp/claude-0/-home-user-docx-viewer/cec0184c-692a-5fed-937f-11818dd0a964/scratchpad/ui';
-const TABS = ['home', 'insert'] as const;
+const TABS = ['home', 'insert', 'draw'] as const;
 
 /** Names every visible ribbon control in `tab` whose text is clipped or wider than its box. */
 async function clippedControls(page: Page, tab: string): Promise<string[]> {

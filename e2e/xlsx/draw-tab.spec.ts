@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import JSZip from 'jszip';
 import { openFixture } from './fixture-files';
-import { FRAMEWORKS, editor, grid, ribbon } from './helpers';
+import { FRAMEWORKS, editor, goToCell, grid, nameBoxValue, ribbon } from './helpers';
 
 const inks = (page: Page) => grid(page).locator('.xg-obj[data-ink]');
 
@@ -86,7 +86,8 @@ test('Excel Draw: lasso, Ink to Shape, pen settings and Ink Replay', async ({ pa
 	await black.click();
 	const menu = panel.getByRole('dialog', { name: 'Pen: 0.5 mm, Black' });
 	await expect(menu).toBeVisible();
-	await menu.getByRole('radio', { name: 'Green' }).click();
+	// Office's ink colours come first, then the standard colours.
+	await menu.getByRole('menuitemradio', { name: 'Green', exact: true }).first().click();
 	await expect(panel.getByRole('button', { name: 'Pen: 0.5 mm, Green' })).toBeVisible();
 	await page.keyboard.press('Escape');
 	await expect(menu).toHaveCount(0);
@@ -114,4 +115,40 @@ test('Excel Draw: lasso, Ink to Shape, pen settings and Ink Replay', async ({ pa
 	await expect(grid(page).locator('.xg-ink-replay path').first()).toBeAttached();
 	await page.keyboard.press('Escape');
 	await expect(grid(page).locator('.xg-ink-replay')).toHaveCount(0);
+});
+
+test('Excel Draw: a pen press never selects cells; one eraser stroke is one undo step', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await openFixture(page, 'vanilla', 'excel-ink.xlsx');
+	await goToCell(page, 'B2');
+	await ribbon(page).getByRole('tab', { name: 'Draw', exact: true }).click();
+	const panel = ribbon(page);
+	await panel.getByRole('button', { name: 'Pen: 0.5 mm, Red' }).click();
+	// Two strokes far apart, drawn at once: each is ink, and the cell selection stays.
+	await drawOnGrid(page, 300, 300, wave);
+	await drawOnGrid(page, 300, 340, [
+		[200, 0],
+		[400, 4],
+	]);
+	expect(await nameBoxValue(page)).toBe('B2');
+	await expect(inks(page)).toHaveCount(2);
+	const drawn = inks(page).nth(1);
+	await expect(drawn.locator('path')).toHaveCount(2);
+	const before = (await drawn.boundingBox())!;
+
+	// One sweep over the long stroke erases it; the box shrinks to the wave that is left.
+	await panel.getByRole('button', { name: 'Eraser', exact: true }).click();
+	const box = (await grid(page).boundingBox())!;
+	await page.mouse.move(box.x + 650, box.y + 330);
+	await page.mouse.down();
+	await page.mouse.move(box.x + 650, box.y + 360, { steps: 20 });
+	await page.mouse.up();
+	await expect(drawn.locator('path')).toHaveCount(1);
+	const after = (await drawn.boundingBox())!;
+	expect(after.width).toBeLessThan(before.width - 100);
+	// Undo brings the whole stroke back in one step.
+	await page.keyboard.press('Control+z');
+	await expect(drawn.locator('path')).toHaveCount(2);
 });
