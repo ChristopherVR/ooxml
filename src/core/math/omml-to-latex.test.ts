@@ -171,14 +171,22 @@ describe('convertOmmlToLatex: constructs the forward renderer supports', () => {
 		expect(convertOmmlToLatex(oMath({ 'm:box': { 'm:e': r('x') } }))).toBe('x');
 	});
 
-	it('phantom variants round-trip', () => {
-		expect(expectOmmlRoundTrip({ 'm:phant': { 'm:e': r('x') } })).toBe('\\phantom{x}');
+	it('phantom variants round-trip; LaTeX phantoms are hidden (m:show off)', () => {
+		const hide = { 'm:show': v('0') };
+		expect(expectOmmlRoundTrip({ 'm:phant': { 'm:phantPr': hide, 'm:e': r('x') } })).toBe(
+			'\\phantom{x}',
+		);
 		const h = {
-			'm:phant': { 'm:phantPr': { 'm:zeroAsc': v('1'), 'm:zeroDesc': v('1') }, 'm:e': r('x') },
+			'm:phant': {
+				'm:phantPr': { ...hide, 'm:zeroAsc': v('1'), 'm:zeroDesc': v('1') },
+				'm:e': r('x'),
+			},
 		};
 		expect(expectOmmlRoundTrip(h)).toBe('\\hphantom{x}');
-		const vp = { 'm:phant': { 'm:phantPr': { 'm:zeroWid': v('1') }, 'm:e': r('x') } };
+		const vp = { 'm:phant': { 'm:phantPr': { ...hide, 'm:zeroWid': v('1') }, 'm:e': r('x') } };
 		expect(expectOmmlRoundTrip(vp)).toBe('\\vphantom{x}');
+		// A shown phantom has no LaTeX spelling: its content is kept as it is.
+		expect(convertOmmlToLatex(oMath({ 'm:phant': { 'm:e': r('x') } }))).toBe('x');
 	});
 
 	it('func: PowerPoint-style m:func with a limLow name becomes \\lim_{...}', () => {
@@ -222,16 +230,30 @@ describe('convertOmmlToLatex: constructs the forward renderer supports', () => {
 	});
 
 	it('delimiters: several m:e arguments are separated with \\middle, which reads back', () => {
-		const pair = { 'm:d': { 'm:dPr': { 'm:sepChr': v(',') }, 'm:e': [r('a'), r('b')] } };
+		const pair = { 'm:d': { 'm:dPr': { 'm:sepChr': v('‖') }, 'm:e': [r('a'), r('b')] } };
 		const latex = convertOmmlToLatex(oMath(pair));
-		expect(latex).toBe('\\left(a\\middle,b\\right)');
+		expect(latex).toBe('\\left(a\\middle\\|b\\right)');
 		const back = convertLatexToOmml(latex)['m:oMathPara'] as Record<
 			string,
 			Record<string, unknown>
 		>;
 		const d = back['m:oMath']!['m:d'] as Record<string, unknown>;
 		expect(d['m:e']).toHaveLength(2);
-		expect(d['m:dPr']).toEqual({ 'm:sepChr': { '@_val': ',' } });
+		expect(d['m:dPr']).toEqual({ 'm:sepChr': { '@_val': '‖' } });
+	});
+
+	it('delimiters: a separator TeX has no delimiter for stays text, never an invalid \\middle', () => {
+		const pair = { 'm:d': { 'm:dPr': { 'm:sepChr': v(',') }, 'm:e': [r('a'), r('b')] } };
+		expect(convertOmmlToLatex(oMath(pair))).toBe('\\left(a,b\\right)');
+	});
+
+	it('delimiters: a second, different \\middle separator stays text in its element', () => {
+		const back = convertLatexToOmml('\\left(a\\middle|b\\middle\\|c\\right)')[
+			'm:oMathPara'
+		] as Record<string, Record<string, unknown>>;
+		const d = back['m:oMath']!['m:d'] as Record<string, unknown>;
+		expect(d['m:e']).toHaveLength(2);
+		expect(JSON.stringify(d['m:e'])).toContain('‖');
 	});
 
 	it('nary: limLoc undOvr survives as \\limits', () => {

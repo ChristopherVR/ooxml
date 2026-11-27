@@ -137,7 +137,7 @@ export function parseDelimiter(ctx: LatexParserContext): OmmlNode {
 	const openChar = readDelimiterChar(ctx.next(), '(');
 
 	const elements: OmmlNode[][] = [[]];
-	let separator = '|';
+	let separator: string | undefined;
 	while (ctx.peek()) {
 		const tok = ctx.peek()!;
 		if (tok.type === 'command' && tok.value === '\\right') {
@@ -146,8 +146,11 @@ export function parseDelimiter(ctx: LatexParserContext): OmmlNode {
 		}
 		if (tok.type === 'command' && tok.value === '\\middle') {
 			ctx.next();
-			separator = readDelimiterChar(ctx.next(), '|');
-			elements.push([]);
+			const char = readDelimiterChar(ctx.next(), '|');
+			// Office Math has one separator per delimiter: a different later one stays as text.
+			separator ??= char;
+			if (char === separator) elements.push([]);
+			else elements[elements.length - 1]!.push(ctx.makeRun(char));
 			continue;
 		}
 		const node = ctx.parseAtom();
@@ -162,7 +165,7 @@ export function parseDelimiter(ctx: LatexParserContext): OmmlNode {
 	if (openChar !== '(') {
 		dPr['m:begChr'] = { '@_val': openChar } as unknown as OmmlNode;
 	}
-	if (separator !== '|') {
+	if (separator !== undefined && separator !== '|') {
 		dPr['m:sepChr'] = { '@_val': separator } as unknown as OmmlNode;
 	}
 	if (closeChar !== ')') {

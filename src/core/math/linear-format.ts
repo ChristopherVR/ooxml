@@ -11,30 +11,40 @@
 import {
 	canonicalMath,
 	coalesceRuns,
+	controlFormat,
+	onlyMathAndWord,
 	orderedEntries,
 	sharedRunFormat,
 	withRunFormat,
 } from './equation-canonical';
-import { convertLatexToOmml } from './index';
-import { EQUATION_PLACEHOLDER, fillPlaceholders, stripPlaceholders } from './index';
-import { mergeSiblings } from './index';
-import { MAX_LATEX_LENGTH } from './index';
-import { parseOmml } from './index';
-import type { OmmlNode } from './index';
-import { convertOmmlToLatex } from './index';
-import { ensureArr, readRunText } from './index';
+import {
+	convertLatexToOmml,
+	convertOmmlToLatex,
+	ensureArr,
+	fillPlaceholders,
+	MAX_LATEX_LENGTH,
+	mergeSiblings,
+	ommlToXml,
+	parseOmml,
+	readRunText,
+	type OmmlNode,
+} from './index';
+import { stripPlaceholders } from './equation-placeholder-strip';
 import { convertOmmlToUnicodeMath } from './omml-to-unicode-math';
-import { ommlToXml } from './index';
 import { applyControlWords, unicodeMathToLatex } from './unicode-math';
-import { MATH_AUTOCORRECT } from './unicode-math-symbols';
+import { isCombining, MATH_AUTOCORRECT } from './unicode-math-symbols';
 
 /** The notation linear text is written in: UnicodeMath (Word's default) or LaTeX. */
 export type EquationInputFormat = 'unicode' | 'latex';
 
-/** What an edited equation keeps from the original: paragraph properties, its runs' format. */
+/**
+ * What an edited equation keeps from the original: its paragraph properties, its runs' format and
+ * its control characters' format (the math font Word writes on both).
+ */
 export interface EquationFrame {
 	paraProps?: OmmlNode;
 	runFormat?: OmmlNode;
+	controlFormat?: OmmlNode;
 }
 
 /** An equation the linear editor can edit without losing anything. */
@@ -43,14 +53,21 @@ export interface EditableEquation {
 	text: string;
 	/** Whether it is shown in Linear rather than built up. */
 	linear: boolean;
+	/** Whether it can also be shown in Linear: its UnicodeMath text rebuilds it exactly. */
+	canLinear: boolean;
 	frame: EquationFrame;
 }
 
 /** Characters Word's Linear display saves in runs of their own. */
-const OPERATORS = new Set([...'/∕¦┬┴^_▒&@√∛∜■█□¯▁⏞⏟〖〗│']);
+const OPERATOR_CHARS = new Set([
+	...'/∕¦┬┴^_▒&@√∛∜■█□¯▁⏞⏟〖〗│()[]{}|‖⟨⟩⌊⌋⌈⌉├┤"\\⁡',
+	...'∑∏∐∫∬∭∮⋃⋂⋁⋀',
+]);
+/** Accents (combining marks) and escapes are operators of the linear text too. */
+const isOperator = (char: string) => OPERATOR_CHARS.has(char) || isCombining(char);
 
 function wrap(math: OmmlNode, display: boolean, frame: EquationFrame = {}): string {
-	const body = withRunFormat(math, frame.runFormat);
+	const body = withRunFormat(math, frame.runFormat, frame.controlFormat);
 	if (!display) return ommlToXml({ 'm:oMath': body });
 	const para: OmmlNode = frame.paraProps ? { 'm:oMathParaPr': frame.paraProps } : {};
 	para['m:oMath'] = body;
@@ -126,22 +143,36 @@ export function linearizeEquation(omml: string, format: EquationInputFormat): st
 /** Markup that shows UnicodeMath `text` itself, unbuilt, as Word's Linear display saves it. */
 export function linearEquationXml(text: string, display: boolean, frame?: EquationFrame): string {
 	const runs: string[] = [];
-	for (const char of text.split(EQUATION_PLACEHOLDER).join('')) {
+	// Placeholders stay in the text (Word shows them as ⬚), so empty arguments read back.
+	for (const char of text) {
 		const last = runs.length - 1;
-		if (!OPERATORS.has(char) && last >= 0 && !OPERATORS.has(runs[last]!)) runs[last] += char;
+		if (!isOperator(char) && last >= 0 && !isOperator(runs[last]!)) runs[last] += char;
 		else runs.push(char);
 	}
 	return wrap(mergeSiblings(runs.map((t) => ({ 'm:r': { 'm:t': t } }))), display, frame);
 }
 
-/** Linear text of `math` when it is shown in Linear: plain runs with an operator run of its own. */
+const same = (a: OmmlNode | undefined, b: OmmlNode) =>
+	a !== undefined && canonicalMath(a) === canonicalMath(b);
+
+/** Whether UnicodeMath `text` rebuilds `math` exactly. */
+const unicodeHolds = (text: string, math: OmmlNode) => same(buildUpMath(text, 'unicode'), math);
+
+/**
+ * Linear text of `math` when it is shown in Linear: plain runs with an operator run of its own,
+ * whose text builds up into something else (text that rebuilds to the same runs is Professional).
+ */
 function linearText(math: OmmlNode): string | undefined {
 	const entries = orderedEntries(math);
 	if (!entries.length || entries.some(([tag]) => tag !== 'm:r')) return undefined;
 	const runs = entries.map(([, run]) => run as OmmlNode);
-	if (runs.some((run) => run['m:rPr'] !== undefined)) return undefined;
+	const plain = (run: OmmlNode) =>
+		Object.keys(run).every((key) => key === 'm:t' || key === 'w:rPr');
+	if (!runs.every(plain)) return undefined;
 	const texts = runs.map(readRunText);
-	return texts.some((text) => OPERATORS.has(text)) ? texts.join('') : undefined;
+	if (!texts.some((text) => isOperator(text))) return undefined;
+	const text = texts.join('');
+	return unicodeHolds(text, math) ? undefined : text;
 }
 
 /**
@@ -160,37 +191,50 @@ export function linearDisplayText(omml: string): string | undefined {
 
 /**
  * The equation as linear text the editor can change, when that text rebuilds it exactly (its
- * canonical form, see `canonicalMath`); undefined for an equation linear text would change.
+ * canonical form, see `canonicalMath`); undefined for an equation linear text would change:
+ * several equations in one paragraph, mixed formatting, other namespaces, control characters with
+ * more than the math font, or properties its notation cannot spell.
  */
 export function editableEquation(
 	omml: string,
 	format: EquationInputFormat,
 ): EditableEquation | undefined {
 	try {
-		const sole = soleMath(parseOmml(omml));
+		const tree = parseOmml(omml);
+		const sole = onlyMathAndWord(tree) ? soleMath(tree) : undefined;
 		if (!sole) return undefined;
 		const runFormat = sharedRunFormat(sole.math);
-		if (runFormat === 'mixed') return undefined;
+		const control = controlFormat(sole.math);
+		if (runFormat === 'mixed' || control === 'other') return undefined;
 		const frame: EquationFrame = {
 			...(sole.paraProps ? { paraProps: sole.paraProps } : {}),
 			...(runFormat ? { runFormat } : {}),
+			...(control ? { controlFormat: control } : {}),
 		};
 		const shown = linearText(sole.math);
 		if (shown !== undefined) {
-			const built = format === 'latex' ? buildUpMath(shown, 'unicode') : undefined;
-			const text = built ? linearize(built, 'latex') : shown;
-			return { text, linear: true, frame };
+			if (format === 'unicode') return { text: shown, linear: true, canLinear: true, frame };
+			// Linear text is kept as UnicodeMath; in LaTeX it is offered only when it reads back.
+			const built = buildUpMath(shown, 'unicode');
+			const text = built && linearize(built, 'latex');
+			if (!built || !text || !same(buildUpMath(text, 'latex'), built)) return undefined;
+			return { text, linear: true, canLinear: true, frame };
 		}
 		const text = linearize(sole.math, format);
-		const rebuilt = buildUpMath(text, format);
-		if (!rebuilt || canonicalMath(rebuilt) !== canonicalMath(sole.math)) return undefined;
-		return { text, linear: false, frame };
+		if (!same(buildUpMath(text, format), sole.math)) return undefined;
+		const canLinear =
+			format === 'unicode' || unicodeHolds(linearize(sole.math, 'unicode'), sole.math);
+		return { text, linear: false, canLinear, frame };
 	} catch {
 		return undefined;
 	}
 }
 
-/** Markup for edited linear text: built up, or kept linear (as UnicodeMath) when `linear`. */
+/**
+ * Markup for edited linear text: built up, or kept linear (as UnicodeMath) when `linear`.
+ * LaTeX text shown in Linear is written as its UnicodeMath, only when that rebuilds it exactly;
+ * undefined otherwise (or when the text cannot be read).
+ */
 export function writeEditedEquation(edit: {
 	text: string;
 	format: EquationInputFormat;
@@ -200,10 +244,20 @@ export function writeEditedEquation(edit: {
 }): string | undefined {
 	const { text, format, display, linear, frame } = edit;
 	if (!linear) return buildUpEquation(text, format, display, frame);
-	if (format === 'unicode') return linearEquationXml(text, display, frame);
-	const math = buildUpMath(text, 'latex');
-	return math && linearEquationXml(linearize(math, 'unicode'), display, frame);
+	let unicode: string | undefined = text;
+	if (format === 'latex') {
+		const math = buildUpMath(text, 'latex');
+		unicode = math && linearize(math, 'unicode');
+		if (!math || unicode === undefined || !unicodeHolds(unicode, math)) return undefined;
+	}
+	const xml = linearEquationXml(unicode, display, frame);
+	// Linear text that builds up must read back as Linear, or it would be saved as plain text.
+	return linearDisplayText(xml) !== undefined || unicodeHolds(unicode, inner(xml))
+		? xml
+		: undefined;
 }
+
+const inner = (xml: string): OmmlNode => soleMath(parseOmml(xml))?.math ?? {};
 
 /**
  * Math AutoCorrect as the space after a control word triggers it: when the text before `caret`

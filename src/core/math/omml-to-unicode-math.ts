@@ -22,8 +22,25 @@ import { BRACKETS, isCombining, isOperandChar, LINEAR, NARY_CHARS } from './unic
 function children(node: XmlRecord | undefined): string {
 	if (!node || typeof node !== 'object') return '';
 	let out = '';
-	for (const key of contentKeys(node))
-		for (const item of ensureArr(node[key])) out += element(stripXmlOrderSuffix(key), item);
+	let previous = '';
+	for (const key of contentKeys(node)) {
+		const tag = stripXmlOrderSuffix(key);
+		for (const item of ensureArr(node[key])) {
+			const text = element(tag, item);
+			// Text running into a structure would join its operand (`a` and b/c read as ab/c): a
+			// space keeps them apart, as Word writes `a b/c`.
+			const last = Array.from(out).at(-1) ?? '';
+			const first = Array.from(text)[0] ?? '';
+			if (
+				(previous !== 'm:r' || tag !== 'm:r') &&
+				isOperandChar(last) &&
+				(isOperandChar(first) || first in NARY_CHARS || first === '√')
+			)
+				out += ' ';
+			out += text;
+			previous = tag;
+		}
+	}
 	return out;
 }
 

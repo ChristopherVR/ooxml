@@ -5,7 +5,7 @@
  */
 import type { OmmlNode } from './omml-node';
 import { stripXmlOrderSuffix } from './omml-node';
-import { childNode, contentKeys, flagOn, readRunText } from './omml-to-latex-helpers';
+import { childNode, contentKeys, flagOn } from './omml-to-latex-helpers';
 
 export const EQUATION_PLACEHOLDER = '⬚';
 
@@ -47,25 +47,4 @@ function fill(tag: string, node: OmmlNode): OmmlNode {
 /** A copy of `tree` with a `⬚` run in every empty argument that Word would show a box for. */
 export function fillPlaceholders(tree: OmmlNode): OmmlNode {
 	return fill('', tree);
-}
-
-/** A copy of `tree` without placeholder runs: what is saved for the arguments still empty. */
-export function stripPlaceholders(tree: OmmlNode): OmmlNode {
-	const out: OmmlNode = {};
-	for (const [key, value] of Object.entries(tree)) {
-		const tag = stripXmlOrderSuffix(key);
-		const items = (Array.isArray(value) ? value : [value]).flatMap((item) => {
-			if (tag === 'm:r' && item && typeof item === 'object') {
-				const text = readRunText(item as OmmlNode);
-				if (!text.includes(EQUATION_PLACEHOLDER)) return [item];
-				const rest = text.split(EQUATION_PLACEHOLDER).join('');
-				return rest ? [{ ...(item as OmmlNode), 'm:t': rest }] : [];
-			}
-			if (key.startsWith('@_') || !item || typeof item !== 'object') return [item];
-			return [stripPlaceholders(item as OmmlNode)];
-		});
-		if (items.length === 0 && tag === 'm:r') continue;
-		out[key] = Array.isArray(value) ? items : (items[0] ?? {});
-	}
-	return out;
 }

@@ -117,6 +117,10 @@ export function delimiterToLatex(emit: LatexEmitter, node: XmlRecord): string {
 
 	const sepNode = childNode(dPr, 'm:sepChr');
 	const separator = hasAttr(sepNode) ? attrVal(sepNode) : '|';
-	const inner = elements.map((e) => emit.children(e)).join(`\\middle${delimToLatex(separator)}`);
+	// `\middle` takes only a delimiter TeX knows; another separator (`,`) is written as text.
+	const delimiter = PLAIN_DELIM.test(separator) || separator === '/' || REVERSE_DELIM[separator];
+	const inner = elements
+		.map((e) => emit.children(e))
+		.join(delimiter ? `\\middle${delimToLatex(separator)}` : escapeMathText(separator));
 	return `\\left${delimToLatex(open)}${inner}\\right${delimToLatex(close)}`;
 }

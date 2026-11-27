@@ -152,6 +152,10 @@ function limitToLatex(node: XmlRecord, tag: 'm:limLow' | 'm:limUpp'): string {
 function phantomToLatex(node: XmlRecord): string {
 	const phantPr = childNode(node, 'm:phantPr');
 	const base = arg(node, 'm:e');
+	// LaTeX's phantoms hide their content; a shown phantom (`m:show` on, the default) has no spelling.
+	const show = childNode(phantPr, 'm:show');
+	if (phantPr['m:show'] === undefined || !['0', 'off', 'false'].includes(attrVal(show)))
+		return base;
 	if (flagOn(phantPr, 'm:zeroWid')) {
 		return `\\vphantom{${base}}`;
 	}

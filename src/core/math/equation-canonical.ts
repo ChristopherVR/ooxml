@@ -1,14 +1,12 @@
 /**
  * Comparing and normalising Office Math trees: runs coalesced as Word writes them, and a canonical
- * form that ignores what does not change an equation (control-character formatting, default-valued
- * properties, property order, how text is split into runs), so the editors can tell whether linear
- * text rebuilds an equation exactly before they let it be edited that way.
+ * form that ignores what does not change an equation (default-valued properties, property order,
+ * how plain text is split into runs, and the math font Word gives every run and control
+ * character), so the editors can tell whether linear text rebuilds an equation exactly before they
+ * let it be edited that way. Anything else in the tree takes part in the comparison.
  */
-import { mergeSiblings } from './index';
+import { mergeSiblings, readRunText, stripXmlOrderSuffix, ommlToXml } from './index';
 import type { OmmlNode } from './index';
-import { stripXmlOrderSuffix } from './index';
-import { readRunText } from './index';
-import { ommlToXml } from './index';
 
 type Entry = [string, unknown];
 
@@ -29,40 +27,56 @@ const rebuild = (entries: Entry[]): OmmlNode =>
 const isNode = (value: unknown): value is OmmlNode =>
 	Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
-/** Applies `visit` to every element below `node`, children first. */
-function mapTree(node: OmmlNode, visit: (tag: string, value: OmmlNode) => OmmlNode): OmmlNode {
-	return rebuild(
-		orderedEntries(node).map(([tag, value]): Entry => {
-			if (!isNode(value) || tag.startsWith('@_')) return [tag, value];
-			return [tag, visit(tag, mapTree(value, visit))];
+/** Applies `visit` to every element of `node` and below, children first, `node` itself last. */
+function mapTree(
+	node: OmmlNode,
+	visit: (tag: string, value: OmmlNode) => OmmlNode,
+	tag = '',
+): OmmlNode {
+	const mapped = rebuild(
+		orderedEntries(node).map(([child, value]): Entry => {
+			if (!isNode(value) || child.startsWith('@_')) return [child, value];
+			return [child, mapTree(value, visit, child)];
 		}),
+	);
+	return visit(tag, mapped);
+}
+
+/** A run holding only text and run properties, which can join its neighbour. */
+function plainRun(run: unknown): run is OmmlNode {
+	return (
+		isNode(run) &&
+		Object.keys(run).every((key) => ['m:rPr', 'w:rPr', 'm:t'].includes(stripXmlOrderSuffix(key)))
 	);
 }
 
 const runProps = (run: OmmlNode) => JSON.stringify([run['m:rPr'] ?? null, run['w:rPr'] ?? null]);
 
-/** Adjacent runs with the same formatting become one run, as Word writes them. */
-export function coalesceRuns(node: OmmlNode): OmmlNode {
-	return mapTree(node, (_tag, value) => {
-		const entries = orderedEntries(value);
-		const out: Entry[] = [];
-		for (const entry of entries) {
-			const last = out[out.length - 1];
-			const [tag, item] = entry;
-			if (tag === 'm:r' && last?.[0] === 'm:r' && isNode(item) && isNode(last[1])) {
-				const previous = last[1];
-				if (runProps(previous) === runProps(item)) {
-					last[1] = { ...previous, 'm:t': readRunText(previous) + readRunText(item) };
-					continue;
-				}
+function mergeRuns(value: OmmlNode): OmmlNode {
+	const entries = orderedEntries(value);
+	const out: Entry[] = [];
+	for (const [tag, item] of entries) {
+		const last = out[out.length - 1];
+		if (tag === 'm:r' && last?.[0] === 'm:r' && plainRun(item) && plainRun(last[1])) {
+			if (runProps(last[1]) === runProps(item)) {
+				last[1] = { ...last[1], 'm:t': readRunText(last[1]) + readRunText(item) };
+				continue;
 			}
-			out.push([tag, item]);
 		}
-		return out.length === entries.length ? value : rebuild(out);
-	});
+		out.push([tag, item]);
+	}
+	return out.length === entries.length ? value : rebuild(out);
 }
 
-/** On/off properties: present means on, so `m:val="1"` says nothing more. */
+/**
+ * Adjacent plain runs with the same formatting become one run, as Word writes them, at every
+ * level including the top. Runs holding anything else (a symbol, a break) are left alone.
+ */
+export function coalesceRuns(node: OmmlNode): OmmlNode {
+	return mapTree(node, (_tag, value) => mergeRuns(value));
+}
+
+/** On/off properties that are off when absent: `m:val="1"` says nothing more than presence. */
 const FLAGS = new Set([
 	'm:nor',
 	'm:lit',
@@ -79,7 +93,6 @@ const FLAGS = new Set([
 	'm:zeroAsc',
 	'm:zeroDesc',
 	'm:transp',
-	'm:show',
 	'm:maxDist',
 	'm:objDist',
 	'm:alnScr',
@@ -92,6 +105,9 @@ const FLAGS = new Set([
 	'm:strikeBLTR',
 	'm:strikeTLBR',
 ]);
+/** On/off properties that are on when absent (a phantom is shown unless `m:show` is off). */
+const FLAGS_ON = new Set(['m:show']);
+const OFF = new Set(['0', 'off', 'false']);
 /** Property values that are the schema default where they are written. */
 const DEFAULTS: Record<string, Record<string, string>> = {
 	'm:naryPr': { 'm:chr': '∫' },
@@ -100,39 +116,52 @@ const DEFAULTS: Record<string, Record<string, string>> = {
 	'm:fPr': { 'm:type': 'bar' },
 };
 
+/** A matrix column spec of one group of centred columns: what a matrix shows without one. */
+function centredColumns(mcs: unknown): boolean {
+	const groups = isNode(mcs) ? orderedEntries(mcs) : [];
+	if (groups.length !== 1 || groups[0]![0] !== 'm:mc' || !isNode(groups[0]![1])) return false;
+	const props = groups[0]![1]['m:mcPr'];
+	const jc = isNode(props) && isNode(props['m:mcJc']) ? props['m:mcJc']['@_val'] : undefined;
+	return jc === undefined || jc === 'center';
+}
+
 function canonicalProps(tag: string, value: OmmlNode): OmmlNode | undefined {
 	const out: OmmlNode = {};
 	for (const [key, item] of orderedEntries(value).sort(([a], [b]) => a.localeCompare(b))) {
-		if (key === 'm:ctrlPr' || key === 'w:rPr') continue;
+		if (key === 'm:ctrlPr') continue;
+		if (tag === 'm:mPr' && key === 'm:mcs' && centredColumns(item)) continue;
 		const node = isNode(item) ? item : {};
 		const val = node['@_val'];
 		if (val !== undefined && DEFAULTS[tag]?.[key] === val) continue;
+		const off = typeof val === 'string' && OFF.has(val);
 		if (FLAGS.has(key)) {
-			if (val === '0' || val === 'off' || val === 'false') continue;
-			out[key] = {};
+			if (!off) out[key] = {};
+		} else if (FLAGS_ON.has(key)) {
+			if (off) out[key] = { '@_val': '0' };
 		} else out[key] = item;
 	}
 	return Object.keys(out).length ? out : undefined;
 }
 
 /**
- * The canonical form of an `m:oMath` content tree: formatting of control characters and of
- * runs (`w:rPr`) dropped, default properties dropped, runs coalesced.
+ * The canonical form of an `m:oMath` content tree: control-character formatting (checked apart,
+ * see `controlFormat`) and the shared run format (`sharedRunFormat`) dropped, default properties
+ * dropped, plain runs coalesced; everything else is compared as it is.
  */
 export function canonicalMath(math: OmmlNode): string {
 	const stripped = mapTree(math, (tag, value) => {
 		if (tag === 'm:t') return { '#text': readRunText({ 'm:t': value }) };
 		const entries = orderedEntries(value).flatMap(([key, item]): Entry[] => {
-			if (key === 'm:ctrlPr' || key === 'w:rPr' || key === '@_space') return [];
-			if (key.endsWith('Pr') && isNode(item)) {
+			if (key === 'm:ctrlPr' || (tag === 'm:r' && key === 'w:rPr') || key === '@_space') return [];
+			if (key.endsWith('Pr') && key.startsWith('m:') && isNode(item)) {
 				const props = canonicalProps(key, item);
 				return props ? [[key, props]] : [];
 			}
 			return [[key, item]];
 		});
-		return rebuild(entries);
+		return mergeRuns(rebuild(entries));
 	});
-	return ommlToXml({ 'm:oMath': coalesceRuns(stripped) });
+	return ommlToXml({ 'm:oMath': stripped });
 }
 
 /**
@@ -156,14 +185,90 @@ export function sharedRunFormat(math: OmmlNode): OmmlNode | 'mixed' | undefined 
 	return runs && format ? format : undefined;
 }
 
-/** `math` with `format` as every run's `w:rPr`. */
-export function withRunFormat(math: OmmlNode, format: OmmlNode | undefined): OmmlNode {
-	if (!format) return math;
+/** Formatting a control character may carry and still be rewritten: the math font and italic. */
+const CONTROL_KEYS = new Set(['w:rFonts', 'w:i', 'w:iCs']);
+
+/**
+ * The formatting of the equation's control characters (`m:ctrlPr`), when every one of them holds
+ * only the math font (and italic) and they agree on the font; `'other'` when any holds more (a
+ * colour, a tracked change), so the equation is not rewritten.
+ */
+export function controlFormat(math: OmmlNode): OmmlNode | 'other' | undefined {
+	let format: OmmlNode | undefined;
+	let fonts: string | undefined;
+	let other = false;
+	mapTree(math, (tag, value) => {
+		if (tag !== 'm:ctrlPr') return value;
+		const entries = orderedEntries(value);
+		const props = entries.length === 1 && entries[0]![0] === 'w:rPr' ? entries[0]![1] : undefined;
+		if (entries.length && !isNode(props)) other = true;
+		if (!isNode(props)) return value;
+		const keys = orderedEntries(props).map(([key]) => key);
+		if (keys.some((key) => !CONTROL_KEYS.has(key))) other = true;
+		// The math font is the Latin font; Word varies the complex-script one between controls.
+		const fontsNode = isNode(props['w:rFonts']) ? props['w:rFonts'] : {};
+		const font = JSON.stringify([fontsNode['@_ascii'] ?? null, fontsNode['@_hAnsi'] ?? null]);
+		if (fonts !== undefined && font !== fonts) other = true;
+		fonts = font;
+		if (props['w:i'] !== undefined) format = props;
+		else format ??= props;
+		return value;
+	});
+	return other ? 'other' : format;
+}
+
+/** Whether every element of `node` is Office Math or WordprocessingML (no other namespace). */
+export function onlyMathAndWord(node: OmmlNode): boolean {
+	return orderedEntries(node).every(
+		([key, value]) =>
+			key.startsWith('@_') ||
+			key === '#text' ||
+			(/^[mw]:/.test(key) && (!isNode(value) || onlyMathAndWord(value))),
+	);
+}
+
+/** Elements whose properties Word gives a control-character format (`m:ctrlPr`). */
+const STRUCTURES = new Set([
+	'm:acc',
+	'm:bar',
+	'm:borderBox',
+	'm:box',
+	'm:d',
+	'm:eqArr',
+	'm:f',
+	'm:func',
+	'm:groupChr',
+	'm:limLow',
+	'm:limUpp',
+	'm:m',
+	'm:nary',
+	'm:phant',
+	'm:rad',
+	'm:sPre',
+	'm:sSub',
+	'm:sSubSup',
+	'm:sSup',
+]);
+
+/** `math` with `format` as every run's `w:rPr` and `control` in every structure's properties. */
+export function withRunFormat(
+	math: OmmlNode,
+	format: OmmlNode | undefined,
+	control?: OmmlNode,
+): OmmlNode {
+	if (!format && !control) return math;
 	return mapTree(math, (tag, value) => {
-		if (tag !== 'm:r') return value;
-		const entries = orderedEntries(value).filter(([key]) => key !== 'w:rPr');
-		const at = entries.findIndex(([key]) => key !== 'm:rPr');
-		entries.splice(at < 0 ? entries.length : at, 0, ['w:rPr', format]);
-		return rebuild(entries);
+		if (tag === 'm:r' && format) {
+			const entries = orderedEntries(value).filter(([key]) => key !== 'w:rPr');
+			const at = entries.findIndex(([key]) => key !== 'm:rPr');
+			entries.splice(at < 0 ? entries.length : at, 0, ['w:rPr', format]);
+			return rebuild(entries);
+		}
+		if (control && STRUCTURES.has(tag)) {
+			const pr = `${tag}Pr`;
+			const props = isNode(value[pr]) ? value[pr] : {};
+			return { ...value, [pr]: { ...props, 'm:ctrlPr': { 'w:rPr': control } } } as OmmlNode;
+		}
+		return value;
 	});
 }

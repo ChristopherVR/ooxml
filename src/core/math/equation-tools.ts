@@ -36,3 +36,4 @@ export { convertOmmlToUnicodeMath } from './omml-to-unicode-math';
 export { MATH_AUTOCORRECT } from './unicode-math-symbols';
 export { EQUATION_GALLERY } from './index';
 export { EQUATION_PLACEHOLDER } from './index';
+export { stripPlaceholders } from './equation-placeholder-strip';

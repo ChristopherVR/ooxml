@@ -207,7 +207,8 @@ export function parseBoxed(ctx: LatexParserContext): OmmlNode {
 
 /** `\phantom` / `\hphantom` / `\vphantom` -> `m:phant` with the matching flags. */
 export function parsePhantom(ctx: LatexParserContext, kind: 'full' | 'h' | 'v'): OmmlNode {
-	const phantPr: OmmlNode = {};
+	// A LaTeX phantom takes up its content's space without showing it.
+	const phantPr: OmmlNode = { 'm:show': valNode('0') };
 	if (kind === 'h') {
 		phantPr['m:zeroAsc'] = valNode('1');
 		phantPr['m:zeroDesc'] = valNode('1');
@@ -216,7 +217,7 @@ export function parsePhantom(ctx: LatexParserContext, kind: 'full' | 'h' | 'v'):
 	}
 	return {
 		'm:phant': {
-			'm:phantPr': Object.keys(phantPr).length > 0 ? phantPr : undefined,
+			'm:phantPr': phantPr,
 			'm:e': ctx.wrapE(ctx.parseSingleOrGroup()),
 		} as unknown as OmmlNode,
 	};

@@ -74,6 +74,13 @@ const ROWS = [
 		'此公式包含其线性文本无法表示的内容，因此保持原样。',
 	],
 	[
+		'This equation cannot be shown in Linear without changing it, so it is kept as it is.',
+		'Cette équation ne peut pas être affichée en mode linéaire sans être modifiée ; elle est conservée telle quelle.',
+		'Diese Formel kann nicht ohne Änderung linear angezeigt werden; sie bleibt unverändert.',
+		'Esta ecuación no se puede mostrar en formato lineal sin cambiarla, por lo que se conserva tal cual.',
+		'此公式无法在不更改的情况下以线性格式显示，因此保持原样。',
+	],
+	[
 		'This equation is nested too deeply to build up.',
 		'Cette équation est trop imbriquée pour être convertie.',
 		'Diese Formel ist zu tief verschachtelt, um sie aufzubauen.',
