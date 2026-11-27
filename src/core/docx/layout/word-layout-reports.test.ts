@@ -433,3 +433,42 @@ it('lets table justification override only left justification from the default s
 		['right', 360],
 	]);
 });
+
+it.each([
+	['issue-358-justified-line-break-donotexpandshiftreturn', true],
+	['issue-358-justified-line-break-control', false],
+] as const)('lays out soft breaks in %s (#358)', async (name, noExpansion) => {
+	const { page, lines, paragraphs } = await layout(name);
+	const columnWidth = at(page.columns, 0).widthPx;
+	const lineEnd = (line: (typeof lines)[number]) => {
+		const last = at(line.fragments, line.fragments.length - 1);
+		return last.xPx + last.widthPx;
+	};
+	// This first line wraps at the available width instead of ending in a soft break.
+	expect(lineEnd(at(at(paragraphs, 0).lines, 0))).toBeCloseTo(columnWidth);
+	const text = 'And for the other party, represented by:';
+	const line = at(at(paragraphs, 1).lines, 0);
+	expect(line.fragments.map((f) => f.text).join('')).toBe(text);
+	expect(at(line.fragments, 0).xPx).toBe(0);
+	const first = at(line.fragments, 0);
+	const font = { family: first.fontFamily ?? 'Calibri', sizePx: (first.fontSizePt ?? 11) / 0.75 };
+	expect(lineEnd(line)).toBeCloseTo(noExpansion ? measurer.widthOf(text, font) : columnWidth);
+	if (noExpansion) {
+		for (const space of line.fragments.filter((f) => f.text === ' '))
+			expect(space.widthPx).toBeCloseTo(measurer.widthOf(' ', font));
+	}
+});
+
+it('preserves the soft line break setting through a document edit (#358)', async () => {
+	const loaded = await load('issue-358-justified-line-break-donotexpandshiftreturn');
+	const first = at(loaded.model.blocks, 0);
+	if (first.type !== 'paragraph') throw new Error('Expected a body paragraph');
+	const saved = await loadDocx(
+		await loaded.save({
+			...loaded.model,
+			blocks: [{ ...first, runs: [{ text: 'Edited' }] }, ...loaded.model.blocks.slice(1)],
+		}),
+	);
+	expect(saved.model.doNotExpandShiftReturn).toBe(true);
+	expect(at(saved.model.blocks, 0)).toMatchObject({ runs: [{ text: 'Edited' }] });
+});

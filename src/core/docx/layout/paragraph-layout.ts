@@ -249,6 +249,7 @@ function measureParagraph(
 	// Width of the punctuation hanging past each line's end, which alignment does not count.
 	const hangingPx = new Map<number, number>();
 	const squeezedLines = new Set<number>();
+	const softBreakLines = paragraph.doNotExpandShiftReturn ? new Set<number>() : undefined;
 
 	function flushLine(
 		forceEmpty: boolean,
@@ -370,6 +371,7 @@ function measureParagraph(
 		tokenCursor = tokenIndex + 1;
 		if (token.kind === 'lineBreak') {
 			if (!placed.length) firstToken = tokenIndex;
+			softBreakLines?.add(lines.length);
 			flushLine(true, undefined);
 			keepLeadingSpaces = true;
 			continue;
@@ -583,7 +585,7 @@ function measureParagraph(
 			fragments: alignFragments(
 				line.fragments,
 				width + (hangingPx.get(index) ?? 0),
-				index === lastIndex,
+				index === lastIndex || softBreakLines?.has(index) === true,
 				boxes[index]?.split ? 'left' : effectiveAlign,
 				squeezedLines.has(index),
 			).map((fragment) => ({ ...fragment, xPx: fragment.xPx + lineStart(index) })),

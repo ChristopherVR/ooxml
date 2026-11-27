@@ -69,13 +69,13 @@ function justify(fragments: LayoutFragment[], width: number): LayoutFragment[] {
 export function alignFragments(
 	fragments: LayoutFragment[],
 	width: number,
-	isLastLine: boolean,
+	skipExpansion: boolean,
 	effectiveAlign: 'left' | 'right' | 'center' | 'justify',
 	squeezed = false,
 ): LayoutFragment[] {
 	if (!fragments.length) return fragments;
 	const natural = fragments.at(-1)!.xPx + fragments.at(-1)!.widthPx;
-	if (effectiveAlign === 'justify' && (!isLastLine || (squeezed && natural > width)))
+	if (effectiveAlign === 'justify' && (!skipExpansion || (squeezed && natural > width)))
 		return justify(fragments, width);
 	const offset =
 		effectiveAlign === 'center'

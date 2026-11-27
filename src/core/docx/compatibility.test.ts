@@ -42,6 +42,17 @@ describe('readCompatibilitySettings', () => {
 		).toEqual({ compatibilityMode: 14, doNotUseHtmlParagraphAutoSpacing: true });
 	});
 
+	it.each([
+		['<w:doNotExpandShiftReturn/>', true],
+		['<w:doNotExpandShiftReturn w:val="on"/>', true],
+		['<w:doNotExpandShiftReturn w:val="0"/>', undefined],
+		['', undefined],
+	])('reads the soft line break option from %s', (element, expected) => {
+		expect(readCompatibilitySettings(compat(element))).toEqual(
+			expected ? { doNotExpandShiftReturn: true } : {},
+		);
+	});
+
 	it('ignores other URIs, invalid values and switched-off options', () => {
 		expect(readCompatibilitySettings(compat(mode('15', 'urn:other')))).toEqual({});
 		expect(readCompatibilitySettings(compat(mode('abc')))).toEqual({});
@@ -62,6 +73,7 @@ describe('compatibilityProfile', () => {
 		expect(compatibilityProfile({})).toEqual({
 			generation: 'legacy',
 			doNotUseHtmlParagraphAutoSpacing: false,
+			doNotExpandShiftReturn: false,
 		});
 	});
 

@@ -207,6 +207,7 @@ export async function readPackage(
 		model.overrideTableStyleFontSizeAndJustification =
 			parts.overrideTableStyleFontSizeAndJustification;
 	if (parts.doNotUseHtmlParagraphAutoSpacing) model.doNotUseHtmlParagraphAutoSpacing = true;
+	if (parts.doNotExpandShiftReturn) model.doNotExpandShiftReturn = true;
 	if (parts.kinsoku) model.kinsoku = parts.kinsoku;
 	if (parts.footnotes) model.footnotes = parts.footnotes;
 	if (parts.footnoteSeparators) model.footnoteSeparators = parts.footnoteSeparators;

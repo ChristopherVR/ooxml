@@ -201,6 +201,7 @@ export async function parseDocumentParts(
 		...(settings.doNotUseHtmlParagraphAutoSpacing
 			? { doNotUseHtmlParagraphAutoSpacing: true }
 			: {}),
+		...(settings.doNotExpandShiftReturn ? { doNotExpandShiftReturn: true } : {}),
 		...(settings.kinsoku ? { kinsoku: settings.kinsoku } : {}),
 		...(footnotes ? { footnotes } : {}),
 		...(footnoteSeparators ? { footnoteSeparators } : {}),

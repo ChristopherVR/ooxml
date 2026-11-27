@@ -15,6 +15,7 @@ export interface CompatibilitySettings {
 	overrideTableStyleFontSizeAndJustification?: boolean;
 	/** `w:compat/w:doNotUseHTMLParagraphAutoSpacing`. */
 	doNotUseHtmlParagraphAutoSpacing?: boolean;
+	doNotExpandShiftReturn?: boolean;
 }
 
 /** `modern` is compatibility mode 15 and later; `legacy` is 11 to 14 and an absent mode. */
@@ -26,6 +27,7 @@ export interface CompatibilityProfile {
 	mode?: number;
 	/** Legacy `w:compat` child options. */
 	doNotUseHtmlParagraphAutoSpacing: boolean;
+	doNotExpandShiftReturn: boolean;
 }
 
 /** Reads the compatibility mode and legacy options from `w:settings/w:compat`. */
@@ -45,6 +47,9 @@ export function readCompatibilitySettings(compat: XmlElement | undefined): Compa
 		...(onOffElement(first(compat, 'doNotUseHTMLParagraphAutoSpacing')) === true
 			? { doNotUseHtmlParagraphAutoSpacing: true }
 			: {}),
+		...(onOffElement(first(compat, 'doNotExpandShiftReturn')) === true
+			? { doNotExpandShiftReturn: true }
+			: {}),
 	};
 }
 
@@ -55,6 +60,7 @@ export function compatibilityProfile(settings: CompatibilitySettings): Compatibi
 		generation: mode !== undefined && mode >= 15 ? 'modern' : 'legacy',
 		...(mode !== undefined ? { mode } : {}),
 		doNotUseHtmlParagraphAutoSpacing: settings.doNotUseHtmlParagraphAutoSpacing === true,
+		doNotExpandShiftReturn: settings.doNotExpandShiftReturn === true,
 	};
 }
 

@@ -444,6 +444,7 @@ export function adaptDocumentModel(
 			kind: 'paragraph',
 			id: paragraph.id,
 			...(!squeeze ? { squeezeJustifiedSpaces: false as const } : {}),
+			...(compatibility.doNotExpandShiftReturn ? { doNotExpandShiftReturn: true } : {}),
 			runs: (label ? [labelRun(paragraph, label, tableStyleRun), ...taggedRuns] : taggedRuns).map(
 				withFontFallback,
 			),

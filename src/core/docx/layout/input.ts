@@ -184,6 +184,8 @@ export interface LayoutParagraph {
 	wordFitTolerancePx?: number;
 	/** Older Word compatibility modes wrap before tightening justified spaces. */
 	squeezeJustifiedSpaces?: false;
+	/** Soft line breaks leave justified lines at their natural width. */
+	doNotExpandShiftReturn?: true;
 	/** Mandatory paragraph after a table, outside the preceding table's column balance. */
 	afterTableSectionBreak?: boolean;
 	kind: 'paragraph';

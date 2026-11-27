@@ -194,6 +194,8 @@ export interface DocumentModel {
 	 * them and reads the twips. Measured the same in compatibility modes 12, 14 and 15 except pageBreakBefore.
 	 */
 	doNotUseHtmlParagraphAutoSpacing?: boolean;
+	/** Preserve natural spacing on justified lines ending in a soft break. Read from settings.xml. */
+	doNotExpandShiftReturn?: boolean;
 	/**
 	 * Document-wide kinsoku settings from settings.xml (`w:strictFirstAndLastChars`,
 	 * `w:noLineBreaksBefore`, `w:noLineBreaksAfter`); read only, settings.xml is saved as loaded.
