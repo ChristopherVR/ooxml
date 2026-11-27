@@ -155,7 +155,7 @@ test('removing an editor leaves the popover of another editor open', async ({ pa
 	const caret = probe.locator('[aria-label="Font color"] + [data-split-caret]');
 	await reveal(probe, caret);
 	await caret.click();
-	const palette = probe.locator('.ribbon-popover:has(> .swatch)');
+	const palette = probe.locator('.ribbon-popover:not(.ribbon-overflow-panel)');
 	await expect(palette).toBeVisible();
 	await editor(page)
 		.first()
