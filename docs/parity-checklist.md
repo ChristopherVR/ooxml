@@ -1105,7 +1105,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       benchmarks (`e2e/pptx/progressive-open.spec.ts`) and a large-deck work budget guard it
       (2026-11-26).
 - [ ] **P1** Editing, search, save, undo, collaboration and slide show wait for the whole deck
-      to parse after a progressive open.
+      to parse after a progressive open. The rules for using a partly parsed deck (placeholders
+      filled only by their own arrival, edits on parsed slides, queued whole-deck work and save,
+      undo snapshots filled on restore, search coverage, slide show waiting at a placeholder) are
+      the shared `createProgressiveDeckController`
+      (`render/controller/progressive-deck-controller.ts`); the five bindings do not use it yet
+      and still mount the editor only when `load()` resolves.
 - [ ] **P2** The File page footer always names "Untitled Presentation.pptx", and the status bar
       reports an AutoRecover snapshot as "Saved" while the presentation has unsaved edits.
 - [ ] **P1** Headless SVG export (`pptx/converter/SvgExporter.ts`, the CLI `export-svg` and the

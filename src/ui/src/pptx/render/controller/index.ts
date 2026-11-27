@@ -187,3 +187,19 @@ export type {
 	PresenterSessionRole,
 	PresenterSessionState,
 } from './presenter-session-controller';
+export {
+	createProgressiveDeckController,
+	decideProgressiveOperation,
+	fillPendingSlides,
+	isPendingSlide,
+	pendingSlide,
+	pendingSlideIndex,
+	progressiveSearchScope,
+	progressiveShowStep,
+} from './progressive-deck-controller';
+export type {
+	ProgressiveDeckController,
+	ProgressiveDeckState,
+	ProgressiveDecision,
+	ProgressiveOperation,
+} from './progressive-deck-controller';
