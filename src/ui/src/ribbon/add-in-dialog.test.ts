@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import JSZip from 'jszip';
+import { readLocalAddIn } from 'ooxml-core/automation/add-ins';
 import type { OfficeUiDialog } from '../dialog/dialog';
 import { localAddIns } from './add-in-installations';
 import { mountedAddInRestore, openOfficeAddIns, watchOfficeAddIns } from './add-in-dialog';
@@ -360,6 +361,45 @@ it('describes a runnable install without a preference store', async () => {
 	dialog?.querySelector<HTMLButtonElement>('[aria-label="Install Notes"]')?.click();
 	await vi.waitFor(() => expect(dialog?.textContent).toContain('Install for this editor session.'));
 	expect(dialog?.textContent).toContain('This add-in runs only when opened.');
+});
+
+it('points My Add-ins to the ribbon when only a task pane command is available', async () => {
+	const root = document.body
+		.appendChild(document.createElement('div'))
+		.attachShadow({ mode: 'open' });
+	const { digest, manifest } = await readLocalAddIn(new TextEncoder().encode(xml), {
+		host: 'word',
+	});
+	const url = 'https://example.test/pane';
+	localAddIns(root).set(manifest.id, {
+		digest,
+		manifest: {
+			...manifest,
+			name: 'Notes',
+			pane: null,
+			tabs: [
+				{
+					id: 'notes',
+					label: 'Notes',
+					groups: [
+						{
+							id: 'tools',
+							label: 'Tools',
+							commands: [{ id: 'open', label: 'Open Notes', kind: 'taskPane', url }],
+						},
+					],
+				},
+			],
+		},
+	});
+	setOfficeAddInRuntime(root, { origins: ['https://example.test'], frameSrcEnforced: true });
+	await openOfficeAddIns(root, 'myAddIns', (text) => text, 'word', 'en');
+	const dialog = getDialog(root);
+	const open = dialog?.querySelector('[aria-label="Open Notes"]');
+	expect(open).toHaveProperty('disabled', true);
+	expect(dialog?.querySelector(`#${open?.getAttribute('aria-describedby')}`)?.textContent).toBe(
+		'Open the task pane from its ribbon command.',
+	);
 });
 
 it('restores the saved commands on editor mount without opening the dialog', async () => {
