@@ -414,8 +414,10 @@ Word's Share works the same way, with the Word-specific content described above.
   list that uses y-webrtc's default public signaling servers, so pass `signaling` to keep it on
   your own.
 - **What the room carries:** Excel shares cell values, formulas and formats, sheets, defined
-  names, comments and replies, conditional formats, data validation, hyperlinks, tables and
-  charts; pictures and other parts it does not map stay on each participant's device. Visio
+  names, comments and replies, conditional formats, data validation, hyperlinks, tables,
+  charts, PivotTables with their cached source data (up to 4 Mi characters each), and the bytes
+  of in-cell pictures (up to 4 MB each); floating pictures and other parts it does not map stay
+  on each participant's device. Visio
   shares the drawing's pages, shapes, connectors and masters, and the bytes of its media parts
   (pictures), so a participant without the file sees the same drawing. In Visio the room's owner
   can also hand the drawing to the host's `onWriteBack` callback, which decides where it goes.

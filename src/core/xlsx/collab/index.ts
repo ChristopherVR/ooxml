@@ -24,7 +24,8 @@ export {
 	type RemoteSelection,
 	type XlsxPresence,
 } from './presence';
-export { META, NAMES, SCHEMA_VERSION, SHEETS, STYLES, sharedWorkbook } from './schema';
+export { MEDIA, META, NAMES, SCHEMA_VERSION, SHEETS, STYLES, sharedWorkbook } from './schema';
+export { MAX_SHARED_CELL_PICTURE_BYTES, type PictureRef } from './cell-pictures';
 export type { SharedWorkbook } from './schema';
 export { sharedStyleKey } from './styles';
 export type { WriteScope } from './write';

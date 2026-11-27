@@ -16,13 +16,7 @@ export async function editPictureAltText(
 		body: field(ctx, 'Alt Text', input),
 		submit: () => input.value,
 	});
-	if (
-		alt !== undefined &&
-		!ctx.isCollaborating?.() &&
-		!ctx.readOnly() &&
-		target(ctx)?.ws === current.ws &&
-		!sheetLocked(ctx)
-	)
+	if (alt !== undefined && !ctx.readOnly() && target(ctx)?.ws === current.ws && !sheetLocked(ctx))
 		current.session.setCellPictureAltText(current.sheet, current.active, alt);
 }
 

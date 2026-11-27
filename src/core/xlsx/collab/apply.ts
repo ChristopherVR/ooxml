@@ -7,12 +7,13 @@ import type { ExternalChange } from '../edit/external';
 import { isSpilledCell } from '../formula/spill';
 import type { Workbook, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
+import { PictureBridge } from './cell-pictures';
 import { decodeCell, encodeCell } from './codec';
 import { readSharedCell } from './cached-cell';
 import type { Dirty } from './dirty';
 import { applyColumns, applyMerges, applyRows } from './lines';
 import { readNames } from './names';
-import { type SharedWorkbook, childMap, jsonEqual } from './schema';
+import { LIST_PARTS, type SharedWorkbook, childMap, jsonEqual } from './schema';
 import { applySheetParts } from './sheet-parts';
 import { partHost } from './write';
 import type { LeftOutValue } from '../../collab/refusal';
@@ -21,6 +22,15 @@ import type { LeftOutValue } from '../../collab/refusal';
 const sharesParts = (shared: SharedWorkbook): boolean => shared.meta.get('parts') === 1;
 /** Whether they share ink too: until then each peer keeps its own (an older build's room). */
 const sharesInk = (shared: SharedWorkbook): boolean => shared.meta.get('ink') === 1;
+/** Rooms whose writers share PivotTables are stamped too, so an older room never clears them. */
+const WITHOUT_PIVOTS: ReadonlySet<string> = new Set(LIST_PARTS.filter((part) => part !== 'pivots'));
+function listedParts(
+	shared: SharedWorkbook,
+	parts: ReadonlySet<string> | undefined,
+): ReadonlySet<string> | undefined {
+	if (shared.meta.get('pivots') === 1) return parts;
+	return parts ? new Set([...parts].filter((part) => part !== 'pivots')) : WITHOUT_PIVOTS;
+}
 import { type SheetEntry, type SheetKeys, sheetEntries } from './sheets';
 import { StyleBridge } from './styles';
 
@@ -40,6 +50,7 @@ export function applyShared(
 ): ExternalChange | undefined {
 	const defaultKey = shared.meta.get('defaultStyle');
 	const styles = new StyleBridge(workbook, shared.styles, String(defaultKey ?? ''), false);
+	const pictures = new PictureBridge(workbook, shared.media, false);
 	const entries = sheetEntries(shared.sheets);
 	let structural = false;
 	if (dirty.all || dirty.list) structural = applyList(workbook, keys, entries);
@@ -79,9 +90,12 @@ export function applyShared(
 		}
 		if (
 			sharesParts(shared) &&
-			applySheetParts(sheet, partHost(shared, keys, key, refuse), full ? undefined : part.parts, {
-				ink: sharesInk(shared),
-			})
+			applySheetParts(
+				sheet,
+				partHost(shared, keys, key, refuse),
+				listedParts(shared, full ? undefined : part.parts),
+				{ ink: sharesInk(shared) },
+			)
 		)
 			sheetsTouched.add(index);
 		const cells = childMap(map, 'cells');
@@ -91,8 +105,8 @@ export function applyShared(
 			if (!at) return;
 			const raw = readSharedCell(cells, address);
 			const local = getCell(sheet, at.row, at.col);
-			if (local && jsonEqual(encodeCell(local, styles.keyOf), raw)) return;
-			const cell = raw === undefined ? undefined : decodeCell(raw, styles.idOf);
+			if (local && jsonEqual(encodeCell(local, styles.keyOf, pictures.refOf), raw)) return;
+			const cell = raw === undefined ? undefined : decodeCell(raw, styles.idOf, pictures.pictureOf);
 			if (raw !== undefined && !cell) refuse?.({ part: 'cells', field: 'entry' });
 			if (cell) putCell(sheet, at.row, at.col, cell);
 			else if (local && !isSpilledCell(local)) deleteCell(sheet, at.row, at.col);

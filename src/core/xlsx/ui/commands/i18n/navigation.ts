@@ -22,11 +22,17 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Selecciona una celda en una hoja editable.',
 		'请在可编辑工作表上选择一个单元格。',
 	],
-	'In-cell picture editing is unavailable while sharing this workbook.': [
-		'La modification des images dans les cellules est indisponible pendant le partage de ce classeur.',
-		'Zellbilder können nicht bearbeitet werden, solange diese Arbeitsmappe freigegeben ist.',
-		'La edición de imágenes en celdas no está disponible mientras se comparte este libro.',
-		'共享此工作簿时无法编辑单元格图片。',
+	'Floating pictures are not shared yet. Stop sharing to convert this picture.': [
+		'Les images flottantes ne sont pas encore partagées. Arrêtez le partage pour convertir cette image.',
+		'Unverankerte Bilder werden noch nicht freigegeben. Beenden Sie die Freigabe, um dieses Bild umzuwandeln.',
+		'Las imágenes flotantes aún no se comparten. Deje de compartir para convertir esta imagen.',
+		'浮动图片尚不支持共享。请停止共享后再转换此图片。',
+	],
+	'Pictures in cells are shared up to 4 MB. Choose a smaller picture.': [
+		'Les images dans les cellules sont partagées jusqu’à 4 Mo. Choisissez une image plus petite.',
+		'Zellbilder werden bis 4 MB freigegeben. Wählen Sie ein kleineres Bild.',
+		'Las imágenes en celdas se comparten hasta 4 MB. Elija una imagen más pequeña.',
+		'单元格中的图片最多可共享 4 MB。请选择较小的图片。',
 	],
 	'Place in Cell': [
 		'Placer dans la cellule',

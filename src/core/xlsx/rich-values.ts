@@ -38,6 +38,8 @@ export const RICH_PARTS = {
 } as const;
 
 export const LOCAL_IMAGE_KEY = '_rvRel:LocalImageIdentifier';
+/** The largest in-cell picture a collaboration room carries (`xlsx/collab`): 4 MiB. */
+export const MAX_SHARED_CELL_PICTURE_BYTES = 4 * 1024 * 1024;
 /** [MS-XLSX] rich error codes for external image results. */
 export const RICH_ERRORS: ReadonlyMap<ErrorCode, string> = new Map([
 	['#CONNECT!', '9'],

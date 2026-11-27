@@ -4,7 +4,8 @@
 //   xlsx:styles  style key -> resolved CellStyle (content-addressed, see styles.ts)
 //   xlsx:names   `${sheetKey}!${lower-case name}` -> NameEntry
 //   xlsx:sheets  sheet key -> Y.Map { props, cells, rows, cols, merges }
-//   xlsx:comments, xlsx:replies, xlsx:cf, xlsx:dv, xlsx:links, xlsx:tables, xlsx:charts, xlsx:ink
+//   xlsx:comments, xlsx:replies, xlsx:cf, xlsx:dv, xlsx:links, xlsx:tables, xlsx:charts, xlsx:ink,
+//   xlsx:pivots (PivotTables, see pivot-spec.ts)
 //                `${sheetKey}/${item key}` -> { i, d } (keyed object lists, see part-specs.ts)
 //   `meta.parts = 1` stamps rooms whose writers share the lists; `meta.ink = 1` those that also
 //   share ink (written by a later build), so ink of an older room's peers is never dropped.
@@ -21,6 +22,8 @@ export const META = 'xlsx:meta';
 export const STYLES = 'xlsx:styles';
 export const NAMES = 'xlsx:names';
 export const SHEETS = 'xlsx:sheets';
+/** In-cell picture bytes by content hash (cell-pictures.ts); kept out of undo, never deleted. */
+export const MEDIA = 'xlsx:media';
 
 export const SHEET_PARTS = ['props', 'cells', 'rows', 'cols', 'merges'] as const;
 
@@ -38,6 +41,7 @@ export const LIST_PARTS = [
 	'tables',
 	'charts',
 	'ink',
+	'pivots',
 ] as const;
 export type ListPart = (typeof LIST_PARTS)[number];
 export type SheetPart = (typeof SHEET_PARTS)[number];
@@ -48,6 +52,7 @@ export interface SharedWorkbook {
 	names: Y.Map<unknown>;
 	sheets: Y.Map<unknown>;
 	parts: Record<ListPart, Y.Map<unknown>>;
+	media: Y.Map<unknown>;
 }
 
 /** The workbook's top-level maps in `doc`. */
@@ -60,10 +65,14 @@ export function sharedWorkbook(doc: Y.Doc): SharedWorkbook {
 		parts: Object.fromEntries(
 			LIST_PARTS.map((part) => [part, doc.getMap<unknown>(`xlsx:${part}`)]),
 		) as Record<ListPart, Y.Map<unknown>>,
+		media: doc.getMap<unknown>(MEDIA),
 	};
 }
 
-/** Every top-level map, for an UndoManager scope or deep observers. */
+/**
+ * Every top-level map, for an UndoManager scope or deep observers. The media map is left out: its
+ * entries are immutable, and an undo must never remove bytes another cell names.
+ */
 export const sharedTypes = (shared: SharedWorkbook): Y.Map<unknown>[] => [
 	shared.meta,
 	shared.styles,

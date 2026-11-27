@@ -203,8 +203,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       cards, FIELDVALUE and dot access on cached fields, and IMAGE() through an opt-in host
       fetcher) are modelled, drawn and saved; Excel 16 reopens them (`xlsx/rich-values.ts`,
       2026-11-26).
-- [ ] **P1** In-cell pictures, value metadata and their media are not shared in collaboration
-      (Place in Cell is disabled while sharing), and resolved IMAGE() pictures are not saved.
+- [x] **P1** In-cell pictures are shared in collaboration: the cell names its picture by SHA-256
+      and the bytes are stored once per picture in the room, checked on read, up to 4 MB each
+      (`xlsx/collab/cell-pictures.ts`; larger pictures cannot be placed while shared). Remaining:
+      other value metadata (data types) reaches collaborators as its cached value, Convert to
+      Floating Picture is disabled while shared (floating pictures are not shared), and resolved
+      IMAGE() pictures are not saved.
 - [ ] **P1** Connections, query tables and Power Query are carried verbatim only; external links
       use cached values and cannot be refreshed or edited.
 - [x] **P1** Threaded comment edits preserve person records, message identities, resolved state,
@@ -225,8 +229,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       a signature that does not verify is never shown as signed, and saving removes signatures as
       Excel does (`src/ui/src/xlsx/signature-status.test.ts`). The editor does not sign workbooks.
 - [ ] **P2** Named sheet views and ActiveX controls are not modelled.
-- [ ] **P2** Collaboration does not share filters, pivots, panes and views, page setup,
-      protection, images and drawings or document properties.
+- [ ] **P2** Collaboration does not share filters, panes and views, page setup, protection,
+      floating images and drawings or document properties (PivotTables and in-cell pictures are
+      shared, see above and Ribbon).
 
 ### Calculation
 
@@ -394,8 +399,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** PivotTable Analyze and PivotTable Design contextual tabs: options, field settings,
       refresh, change source, subtotals, grand totals, report layout, blank rows, the PivotTable
       style gallery and style options; Excel 16 reopens and refreshes the results (2026-11-26).
-- [ ] **P1** PivotTable definitions and caches are not mapped to Yjs, so pivot editing is disabled
-      while a collaboration session is bound; the Field List is the settings dialog, not a pane.
+- [x] **P1** PivotTable definitions and caches are shared through the Excel Yjs mapping
+      (`xlsx/collab/pivot-spec.ts`): create, refresh, field changes, layout, totals, styles and
+      filters sync, last writer wins per PivotTable, so the PivotTable commands stay enabled while
+      shared. Remaining: a PivotTable over 4 Mi characters of JSON stays local (its commands say
+      why while shared), and concurrent edits to one PivotTable keep only the last.
+- [ ] **P1** The PivotTable Field List is the settings dialog, not a pane.
 - [ ] **P2** PivotTable value field number formats (`dataField/@numFmtId`) are read, written and
       set through the model API (`valueNumberFormat`, `numberFormat`), but the report's value
       cells do not take the format when the model lays them out, and Value Field Settings has no

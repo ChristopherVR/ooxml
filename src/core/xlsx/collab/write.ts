@@ -12,6 +12,7 @@ import {
 } from '../address';
 import { forEachCell, forEachCellInRange, getCell } from '../cells';
 import type { Workbook, Worksheet } from '../model';
+import { PictureBridge } from './cell-pictures';
 import { encodeCell } from './codec';
 import { cacheAddress, cacheKey, readSharedCell, writeSettledCell } from './cached-cell';
 import { writeLines } from './lines';
@@ -59,13 +60,14 @@ export function writeDeferredCalculation(
 		String(shared.meta.get('defaultStyle') ?? ''),
 		false,
 	);
+	const pictures = new PictureBridge(workbook, shared.media, false);
 	for (const sheet of workbook.sheets) {
 		const key = keys.find(sheet, entries);
 		const map = key === undefined ? undefined : childMap(shared.sheets, key);
 		const cells = map && childMap(map, 'cells');
 		if (!cells) continue;
 		forEachCell(sheet, (cell, row, col) => {
-			const entry = encodeCell(cell, styles.keyOf);
+			const entry = encodeCell(cell, styles.keyOf, pictures.refOf);
 			if (entry) writeSettledCell(cells, formatAddress({ row, col }), entry);
 		});
 	}
@@ -86,6 +88,8 @@ export function writeWorkbook(
 	setIfChanged(meta, 'parts', 1);
 	// And ink, which a build before it kept local: its peers' rooms leave a joiner's ink alone.
 	setIfChanged(meta, 'ink', 1);
+	// PivotTables joined the lists later: their own stamp keeps older rooms' PivotTables local.
+	setIfChanged(meta, 'pivots', 1);
 	let defaultKey = meta.get('defaultStyle');
 	if (typeof defaultKey !== 'string') {
 		const base = workbook.styles[0];
@@ -94,6 +98,7 @@ export function writeWorkbook(
 	}
 	const styles = new StyleBridge(workbook, shared.styles, defaultKey as string, true);
 	styles.keyOf(0);
+	const pictures = new PictureBridge(workbook, shared.media, true);
 	const entries = sheetEntries(sheets);
 	const known = workbook.sheets.map((sheet) => keys.find(sheet, entries));
 	const full = scope.kind === 'all' || known.some((key) => key === undefined || !sheets.has(key));
@@ -131,7 +136,7 @@ export function writeWorkbook(
 			styles.keyOf,
 		);
 		const ranges = !full && scope.kind === 'sheet' ? scope.ranges : undefined;
-		writeCells(sheet, sheetPart(map, 'cells'), styles.keyOf, ranges);
+		writeCells(sheet, sheetPart(map, 'cells'), styles.keyOf, pictures.refOf, ranges);
 		// A cell-range edit (typing, paste, format) cannot change drawings: skip charts and ink.
 		writeSheetParts(sheet, partHost(shared, keys, key), { charts: ranges === undefined });
 	});
@@ -167,12 +172,13 @@ function writeCells(
 	sheet: Worksheet,
 	cells: Y.Map<unknown>,
 	keyOf: (styleId: number | undefined) => string | undefined,
+	refOf: PictureBridge['refOf'],
 	ranges?: CellRange[],
 ): void {
 	const write = (row: number, col: number): string => {
 		const key = formatAddress({ row, col });
 		const cell = getCell(sheet, row, col);
-		const value = cell && encodeCell(cell, keyOf);
+		const value = cell && encodeCell(cell, keyOf, refOf);
 		if (!jsonEqual(value, readSharedCell(cells, key))) {
 			setIfChanged(cells, key, value);
 			cells.delete(cacheKey(key));

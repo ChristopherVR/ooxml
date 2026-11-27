@@ -47,3 +47,4 @@ export async function recommendedPivotTables(
 ) {
 	return (await import('./recommend')).recommendPivots(...args);
 }
+export { MAX_SHARED_PIVOT_CHARS, pivotShareable } from './share-limit';

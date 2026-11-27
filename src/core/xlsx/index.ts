@@ -10,6 +10,7 @@ export type {
 	RichValueRecord,
 	RichValueStore,
 } from './rich-values';
+export { MAX_SHARED_CELL_PICTURE_BYTES } from './rich-values';
 export { drawingSchemeColors } from './drawing-theme';
 export * from './address';
 export * from './address-r1c1';

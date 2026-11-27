@@ -4,7 +4,6 @@ import {
 	pivotChartButtons,
 	pivotChartTable,
 	pivotSubtotalFields,
-	pivotTableAt,
 } from 'ooxml-core/xlsx';
 import {
 	activeChart,
@@ -15,14 +14,9 @@ import {
 	type Command,
 	type EditorContext,
 } from 'ooxml-core/xlsx/ui';
-import { pivotEditing } from './pivot-availability';
+import { pivotEditing, selectedPivot } from './pivot-availability';
 
-export function selectedPivot(ctx: EditorContext) {
-	if (ctx.selection.get().drawing !== undefined) return;
-	const t = target(ctx);
-	const pivot = t ? pivotTableAt(t.ws, t.active) : undefined;
-	return t && pivot ? { t, pivot } : undefined;
-}
+export { selectedPivot };
 
 const selected = selectedPivot;
 

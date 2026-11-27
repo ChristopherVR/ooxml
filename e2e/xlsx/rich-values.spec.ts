@@ -128,7 +128,7 @@ test('uses the host IMAGE provider when a file requests calculation on open', as
 	await expect(grid(page).locator('.xg-c:not([hidden]) > img[alt="On-open image"]')).toBeVisible();
 });
 
-test('disables in-cell picture editing with a reason while sharing', async ({ page }) => {
+test('keeps Place in Cell available while sharing', async ({ page }) => {
 	await openLanding(page);
 	await newWorkbook(page);
 	await editor(page).evaluate(
@@ -137,11 +137,10 @@ test('disables in-cell picture editing with a reason while sharing', async ({ pa
 		`pictures-${Date.now()}`,
 	);
 	await openPictures(page);
+	// In-cell pictures are shared through the room (up to 4 MB each).
 	const command = editor(page).getByRole('menuitem', { name: 'Place in Cell', exact: true });
-	await expect(command).toBeDisabled();
-	await expect(command).toHaveAccessibleDescription(
-		'In-cell picture editing is unavailable while sharing this workbook.',
-	);
+	await expect(command).toBeEnabled();
+	await expect(command).not.toHaveAttribute('aria-description');
 	await page.keyboard.press('Escape');
 	await editor(page).evaluate((element) => (element as XlsxEditorElement).stopCollaboration());
 	await openPictures(page);

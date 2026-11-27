@@ -1,11 +1,11 @@
 import type { Translations } from './types';
 
 export const PIVOT_CONTEXT_STRINGS: Translations = {
-	'PivotTable edits are unavailable during collaboration.': [
-		'La modification des tableaux croisés dynamiques est indisponible pendant la collaboration.',
-		'PivotTables können während der Zusammenarbeit nicht bearbeitet werden.',
-		'No se pueden editar tablas dinámicas durante la colaboración.',
-		'协作期间无法编辑数据透视表。',
+	'This PivotTable is too large to share. Stop sharing to edit it.': [
+		'Ce tableau croisé dynamique est trop volumineux pour être partagé. Arrêtez le partage pour le modifier.',
+		'Diese PivotTable ist zu groß zum Freigeben. Beenden Sie die Freigabe, um sie zu bearbeiten.',
+		'Esta tabla dinámica es demasiado grande para compartirla. Deje de compartir para editarla.',
+		'此数据透视表太大，无法共享。请停止共享后再编辑。',
 	],
 	Actions: ['Actions', 'Aktionen', 'Acciones', '操作'],
 	Calculations: ['Calculs', 'Berechnungen', 'Cálculos', '计算'],

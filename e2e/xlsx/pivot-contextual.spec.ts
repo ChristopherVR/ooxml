@@ -198,7 +198,7 @@ test('keeps custom subtotals when moving them to the top and bottom', async ({ p
 	}
 });
 
-test('explains disabled pivot edits while the workbook is shared', async ({ page }) => {
+test('keeps pivot edits available while the workbook is shared', async ({ page }) => {
 	await loadPivotWorkbook(page);
 	await goToCell(page, 'A2');
 	const tabs = ribbon(page);
@@ -214,25 +214,19 @@ test('explains disabled pivot edits while the workbook is shared', async ({ page
 			user: { name: 'Ada' },
 		});
 	});
-	const reason = 'PivotTable edits are unavailable during collaboration.';
-	await expect(rename).toBeDisabled();
-	await expect(rename).toHaveAccessibleDescription(reason);
-	await expect(tabs.locator('[data-command="pivot.refresh"]')).toBeDisabled();
-	await clickRibbonControl(page, tabs.locator('[data-menu-commands="pivot.select"]'));
-	await expect(editor(page).getByRole('menuitem', { name: 'Entire PivotTable' })).toBeEnabled();
-	await page.keyboard.press('Escape');
+	// PivotTables are shared through the room, so their commands stay enabled.
+	await expect(rename).toBeEnabled();
+	await expect(rename).not.toHaveAttribute('aria-description');
+	await expect(tabs.locator('[data-command="pivot.refresh"]')).toBeEnabled();
 	await tabs.getByRole('tab', { name: 'PivotTable Design' }).click();
 	const gallery = tabs.locator('[data-command="pivot.style"]');
 	const totals = tabs.locator('[data-label-key="Grand Totals"]');
 	for (const control of [gallery, totals]) {
-		await expect(control).toBeDisabled();
-		await expect(control).toHaveAccessibleDescription(reason);
+		await expect(control).toBeEnabled();
+		await expect(control).not.toHaveAttribute('aria-description');
 	}
 	await editor(page).evaluate((node) =>
 		(node as unknown as { stopCollaboration(): void }).stopCollaboration(),
 	);
-	for (const control of [gallery, totals]) {
-		await expect(control).toBeEnabled();
-		await expect(control).not.toHaveAttribute('aria-description');
-	}
+	for (const control of [gallery, totals]) await expect(control).toBeEnabled();
 });

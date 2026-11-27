@@ -1,5 +1,6 @@
 // The list-shaped parts of a shared sheet (comments, conditional formats, validations, links,
-// tables, charts, ink) between the model and their shared maps. See part-specs.ts for the mapping.
+// tables, charts, ink, PivotTables) between the model and their shared maps. See part-specs.ts for
+// the mapping.
 import { formatAddress } from '../address';
 import type { Comment, DrawingObject, InkObject, Worksheet } from '../model';
 import { type PartIds, type PartSpec, type PrefixStore, readKeyed, writeKeyed } from './keyed';
@@ -13,6 +14,8 @@ import {
 	tableSpec,
 	validationSpec,
 } from './part-specs';
+import { pivotShareable } from '../pivot/share-limit';
+import { pivotSpec } from './pivot-spec';
 import type { ListPart } from './schema';
 
 /** What the sheet's keyed parts need from the binding: item identity and key minting. */
@@ -40,8 +43,8 @@ const inksOf = (sheet: Worksheet): InkObject[] =>
 	sheet.drawings.filter((d): d is InkObject => d.kind === 'ink');
 
 /**
- * Writes the object lists of `sheet`; `charts` and `ink` are skipped for edits that cannot touch
- * drawings.
+ * Writes the object lists of `sheet`; `charts` (charts, ink and PivotTables) is skipped for
+ * cell-range edits, which cannot touch any of them.
  */
 export function writeSheetParts(
 	sheet: Worksheet,
@@ -65,6 +68,7 @@ export function writeSheetParts(
 			chartSpec,
 		);
 	if (options.charts) put('ink', inksOf(sheet), inkSpec);
+	if (options.charts) put('pivots', sheet.pivotTables ?? [], pivotSpec);
 }
 
 /**
@@ -175,5 +179,16 @@ export function applySheetParts(
 	);
 	swap('charts', charts, chartSpec, slots('chart'));
 	swap('ink', inksOf(sheet), inkSpec, slots('ink'));
+	// A PivotTable too large to share stays on this peer; only the shared ones are reconciled.
+	const pivots = sheet.pivotTables ?? [];
+	const unshared = pivots.filter((pivot) => !pivotShareable(pivot));
+	swap(
+		'pivots',
+		pivots.filter((pivot) => pivotShareable(pivot)),
+		pivotSpec,
+		(next) => {
+			sheet.pivotTables = [...next, ...unshared];
+		},
+	);
 	return changed;
 }

@@ -89,14 +89,23 @@ it('shows both contextual tabs for a PivotTable cell and drives undoable ribbon 
 		await ctx.commands.run('pivot.expand-field');
 		expect(report().display?.collapsed).toBe(false);
 
+		// Shared PivotTables stay editable; only one over the room's size limit waits for sharing to end.
 		ctx.collaborationActive = () => true;
-		expect(await ctx.commands.run('pivot.showRowStripes')).toBe(false);
-		expect(await ctx.commands.run('pivot.refresh')).toBe(false);
-		expect(await ctx.commands.run('pivot.select')).toBe(true);
-		expect(report().display?.style?.showRowStripes).toBeUndefined();
-		ctx.collaborationActive = () => false;
 		expect(await ctx.commands.run('pivot.showRowStripes')).toBe(true);
 		expect(report().display?.style?.showRowStripes).toBe(true);
+		expect(await ctx.commands.run('pivot.select')).toBe(true);
+		const pivots = session.workbook.sheets[0]!.pivotTables!;
+		const shared = report();
+		pivots[0] = {
+			...shared,
+			records: Array.from({ length: 300_000 }, () => ['Group', 'Item', 1]),
+		};
+		ctx.selection.set({ active: shared.location.start });
+		expect(ctx.commands.isEnabled('pivot.refresh')).toBe(false);
+		expect(ctx.commands.isEnabled('insert.pivot-table')).toBe(true);
+		ctx.collaborationActive = () => false;
+		expect(ctx.commands.isEnabled('pivot.refresh')).toBe(true);
+		pivots[0] = shared;
 	} finally {
 		stop();
 	}

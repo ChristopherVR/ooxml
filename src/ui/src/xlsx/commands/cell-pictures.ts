@@ -1,4 +1,4 @@
-import { cellView, getCell } from 'ooxml-core/xlsx';
+import { MAX_SHARED_CELL_PICTURE_BYTES, cellView, getCell } from 'ooxml-core/xlsx';
 import {
 	editing,
 	icon,
@@ -9,16 +9,29 @@ import {
 } from 'ooxml-core/xlsx/ui';
 
 type Target = NonNullable<ReturnType<typeof target>>;
-export const cellPictureEditsAvailable = (ctx: EditorContext): boolean => !ctx.isCollaborating?.();
 
-export function cellPictureUnavailable(other: string): (ctx: EditorContext) => string {
+/**
+ * In-cell pictures are shared in collaboration. Floating pictures are not, so turning an in-cell
+ * picture into a floating one waits until sharing ends (collaborators would lose the picture).
+ */
+const floatingAvailable = (ctx: EditorContext): boolean => !ctx.isCollaborating?.();
+
+function floatingUnavailable(other: string): (ctx: EditorContext) => string {
 	return (ctx) =>
-		cellPictureEditsAvailable(ctx)
+		floatingAvailable(ctx)
 			? other
-			: 'In-cell picture editing is unavailable while sharing this workbook.';
+			: 'Floating pictures are not shared yet. Stop sharing to convert this picture.';
 }
 
 const INVALID_PICTURE = 'Use a PNG, JPEG or GIF picture within the size limits.';
+const TOO_LARGE_TO_SHARE = 'Pictures in cells are shared up to 4 MB. Choose a smaller picture.';
+
+/** While shared, a picture over the room's limit would reach collaborators as #VALUE! only. */
+function refusedWhileShared(ctx: EditorContext, size: number): boolean {
+	if (!ctx.isCollaborating?.() || size <= MAX_SHARED_CELL_PICTURE_BYTES) return false;
+	ctx.toast(ctx.t(TOO_LARGE_TO_SHARE), 'warning');
+	return true;
+}
 
 export async function insertCellPicture(
 	ctx: EditorContext,
@@ -29,9 +42,9 @@ export async function insertCellPicture(
 		ctx.toast(ctx.t(INVALID_PICTURE), 'warning');
 		return;
 	}
+	if (refusedWhileShared(ctx, file.size)) return;
 	const bytes = new Uint8Array(await file.arrayBuffer());
 	if (
-		!cellPictureEditsAvailable(ctx) ||
 		ctx.readOnly() ||
 		ctx.session() !== current.session ||
 		target(ctx)?.ws !== current.ws ||
@@ -70,13 +83,19 @@ export function cellPictureCommands(): Command[] {
 		editing({
 			id: 'picture.place-in-cell',
 			label: 'Convert to In-Cell Picture',
-			unavailable: cellPictureUnavailable('Select a floating picture on an editable sheet.'),
+			unavailable: 'Select a floating picture on an editable sheet.',
 			icon: icon('picture'),
-			enabled: (ctx) => cellPictureEditsAvailable(ctx) && Boolean(selectedDrawingPicture(ctx)),
+			enabled: (ctx) => Boolean(selectedDrawingPicture(ctx)),
 			run: (ctx) => {
 				const selected = selectedDrawingPicture(ctx);
 				if (!selected) return;
 				const { current, index } = selected;
+				const drawing = current.ws.drawings[index];
+				const bytes =
+					drawing?.kind === 'image'
+						? current.session.workbook.source?.parts.get(drawing.partName)
+						: undefined;
+				if (refusedWhileShared(ctx, bytes?.length ?? 0)) return;
 				const at = current.session.placePictureInCell(current.sheet, index);
 				if (at)
 					ctx.selection.set({
@@ -91,9 +110,9 @@ export function cellPictureCommands(): Command[] {
 		editing({
 			id: 'picture.place-over-cells',
 			label: 'Convert to Floating Picture',
-			unavailable: cellPictureUnavailable('Select an in-cell picture on an editable sheet.'),
+			unavailable: floatingUnavailable('Select an in-cell picture on an editable sheet.'),
 			icon: icon('picture'),
-			enabled: (ctx) => cellPictureEditsAvailable(ctx) && Boolean(selectedCellPicture(ctx)),
+			enabled: (ctx) => floatingAvailable(ctx) && Boolean(selectedCellPicture(ctx)),
 			run: (ctx) => {
 				const selected = selectedCellPicture(ctx);
 				if (!selected) return;
@@ -105,8 +124,8 @@ export function cellPictureCommands(): Command[] {
 		editing({
 			id: 'picture.cell-alt-text',
 			label: 'Alt Text',
-			unavailable: cellPictureUnavailable('Select an in-cell picture on an editable sheet.'),
-			enabled: (ctx) => cellPictureEditsAvailable(ctx) && Boolean(selectedCellPicture(ctx)),
+			unavailable: 'Select an in-cell picture on an editable sheet.',
+			enabled: (ctx) => Boolean(selectedCellPicture(ctx)),
 			run: async (ctx) => {
 				const selected = selectedCellPicture(ctx);
 				if (!selected) return;

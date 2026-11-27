@@ -11,9 +11,14 @@ import {
 	isCellError,
 	isErrorCode,
 } from '../model';
+import type { EmbeddedCellPicture } from '../rich-values';
+import type { PictureRef } from './cell-pictures';
 import { isRecord } from './schema';
 
-/** A cell: value, type, formula, style key, array range, rich text and formula flags. */
+/**
+ * A cell: value, type, formula, style key, array range, rich text, formula flags and the in-cell
+ * picture it shows (see cell-pictures.ts).
+ */
 export interface CellEntry {
 	v?: number | string | boolean;
 	/** `n` number, `s` string, `b` boolean, `e` error (`v` holds the code). */
@@ -24,6 +29,7 @@ export interface CellEntry {
 	r?: RichTextRun[];
 	d?: 1;
 	l?: 1;
+	p?: PictureRef;
 }
 
 /** Row or column formatting: size, custom flag, hidden, style key, outline, collapsed. */
@@ -43,6 +49,8 @@ export interface LineEntry {
 
 type KeyOf = (styleId: number | undefined) => string | undefined;
 type IdOf = (key: string | undefined) => number | undefined;
+type RefOf = (cell: Cell) => PictureRef | undefined;
+type PictureOf = (raw: unknown) => EmbeddedCellPicture | undefined;
 
 const MAX_TEXT = 32_767;
 const isText = (v: unknown, max = MAX_TEXT): v is string =>
@@ -50,7 +58,7 @@ const isText = (v: unknown, max = MAX_TEXT): v is string =>
 const isCount = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0;
 
 /** A cell's shared entry; undefined when it holds nothing worth sharing (spill results). */
-export function encodeCell(cell: Cell, keyOf: KeyOf): CellEntry | undefined {
+export function encodeCell(cell: Cell, keyOf: KeyOf, refOf?: RefOf): CellEntry | undefined {
 	const entry: CellEntry = {};
 	const s = cell.styleId ? keyOf(cell.styleId) : undefined;
 	if (isSpilledCell(cell)) return s ? { s } : undefined;
@@ -74,6 +82,8 @@ export function encodeCell(cell: Cell, keyOf: KeyOf): CellEntry | undefined {
 	if (cell.richText) entry.r = structuredClone(cell.richText);
 	if (cell.dynamicArray) entry.d = 1;
 	if (cell.legacyFormula) entry.l = 1;
+	const picture = cell.formula === undefined ? refOf?.(cell) : undefined;
+	if (picture) entry.p = picture;
 	return Object.keys(entry).length ? entry : undefined;
 }
 
@@ -90,7 +100,7 @@ function decodeRuns(raw: unknown): RichTextRun[] | undefined {
 }
 
 /** The model cell of a shared entry, or undefined when the entry is malformed. */
-export function decodeCell(raw: unknown, idOf: IdOf): Cell | undefined {
+export function decodeCell(raw: unknown, idOf: IdOf, pictureOf?: PictureOf): Cell | undefined {
 	if (!isRecord(raw)) return undefined;
 	const cell: Cell = { value: null };
 	const { v, t } = raw;
@@ -124,6 +134,10 @@ export function decodeCell(raw: unknown, idOf: IdOf): Cell | undefined {
 	}
 	if (raw.d === 1) cell.dynamicArray = true;
 	if (raw.l === 1) cell.legacyFormula = true;
+	if (raw.p !== undefined && t === 'e' && cell.formula === undefined) {
+		const picture = pictureOf?.(raw.p);
+		if (picture) cell.inCellPicture = picture;
+	}
 	return cell;
 }
 
