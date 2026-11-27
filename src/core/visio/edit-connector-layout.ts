@@ -260,6 +260,8 @@ export function layoutConnectorShape(
 	sites: Record<End, ConnectorSite>,
 	check: () => void,
 	obstacles: readonly VisioRouteBox[] = [],
+	/** Applied to the routed vertices before they are written (parallel-connector spacing). */
+	adjust: (vertices: VisioRoutePoint[]) => VisioRoutePoint[] = (vertices) => vertices,
 ): readonly string[] {
 	const local = cells(shape);
 	const shapeId = attribute(shape, 'ID')!;
@@ -273,7 +275,7 @@ export function layoutConnectorShape(
 				numeric(local.get(`Lock${prefix(end)}`), 0) !== 0
 			)
 				fail('EDIT_PROTECTED_CELL', `Lock${prefix(end)} prevents rerouting a glued connector.`);
-	writeConnectorShape(shape, route, routeVertices(route, sites, obstacles));
+	writeConnectorShape(shape, route, adjust(routeVertices(route, sites, obstacles)));
 	const changed: VisioCellKey[] = ENDS.flatMap((end) =>
 		['X', 'Y'].map((axis) => ({ pageId, shapeId, cell: `${prefix(end)}${axis}` })),
 	);

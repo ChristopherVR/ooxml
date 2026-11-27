@@ -34,6 +34,7 @@ import {
 import { shapeChain } from './edit-connector-world';
 import type { VisioRouteBox, VisioRoutePoint } from './connector-route';
 import { connectorObstacles } from './edit-connector-obstacles';
+import { spaceConnectorRoute } from './edit-connector-spacing';
 import {
 	effectiveCells,
 	isStencilConnector,
@@ -185,6 +186,9 @@ export function rerouteConnector(
 					]),
 				))
 			: [];
+	// Visio spaces a right-angle route apart from the unrelated connectors it would run on.
+	const space = (vertices: VisioRoutePoint[]) =>
+		route === 'right-angle' ? spaceConnectorRoute(root, glue, vertices, obstacles) : vertices;
 	const pages = stencil
 		? layoutStencilConnector(
 				root,
@@ -192,11 +196,13 @@ export function rerouteConnector(
 				shape,
 				route,
 				// Visio's own side choice first; the general router when that path is blocked.
-				(org ? undefined : stencilConnectorPath(walk('begin'), walk('end'), route, obstacles)) ??
-					routeVertices(route, chosen, obstacles),
+				space(
+					(org ? undefined : stencilConnectorPath(walk('begin'), walk('end'), route, obstacles)) ??
+						routeVertices(route, chosen, obstacles),
+				),
 				check,
 			)
-		: layoutConnectorShape(roots, pageId, shape, route, chosen, check, obstacles);
+		: layoutConnectorShape(roots, pageId, shape, route, chosen, check, obstacles, space);
 	proveConnectorShape(shape, route);
 	return pages;
 }

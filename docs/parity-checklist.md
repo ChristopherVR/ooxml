@@ -1610,8 +1610,19 @@ installed Visio 16 build is used to check that saved files open without repair.
       free-ended right-angle connectors reroute around a moved shape, and straight, curved,
       elbow and grouped connector masters copy and drop, checked against Visio 16 cells
       (`visio/__fixtures__/native-connector-copy-drop.json`).
-- [ ] **P1** Visio's redistribution of parallel or coincident Dynamic connector copies, and its
-      free-ended routing around complex obstacle layouts.
+- [x] **P1** Parallel dynamic connectors are spaced apart as Page Setup > Layout and Routing sets:
+      when a right-angle connector is routed (drawn, glued, rerouted after a move), each interior
+      run that lies on another connector's run moves sideways by the page's line spacing
+      (LineToLineX for vertical runs, LineToLineY for horizontal), nearest place first, keeping
+      its ends, its neighbouring runs' directions and clear of obstacles; LineAdjustFrom picks
+      unrelated lines (the default), all lines or none, and related connectors (sharing a glued
+      shape) overlap (`visio/connector-spacing.ts`, `edit-connector-spacing.ts`). Approximated
+      from the public cell documentation, not measured against Visio's router.
+- [ ] **P1** Connector spacing remainders: runs that leave or enter a shape (one- and two-run
+      routes, two connectors between the same sides) are not spread, a connector already on the
+      page is not moved when a new one is routed onto it, LineAdjustTo (which lines line up) and
+      the routing-style defaults other than right-angle are not modelled, and Visio's
+      free-ended routing around complex obstacle layouts is still open.
 - [ ] **P1** A shape glued to a connector of a custom connector master (a 1-D master not built
       like Visio's Dynamic connector, as the sample generators write) cannot be moved: the
       connector cannot be rerouted, so `move-shape` refuses rather than leave it behind

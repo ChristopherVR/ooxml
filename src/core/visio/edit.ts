@@ -10,6 +10,7 @@ import { masterTemplate, replaceScopedPlainText } from './edit-text-scope';
 import { measuresOwnText, refreshTextSizes, type TextSizeTarget } from './edit-text-size';
 import { takeDeferredTextSizes } from './edit-text-size-formula';
 import { refreshLineJumpCaches } from './edit-line-jump-cache';
+import { registerConnectorSpacing } from './edit-connector-spacing';
 import {
 	applyInstanceGeometryEdit,
 	isGlueTarget,
@@ -650,6 +651,8 @@ async function runTransaction(
 		}
 		// Glue and routing read stencil shapes through their masters, resolved before the edits run.
 		await registerStencilShapes(roots, masterTemplate(pkg), check);
+		// Routed connectors are spaced apart by the page's Layout and Routing settings.
+		await registerConnectorSpacing(pkg, roots, check);
 		// Stencil shapes that are grouped, or sit in a group that is ungrouped, moved or rotated.
 		groupMembers = await groupInstances(pkg, roots, commands, masterTemplate(pkg), check);
 		await prepareGroupResizeInstances(roots, geometryCommands, masterTemplate(pkg), check);
