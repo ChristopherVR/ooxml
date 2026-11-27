@@ -446,7 +446,10 @@ export function adaptDocumentModel(
 			kind: 'paragraph',
 			id: paragraph.id,
 			...(!squeeze ? { squeezeJustifiedSpaces: false as const } : {}),
-			...(compatibility.doNotExpandShiftReturn ? { doNotExpandShiftReturn: true } : {}),
+			// Measured in Word 16: distributed paragraphs still expand lines ending in a soft break.
+			...(compatibility.doNotExpandShiftReturn && resolved.justification !== 'distribute'
+				? { doNotExpandShiftReturn: true }
+				: {}),
 			runs: (label ? [labelRun(paragraph, label, tableStyleRun), ...taggedRuns] : taggedRuns).map(
 				withFontFallback,
 			),

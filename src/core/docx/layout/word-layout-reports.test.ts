@@ -459,6 +459,30 @@ it.each([
 	}
 });
 
+it.each([
+	['distribute', true],
+	['thaiDistribute', false],
+	['mediumKashida', false],
+] as const)(
+	'expands soft-break lines under doNotExpandShiftReturn only for %s (#358)',
+	async (justification, expands) => {
+		const { model } = await load('issue-358-justified-line-break-donotexpandshiftreturn');
+		const blocks = model.blocks.map((block) =>
+			block.type === 'paragraph' ? { ...block, justification } : block,
+		);
+		const { pages } = layoutDocumentModel({ ...model, blocks }, measurer);
+		const column = at(at(pages, 0).columns, 0);
+		const paragraph = at(column.blocks, 1);
+		if (paragraph.kind !== 'paragraph') throw new Error('Expected a paragraph');
+		const fragments = at(paragraph.lines, 0).fragments;
+		const last = at(fragments, fragments.length - 1);
+		const end = last.xPx + last.widthPx;
+		if (expands) expect(end).toBeCloseTo(column.widthPx);
+		// Natural width of the 40-character line under the test measurer.
+		else expect(end).toBeCloseTo(330.88);
+	},
+);
+
 it('preserves the soft line break setting through a document edit (#358)', async () => {
 	const loaded = await load('issue-358-justified-line-break-donotexpandshiftreturn');
 	const first = at(loaded.model.blocks, 0);
