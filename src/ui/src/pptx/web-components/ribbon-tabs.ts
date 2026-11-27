@@ -97,6 +97,7 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 			return this.#model;
 		}
 		set state(value: RibbonTabRowState | undefined) {
+			if (value?.selected !== this.#model?.selected) this.#manifestTab = undefined;
 			this.#model = value;
 			this.label = value?.label ?? null;
 			this.#applyState();

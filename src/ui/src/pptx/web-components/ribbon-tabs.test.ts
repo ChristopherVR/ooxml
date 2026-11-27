@@ -120,6 +120,20 @@ describe('pptx-ui-ribbon-tabs', () => {
 		expect(host).toHaveProperty('selected', 'installed-add-in.notes');
 		expect(host.hasAttribute('data-manifest-tab-active')).toBe(true);
 		expect(host.querySelector('[data-add-in]')).toHaveProperty('hidden', false);
+		host.state = buildRibbonTabRow(input);
+		expect(host).toHaveProperty('selected', 'installed-add-in.notes');
+		host.state = buildRibbonTabRow({
+			...input,
+			active: 'pictureFormat',
+			contextualTabs: ['pictureFormat'],
+		});
+		expect(host).toHaveProperty('selected', 'pictureFormat');
+		expect(host.hasAttribute('data-manifest-tab-active')).toBe(false);
+		expect(host.querySelector('[data-add-in]')).toHaveProperty('hidden', true);
+		host
+			.tabButtons()
+			.find((button) => button.textContent === 'Notes')
+			?.click();
 		host
 			.tabButtons()
 			.find((button) => button.dataset.tab === 'home')
