@@ -4,7 +4,7 @@ import { newDocument, reveal } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: Insert groups fit and commands use the correct tabs`, async ({ page }) => {
-		await page.setViewportSize({ width: 1600, height: 900 });
+		await page.setViewportSize({ width: 1920, height: 900 });
 		await page.goto(`/?framework=${framework}`);
 		await newDocument(page);
 		const editor = page.locator('docx-editor');

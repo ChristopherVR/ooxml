@@ -131,6 +131,9 @@
 .ribbon-panel[data-panel='Insert'] .ribbon-group button.ribbon-large:not(.ribbon-overflow-button) {
 	width: 56px;
 }
+.ribbon-panel[data-panel='Insert'] .ribbon-group[data-label='Comments']:not([data-collapsed]) {
+	min-width: 80px;
+}
 .ribbon-group:is([data-label='Illustrations'], [data-label='Text']) .ribbon-stack {
 	align-items: stretch;
 }
