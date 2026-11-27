@@ -117,6 +117,10 @@ own name, as `unsupported`. So is a MERGEBARCODE field, which keeps its saved re
 A kept field (`unlink: false`) holds the value as its cached result, and Word shows it on
 opening. Word's Update Field (F9) on such a document shows `«Name»`, because the document has no
 data source attached (checked with Word 16); unlink the fields when the output must survive F9.
+Fields in headers and footers are always replaced by their values, even when fields are kept:
+Word 16 prints a MERGEFIELD kept in a header or footer of a document without mail merge settings
+(which the merged document is) as `«Name»`, not its result (#368). The result of such a field
+gives that as its `reason`.
 
 ### Repeating regions
 

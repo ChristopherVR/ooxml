@@ -263,19 +263,23 @@ export class MergeFields {
 			if (!known) {
 				issue('unknown-field', column);
 				hooks.observe?.({ blockId, name: column, status: 'missing' });
-				if (hooks.missing === 'keep') return hooks.keepFields ? undefined : { text: cached };
+				if (hooks.missing === 'keep')
+					return hooks.keepFields && !hooks.unlink?.(cached, blockId)
+						? undefined
+						: { text: cached, ...(hooks.keepFields && { unlink: true as const }) };
 			}
 			const value = record && Object.hasOwn(record, column) ? (record[column] ?? null) : null;
 			if (known) {
 				const reason = pictureMismatch(value, field.format);
 				hooks.observe?.({ blockId, name: column, status: 'filled', ...(reason && { reason }) });
 			}
-			if (!textOf(value)) return result('');
-			const text = format(value);
+			const text = textOf(value) ? format(value) : '';
 			const merged = result(
-				`${before === undefined ? '' : resolve(before)}${field.switches.has('v') ? verticalText(text) : text}${after === undefined ? '' : resolve(after)}`,
+				text
+					? `${before === undefined ? '' : resolve(before)}${field.switches.has('v') ? verticalText(text) : text}${after === undefined ? '' : resolve(after)}`
+					: '',
 			);
-			return hooks.unlink?.(merged.text) ? { ...merged, unlink: true } : merged;
+			return hooks.unlink?.(merged.text, blockId) ? { ...merged, unlink: true } : merged;
 		}
 		if (isPrompt) {
 			const fallback = field.switches.get('d');

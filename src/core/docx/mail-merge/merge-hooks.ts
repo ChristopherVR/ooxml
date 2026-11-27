@@ -23,6 +23,6 @@ export interface MergeHooks {
 	/** `keep`: a field the record does not provide keeps the result it has. */
 	missing?: 'empty' | 'keep';
 	observe?(event: MergeFieldEvent): void;
-	/** Whether a result must replace its field even when fields are kept. */
-	unlink?(text: string): boolean;
+	/** Whether a result in paragraph `blockId` must replace its field even when fields are kept. */
+	unlink?(text: string, blockId: string): boolean;
 }

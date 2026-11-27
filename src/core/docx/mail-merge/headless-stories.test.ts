@@ -82,6 +82,52 @@ describe('mergeFields in every story', () => {
 		]);
 	});
 
+	it('replaces header and footer fields by their values when fields are kept (#368)', async () => {
+		// Word prints a MERGEFIELD kept in a header of a document without mail merge settings as
+		// «Name», so a merged header must hold the value itself.
+		const loaded = await template(
+			paragraph(run('Body ') + simple('MERGEFIELD Name')) +
+				'<w:sectPr><w:headerReference w:type="default" r:id="rId1"/><w:footerReference w:type="default" r:id="rId2"/></w:sectPr>',
+			{
+				'word/header1.xml': `<w:hdr xmlns:w="${NS.w}">${paragraph(run('Head ') + complex(code(' MERGEFIELD Name '), 'old') + simple('MERGEFIELD Blank'))}</w:hdr>`,
+				'word/footer1.xml': `<w:ftr xmlns:w="${NS.w}">${paragraph(run('Foot ') + simple('MERGEFIELD Name'))}</w:ftr>`,
+				'word/_rels/document.xml.rels': `<Relationships xmlns="${NS.rels}"><Relationship Id="rId1" Type="${NS.r}/header" Target="header1.xml"/><Relationship Id="rId2" Type="${NS.r}/footer" Target="footer1.xml"/></Relationships>`,
+			},
+		);
+		const { model, results } = await mergeFields(loaded.model, {
+			values: { Name: 'Ada', Blank: '' },
+		});
+		expect(model.mailMerge).toBeUndefined();
+		const header = results.find((result) => result.story === 'header' && result.name === 'Name');
+		expect(header?.reason).toMatch(/header or footer/);
+		expect(results.find((result) => result.story === 'body')?.reason).toBeUndefined();
+		const { exportDocxPdf } = await import('../pdf-export/export-pdf');
+		const { createFakeMeasurer } = await import('../layout/index');
+		const { bytes } = await exportDocxPdf(model, { measurer: createFakeMeasurer() });
+		const pdf = Buffer.from(bytes).toString('latin1');
+		const { inflateSync } = await import('node:zlib');
+		let shown = '';
+		for (const match of pdf.matchAll(/<<([^]*?)>>\nstream\n/g)) {
+			const start = match.index + match[0].length;
+			const length = Number(/\/Length (\d+)/.exec(match[1]!)?.[1]);
+			if (!/\/FlateDecode/.test(match[1]!) || /\/Subtype \/Image|\/Length1/.test(match[1]!))
+				continue;
+			const content = inflateSync(bytes.subarray(start, start + length)).toString('latin1');
+			for (const item of content.matchAll(/\(((?:\\.|[^\\)])*)\) Tj/g)) shown += item[1];
+		}
+		expect(shown).toContain('Head Ada');
+		expect(shown).toContain('Foot Ada');
+		expect(shown).toContain('Body Ada');
+		expect(shown).not.toContain('\xab');
+		// The body keeps its field, with the value as its cached result.
+		const xml = await (
+			await JSZip.loadAsync(await loaded.save(model))
+		)
+			.file('word/document.xml')!
+			.async('string');
+		expect(xml).toContain('MERGEFIELD Name');
+	});
+
 	it('keeps the input model unchanged', async () => {
 		const loaded = await template(paragraph(simple('MERGEFIELD Name')));
 		const before = JSON.stringify(loaded.model);

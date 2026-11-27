@@ -92,8 +92,11 @@ describe('mergeFields from ooxml-core/docx, saved and reloaded', () => {
 			for (const [index, slot] of ['default', 'first', 'even'].entries()) {
 				const header = (await part(bytes, `word/header${index}.xml`))!;
 				expect(header).toContain(`>${VALUES[`H${slot}` as keyof typeof VALUES]}<`);
-				expect(header.includes('MERGEFIELD')).toBe(!unlink);
+				// Kept or not, a header holds the value itself: Word would print a kept field «Name».
+				expect(header).not.toContain('MERGEFIELD');
 			}
+			const body = (await part(bytes, 'word/document.xml'))!;
+			expect(body.includes('MERGEFIELD')).toBe(!unlink);
 			const reopened = await loadDocx(bytes);
 			const section = reopened.model.sections?.[0];
 			expect(text(section?.headers?.first?.blocks ?? [])).toEqual(['Hfirst hf']);

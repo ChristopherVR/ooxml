@@ -49,13 +49,22 @@ export interface MergeFieldResult {
 	status: MergeFieldEvent['status'];
 	/**
 	 * Why the field was not filled (`missing`, `invalid`, `locked`, `unsupported`), or why a filled
-	 * value was written as it is (a `\#` or `\@` picture its value does not match).
+	 * value was written as it is (a `\#` or `\@` picture its value does not match), or why it
+	 * replaced its field although fields are kept (in a header or footer).
 	 */
 	reason?: string;
 	region?: string;
 	/** The region row, zero-based. */
 	row?: number;
 }
+
+/**
+ * Why a field filled in a header or footer is replaced by its value although fields are kept:
+ * Word prints a MERGEFIELD kept there as «Name» in a document without mail merge settings, which
+ * the merged document is.
+ */
+const HEADER_FOOTER_UNLINKED =
+	'the field is replaced by its value: Word shows a merge field kept in a header or footer as its name';
 
 const REASONS: Partial<Record<MergeFieldEvent['status'], string>> = {
 	invalid: 'the field instruction could not be read',
@@ -89,6 +98,9 @@ function paragraphStories(model: DocumentModel) {
 	});
 	return stories;
 }
+
+const inHeaderOrFooter = (story: MergeStory | undefined) =>
+	story === 'header' || story === 'footer';
 
 const isBlank = (paragraph: Paragraph) =>
 	paragraph.runs.every(
@@ -150,12 +162,17 @@ export function mergeFields(
 			keepFields: !options.unlink,
 			missing: options.missing ?? 'empty',
 			record: (blockId) => expanded.scope.get(blockId) ?? values,
-			unlink: (text) => html.holdsBlocks(text),
+			unlink: (text, blockId) =>
+				html.holdsBlocks(text) || inHeaderOrFooter(stories.get(blockId)?.story),
 			observe: (event) => {
 				touched.add(event.blockId);
 				const place = regionOf.get(event.blockId);
 				const where = stories.get(event.blockId) ?? { story: 'body' };
-				const reason = reasonOf(event, place);
+				const reason =
+					reasonOf(event, place) ??
+					(!options.unlink && event.status === 'filled' && inHeaderOrFooter(where.story)
+						? HEADER_FOOTER_UNLINKED
+						: undefined);
 				results.push({
 					name: event.name,
 					...where,
