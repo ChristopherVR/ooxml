@@ -13,7 +13,7 @@ export function reapplyRibbonVisibility(toolbar: HTMLElement): void {
 /** Stable action id of a ribbon control (looked up from its English label, whatever the locale). */
 export function ribbonControlId(control: HTMLElement): RibbonActionId | null {
 	const label = control.dataset.localearialabel ?? control.getAttribute('aria-label');
-	return label === 'Add-ins' ? 'my-add-ins' : ribbonActionIdForLabel(label);
+	return ribbonActionIdForLabel(label);
 }
 
 /**

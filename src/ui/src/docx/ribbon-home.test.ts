@@ -18,12 +18,19 @@ describe('Home tab layout', () => {
 		expect(labels).toEqual(HOME_GROUPS);
 	});
 
-	it('uses the My Add-ins customization ID on the Home tab', () => {
+	it('customizes Home Add-ins independently of Insert My Add-ins', () => {
 		const ribbon = createRibbon();
 		const button = ribbon.querySelector<HTMLElement>('[data-panel="Home"] [aria-label="Add-ins"]')!;
-		expect(ribbonControlId(button)).toBe('my-add-ins');
+		const mine = ribbon.querySelector<HTMLElement>(
+			'[data-panel="Insert"] [aria-label="My Add-ins"]',
+		)!;
+		expect(ribbonControlId(button)).toBe('add-ins');
 		applyRibbonVisibility(ribbon, true, ['my-add-ins']);
+		expect(button.hasAttribute('data-dve-hidden')).toBe(false);
+		expect(mine.hasAttribute('data-dve-hidden')).toBe(true);
+		applyRibbonVisibility(ribbon, true, ['add-ins']);
 		expect(button.hasAttribute('data-dve-hidden')).toBe(true);
+		expect(mine.hasAttribute('data-dve-hidden')).toBe(false);
 	});
 
 	it('moves paragraph spacing to the Layout tab', () => {
