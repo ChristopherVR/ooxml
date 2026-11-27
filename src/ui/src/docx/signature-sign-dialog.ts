@@ -1,4 +1,6 @@
 import { signatureLinesOf, type SignatureLineSpec } from 'ooxml-core/docx';
+// The signer itself loads on the first signing (`signature.signPackage`), so this module stays small.
+import { signature } from 'ooxml-core/opc';
 import { dialogButton, labelled, textInput } from './dialog-fields';
 import {
 	createDialogShell,
@@ -107,7 +109,6 @@ export function createSignDialog(core: EditorCore, requested?: SignatureLineSpec
 			const bytes = await (
 				core.element as unknown as { saveBytes(): Promise<Uint8Array> }
 			).saveBytes();
-			const { signature } = await import('ooxml-core/opc');
 			const signed = await signature.signPackage(bytes, signer, {
 				...(line ? { signatureLineId: line.id } : {}),
 				...(name.value.trim() ? { signatureText: name.value.trim() } : {}),
