@@ -3,6 +3,7 @@
 // is patched in place, a control the model dropped from every row or cell it holds is unwrapped
 // (they stay), a row or cell it dropped from a control kept on others leaves that control, and a
 // control the model added wraps its row or cell in a new `w:sdt`.
+import { saveEnvironmentOf } from '../opc/reproducible';
 import type { ContentControl } from './content-control-model';
 import { isSdt, sdtContent } from './content-control';
 import {
@@ -39,7 +40,8 @@ function controlIds(doc: XmlDocument): Set<string> {
 }
 
 /** A control id that no `w:sdtPr` in `doc` has. */
-const unusedControlId = (doc: XmlDocument): string => freshControlId(controlIds(doc));
+const unusedControlId = (doc: XmlDocument): string =>
+	freshControlId(controlIds(doc), saveEnvironmentOf(doc).ids);
 
 /**
  * Whether `node` is a row or cell, or holds rows or cells (a `w:sdt` or `w:customXml` around them):

@@ -2,6 +2,8 @@
 // The run of a SmartArt graphic: an edited diagram keeps its `w:drawing` markup (only the extent
 // can change; its parts are rewritten by diagram-save.ts) and an inserted one gets a new
 // `wp:inline` with `dgm:relIds`, registering its four parts with the relationship allocator.
+import { saveEnvironmentOf } from '../opc/reproducible';
+import { createOfficeGuid } from '../crypto/uuid';
 import { DIAGRAM_CONTENT_TYPES, DIAGRAM_RELATIONSHIP_TYPES } from '../diagram/index';
 import type { DocxDiagram } from './diagram';
 import { insertedDiagramDataXml } from './diagram-save';
@@ -48,7 +50,11 @@ export function buildInsertedDiagramDrawing(
 			...(content !== undefined ? { content } : {}),
 		});
 	};
-	const dm = part('data', insertedDiagramDataXml(diagram));
+	const { ids } = saveEnvironmentOf(doc);
+	const dm = part(
+		'data',
+		insertedDiagramDataXml(diagram, () => createOfficeGuid(ids)),
+	);
 	const lo = part('layout', diagram.layoutSource?.layoutXml);
 	const qs = part('quickStyle', diagram.layoutSource?.quickStyleXml);
 	const cs = part('colors', diagram.layoutSource?.colorsXml);

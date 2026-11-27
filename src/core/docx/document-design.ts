@@ -6,6 +6,7 @@ import { resolveDrawingColor } from '../drawingml/drawing-color';
 import type { DrawingTheme } from '../drawingml/theme-model';
 import type { ThemeCatalog, ThemeColorSlot } from './theme-model';
 import { themeCatalogOf } from './theme';
+import { defaultWordTheme } from './default-theme';
 import { defaultStyleId } from './style-inheritance';
 import { resolveParagraphFormatting } from './paragraph-styles';
 import type { DocumentModel } from './model';
@@ -60,16 +61,7 @@ export function designColors(
 }
 
 export function designTheme(theme?: ThemeCatalog): ThemeCatalog {
-	return (
-		theme ?? {
-			name: 'Office Theme',
-			colorSchemeName: 'Office',
-			fontSchemeName: 'Office',
-			colors: designColors(),
-			colorMapping: {},
-			fonts: { major: { latin: 'Calibri Light' }, minor: { latin: 'Calibri' } },
-		}
-	);
+	return theme ?? defaultWordTheme();
 }
 
 export const DESIGN_EFFECTS = ['flat', 'soft', 'strong'] as const;

@@ -26,6 +26,13 @@ import {
 import { chartsIn, documentDrawingBlocks, type DocxChart } from './chart';
 import type { DocumentModel } from './model';
 import { isNewDocxChart } from './chart-edit';
+import { saveEnvironmentOf } from '../opc/reproducible';
+
+/** The new workbook in the document theme's body font, dated as the save dates its entries. */
+function workbookOptions(zip: JSZip) {
+	const { minorFont, zipDate } = saveEnvironmentOf(zip);
+	return { zipDate, ...(minorFont && { minorFont }) };
+}
 
 /**
  * Writes the parts of a chart inserted in this session: the chart part, its relationships, its
@@ -35,6 +42,7 @@ export async function writeNewChartPart(zip: JSZip, space: ChartSpace): Promise<
 	const { partName } = await writeChartPartWithWorkbook(zip, space, {
 		chartFolder: 'word/charts/',
 		embeddingsFolder: 'word/embeddings/',
+		workbook: workbookOptions(zip),
 	});
 	await embedChartPartPictures(zip, partName, CHART_MEDIA_FOLDERS.docx, space.pictureSources);
 	return partName;
@@ -45,6 +53,7 @@ export async function writeNewChartExPart(zip: JSZip, space: ChartExSpace): Prom
 	const { partName } = await writeChartExPartWithWorkbook(zip, space, {
 		chartFolder: 'word/charts/',
 		embeddingsFolder: 'word/embeddings/',
+		workbook: workbookOptions(zip),
 	});
 	return partName;
 }

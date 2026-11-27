@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes relationships added while applying edits to one package part (the document, a header,
 // a footer or a notes part), plus the bytes and content types of newly inserted media.
+import { bindSaveEnvironment, saveEnvironmentOf } from '../opc/reproducible';
 import type JSZip from 'jszip';
 import type { PendingMediaPart } from './model';
 import {
@@ -52,6 +53,8 @@ export async function allocatorForPart(
 	doc: XmlDocument,
 	docPrIds?: DocPrIdAllocator,
 ): Promise<RelationshipAllocator> {
+	// The story's writers draw their random ids from the save's source (`saveEnvironmentOf`).
+	bindSaveEnvironment(doc, saveEnvironmentOf(zip));
 	const declared = parseRelationships(
 		await zip.file(relationshipsPartFor(partName))?.async('string'),
 	);

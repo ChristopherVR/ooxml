@@ -1,3 +1,4 @@
+import { themeLatinFont } from '../default-theme';
 import { scriptLayoutRuns } from './script-fonts';
 import type {
 	Block,
@@ -188,7 +189,7 @@ export function adaptDocumentModel(
 		// Word draws a symbol (`w:sym`) in its own font, whatever the run's font is.
 		const family =
 			(symbolOnly(run) && run.symbol?.font) ||
-			((role && theme ? theme.fonts[role]?.latin : undefined) ?? formatting.fontFamily);
+			((role ? themeLatinFont(theme, role) : undefined) ?? formatting.fontFamily);
 		const color =
 			(formatting.colorTheme && theme
 				? resolveThemeColorReference(formatting.colorTheme, theme)

@@ -12,10 +12,12 @@ describe('new document styles', () => {
 			lineSpacingTwips: 259,
 			lineSpacingRule: 'auto',
 		});
+		// Word 2013+ names no face here: body text is the theme's minor font.
 		expect(model.characterStyles?.docDefaults).toMatchObject({
-			fontFamily: 'Calibri',
+			fontTheme: { ascii: 'minor', hAnsi: 'minor', eastAsia: 'minor', cs: 'minor' },
 			fontSize: 11,
 		});
+		expect(model.characterStyles?.docDefaults?.fontFamily).toBeUndefined();
 		expect(Object.keys(model.paragraphStyles!.styles)).toEqual(
 			expect.arrayContaining(['Normal', 'Heading1', 'Heading2', 'Heading3', 'Title', 'TOC1']),
 		);

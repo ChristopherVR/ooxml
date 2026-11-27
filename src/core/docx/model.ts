@@ -1,3 +1,4 @@
+import type { ReproducibleSaveOptions } from '../opc/reproducible';
 import type { LatentStyles } from './latent-styles';
 import type { DocumentProperties } from './core-properties';
 import type { SignatureSummary } from '../opc/signature/state';
@@ -242,11 +243,17 @@ export interface DocxLoadOptions {
 	limits?: DocxLoadLimits;
 }
 /** Options of a save. */
-export interface SaveOptions {
+/**
+ * `now`, `ids` and `zipDate` (`ReproducibleSaveOptions`, opc) make a save reproducible: the time
+ * it stamps, the source of the ids Word draws at random (content controls, data store items,
+ * SmartArt model ids) and the date of every ZIP entry (1980-01-01 by default, as Word writes).
+ */
+export interface SaveOptions extends ReproducibleSaveOptions {
 	/**
 	 * Stamps `dcterms:modified` (and `cp:lastModifiedBy` when `author` is given) in
 	 * `docProps/core.xml` of a package whose content changed. Off unless given (a save keeps every
-	 * other part byte for byte); `at` fixes the time. The editor element saves with it on.
+	 * other part byte for byte); `at` fixes the time (by default the save's `now`). The editor
+	 * element saves with it on.
 	 */
 	modified?: { at?: Date; author?: string };
 }

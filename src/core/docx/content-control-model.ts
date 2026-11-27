@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // The model of a structured document tag (`w:sdt`, a Word content control): its kind, identity,
 // lock settings and the state each kind edits. Anything not modeled stays in `sourceXml`.
+import { idInRange, randomIdSource, type IdSource } from '../opc/reproducible';
 
 export type ContentControlKind =
 	| 'richText'
@@ -90,10 +91,13 @@ export const isContentControlLocked = (
 		: control.lock === 'sdtLocked' || control.lock === 'sdtContentLocked';
 };
 
-/** A control id that is not in `used`: Word uses signed 32-bit integers, so 1 to 2^31 - 1. */
-export function freshControlId(used: ReadonlySet<string>): string {
+/**
+ * A control id that is not in `used`: Word uses signed 32-bit integers, so 1 to 2^31 - 1, drawn
+ * at random as Word does unless `ids` is a save's reproducible source.
+ */
+export function freshControlId(used: ReadonlySet<string>, ids: IdSource = randomIdSource): string {
 	let id: string;
-	do id = String(Math.floor(Math.random() * (2 ** 31 - 1)) + 1);
+	do id = String(idInRange(ids, 1, 2 ** 31 - 1));
 	while (used.has(id));
 	return id;
 }

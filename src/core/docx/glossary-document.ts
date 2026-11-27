@@ -4,6 +4,7 @@
 // Organizer read them, insert them and add new ones from a selection. Entries from the file are
 // kept as they were (only entries added or deleted here change the part); pictures inside an entry
 // are not resolved, since the glossary part has its own relationships.
+import { bindSaveEnvironment, saveEnvironmentOf } from '../opc/reproducible';
 import type JSZip from 'jszip';
 import { createOfficeGuid } from '../crypto/uuid';
 import type { Block, DocumentModel, Paragraph } from './model';
@@ -164,9 +165,7 @@ function docPartElement(doc: XmlDocument, entry: GlossaryEntry): XmlElement {
 	behaviors.appendChild(valued('behavior', 'content'));
 	properties.appendChild(behaviors);
 	if (entry.description) properties.appendChild(valued('description', entry.description));
-	properties.appendChild(
-		valued('guid', `{${createOfficeGuid().replace(/[{}]/g, '').toUpperCase()}}`),
-	);
+	properties.appendChild(valued('guid', createOfficeGuid(saveEnvironmentOf(doc).ids)));
 	part.appendChild(properties);
 	const body = makeW(doc, 'docPartBody');
 	const allocator = new RelationshipAllocator([]);
@@ -201,7 +200,10 @@ export async function writeGlossaryEntries(
 	if (!removed.length && !added.length) return;
 	const partName = model.glossaryPart ?? GLOSSARY_PART;
 	const file = zip.file(partName);
-	const doc = parseXml(file ? await file.async('string') : EMPTY_GLOSSARY);
+	const doc = bindSaveEnvironment(
+		parseXml(file ? await file.async('string') : EMPTY_GLOSSARY),
+		saveEnvironmentOf(zip),
+	);
 	let parts = first(doc.documentElement, 'docParts');
 	if (!parts) {
 		parts = makeW(doc, 'docParts');

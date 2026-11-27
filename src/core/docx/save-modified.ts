@@ -13,13 +13,14 @@ export async function stampModified(
 	zip: JSZip,
 	option: SaveOptions['modified'],
 	anonymous = false,
+	now: Date = new Date(),
 ): Promise<void> {
 	if (!option) return;
 	const file = zip.file(CORE_PATH);
 	if (!file) return;
 	const source = await file.async('string');
 	const props = parseCoreProperties(source);
-	props.modified = formatW3cdtf(option.at ?? new Date());
+	props.modified = formatW3cdtf(option.at ?? now);
 	if (option.author && !anonymous) props.lastModifiedBy = option.author;
 	zip.file(CORE_PATH, writeCoreProperties(props, source));
 }

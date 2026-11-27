@@ -12,6 +12,7 @@ import {
 	diagramPictureRelationships,
 } from '../diagram/index';
 import { createOfficeGuid } from '../crypto/uuid';
+import { saveEnvironmentOf } from '../opc/reproducible';
 import { removeContentTypeOverride, resolvePartPath } from '../opc/index';
 import type { DocxDiagram } from './diagram';
 import { diagramsIn } from './diagram-document';
@@ -131,6 +132,7 @@ export async function applyDiagramEdits(
 			partName,
 			writeEditedDiagramData(xml, nodesOf(diagram), {
 				dropDrawingLink: true,
+				createModelId: () => createOfficeGuid(saveEnvironmentOf(zip).ids),
 				...(diagram.colorsId ? { colorsId: diagram.colorsId } : {}),
 				...(diagram.quickStyleId ? { quickStyleId: diagram.quickStyleId } : {}),
 				...(relaid && layoutId

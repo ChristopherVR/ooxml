@@ -1,4 +1,6 @@
 import type JSZip from 'jszip';
+import { createOfficeGuid } from '../crypto/uuid';
+import { saveEnvironmentOf } from '../opc/reproducible';
 import {
 	buildGeneratedDiagramCache,
 	withDiagramDrawingRelationship,
@@ -32,6 +34,7 @@ export async function applyGeneratedDiagramCaches(
 		diagramsIn(baseBlocks).map((diagram) => [diagram.parts.data?.partName, diagram]),
 	);
 	const done = new Set<string>();
+	const { ids } = saveEnvironmentOf(zip);
 	const resolver = diagramColorTheme(theme);
 	const scheme: Record<string, string> = {};
 	for (const key of [...Object.keys(theme?.colors ?? {}), 'bg1', 'tx1', 'bg2', 'tx2']) {
@@ -63,15 +66,19 @@ export async function applyGeneratedDiagramCaches(
 			...(colorsXml ? { colorsXml } : {}),
 			...(quickStyleXml ? { quickStyleXml } : {}),
 		};
-		const cache = buildGeneratedDiagramCache(dataXml, {
-			extentEmu: diagram.extentEmu,
-			source,
-			scheme,
-			layoutId: diagram.layout?.uniqueId,
-			family: diagram.layout?.family,
-			minorFont: theme?.fonts.minor.latin,
-			formatScheme: theme?.formatScheme,
-		});
+		const cache = buildGeneratedDiagramCache(
+			dataXml,
+			{
+				extentEmu: diagram.extentEmu,
+				source,
+				scheme,
+				layoutId: diagram.layout?.uniqueId,
+				family: diagram.layout?.family,
+				minorFont: theme?.fonts.minor.latin,
+				formatScheme: theme?.formatScheme,
+			},
+			() => createOfficeGuid(ids),
+		);
 		if (!cache) continue;
 		let index = 1;
 		while (zip.file(`word/diagrams/drawing${index}.xml`)) index++;

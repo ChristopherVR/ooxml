@@ -1,6 +1,8 @@
 import { keepCompressedMedia } from '../opc/zip-save';
+import { bindSaveEnvironment, dateZipEntries, saveEnvironment } from '../opc/reproducible';
 import { applyStyleCatalogs } from './style-catalog-save';
 import { applyWordTheme } from './theme-save';
+import { defaultWordTheme } from './default-theme';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import JSZip from 'jszip';
 import { openZip } from '../opc/zip-limits';
@@ -121,8 +123,12 @@ export async function saveDocx(
 		numberRevisionIds(numberCommentIds(model), maxWordId(binding?.sourceXml)),
 	);
 	const zip = binding ? await openZip(binding.original, binding.zipLimits) : new JSZip();
+	// The clock and id source every writer of this save reads (`saveEnvironmentOf(zip)`).
+	const minorFont = model.theme?.fonts.minor.latin;
+	const env = { ...saveEnvironment(options), ...(minorFont && { minorFont }) };
+	bindSaveEnvironment(zip, env);
 	const sourceEntries = entryNames(zip);
-	let document = binding ? parseXml(binding.sourceXml) : newDocument();
+	let document = bindSaveEnvironment(binding ? parseXml(binding.sourceXml) : newDocument(), env);
 	const docPrIds = new DocPrIdAllocator();
 	await docPrIds.reserveFromPackage(zip);
 	if (!binding) {
@@ -157,7 +163,7 @@ export async function saveDocx(
 		try {
 			written = write(document, preferred);
 		} catch {
-			document = binding ? parseXml(binding.sourceXml) : newDocument();
+			document = bindSaveEnvironment(binding ? parseXml(binding.sourceXml) : newDocument(), env);
 		}
 	const { newRelationships } = written ?? write(document, model);
 	if (model.pageColor !== binding?.base.pageColor) applyPageBackground(document, model.pageColor);
@@ -187,7 +193,12 @@ export async function saveDocx(
 	await applyNumberingCatalog(zip, model, binding, pendingMedia);
 	await applyCoreProperties(zip, model.properties, binding?.base.properties);
 	await applyStyleCatalogs(zip, model, binding?.base);
-	await applyWordTheme(zip, model.theme, binding?.base.theme);
+	// A new document is saved with a theme, as Word saves one: its styles refer to the theme fonts.
+	await applyWordTheme(
+		zip,
+		model.theme ?? (binding ? undefined : defaultWordTheme()),
+		binding?.base.theme,
+	);
 	if (model.compatibilityMode !== binding?.base.compatibilityMode)
 		await applyCompatibilityMode(zip, model.compatibilityMode);
 	const override = model.overrideTableStyleFontSizeAndJustification;
@@ -233,9 +244,15 @@ export async function saveDocx(
 	if (privacy?.removePersonalInformation)
 		await scrubPersonalParts(zip, privacy.removeDateAndTime === true);
 	if (binding)
-		await stampModified(zip, options?.modified, privacy?.removePersonalInformation === true);
+		await stampModified(
+			zip,
+			options?.modified,
+			privacy?.removePersonalInformation === true,
+			env.now,
+		);
 	if (binding) await stripPackageSignatures(zip);
 	dropAddedFolders(zip, sourceEntries);
 	keepCompressedMedia(zip);
+	dateZipEntries(zip, env.zipDate);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }

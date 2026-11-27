@@ -1,3 +1,4 @@
+import { saveEnvironmentOf } from '../opc/reproducible';
 import type JSZip from 'jszip';
 import { createOfficeGuid } from '../crypto/uuid';
 import {
@@ -61,7 +62,7 @@ export async function writeBibliographyPart(
 		number++;
 	const item = `customXml/item${number}.xml`;
 	const props = `itemProps${number}.xml`;
-	const id = createOfficeGuid();
+	const id = createOfficeGuid(saveEnvironmentOf(zip).ids);
 	zip.file(item, part.xml);
 	zip.file(
 		`customXml/${props}`,
