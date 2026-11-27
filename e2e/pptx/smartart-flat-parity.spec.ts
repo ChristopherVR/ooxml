@@ -23,6 +23,7 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession, thumbnail } from './support/deck';
+import { slidePosition } from './support/keyboard';
 
 const fixturePath = resolve(
 	fileURLToPath(new URL('./fixtures/three-d-parity/three-d-smartart.pptx', import.meta.url)),
@@ -58,6 +59,8 @@ async function openSlide(page: Page, slideNumber: number): Promise<void> {
 	const thumb = thumbnail(page, slideNumber);
 	await thumb.scrollIntoViewIfNeeded();
 	await thumb.click();
+	// Some bindings paint the clicked slide a frame later; read the stage only once it shows it.
+	await expect.poll(() => slidePosition(page)).toBe(`Slide ${slideNumber} of ${SLIDE_COUNT}`);
 }
 
 test.describe('smartArt flat path matches PowerPoint', () => {
