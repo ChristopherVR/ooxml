@@ -57,6 +57,8 @@ type DiffMode = 'explicit' | 'single' | 'double';
 interface ParsedToken {
 	value: number;
 	mode: DiffMode;
+	/** `*`: repeat the last value (explicit) or the last difference. */
+	repeat?: boolean;
 }
 
 /**
@@ -64,7 +66,8 @@ interface ParsedToken {
  * Anchored on the number so that `0-10` yields two values and `'40'46` keeps
  * each prefix attached to the value it qualifies.
  */
-const VALUE_TOKEN = /(?:(['"!])\s*)?(-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)/gu;
+const VALUE_TOKEN =
+	/(?:(['"!])\s*)?(\?|\*|-?#[\da-fA-F]+|-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)/gu;
 
 /** Scan one comma-delimited point into its channel value tokens. */
 function scanValueTokens(rawPoint: string, channelCount: number): string[] {
@@ -92,10 +95,17 @@ function parseValueToken(token: string, currentMode: DiffMode): ParsedToken | un
 		mode = 'double';
 		body = token.slice(1);
 	}
-	if (body.length === 0) {
+	// `?`: the value is unknown, so the channel keeps its last value.
+	if (body.length === 0 || body === '?') {
 		return undefined;
 	}
-	const value = Number(body);
+	// `*`: the same value (explicit) or the same difference as the last point.
+	if (body === '*') {
+		return { value: Number.NaN, mode, repeat: true };
+	}
+	// `#`: a hexadecimal integer.
+	const hex = /^(-?)#([\da-fA-F]+)$/u.exec(body);
+	const value = hex ? (hex[1] ? -1 : 1) * Number.parseInt(hex[2] ?? '', 16) : Number(body);
 	return isFiniteNumber(value) ? { value, mode } : undefined;
 }
 
@@ -109,6 +119,11 @@ function applyDiffMode(
 	// Missing slots read as NaN, which is what `undefined` arithmetic produced.
 	const value = lastValue[index] ?? NaN;
 	let next: number;
+	if (parsed.repeat) {
+		next = parsed.mode === 'explicit' ? value : value + (lastVelocity[index] ?? 0);
+		lastValue[index] = next;
+		return next;
+	}
 	if (parsed.mode === 'single') {
 		lastVelocity[index] = parsed.value;
 		next = value + parsed.value;

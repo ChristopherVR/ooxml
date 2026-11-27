@@ -8,7 +8,7 @@ const MAX_PRESETS = MAX_INK_PENS;
 
 /** The saved pens a deck can use: the shared gallery rules, with PowerPoint's 1 px minimum. */
 export function normalizeDrawPens(value: unknown): DrawPenPreset[] {
-	return normalizeInkPens(value).filter((pen) => pen.width >= 1);
+	return normalizeInkPens(value, 16).filter((pen) => pen.width >= 1);
 }
 
 export function createDrawPens(options: {

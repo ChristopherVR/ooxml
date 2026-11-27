@@ -38,10 +38,10 @@ export function inkShapeOf(shape: RecognizedInkShape, color: string, widthPx: nu
 			line: shape.kind === 'arrow' ? { ...line, tailEnd: { type: 'triangle' } } : line,
 		};
 	}
+	const preset = shape.kind === 'rect' || shape.kind === 'ellipse' ? shape.kind : 'triangle';
 	return {
-		preset: shape.kind === 'rect' || shape.kind === 'ellipse' ? shape.kind : 'triangle',
-		box: { ...shape.box },
-		rotation: shape.rotation,
+		preset,
+		...snapped(preset, shape.box, shape.rotation),
 		flipH: false,
 		flipV: false,
 		line,
@@ -54,5 +54,31 @@ function lineBox(start: InkCoordinate, end: InkCoordinate) {
 		y: Math.min(start.y, end.y),
 		width: Math.max(1, Math.abs(end.x - start.x)),
 		height: Math.max(1, Math.abs(end.y - start.y)),
+	};
+}
+
+/** Rotations this close to a quarter turn are snapped to it. */
+const SNAP_DEGREES = 12;
+
+/**
+ * A rectangle or ellipse drawn nearly square to the page is meant square, as Office snaps it: a
+ * box within `SNAP_DEGREES` of a quarter turn is turned upright about its centre (its width and
+ * height swap for an odd quarter turn). A triangle keeps its rotation, which says where its apex is.
+ */
+function snapped(
+	preset: InkShape['preset'],
+	box: InkShape['box'],
+	rotation: number,
+): Pick<InkShape, 'box' | 'rotation'> {
+	const turn = ((rotation % 360) + 360) % 360;
+	const quarters = Math.round(turn / 90);
+	if (preset === 'triangle' || Math.abs(turn - quarters * 90) > SNAP_DEGREES)
+		return { box: { ...box }, rotation };
+	if (quarters % 2 === 0) return { box: { ...box }, rotation: 0 };
+	const cx = box.x + box.width / 2;
+	const cy = box.y + box.height / 2;
+	return {
+		box: { x: cx - box.height / 2, y: cy - box.width / 2, width: box.height, height: box.width },
+		rotation: 0,
 	};
 }

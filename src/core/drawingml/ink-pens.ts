@@ -36,11 +36,13 @@ export const INK_PEN_THICKNESSES_MM: Readonly<Record<'pen' | 'highlighter', read
 	highlighter: [2, 4, 6, 8, 10],
 };
 export const inkThicknessPx = mm;
+/** The widest pen the gallery holds: the widest highlighter (10 mm). */
+export const MAX_INK_PEN_WIDTH = mm(10);
 
 const COLOR = /^#[\da-f]{6}$/iu;
 
 /** Whether `pen` is a pen the gallery can hold, with widths up to `maxWidth` pixels. */
-export function isInkPen(pen: unknown, maxWidth = 16): pen is InkPen {
+export function isInkPen(pen: unknown, maxWidth = MAX_INK_PEN_WIDTH): pen is InkPen {
 	if (!pen || typeof pen !== 'object') return false;
 	const { kind, color, width } = pen as Partial<InkPen>;
 	return (
@@ -54,7 +56,7 @@ export function isInkPen(pen: unknown, maxWidth = 16): pen is InkPen {
 }
 
 /** A stored gallery reduced to its valid pens, at most {@link MAX_INK_PENS}. */
-export function normalizeInkPens(value: unknown, maxWidth = 16): InkPen[] {
+export function normalizeInkPens(value: unknown, maxWidth = MAX_INK_PEN_WIDTH): InkPen[] {
 	if (!Array.isArray(value)) return [];
 	return value
 		.slice(0, MAX_INK_PENS)

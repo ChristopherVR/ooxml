@@ -1,5 +1,6 @@
 import { pointInPolygon } from '../../geometry/shape-boolean-types';
 import { inkDistance, MAX_INK_SAMPLES, type InkCoordinate } from '../ink-geometry';
+import { MAX_INK_PART_SAMPLES, MAX_INK_TRACES } from './inkml-limits';
 import { inkPathPoints } from './path';
 import { inkPenOpacity, type InkPen } from '../ink-pens';
 import type { InkStroke } from './types';
@@ -66,6 +67,7 @@ export function inkStrokeFromSamples(
 		color: pen.color,
 		width: pen.width,
 		opacity: inkPenOpacity(pen.kind),
+		tool: pen.kind,
 		...(varies ? { pressures: pressures.map((value) => Math.max(0, Math.min(1, value))) } : {}),
 		...(start !== undefined && end !== undefined
 			? {
@@ -165,4 +167,22 @@ export function lassoInkStrokes(
 		const inside = points.filter((point) => pointInPolygon(point, ring)).length;
 		return points.length && inside / points.length >= 0.6 ? [index] : [];
 	});
+}
+
+/** Strokes one drawing collects before a new stroke starts another: well inside what a part may hold. */
+const JOIN_MAX_STROKES = 64;
+const JOIN_MAX_SAMPLES = 16_000;
+
+/**
+ * Whether `added` may join the drawing holding `strokes` (strokes drawn one after another, as
+ * Office collects them). The total stays well inside what the reader reads back from one part
+ * (`MAX_INK_TRACES`, `MAX_INK_PART_SAMPLES`), so a drawing this library writes is always read in
+ * full, and rewriting a growing drawing stays cheap.
+ */
+export function canJoinInk(strokes: readonly InkStroke[], added: readonly InkStroke[]): boolean {
+	const count = strokes.length + added.length;
+	if (count > Math.min(JOIN_MAX_STROKES, MAX_INK_TRACES)) return false;
+	let samples = 0;
+	for (const stroke of [...strokes, ...added]) samples += inkPathPoints(stroke.path).length;
+	return samples <= Math.min(JOIN_MAX_SAMPLES, MAX_INK_PART_SAMPLES);
 }

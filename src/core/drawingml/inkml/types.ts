@@ -79,4 +79,22 @@ export interface InkStroke {
 	 * `pptx-viewer-shared`'s `render/ink-replay-timeline.ts`.
 	 */
 	pointTimestamps?: number[] | undefined;
+	/**
+	 * The pen that drew it, when known: this library's own pens, or `highlighter` for a brush with
+	 * InkML `rasterOp="maskPen"` (Office's highlighter). The writer gives a highlighter Office's
+	 * highlighter brush (`tip="rectangle"`, `rasterOp="maskPen"`).
+	 */
+	tool?: 'pen' | 'pencil' | 'highlighter' | 'actionPen' | undefined;
+	/**
+	 * Brush properties of the source part this model does not hold (`tip`, `rasterOp`,
+	 * `ignorePressure`, `fitToCurve`, a `height` other than the width...), written back as read.
+	 */
+	brushExtras?: InkBrushProperty[] | undefined;
+}
+
+/** One InkML `brushProperty`, as written. */
+export interface InkBrushProperty {
+	name: string;
+	value: string;
+	units?: string | undefined;
 }

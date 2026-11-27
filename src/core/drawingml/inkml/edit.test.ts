@@ -5,6 +5,7 @@ import {
 	eraseInkStrokes,
 	inkPathPoints,
 	inkStrokeFromSamples,
+	canJoinInk,
 	inkStrokesBounds,
 	lassoInkStrokes,
 	transformInkStrokes,
@@ -83,6 +84,48 @@ describe('ink edits', () => {
 			color: { kind: 'srgb', value: 'E81123', transforms: [] },
 		});
 	});
+
+	it('snaps a rectangle drawn slightly turned square to the page', () => {
+		// A hand-drawn rectangle 6 degrees off, 200 by 100.
+		const turn = (6 * Math.PI) / 180;
+		const corner = (x: number, y: number) => ({
+			x: 300 + x * Math.cos(turn) - y * Math.sin(turn),
+			y: 200 + x * Math.sin(turn) + y * Math.cos(turn),
+		});
+		const corners = [corner(0, 0), corner(200, 0), corner(200, 100), corner(0, 100), corner(0, 0)];
+		const points = corners.flatMap((point, index) => {
+			const next = corners[index + 1];
+			if (!next) return [point];
+			return Array.from({ length: 10 }, (_, step) => ({
+				x: point.x + ((next.x - point.x) * step) / 10,
+				y: point.y + ((next.y - point.y) * step) / 10,
+			}));
+		});
+		const recognized = recognizeInkShape([points])!;
+		expect(recognized.kind).toBe('rect');
+		const shape = inkShapeOf(recognized, '#000000', 2);
+		expect(shape.rotation).toBe(0);
+		expect(shape.box.width).toBeGreaterThan(shape.box.height);
+		// Turned well past the snap, the shape keeps its rotation.
+		const steep = inkShapeOf({ ...recognized, rotation: 30 } as typeof recognized, '#000000', 2);
+		expect(steep.rotation).toBe(30);
+	});
+
+	it('stops collecting strokes into one drawing well inside the reader limits', () => {
+		const one = [line(0, 0, 10, 10)];
+		expect(
+			canJoinInk(
+				Array.from({ length: 10 }, () => one[0]!),
+				one,
+			),
+		).toBe(true);
+		expect(
+			canJoinInk(
+				Array.from({ length: 64 }, () => one[0]!),
+				one,
+			),
+		).toBe(false);
+	});
 });
 
 describe('ink pens', () => {
@@ -99,11 +142,13 @@ describe('ink pens', () => {
 				{ kind: 'pen', color: '#123456', width: 3 },
 				{ kind: 'marker', color: '#123456', width: 3 },
 				{ kind: 'pen', color: 'red', width: 3 },
-				{ kind: 'highlighter', color: '#FFFF00', width: 22 },
+				{ kind: 'pen', color: '#123456', width: 60 },
 			]),
 		).toEqual([{ kind: 'pen', color: '#123456', width: 3 }]);
+		// The gallery's own highlighter (6 mm) is a valid pen; a caller may keep a lower limit.
+		expect(normalizeInkPens(DEFAULT_INK_PENS)).toEqual(DEFAULT_INK_PENS);
 		expect(
-			normalizeInkPens([{ kind: 'highlighter', color: '#FFFF00', width: 22 }], 32),
-		).toHaveLength(1);
+			normalizeInkPens([{ kind: 'highlighter', color: '#FFFF00', width: 22 }], 16),
+		).toHaveLength(0);
 	});
 });

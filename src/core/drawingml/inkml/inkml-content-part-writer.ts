@@ -47,6 +47,7 @@ function resolveTiltMode(strokes: readonly InkStroke[]): TiltMode {
 export function buildInkMlContent(
 	strokes: readonly InkStroke[],
 	rawXml?: InkXmlObject,
+	space?: { width: number; height: number },
 ): InkXmlObject {
 	const data = rawXml ? { ...rawXml } : {};
 	// A loaded PowerPoint part is keyed `inkml:ink`, not `ink:ink`. Missing that
@@ -58,6 +59,14 @@ export function buildInkMlContent(
 	deleteStaleInkChildren(root);
 	root['@_xmlns:ink'] = INKML_NAMESPACE;
 	root['@_xmlns:pva'] = METADATA_NAMESPACE;
+	// The box the authored paths are drawn in, so a reader stretches them onto a resized drawing.
+	if (space) {
+		root['@_pva:spaceWidth'] = String(space.width);
+		root['@_pva:spaceHeight'] = String(space.height);
+	} else {
+		delete root['@_pva:spaceWidth'];
+		delete root['@_pva:spaceHeight'];
+	}
 	// Only declare (and author per-point values for) a tilt channel pair when
 	// at least one stroke actually carries tilt data. A document with no tilt
 	// anywhere must serialise byte-identically to before this feature existed:
@@ -130,14 +139,34 @@ export function buildInkMlContent(
 function brushProperties(stroke: InkStroke): InkXmlObject[] {
 	const size = String((stroke.width * 2.54) / 96);
 	const opacity = Math.max(0, Math.min(1, stroke.opacity));
+	const extras = new Map((stroke.brushExtras ?? []).map((extra) => [extra.name, extra]));
+	// Office's highlighter: a rectangular tip that masks (multiplies) what is under it.
+	if (stroke.tool === 'highlighter') {
+		if (!extras.has('tip')) extras.set('tip', { name: 'tip', value: 'rectangle' });
+		if (!extras.has('rasterOp')) extras.set('rasterOp', { name: 'rasterOp', value: 'maskPen' });
+	}
+	const height = extras.get('height');
+	extras.delete('height');
 	return [
 		{ '@_name': 'width', '@_value': size, '@_units': 'cm' },
-		{ '@_name': 'height', '@_value': size, '@_units': 'cm' },
+		height
+			? {
+					'@_name': 'height',
+					'@_value': height.value,
+					...(height.units ? { '@_units': height.units } : {}),
+				}
+			: { '@_name': 'height', '@_value': size, '@_units': 'cm' },
 		{ '@_name': 'color', '@_value': stroke.color },
 		...(opacity < 1
 			? [{ '@_name': 'transparency', '@_value': String(Math.round((1 - opacity) * 255)) }]
 			: []),
 		{ '@_name': 'opacity', '@_value': String(stroke.opacity) },
+		// The source part's own properties this model does not hold, as they were written.
+		...[...extras.values()].map((extra) => ({
+			'@_name': extra.name,
+			'@_value': extra.value,
+			...(extra.units ? { '@_units': extra.units } : {}),
+		})),
 	];
 }
 

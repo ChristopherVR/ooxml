@@ -47,6 +47,7 @@ export function pointsToPressures(
 	points: number[][],
 	channelOrder: ChannelOrder,
 	authored = false,
+	range?: { min: number; max: number },
 ): number[] {
 	const fIndex = channelOrder.indexOf('F');
 	if (fIndex < 0) {
@@ -58,7 +59,12 @@ export function pointsToPressures(
 		if (isFiniteNumber(raw)) {
 			// InkML force is commonly integer-encoded (0..32767); clamp to 0-1
 			// for the renderer, normalising the typical integer range.
-			const normalised = !authored && raw > 1 ? raw / 32767 : raw;
+			// The declared range wins (a part may write 0..1023 or 0..8191).
+			const normalised = range
+				? (raw - range.min) / (range.max - range.min)
+				: !authored && raw > 1
+					? raw / 32767
+					: raw;
 			pressures.push(Math.max(0, Math.min(1, normalised)));
 		}
 	}

@@ -29,9 +29,15 @@ export { buildInkMlContent } from './inkml-content-part-writer';
 export interface ParsedInkMlContent {
 	strokes: InkStroke[];
 	rawXml: InkXmlObject;
+	/**
+	 * Part of the ink was not read: a trace over the sample limit, or the part over its sample or
+	 * trace budget. Rewriting the part from the strokes read would lose the rest, so callers keep
+	 * such a part as it is and do not edit its strokes.
+	 */
+	truncated: boolean;
 }
 
-type BrushStyle = Pick<InkStroke, 'color' | 'width' | 'opacity'>;
+type BrushStyle = Pick<InkStroke, 'color' | 'width' | 'opacity' | 'tool' | 'brushExtras'>;
 
 const DEFAULT_BRUSH: BrushStyle = { color: '#000000', width: 1, opacity: 1 };
 
@@ -47,7 +53,10 @@ const DEFAULT_BRUSH: BrushStyle = { color: '#000000', width: 1, opacity: 1 };
  */
 export function parseInkMlContent(data: InkXmlObject, box?: InkTargetBox): ParsedInkMlContent {
 	const index = indexInkMl(data);
-	if (!index || !nsGet(data, 'ink')) return { strokes: [], rawXml: data };
+	const inkRoot = nsGet(data, 'ink');
+	if (!index || !inkRoot) return { strokes: [], rawXml: data, truncated: Boolean(inkRoot) };
+	let truncated = false;
+	const space = authoredSpace(inkRoot);
 	const brushes = collectBrushes(index.brushes);
 	const timing = inkMlTiming(index);
 	const channelOrders = new Map<InkXmlObject | undefined, string[]>();
@@ -59,9 +68,15 @@ export function parseInkMlContent(data: InkXmlObject, box?: InkTargetBox): Parse
 		const authored = typeof trace === 'object' ? String(nsAttr(trace, 'path') ?? '') : '';
 		const traceSamples = countInkTraceSamples(text);
 		const pathSamples = countAuthoredInkPathSamples(authored);
-		if (traceSamples === undefined || pathSamples === undefined) return [];
+		if (traceSamples === undefined || pathSamples === undefined) {
+			truncated = true;
+			return [];
+		}
 		const count = Math.max(traceSamples, pathSamples);
-		if (count > remainingSamples) return [];
+		if (count > remainingSamples) {
+			truncated = true;
+			return [];
+		}
 		remainingSamples -= count;
 		const format = timing.formatFor(trace);
 		let channelOrder = channelOrders.get(format);
@@ -86,6 +101,7 @@ export function parseInkMlContent(data: InkXmlObject, box?: InkTargetBox): Parse
 			{
 				trace,
 				authored: authored.trim(),
+				force: channelRange(format, 'F'),
 				order,
 				points: decodeTracePoints(text, order),
 				untimed: typeof trace === 'object' && nsAttr(trace, 'untimed') !== undefined,
@@ -106,10 +122,17 @@ export function parseInkMlContent(data: InkXmlObject, box?: InkTargetBox): Parse
 			mapPoint && !entry.authored
 				? mapDecodedPoints(entry.points, entry.order, mapPoint)
 				: entry.points;
-		const path = entry.authored || pointsToSvgPath(points, mapPoint ? ['X', 'Y'] : entry.order);
+		const path =
+			(entry.authored && scaleAuthoredPath(entry.authored, space, box)) ||
+			pointsToSvgPath(points, mapPoint ? ['X', 'Y'] : entry.order);
 		if (!path) continue;
 		const brush = brushes.get(entry.brushRef) ?? DEFAULT_BRUSH;
-		const pressures = pointsToPressures(entry.points, entry.order, Boolean(entry.authored));
+		const pressures = pointsToPressures(
+			entry.points,
+			entry.order,
+			Boolean(entry.authored),
+			entry.force,
+		);
 		const tilt = pointsToTilt(entry.points, entry.order);
 		const timestamps = entry.untimed ? [] : pointsToTimestamps(entry.points, entry.order);
 		const { pointTimestamps, ...strokeTiming } = timing.read(entry.trace, timestamps);
@@ -130,7 +153,55 @@ export function parseInkMlContent(data: InkXmlObject, box?: InkTargetBox): Parse
 			...(pointTimestamps.length > 0 ? { pointTimestamps } : {}),
 		});
 	}
-	return { strokes, rawXml: data };
+	return { strokes, rawXml: data, truncated };
+}
+
+/**
+ * The size of the box this library's authored paths were drawn in (`pva:spaceWidth`,
+ * `pva:spaceHeight` on the root), so a part read into a box of another size (the drawing was
+ * resized after it was saved) is stretched onto it, as Office stretches the traces.
+ */
+function authoredSpace(root: unknown): { width: number; height: number } | undefined {
+	if (!root || typeof root !== 'object') return undefined;
+	const width = Number(nsAttr(root as InkXmlObject, 'spaceWidth'));
+	const height = Number(nsAttr(root as InkXmlObject, 'spaceHeight'));
+	return width > 0 && height > 0 ? { width, height } : undefined;
+}
+
+const AUTHORED_POINT =
+	/([ML])\s*(-?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)[,\s]+(-?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)/giu;
+
+/** An authored path stretched from the space it was drawn in onto `box`, else as it is. */
+function scaleAuthoredPath(
+	path: string,
+	space: { width: number; height: number } | undefined,
+	box: InkTargetBox | undefined,
+): string {
+	if (!space || !box || (space.width === box.width && space.height === box.height)) return path;
+	const sx = box.width / space.width;
+	const sy = box.height / space.height;
+	const round = (value: number) => Math.round(value * 100) / 100;
+	return path.replace(
+		AUTHORED_POINT,
+		(_, command: string, x: string, y: string) =>
+			`${command} ${round(Number(x) * sx)} ${round(Number(y) * sy)}`,
+	);
+}
+
+/** A channel's declared range (InkML `channel` `min`/`max`), when it declares a `max`. */
+function channelRange(
+	format: InkXmlObject | undefined,
+	name: string,
+): { min: number; max: number } | undefined {
+	if (!format) return undefined;
+	const channel = ensureArray(nsGet(format, 'channel')).find(
+		(item) => String(nsAttr(item, 'name') ?? '').toUpperCase() === name,
+	);
+	if (!channel) return undefined;
+	const max = Number(nsAttr(channel, 'max'));
+	const declaredMin = Number(nsAttr(channel, 'min') ?? 0);
+	const min = isFiniteNumber(declaredMin) ? declaredMin : 0;
+	return isFiniteNumber(max) && max > min ? { min, max } : undefined;
 }
 
 /** Re-project decoded channel values, keeping every non-XY channel in place. */
@@ -172,7 +243,22 @@ function collectBrushes(nodes: readonly InkXmlObject[]): Map<string, BrushStyle>
 			? inkLengthToPx(Number(size.value), size.units === undefined ? undefined : String(size.units))
 			: Number.NaN;
 		const id = String(nsAttr(brush, 'id') ?? '');
+		const extras = [...properties]
+			.filter(
+				([name, { value }]) =>
+					!['width', 'color', 'transparency', 'opacity'].includes(name) &&
+					// A height equal to the width is the round tip the writer always writes.
+					!(name === 'height' && size && value === size.value),
+			)
+			.map(([name, { value, units }]) => ({
+				name,
+				value: String(value ?? ''),
+				...(units === undefined ? {} : { units: String(units) }),
+			}));
+		const highlighter = properties.get('rasterOp')?.value === 'maskPen';
 		brushes.set(id, {
+			...(highlighter ? { tool: 'highlighter' as const } : {}),
+			...(extras.length ? { brushExtras: extras } : {}),
 			color: String(properties.get('color')?.value ?? DEFAULT_BRUSH.color),
 			// Rounded, so a width this library wrote in centimetres reads back as the same pixels.
 			width:

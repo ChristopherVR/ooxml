@@ -78,6 +78,72 @@ describe('InkML parts', () => {
 		expect(readInkPart('x'.repeat(9 * 1024 * 1024)).strokes).toEqual([]);
 	});
 
+	it('marks a part read only in part, and never rewrites it', () => {
+		const head =
+			'<inkml:ink xmlns:inkml="http://www.w3.org/2003/InkML"><inkml:traceFormat><inkml:channel name="X" type="integer"/><inkml:channel name="Y" type="integer"/></inkml:traceFormat>';
+		const big = Array.from({ length: 5000 }, (_, i) => `${i} ${i}`).join(',');
+		const xml = `${head}<inkml:trace>0 0,10 10</inkml:trace><inkml:trace>${big}</inkml:trace></inkml:ink>`;
+		const part = readInkPart(xml, { width: 100, height: 100 });
+		expect(part.truncated).toBe(true);
+		expect(part.strokes).toHaveLength(1);
+		// An edit of the strokes read leaves the part alone: the long trace would be lost.
+		expect(updatedInkPart(xml, [], { width: 100, height: 100 })).toBeUndefined();
+		expect(readInkPart('<ink:ink').truncated).toBe(true);
+		expect(readInkPart('x'.repeat(9 * 1024 * 1024)).truncated).toBe(true);
+		expect(readInkPart(`${head}<inkml:trace>0 0,10 10</inkml:trace></inkml:ink>`).truncated).toBe(
+			false,
+		);
+	});
+
+	it('reads pressure by the declared range and InkML ?, * and # values', () => {
+		const xml =
+			'<inkml:ink xmlns:inkml="http://www.w3.org/2003/InkML"><inkml:traceFormat><inkml:channel name="X" type="integer"/><inkml:channel name="Y" type="integer"/><inkml:channel name="F" type="integer" max="1023"/></inkml:traceFormat>' +
+			"<inkml:trace>#A 0 1023,'1 ? *,* * 0</inkml:trace></inkml:ink>";
+		const [stroke] = readInkPart(xml).strokes;
+		expect(stroke?.pressures).toEqual([1, 1, 0]);
+		// #A is 10; the second point moves by 1 and keeps y; * repeats the last difference.
+		expect(stroke?.path).toBe('M 10 0 L 11 0 L 12 0');
+	});
+
+	it('keeps brush properties it does not model and writes Office’s highlighter', () => {
+		const xml =
+			'<inkml:ink xmlns:inkml="http://www.w3.org/2003/InkML"><inkml:definitions><inkml:brush xml:id="b"><inkml:brushProperty name="width" value="0.1" units="cm"/><inkml:brushProperty name="height" value="0.3" units="cm"/><inkml:brushProperty name="color" value="#FF0000"/><inkml:brushProperty name="ignorePressure" value="1"/><inkml:brushProperty name="fitToCurve" value="1"/></inkml:brush></inkml:definitions>' +
+			'<inkml:trace brushRef="#b">0 0,10 10</inkml:trace><inkml:trace brushRef="#b">5 5,20 0</inkml:trace></inkml:ink>';
+		const box = { width: 20, height: 10 };
+		const { strokes } = readInkPart(xml, box);
+		const out = updatedInkPart(xml, strokes.slice(0, 1), box)!;
+		for (const property of [
+			'name="ignorePressure" value="1"',
+			'name="fitToCurve" value="1"',
+			'name="height" value="0.3" units="cm"',
+		])
+			expect(out).toContain(property);
+		const highlighter = inkStrokeFromSamples(
+			[
+				{ x: 0, y: 0 },
+				{ x: 9, y: 3 },
+			],
+			{ kind: 'highlighter', color: '#FFFF00', width: 22 },
+		)!;
+		const written = writeInkPart([highlighter]);
+		expect(written).toContain('name="tip" value="rectangle"');
+		expect(written).toContain('name="rasterOp" value="maskPen"');
+		expect(readInkPart(written).strokes[0]?.tool).toBe('highlighter');
+	});
+
+	it('stretches its own strokes onto a box resized after saving', () => {
+		const stroke = inkStrokeFromSamples(
+			[
+				{ x: 0, y: 0 },
+				{ x: 50, y: 20 },
+			],
+			pen,
+		)!;
+		const xml = writeInkPart([stroke], undefined, { width: 50, height: 20 });
+		expect(readInkPart(xml, { width: 50, height: 20 }).strokes[0]?.path).toBe(stroke.path);
+		expect(readInkPart(xml, { width: 100, height: 40 }).strokes[0]?.path).toBe('M 0 0 L 100 40');
+	});
+
 	it('round-trips the object tree, escaping text and attributes', () => {
 		const xml =
 			'<?xml version="1.0"?><a:root xmlns:a="urn:a" note="&quot;x&lt;"><a:t>1 &amp; 2</a:t><a:t>3</a:t><a:e k="v"/></a:root>';
