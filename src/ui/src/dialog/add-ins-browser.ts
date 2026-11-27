@@ -93,3 +93,17 @@ export function renderAddInBrowser(options: AddInBrowserOptions) {
 			})}
 		</div>`;
 }
+
+export function renderMarketplaceForm(
+	session: AddInSession,
+	busy: boolean,
+	resolve: (event: SubmitEvent) => void,
+) {
+	if (!session.resolver || session.product === 'visio') return nothing;
+	const { t } = session;
+	return html`<form class="tools" @submit=${resolve}>
+		<label for="marketplace-link">${t('Add from Marketplace link')}</label>
+		<input id="marketplace-link" type="text" maxlength="2048" ?disabled=${busy} />
+		<button type="submit" ?disabled=${busy}>${t('Review add-in')}</button>
+	</form>`;
+}

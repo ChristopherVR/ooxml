@@ -9,7 +9,7 @@ import {
 } from '../ribbon/add-in-runtime-settings';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
 import { renderAddInConsent, renderAddInConsentActions } from './add-ins-consent';
-import { renderAddInBrowser, type Pivot } from './add-ins-browser';
+import { renderAddInBrowser, renderMarketplaceForm, type Pivot } from './add-ins-browser';
 import { addInSession, type AddInSession, type AddInPreview } from './add-ins-session';
 import { defineDialog, type OfficeUiDialog } from './dialog';
 import css from './add-ins-dialog.css?raw';
@@ -165,17 +165,6 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		}
 	}
 
-	private renderMarketplace(session: AddInSession) {
-		if (this.#pivot !== 'My Add-ins' || !session.resolver || session.product === 'visio')
-			return nothing;
-		const label = session.t('Add from Marketplace link');
-		return html`<form class="tools" @submit=${this.resolve}>
-			<label for="marketplace-link">${label}</label>
-			<input id="marketplace-link" type="text" maxlength="2048" ?disabled=${!!this.#pending} />
-			<button type="submit" ?disabled=${!!this.#pending}>${session.t('Review add-in')}</button>
-		</form>`;
-	}
-
 	private confirm(): void {
 		const preview = this.#preview;
 		const session = this.#session;
@@ -254,7 +243,10 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 							busy: Boolean(this.#pending),
 							error: this.#error,
 							alert: this.renderError(),
-							marketplace: this.renderMarketplace(session),
+							marketplace:
+								this.#pivot === 'My Add-ins'
+									? renderMarketplaceForm(session, Boolean(this.#pending), this.resolve)
+									: nothing,
 							select: (pivot) => this.pivot(pivot),
 							key: (event, pivots) => this.pivotKey(event, pivots),
 							search: (event) => {
