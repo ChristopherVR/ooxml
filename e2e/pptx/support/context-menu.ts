@@ -18,6 +18,8 @@
  */
 import type { Locator, Page } from '@playwright/test';
 
+import { settledBox } from './deck';
+
 /** A context-menu container, whichever of the two neutral markers it uses. */
 export const MENU_SELECTOR =
 	'[data-pptx-context-menu="true"], [data-pptx-presentation-menu], pptx-ui-context-menu, [role="menu"]';
@@ -166,10 +168,7 @@ export async function menuIsOpen(page: Page): Promise<boolean> {
 
 /** Centre of a rendered locator, in viewport coordinates. */
 export async function centreOf(target: Locator): Promise<Point> {
-	const box = await target.boundingBox();
-	if (!box) {
-		throw new Error('cannot aim at an element with no bounding box');
-	}
+	const box = await settledBox(target, 'cannot aim at an element with no bounding box');
 	return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 

@@ -52,11 +52,25 @@ for (const animated of [false, true])
 				return box && getComputedStyle(box).visibility === 'hidden';
 			}, id);
 			await page.keyboard.press('PageDown');
+			// Mark the animating frame again: the vanilla binding rebuilds its stage on the
+			// build step, replacing the node marked above.
+			await page.waitForFunction((id) => {
+				const nodes = [...document.querySelectorAll<HTMLElement>('[data-element-id]')].filter(
+					(node) => node.dataset.elementId === id,
+				);
+				for (const node of nodes) node.removeAttribute('data-e2e-animated-frame');
+				const box = nodes.sort(
+					(a, b) =>
+						b.getBoundingClientRect().width * b.getBoundingClientRect().height -
+						a.getBoundingClientRect().width * a.getBoundingClientRect().height,
+				)[0];
+				box?.setAttribute('data-e2e-animated-frame', 'true');
+				if (!box) return false;
+				const style = getComputedStyle(box);
+				return style.visibility !== 'hidden' && style.animationName !== 'none';
+			}, id);
 			const box = page.locator('[data-e2e-animated-frame]');
 			await expect(box).toBeVisible();
-			await expect
-				.poll(() => box.evaluate((node) => getComputedStyle(node).animationName))
-				.not.toBe('none');
 			img = box.locator('img').first();
 		}
 

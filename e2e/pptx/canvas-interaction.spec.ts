@@ -39,7 +39,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
-import { fixture, loadDeck, slideElements, viewport } from './support/deck';
+import { fixture, loadDeck, settledBox, slideElements, viewport } from './support/deck';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -59,15 +59,17 @@ test('default fitting follows viewport resize without changing authored geometry
 
 	await page.setViewportSize({ width: 1100, height: 650 });
 	await expect
-		.poll(async () => (await target.boundingBox())!.width)
+		.poll(async () => (await settledBox(target, 'Box A has no bounding box')).width)
 		.toBeLessThan(original.width - 1);
-	const smaller = (await target.boundingBox())!;
+	const smaller = await settledBox(target, 'Box A has no bounding box');
 	expect(smaller.width / smaller.height).toBeCloseTo(original.width / original.height, 2);
 	expect(await geomOf(target)).toStrictEqual(authored);
 
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await expect
-		.poll(async () => Math.abs((await target.boundingBox())!.width - original.width))
+		.poll(async () =>
+			Math.abs((await settledBox(target, 'Box A has no bounding box')).width - original.width),
+		)
 		.toBeLessThan(1);
 	expect(await geomOf(target)).toStrictEqual(authored);
 });

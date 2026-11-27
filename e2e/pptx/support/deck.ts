@@ -235,11 +235,28 @@ export function inspector(page: Page): Locator {
 	return page.locator('[data-pptx-inspector]:visible').first();
 }
 
+/**
+ * The rendered box of `target`, waiting out a stage rebuild. The vanilla binding rebuilds its
+ * stage on every store change (a selection, a resize), so a locator resolved just before the
+ * rebuild measures a detached node and Playwright reports no box; measure again until the new
+ * node is laid out.
+ */
+export async function settledBox(
+	target: Locator,
+	message: string,
+	timeout = 5_000,
+): Promise<{ x: number; y: number; width: number; height: number }> {
+	const deadline = Date.now() + timeout;
+	for (;;) {
+		const box = await target.boundingBox({ timeout });
+		if (box) return box;
+		if (Date.now() > deadline) throw new Error(message);
+		await target.page().waitForTimeout(50);
+	}
+}
+
 /** Select an element on the canvas by clicking its centre. */
 export async function selectElement(page: Page, target: Locator): Promise<void> {
-	const box = await target.boundingBox();
-	if (!box) {
-		throw new Error('cannot select an element with no bounding box');
-	}
+	const box = await settledBox(target, 'cannot select an element with no bounding box');
 	await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 }
