@@ -1,12 +1,13 @@
 // The list-shaped parts of a shared sheet (comments, conditional formats, validations, links,
-// tables, charts) between the model and their shared maps. See part-specs.ts for the mapping.
+// tables, charts, ink) between the model and their shared maps. See part-specs.ts for the mapping.
 import { formatAddress } from '../address';
-import type { Comment, DrawingObject, Worksheet } from '../model';
+import type { Comment, DrawingObject, InkObject, Worksheet } from '../model';
 import { type PartIds, type PartSpec, type PrefixStore, readKeyed, writeKeyed } from './keyed';
 import {
 	chartSpec,
 	commentSpec,
 	conditionalSpec,
+	inkSpec,
 	linkSpec,
 	replySpec,
 	tableSpec,
@@ -35,7 +36,13 @@ const repliesOwners = (comments: readonly Comment[]): Map<object, string> => {
 const allReplies = (comments: readonly Comment[]): Reply[] =>
 	comments.flatMap((comment) => comment.replies ?? []);
 
-/** Writes the object lists of `sheet`; `charts` is skipped for edits that cannot touch drawings. */
+const inksOf = (sheet: Worksheet): InkObject[] =>
+	sheet.drawings.filter((d): d is InkObject => d.kind === 'ink');
+
+/**
+ * Writes the object lists of `sheet`; `charts` and `ink` are skipped for edits that cannot touch
+ * drawings.
+ */
 export function writeSheetParts(
 	sheet: Worksheet,
 	host: PartHost,
@@ -57,19 +64,21 @@ export function writeSheetParts(
 			),
 			chartSpec,
 		);
+	if (options.charts) put('ink', inksOf(sheet), inkSpec);
 }
 
 /**
  * Reads the object lists named in `parts` (all when undefined) into `sheet`, in place.  Returns whether
- * anything in the sheet changed.
+ * anything in the sheet changed. Ink is read only from a room whose writers share it (`ink`).
  */
 export function applySheetParts(
 	sheet: Worksheet,
 	host: PartHost,
 	parts?: ReadonlySet<string>,
+	options: { ink: boolean } = { ink: true },
 ): boolean {
 	const wants = (part: ListPart): PrefixStore | undefined =>
-		!parts || parts.has(part) ? host.store(part) : undefined;
+		(part !== 'ink' || options.ink) && (!parts || parts.has(part)) ? host.store(part) : undefined;
 	let changed = false;
 	const refuse = (part: ListPart) => (field: string) => host.refuse?.(part, field);
 	const swap = <T extends object>(
@@ -148,19 +157,23 @@ export function applySheetParts(
 		}
 		inPlace(sheet.tables)(next);
 	});
+	// Charts and ink keep their slots among the other drawings, in the shared order; extras go last.
+	const slots =
+		(kind: 'chart' | 'ink') =>
+		(next: DrawingObject[]): void => {
+			let k = 0;
+			const merged: DrawingObject[] = [];
+			for (const drawing of sheet.drawings) {
+				if (drawing.kind !== kind) merged.push(drawing);
+				else if (k < next.length) merged.push(next[k++] as DrawingObject);
+			}
+			while (k < next.length) merged.push(next[k++] as DrawingObject);
+			sheet.drawings.splice(0, sheet.drawings.length, ...merged);
+		};
 	const charts = sheet.drawings.filter(
 		(d): d is Extract<DrawingObject, { kind: 'chart' }> => d.kind === 'chart',
 	);
-	swap('charts', charts, chartSpec, (next) => {
-		// Charts keep their slots among the other drawings, in the shared order; extras go last.
-		let k = 0;
-		const merged: DrawingObject[] = [];
-		for (const drawing of sheet.drawings) {
-			if (drawing.kind !== 'chart') merged.push(drawing);
-			else if (k < next.length) merged.push(next[k++] as DrawingObject);
-		}
-		while (k < next.length) merged.push(next[k++] as DrawingObject);
-		sheet.drawings.splice(0, sheet.drawings.length, ...merged);
-	});
+	swap('charts', charts, chartSpec, slots('chart'));
+	swap('ink', inksOf(sheet), inkSpec, slots('ink'));
 	return changed;
 }

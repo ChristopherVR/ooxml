@@ -383,9 +383,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 - [ ] **P1** Missing tabs: Chart Format (a pane instead).
 - [ ] **P2** Draw tab: Ruler (Stencils) and Ink to Math are disabled with their reason (no ruler
-      stencil, no handwriting recognizer), and ink stays local in a shared room; drawing, the
-      eraser, the lasso, Ink to Shape and Ink Replay work and save as Excel ink
-      (`xlsx/edit/ink.test.ts`, `e2e/xlsx/draw-tab.spec.ts`).
+      stencil, no handwriting recognizer); drawing, the eraser, the lasso, Ink to Shape and Ink
+      Replay work and save as Excel ink (`xlsx/edit/ink.test.ts`, `e2e/xlsx/draw-tab.spec.ts`).
+      Ink is shared in a shared workbook, last writer wins per drawing
+      (`xlsx/collab/share-ink.test.ts`).
 - [x] **P1** PivotTable Analyze and PivotTable Design contextual tabs: options, field settings,
       refresh, change source, subtotals, grand totals, report layout, blank rows, the PivotTable
       style gallery and style options; Excel 16 reopens and refreshes the results (2026-11-26).

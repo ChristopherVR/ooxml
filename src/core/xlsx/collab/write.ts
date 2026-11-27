@@ -84,6 +84,8 @@ export function writeWorkbook(
 	setIfChanged(meta, 'v', SCHEMA_VERSION);
 	// Stamps rooms whose peers share the object-list parts; older rooms are left alone on read.
 	setIfChanged(meta, 'parts', 1);
+	// And ink, which a build before it kept local: its peers' rooms leave a joiner's ink alone.
+	setIfChanged(meta, 'ink', 1);
 	let defaultKey = meta.get('defaultStyle');
 	if (typeof defaultKey !== 'string') {
 		const base = workbook.styles[0];
@@ -130,7 +132,7 @@ export function writeWorkbook(
 		);
 		const ranges = !full && scope.kind === 'sheet' ? scope.ranges : undefined;
 		writeCells(sheet, sheetPart(map, 'cells'), styles.keyOf, ranges);
-		// A cell-range edit (typing, paste, format) cannot change drawings: skip the charts.
+		// A cell-range edit (typing, paste, format) cannot change drawings: skip charts and ink.
 		writeSheetParts(sheet, partHost(shared, keys, key), { charts: ranges === undefined });
 	});
 	writeOrder(sheets, keyList, entries);

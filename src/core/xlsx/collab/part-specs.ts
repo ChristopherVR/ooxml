@@ -7,6 +7,7 @@
 //   links     range -> Hyperlink                         one link per range
 //   tables    minted key -> Table (columns, style flags, filters), the whole table as one entry
 //   charts    minted key -> ChartObject, last writer wins per chart (anchor, name, `chartSpace`)
+//   ink       minted key -> InkObject, last writer wins per drawing (anchor, name, strokes)
 // Everything the model carries for an item (preserved extension XML inside a rule or chart, the
 // chart's neutral `chartSpace`) travels in the entry verbatim; entries are validated on decode.
 import { isStorableHyperlinkHref } from '../../opc/safe-href';
@@ -18,6 +19,7 @@ import type {
 	ConditionalFormat,
 	DataValidation,
 	Hyperlink,
+	InkObject,
 	Table,
 } from '../model';
 import type { PartSpec } from './keyed';
@@ -204,5 +206,64 @@ export const chartSpec: PartSpec<ChartObject> = {
 	},
 	adopt: (decoded, local) => {
 		if (local?.partName !== undefined) decoded.partName = local.partName;
+	},
+};
+
+/** A shared ink entry holds at most this many strokes and path characters per stroke. */
+const MAX_SHARED_STROKES = 4096;
+const MAX_SHARED_PATH = 262_144;
+const HEX = /^#[\da-f]{6}$/iu;
+const isSize = (v: unknown, max: number): v is number =>
+	typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= max;
+
+function isStroke(raw: unknown): boolean {
+	return (
+		isRecord(raw) &&
+		isText(raw.path, MAX_SHARED_PATH) &&
+		isText(raw.color, 7) &&
+		HEX.test(raw.color) &&
+		isSize(raw.width, 1024) &&
+		typeof raw.opacity === 'number' &&
+		raw.opacity >= 0 &&
+		raw.opacity <= 1
+	);
+}
+
+/**
+ * Ink drawn on the Draw tab, last writer wins per drawing. The anchor as read (`sourceXml`, with
+ * its fallback picture) and the part name belong to the package of the peer that holds them, so
+ * they stay local; ink read only in part (`truncated`) is not shared, since its strokes are not
+ * the whole drawing.
+ */
+export const inkSpec: PartSpec<InkObject> = {
+	encode: (ink) => {
+		if (ink.truncated) return undefined;
+		const { partName: _part, sourceXml: _source, ...rest } = ink;
+		return clone(rest);
+	},
+	decode: (raw) =>
+		isRecord(raw) &&
+		raw.kind === 'ink' &&
+		isRecord(raw.anchor) &&
+		isRecord(raw.anchor.from) &&
+		isSize(raw.width, 1_000_000) &&
+		isSize(raw.height, 1_000_000) &&
+		Array.isArray(raw.strokes) &&
+		raw.strokes.length <= MAX_SHARED_STROKES &&
+		raw.strokes.every(isStroke) &&
+		raw.truncated === undefined &&
+		raw.sourceXml === undefined &&
+		raw.partName === undefined &&
+		(raw.name === undefined || isText(raw.name, 255)) &&
+		(raw.description === undefined || isText(raw.description))
+			? (clone(raw) as unknown as InkObject)
+			: undefined,
+	natural: (e) => {
+		const name = (e as { name?: unknown }).name;
+		return typeof name === 'string' ? name : undefined;
+	},
+	adopt: (decoded, local) => {
+		if (local?.partName !== undefined) decoded.partName = local.partName;
+		if (local?.sourceXml !== undefined) decoded.sourceXml = local.sourceXml;
 	},
 };

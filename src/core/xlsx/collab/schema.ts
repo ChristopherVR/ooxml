@@ -4,8 +4,10 @@
 //   xlsx:styles  style key -> resolved CellStyle (content-addressed, see styles.ts)
 //   xlsx:names   `${sheetKey}!${lower-case name}` -> NameEntry
 //   xlsx:sheets  sheet key -> Y.Map { props, cells, rows, cols, merges }
-//   xlsx:comments, xlsx:replies, xlsx:cf, xlsx:dv, xlsx:links, xlsx:tables, xlsx:charts
+//   xlsx:comments, xlsx:replies, xlsx:cf, xlsx:dv, xlsx:links, xlsx:tables, xlsx:charts, xlsx:ink
 //                `${sheetKey}/${item key}` -> { i, d } (keyed object lists, see part-specs.ts)
+//   `meta.parts = 1` stamps rooms whose writers share the lists; `meta.ink = 1` those that also
+//   share ink (written by a later build), so ink of an older room's peers is never dropped.
 // A sheet key is a stable id minted by the peer that added the sheet (never its name or index).
 // Inside a sheet: `props` (Y.Map: name, sheetId, order, state, tab, rh, cw), `cells` (`A1` ->
 // CellEntry), `rows` (1-based row number -> RowEntry), `cols` (`C:E` span -> ColEntry) and
@@ -27,7 +29,16 @@ export const SHEET_PARTS = ['props', 'cells', 'rows', 'cols', 'merges'] as const
  * every sheet, with entries keyed `${sheetKey}/${item}`, so no peer ever has to create one: rooms
  * written before these parts existed, and two peers writing first at once, converge.
  */
-export const LIST_PARTS = ['comments', 'replies', 'cf', 'dv', 'links', 'tables', 'charts'] as const;
+export const LIST_PARTS = [
+	'comments',
+	'replies',
+	'cf',
+	'dv',
+	'links',
+	'tables',
+	'charts',
+	'ink',
+] as const;
 export type ListPart = (typeof LIST_PARTS)[number];
 export type SheetPart = (typeof SHEET_PARTS)[number];
 

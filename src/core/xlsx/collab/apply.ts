@@ -19,6 +19,8 @@ import type { LeftOutValue } from '../../collab/refusal';
 
 /** Whether the room's writers share the object-list parts (see write.ts). */
 const sharesParts = (shared: SharedWorkbook): boolean => shared.meta.get('parts') === 1;
+/** Whether they share ink too: until then each peer keeps its own (an older build's room). */
+const sharesInk = (shared: SharedWorkbook): boolean => shared.meta.get('ink') === 1;
 import { type SheetEntry, type SheetKeys, sheetEntries } from './sheets';
 import { StyleBridge } from './styles';
 
@@ -77,7 +79,9 @@ export function applyShared(
 		}
 		if (
 			sharesParts(shared) &&
-			applySheetParts(sheet, partHost(shared, keys, key, refuse), full ? undefined : part.parts)
+			applySheetParts(sheet, partHost(shared, keys, key, refuse), full ? undefined : part.parts, {
+				ink: sharesInk(shared),
+			})
 		)
 			sheetsTouched.add(index);
 		const cells = childMap(map, 'cells');
