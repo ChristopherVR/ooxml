@@ -50,4 +50,55 @@ describe('ink through the clipboard', () => {
 		const parsed = PMDOMParser.fromSchema(schema).parse(holder).firstChild!.firstChild!;
 		expect(parsed.attrs.ink).toBeNull();
 	});
+
+	const pasted = (attrs: Record<string, string>) => {
+		const holder = document.createElement('p');
+		const span = document.createElement('span');
+		span.dataset.docxImagePlaceholder = '1';
+		for (const [key, value] of Object.entries(attrs)) span.setAttribute(key, value);
+		span.textContent = 'Ink';
+		holder.append(span);
+		return PMDOMParser.fromSchema(schema).parse(holder).firstChild!.firstChild!;
+	};
+	const stroke = { path: 'M 0 0 L 10 10', color: '#112233', width: 2, opacity: 1 };
+
+	it('refuses strokes no editor would write', () => {
+		for (const bad of [
+			{ ...stroke, width: '1e999' },
+			{ ...stroke, width: -2 },
+			{ ...stroke, color: 'red' },
+			{ ...stroke, path: 'M 0 0 C 1 1 2 2 3 3' },
+		]) {
+			const ink = JSON.stringify({ strokes: [bad], width: 10, height: 10 }).replace(
+				'"1e999"',
+				'1e999',
+			);
+			expect(pasted({ 'data-ink': ink }).attrs.ink).toBeNull();
+		}
+		const many = JSON.stringify({
+			strokes: Array.from({ length: 65 }, () => stroke),
+			width: 10,
+			height: 10,
+		});
+		expect(pasted({ 'data-ink': many }).attrs.ink).toBeNull();
+	});
+
+	it('keeps only what a stroke, a size and a position may hold', () => {
+		const node = pasted({
+			'data-ink': JSON.stringify({
+				strokes: [
+					{ ...stroke, opacity: 'zz', brushExtras: [{ name: 'x', value: 'y' }], pressures: [1] },
+				],
+				width: 10,
+				height: 10,
+			}),
+			'data-width-px': '1e999',
+			'data-anchored': '1',
+			'data-placement': '{"wrap":"bogus","offsetXPx":1e999,"relativeFrom":"page","evil":1}',
+		});
+		const ink = JSON.parse(node.attrs.ink);
+		expect(ink.strokes[0]).toEqual(stroke);
+		expect(node.attrs.widthPx).toBe(10);
+		expect(JSON.parse(node.attrs.placement)).toEqual({ wrap: 'none', relativeFrom: 'page' });
+	});
 });

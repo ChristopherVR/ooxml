@@ -1,6 +1,7 @@
 import { parseInkMlContent } from '../../../drawingml/inkml/inkml-content-part';
 import { readInkPart } from '../../../drawingml/inkml/part';
 import { inkObjectFromXml } from '../../../drawingml/inkml/xml-tree';
+import { inkFromClipboard } from '../../../docx/ui/ink-clipboard';
 import type { SecurityCase } from '../case';
 
 export const cases: readonly SecurityCase[] = [
@@ -27,5 +28,25 @@ export const cases: readonly SecurityCase[] = [
 			return `${strokes} ${own}`;
 		},
 		expected: '1 true',
+	},
+	{
+		name: 'pasted Word ink is rebuilt from what ink may hold',
+		limits: { ms: 1500, heapMb: 96 },
+		run() {
+			const dataset = {
+				ink: '{"strokes":[{"path":"M 0 0 L 1 1","color":"#000000","width":1e999}],"width":1,"height":1}',
+			};
+			const huge = inkFromClipboard({ dataset } as unknown as HTMLElement);
+			const placement = inkFromClipboard({
+				dataset: {
+					ink: '{"strokes":[{"path":"M 0 0 L 1 1","color":"#000000","width":1}],"width":1,"height":1}',
+					anchored: '1',
+					placement: '{"wrap":"x","offsetYPx":1e999}',
+					widthPx: '1e999',
+				},
+			} as unknown as HTMLElement);
+			return `${'ink' in huge} ${placement.placement} ${placement.widthPx}`;
+		},
+		expected: 'false {"wrap":"none"} 1',
 	},
 ];
