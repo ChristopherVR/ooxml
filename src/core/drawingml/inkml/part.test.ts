@@ -154,6 +154,38 @@ describe('InkML parts', () => {
 	});
 });
 
+describe('inkStrokesEqual', () => {
+	const base = { path: 'M 0 0 L 4 4', color: '#000000', width: 2, opacity: 1 };
+	it('tells strokes apart by pressure, tilt, pen and brush properties', () => {
+		expect(inkStrokesEqual([{ ...base, pressures: [0.5, 0.5] }], [base])).toBe(true);
+		expect(
+			inkStrokesEqual([{ ...base, pressures: [0.2, 0.9] }], [{ ...base, pressures: [0.9, 0.2] }]),
+		).toBe(false);
+		expect(
+			inkStrokesEqual([{ ...base, tiltAngles: [1, 2] }], [{ ...base, tiltAngles: [1, 3] }]),
+		).toBe(false);
+		expect(inkStrokesEqual([{ ...base, tool: 'highlighter' }], [base])).toBe(false);
+		expect(
+			inkStrokesEqual([{ ...base, brushExtras: [{ name: 'fitToCurve', value: '1' }] }], [base]),
+		).toBe(false);
+		expect(
+			inkStrokesEqual(
+				[{ ...base, tool: 'highlighter' }],
+				[
+					{
+						...base,
+						tool: 'highlighter',
+						brushExtras: [
+							{ name: 'tip', value: 'rectangle' },
+							{ name: 'rasterOp', value: 'maskPen' },
+						],
+					},
+				],
+			),
+		).toBe(true);
+	});
+});
+
 describe('inkSvg', () => {
 	it('draws checked paths and colours only', () => {
 		const svg = inkSvg(

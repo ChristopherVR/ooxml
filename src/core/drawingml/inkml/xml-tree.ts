@@ -19,8 +19,14 @@ function textOf(element: XmlElement): string {
 	return text;
 }
 
+/**
+ * An object for element and attribute names, which come from the part: with no prototype, a
+ * `__proto__` or `constructor` element is an ordinary key and never reaches Object.prototype.
+ */
+const record = (): InkXmlObject => Object.create(null) as InkXmlObject;
+
 function convert(element: XmlElement): InkXmlObject | string {
-	const object: InkXmlObject = {};
+	const object = record();
 	for (let index = 0; index < element.attributes.length; index++) {
 		const attribute = element.attributes.item(index);
 		if (attribute) object[`@_${attribute.name}`] = attribute.value;
@@ -31,7 +37,7 @@ function convert(element: XmlElement): InkXmlObject | string {
 	if (!children.length && text) object['#text'] = text;
 	for (const child of children) {
 		const value = convert(child);
-		const existing = object[child.nodeName];
+		const existing = Object.hasOwn(object, child.nodeName) ? object[child.nodeName] : undefined;
 		if (existing === undefined) object[child.nodeName] = value as InkXmlObject;
 		else if (Array.isArray(existing)) existing.push(value as InkXmlObject);
 		else object[child.nodeName] = [existing as InkXmlObject, value as InkXmlObject];
@@ -43,7 +49,7 @@ function convert(element: XmlElement): InkXmlObject | string {
 export function inkObjectFromXml(xml: string): InkXmlObject {
 	const root = parseXml(xml, { label: 'InkML', limits: { maxDepth: 64 } }).documentElement;
 	if (!root || !isElement(root)) return {};
-	const tree: InkXmlObject = {};
+	const tree = record();
 	tree[root.nodeName] = convert(root) as InkXmlObject;
 	return tree;
 }

@@ -1,6 +1,7 @@
 export * from './types';
 export * from './part';
 export * from './edit';
+export * from './box';
 export * from './svg';
 export { inkObjectFromXml, inkObjectToXml } from './xml-tree';
 export { buildInkMlContent, parseInkMlContent } from './inkml-content-part';

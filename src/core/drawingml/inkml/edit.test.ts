@@ -11,6 +11,7 @@ import {
 	transformInkStrokes,
 } from './edit';
 import { inkShapeOf } from './to-shape';
+import { fitInkBox, inkBoxReaches, inkJoins, inkLocalPoint, snapInkBox } from './box';
 import type { InkStroke } from './types';
 
 const pen = { kind: 'pen' as const, color: '#000000', width: 2 };
@@ -125,6 +126,37 @@ describe('ink edits', () => {
 				one,
 			),
 		).toBe(false);
+	});
+});
+
+describe('ink boxes', () => {
+	const box = { x: 100, y: 50, width: 200, height: 100 };
+	it('joins strokes drawn soon and near, and reaches a box with the eraser', () => {
+		const near = { x: 320, y: 60, width: 10, height: 10 };
+		expect(inkJoins(box, near, 500)).toBe(true);
+		expect(inkJoins(box, near, 2500)).toBe(false);
+		expect(inkJoins(box, { ...near, x: 400 }, 500)).toBe(false);
+		expect(inkBoxReaches(box, { x: 95, y: 60 }, 6)).toBe(true);
+		expect(inkBoxReaches(box, { x: 90, y: 60 }, 6)).toBe(false);
+	});
+	it('maps a point into the drawing and fits the box to the strokes left', () => {
+		// The drawing's own space is half the box's size.
+		const space = { width: 100, height: 50 };
+		expect(inkLocalPoint(box, space, { x: 200, y: 100 })).toEqual({
+			point: { x: 50, y: 25 },
+			factor: 0.5,
+		});
+		const fit = fitInkBox([line(50, 10, 90, 40)], space, box, true)!;
+		expect(fit.box.x).toBeLessThanOrEqual(200);
+		expect(fit.box.x).toBeGreaterThan(190);
+		expect(fit.box.width).toBeLessThan(100);
+		expect(fit.strokes[0]!.path.startsWith('M ')).toBe(true);
+		expect(snapInkBox({ x: 1.5, y: 2.2, width: 3, height: 1 })).toEqual({
+			x: 1,
+			y: 2,
+			width: 4,
+			height: 2,
+		});
 	});
 });
 
