@@ -21,6 +21,7 @@ import { resolveTableStyleFormatting } from '../resolve-table';
 import { resolveRunFormatting } from '../run-formatting';
 import type { RunFormatting } from '../run-style-model';
 import { symbolOnly, symbolSegments } from '../special-characters';
+import { allCapsText } from '../caps-display';
 import { DEFAULT_FONT_FAMILY } from './units';
 
 type Push = (run: WebfontRun) => void;
@@ -99,7 +100,11 @@ export function collectDocxWebfontRuns(model: DocumentModel): WebfontRun[] {
 				if (!run.text || run.image) continue;
 				// Word draws a symbol (`w:sym`) in its own font, whatever the run's font is.
 				const family = (symbolOnly(run) && run.symbol?.font) || familyOf(formatting);
-				emit(formatting.caps ? run.text.toUpperCase() : run.text, formatting, family);
+				emit(
+					formatting.caps ? allCapsText(run.text, formatting.language) : run.text,
+					formatting,
+					family,
+				);
 			}
 		}
 	};

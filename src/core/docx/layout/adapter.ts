@@ -37,6 +37,7 @@ import { effectiveTextScalePercent } from '../simple-types';
 import { kinsokuLanguage } from '../../text/kinsoku';
 import { resolveEastAsiaLanguage } from '../run-language';
 import { symbolOnly, symbolSegments } from '../special-characters';
+import { allCapsText, smallCapsText } from '../caps-display';
 import { formFieldDisplayText } from '../form-fields';
 import { wordHighlightColors } from '../highlight';
 import { paragraphMarkRun } from '../paragraph-mark';
@@ -296,7 +297,14 @@ export function adaptDocumentModel(
 		return {
 			sourceLength: reviewSourceLength(run),
 			// Hidden text (`w:vanish`) takes no space when printed, as in Word by default.
-			text: image || formatting.vanish ? '' : formatting.caps ? text.toUpperCase() : text,
+			text:
+				image || formatting.vanish
+					? ''
+					: formatting.caps
+						? allCapsText(text, formatting.language)
+						: formatting.smallCaps
+							? smallCapsText(text, formatting.language)
+							: text,
 			...((name === 'MERGEFIELD' || name === 'ADDRESSBLOCK' || name === 'GREETINGLINE') && {
 				mergeField: true,
 			}),

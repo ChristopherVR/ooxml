@@ -9,6 +9,7 @@ import { fieldResultSpans } from '../field-result-spans';
 import type { DocumentModel, Paragraph } from '../model';
 import type { LayoutBlock, LayoutDocumentInput, LayoutParagraph, LayoutRun } from './input';
 import { reviewSourceLength } from './review-display';
+import { allCapsText } from '../caps-display';
 
 /** A stretch of a paragraph's source positions and what it draws. */
 interface Patch {
@@ -52,11 +53,19 @@ function patched(run: LayoutRun, patch: Patch, first: boolean): LayoutRun {
 	const { result } = patch;
 	const sourceLength = run.sourceLength ?? run.text.length;
 	const text = first && result ? result.text : '';
-	// A run drawn in capitals (`w:caps`) shows its result in capitals too.
-	const caps = run.text !== patch.source && run.text === patch.source.toUpperCase();
+	// A run drawn in capitals (`w:caps`) shows its result in capitals too, in French (France)
+	// without the accents of the letters the formatting capitalised.
+	const capsLanguage =
+		run.text === patch.source
+			? undefined
+			: run.text === patch.source.toUpperCase()
+				? ''
+				: run.text === allCapsText(patch.source, 'fr-FR')
+					? 'fr-FR'
+					: undefined;
 	return {
 		...run,
-		text: caps ? text.toUpperCase() : text,
+		text: capsLanguage === undefined ? text : allCapsText(text, capsLanguage),
 		sourceLength,
 		...(first && result?.fontFamily ? { fontFamily: result.fontFamily } : {}),
 		...(first && result?.fontSizePt ? { fontSizePt: result.fontSizePt } : {}),
