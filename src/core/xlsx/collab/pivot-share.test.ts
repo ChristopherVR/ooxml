@@ -86,6 +86,8 @@ describe('sharing PivotTables', () => {
 		expect(pivotsOf(b)[0]?.itemFilters).toEqual([{ field: 'Category', hidden: ['Veg'] }]);
 
 		a.edit.setCellInput(0, 1, 2, '100');
+		// B refreshes once A's edit has reached it, so the shared records carry the new amount.
+		sync(a, b);
 		b.edit.refreshPivotTable(1, name);
 		sync(a, b);
 		expect(pivotsOf(a)[0]?.records[0]).toEqual(['Fruit', 'East', 100]);
