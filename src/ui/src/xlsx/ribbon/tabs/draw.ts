@@ -32,7 +32,7 @@ export function drawTab(): RibbonTab {
 			{
 				id: 'stencils',
 				label: 'Stencils',
-				controls: [{ kind: 'button', command: 'draw.ruler', size: 'large' }],
+				controls: [{ kind: 'toggle', command: 'draw.ruler', size: 'large' }],
 			},
 			{
 				id: 'convert',
