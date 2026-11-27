@@ -6,9 +6,9 @@ import { generateFixture as generateArrowTextRegressions } from './generate-arro
  * prove the committed decks are what the generators write today.
  *
  * Each generator writes through `writeFixtureDeterministic` (fixed zip dates,
- * order and core-properties stamps) and runs under a `Math.random` seeded from
- * its own name, because the core's save mints random ids for new content (a
- * table's `a16:colId`s). Together they keep a deck whose content has not
+ * order and core-properties stamps) and runs under a `Math.random` and a
+ * `crypto.getRandomValues` seeded from its own name, because the core's save
+ * mints random ids for new content (a table's `a16:colId`s). Together they keep a deck whose content has not
  * changed byte-identical on disk across runs.
  */
 import { generateBarPictureFillHillFixture } from './generate-bar-picture-fill-hill-fixture';
@@ -124,12 +124,23 @@ function seededRandom(seed: string): () => number {
 /** Regenerate every generated fixture in `e2e/pptx/fixtures`. */
 export async function generateAllFixtures(): Promise<void> {
 	const realRandom = Math.random;
+	const crypto = globalThis.crypto;
+	const realGetRandomValues = crypto.getRandomValues;
 	try {
 		for (const [name, generate] of GENERATORS) {
-			Math.random = seededRandom(name);
+			const random = seededRandom(name);
+			Math.random = random;
+			// The core's default id source reads crypto, not Math.random: seed it the same way.
+			crypto.getRandomValues = (<T extends ArrayBufferView | null>(array: T): T => {
+				if (array instanceof Uint32Array)
+					for (let i = 0; i < array.length; i++) array[i] = Math.floor(random() * 0x1_0000_0000);
+				else if (array) realGetRandomValues.call(crypto, array as Uint8Array);
+				return array;
+			}) as typeof crypto.getRandomValues;
 			await generate();
 		}
 	} finally {
 		Math.random = realRandom;
+		crypto.getRandomValues = realGetRandomValues;
 	}
 }
