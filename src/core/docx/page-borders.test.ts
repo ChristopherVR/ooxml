@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { loadDocx } from './parse';
-import { eighthPoints } from './units';
+import { eighthPoints, signedTwips, twips } from './units';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
@@ -60,5 +60,54 @@ describe('page borders', () => {
 	it('keeps the package byte-exact when borders are untouched', async () => {
 		const bytes = await fixture(WITH);
 		expect(await (await loadDocx(bytes)).save()).toEqual(bytes);
+	});
+
+	it('keeps the borders of the following section out of a new break before it', async () => {
+		const { saveDocx } = await import('./save');
+		const section = (endsAtBlockId: string) => ({
+			endsAtBlockId,
+			type: 'nextPage' as const,
+			pageWidthTwips: twips(12240),
+			pageHeightTwips: twips(15840),
+			orientation: 'portrait' as const,
+			marginTopTwips: signedTwips(1440),
+			marginRightTwips: twips(1440),
+			marginBottomTwips: signedTwips(1440),
+			marginLeftTwips: twips(1440),
+			columns: { count: 1, equalWidth: true },
+		});
+		const bytes = await saveDocx({
+			blocks: [
+				{ type: 'paragraph', id: 'a', runs: [{ text: 'Plain' }] },
+				{ type: 'paragraph', id: 'b', runs: [{ text: 'Bordered' }] },
+			],
+			page: {
+				width: 816,
+				height: 1056,
+				marginTop: 96,
+				marginRight: 96,
+				marginBottom: 96,
+				marginLeft: 96,
+			},
+			warnings: [],
+			sections: [
+				section('a'),
+				{
+					...section('b'),
+					pageBorders: {
+						top: { style: 'single', sizeEighthPoints: eighthPoints(8), spacePoints: 24 },
+						offsetFrom: 'page',
+					},
+				},
+			],
+		});
+		const xml = await xmlOf(bytes);
+		const paragraphSection = /<w:pPr>.*?<w:sectPr>(.*?)<\/w:sectPr>/.exec(xml)?.[1] ?? '';
+		expect(paragraphSection).toContain('<w:pgSz');
+		expect(paragraphSection).not.toContain('pgBorders');
+		expect(xml.match(/<w:pgBorders/g)).toHaveLength(1);
+		const reopened = await loadDocx(bytes);
+		expect(reopened.model.sections?.[0]?.pageBorders).toBeUndefined();
+		expect(reopened.model.sections?.[1]?.pageBorders?.top?.style).toBe('single');
 	});
 });

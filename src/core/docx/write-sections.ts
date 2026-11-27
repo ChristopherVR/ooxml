@@ -130,6 +130,8 @@ export function applySectionEdits(
 		finalBase && ends.has(finalBase.endsAtBlockId) ? bodySection.cloneNode(true) : undefined;
 	// Walk backwards so each new break can copy the section that follows it.
 	let following = bodySection;
+	// The model `following` holds, which a break copied from it starts from.
+	let followingModel: SectionProperties | undefined;
 	for (let index = sections.length - 1; index >= 0; index--) {
 		const section = sections[index];
 		if (!section) continue;
@@ -138,6 +140,7 @@ export function applySectionEdits(
 			? bodySection
 			: paragraphSection(nodeFor(section.endsAtBlockId));
 		const previous = last ? finalBase : baseByEnd.get(section.endsAtBlockId);
+		let copiedFrom: SectionProperties | undefined;
 		if (!sectPr) {
 			const paragraph = nodeFor(section.endsAtBlockId);
 			if (paragraph?.localName !== 'p')
@@ -147,18 +150,21 @@ export function applySectionEdits(
 				pPr = makeW(doc, 'pPr');
 				paragraph.insertBefore(pPr, paragraph.firstChild);
 			}
-			sectPr = (
-				previous && previous === finalBase && finalSource ? finalSource : following.cloneNode(true)
-			) as XmlElement;
+			const fromFinal = Boolean(previous && previous === finalBase && finalSource);
+			sectPr = (fromFinal ? finalSource : following.cloneNode(true)) as XmlElement;
+			copiedFrom = fromFinal ? finalBase : followingModel;
 			pPr.appendChild(sectPr);
 			orderParagraphProperties(pPr);
 		}
 		assertWritable(section, previous);
 		if (!previous || JSON.stringify(previous) !== JSON.stringify(section)) {
-			writeSectionProperties(doc, sectPr, section, previous);
+			// A copied break is patched from what it copied, so a property this section lacks (page
+			// borders, a paper source) does not stay behind from the following section.
+			writeSectionProperties(doc, sectPr, section, previous ?? copiedFrom);
 			writeNewReferences(doc, sectPr, section, previous, references);
 			orderSectionProperties(sectPr);
 		}
 		following = sectPr;
+		followingModel = section;
 	}
 }
