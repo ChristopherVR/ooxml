@@ -30,9 +30,13 @@ test('Bold, Fill Color and the number format list format the selection', async (
 	expect((await cellStyle(page, 0, 0))?.font.bold).toBe(true);
 	await ribbon(page).locator('[data-command="home.fill-color"]').first().click();
 	expect((await cellStyle(page, 0, 0))?.fill).toMatchObject({ type: 'pattern', pattern: 'solid' });
-	await ribbon(page)
-		.locator('select[data-command="home.number-format"]')
-		.selectOption({ label: 'Currency' });
+	// Number folds before Styles, as in Excel: at this width it is a dropdown button.
+	const numberFormat = ribbon(page).locator('select[data-command="home.number-format"]');
+	if (!(await numberFormat.isVisible()))
+		await ribbon(page)
+			.locator('.ribbon-group[data-label="Number"][data-collapsed] .ribbon-overflow-button')
+			.click();
+	await numberFormat.selectOption({ label: 'Currency' });
 	await expect.poll(async () => (await cellStyle(page, 0, 0))?.numFmt).toContain('$');
 	// Display text depends on font metrics: without Calibri (Linux CI) bold `$1,234.50` is wider
 	// than the default column, and the grid shows `#######` exactly as Excel does.

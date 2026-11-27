@@ -62,6 +62,15 @@ const overflow = createRibbonOverflow({
 	command: 'button[data-command]',
 	setCaption: setLargeCaption,
 	reserveCaptions: true,
+	// Home folds as Excel's does: Add-ins, Editing and Cells first, then Number before Styles
+	// (Excel keeps Conditional Formatting, Format as Table and Cell Styles longer), then the rest
+	// from the right.
+	groupPriority: (group) => {
+		if (group.parentElement?.dataset.ribbonTab !== 'home') return 0;
+		const label = group.dataset.label ?? '';
+		if (['Add-ins', 'Editing', 'Cells'].includes(label)) return 0;
+		return label === 'Number' ? 1 : 2;
+	},
 });
 
 export const fitPanel = overflow.fitPanel;
