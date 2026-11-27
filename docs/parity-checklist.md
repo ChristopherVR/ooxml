@@ -674,9 +674,23 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       text one box cannot fit continues in the next box of the chain, in `seq` order, reflowed at
       that box's width; the last box keeps the rest clipped, as Word 16 draws it. Saved byte for byte
       (`docx/layout/text-box-layout.test.ts`).
-- [x] **P2** A floating object positioned from its paragraph that would cross the bottom margin
-      moves its paragraph to the next page, as Word does (`layout/floats.ts`
-      `floatCrossesBottomMargin`, `layout/floats.test.ts`, `e2e/docx/print-cell-floats.spec.ts`).
+- [x] **P2** A wrapping floating object positioned from its paragraph or line moves its paragraph
+      to the next page when it would cross the bottom margin in compatibility mode 15, and only
+      when it would pass the paper edge in earlier modes; a `wrapNone` object (in front of or
+      behind the text) stays with its anchor and may overlap the margin and the paper edge, as
+      measured in Word 16 (#354, `layout/floats.ts` `floatExceedsBottomLimit`,
+      `layout/floats.test.ts`, `e2e/docx/print-cell-floats.spec.ts`).
+- [ ] **P2** Before mode 15 Word keeps a square-wrapped paragraph-relative object that passes the
+      paper edge by up to about 24 pt on its page, rewrapping the anchor's text; the engine moves
+      it to the next page as soon as it passes the edge (#354).
+- [ ] **P2** A square-wrapped object positioned from its line is placed from the anchor's line
+      after the text wraps around it, so a long anchor paragraph places it lower than Word, which
+      uses the line before wrapping, and can move it to the next page early (#354).
+- [x] **P2** `w:compat/w:doNotExpandShiftReturn` leaves a justified line that ends in a
+      text-wrapping break (`w:br`) at its natural width, as the last line is, except in
+      `jc="distribute"` paragraphs, which still expand it; a line ending in a page or column break
+      is never expanded, with or without the setting, as measured in Word 16 (#358,
+      `layout/paragraph-layout.test.ts`, `layout/word-layout-reports.test.ts`).
 - [x] **P1** Text boxes are drawn on pages: a shape holding a `wps:txbx` (a `rect` text box, a line
       or connector) and a text box written with `txBox="1"` are drawn with their frame and their
       paragraphs, floating or inline, in the body and in headers and footers, and `txBox="1"`
