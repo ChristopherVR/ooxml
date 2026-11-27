@@ -145,6 +145,13 @@ export interface FabricatedDiagramDataOptions {
 	guidByNodeId?: Map<string, string>;
 	/** Presentation-point ids used by cached `dsp:sp` shapes. */
 	presentationGuidByNodeId?: Map<string, string>;
+	/**
+	 * Presentation-point ids of cached shapes that belong to no node, in drawing order: the
+	 * arrows a process or cycle draws between its nodes. Each is written as the `sibTrans`
+	 * presentation of the node at its position (the one the arrow follows), or of the `doc`
+	 * point when there are more such shapes than nodes.
+	 */
+	transitionPresentationGuids?: readonly string[];
 	/** Mints point and connection model ids; a braced upper-case GUID by default. */
 	createModelId?: () => string;
 }
@@ -173,6 +180,7 @@ export function writeFabricatedDiagramData(
 	const points: string[] = [docPointXml(docGuid, ids)];
 	const connections: string[] = [];
 	const nextSrcOrd = new Map<string, number>();
+	const sibTransGuids: string[] = [];
 
 	for (const node of data.nodes) {
 		const guid = node.id ? guidByNodeId.get(node.id) : undefined;
@@ -190,6 +198,7 @@ export function writeFabricatedDiagramData(
 		points.push(contentPointXml(guid, node));
 		points.push(transPointXml(parTransGuid, 'parTrans', cxnGuid));
 		points.push(transPointXml(sibTransGuid, 'sibTrans', cxnGuid));
+		sibTransGuids.push(sibTransGuid);
 		connections.push(
 			`<dgm:cxn modelId="${cxnGuid}" srcId="${parentGuid}" destId="${guid}" srcOrd="${srcOrd}" destOrd="0" parTransId="${parTransGuid}" sibTransId="${sibTransGuid}"/>`,
 		);
@@ -209,6 +218,23 @@ export function writeFabricatedDiagramData(
 			);
 		}
 	}
+
+	const transitions = options.transitionPresentationGuids ?? [];
+	transitions.forEach((presentationGuid, index) => {
+		const sibTrans = sibTransGuids[index];
+		points.push(
+			`<dgm:pt modelId="${presentationGuid}" type="pres">` +
+				`<dgm:prSet presAssocID="${sibTrans ?? docGuid}" presName="${sibTrans ? 'sibTrans' : 'background'}"` +
+				` presStyleLbl="sibTrans2D1" presStyleIdx="${index}" presStyleCnt="${transitions.length}"/>` +
+				`<dgm:spPr/></dgm:pt>`,
+		);
+		if (sibTrans)
+			connections.push(
+				`<dgm:cxn modelId="${createModelId()}" type="presOf" srcId="${sibTrans}"` +
+					` destId="${presentationGuid}" srcOrd="0" destOrd="0"` +
+					` presId="${escapeDiagramXml(ids.layoutUniqueId)}"/>`,
+			);
+	});
 
 	return (
 		`${DIAGRAM_XML_PROLOG}\r\n<dgm:dataModel ${DIAGRAM_DATA_XMLNS}>` +

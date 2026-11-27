@@ -42,4 +42,34 @@ describe('writeFabricatedDiagramData', () => {
 		expect(model.points.filter((point) => point.type === 'pres')).toHaveLength(3);
 		expect(xml).toContain('phldrT="[Text]"');
 	});
+
+	it('writes the presentation points of the arrows between nodes as sibling transitions', () => {
+		let counter = 0;
+		const createModelId = () => `{00000000-0000-4000-8000-${String(++counter).padStart(12, '0')}}`;
+		const arrows = [
+			'{AAAAAAAA-0000-4000-8000-000000000001}',
+			'{AAAAAAAA-0000-4000-8000-000000000002}',
+		];
+		const xml = writeFabricatedDiagramData(
+			{
+				nodes: [
+					{ id: 'a', text: 'One' },
+					{ id: 'b', text: 'Two' },
+				],
+			},
+			ids,
+			{ createModelId, transitionPresentationGuids: arrows },
+		);
+		const sibTrans = [...xml.matchAll(/<dgm:pt modelId="([^"]+)" type="sibTrans"/g)].map(
+			(match) => match[1],
+		);
+		expect(sibTrans).toHaveLength(2);
+		arrows.forEach((guid, index) => {
+			expect(xml).toContain(
+				`<dgm:pt modelId="${guid}" type="pres"><dgm:prSet presAssocID="${sibTrans[index]}" presName="sibTrans"`,
+			);
+			expect(xml).toContain(`type="presOf" srcId="${sibTrans[index]}" destId="${guid}"`);
+		});
+		expect(parseDiagramDataModel(xml).issues).toEqual([]);
+	});
 });

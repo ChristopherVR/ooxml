@@ -73,6 +73,7 @@ function resolveShapeModelId(
 	index: number,
 	nodes: PptxSmartArtNode[],
 	presentationGuidByNodeId: Map<string, string>,
+	allocateModelId?: () => string,
 ): string {
 	for (const presentationId of presentationGuidByNodeId.values()) {
 		if (shape.id === presentationId) {
@@ -99,7 +100,9 @@ function resolveShapeModelId(
 			return guid;
 		}
 	}
-	return '';
+	// A shape of no node (a process or cycle arrow between two nodes) gets a presentation point
+	// of its own, so it is drawn rather than dropped.
+	return allocateModelId?.() ?? '';
 }
 
 function textTransformXml(shape: PptxSmartArtDrawingShape): string {
@@ -188,8 +191,15 @@ function shapeXml(
 	nodes: PptxSmartArtNode[],
 	presentationGuidByNodeId: Map<string, string>,
 	writeRun?: SmartArtRunWriter,
+	allocateModelId?: () => string,
 ): string {
-	const modelId = resolveShapeModelId(shape, index, nodes, presentationGuidByNodeId);
+	const modelId = resolveShapeModelId(
+		shape,
+		index,
+		nodes,
+		presentationGuidByNodeId,
+		allocateModelId,
+	);
 	if (!modelId) {
 		return '';
 	}
@@ -211,12 +221,20 @@ export function buildFabricatedDrawingXml(
 	nodes: PptxSmartArtNode[],
 	presentationGuidByNodeId: Map<string, string>,
 	writeRun?: SmartArtRunWriter,
+	/**
+	 * Gives a shape that belongs to no node its presentation point id (in shape order); the
+	 * caller writes those points (`transitionPresentationGuids`). Without it such a shape is left
+	 * out of the drawing.
+	 */
+	allocateModelId?: () => string,
 ): string | undefined {
 	if (!shapes || shapes.length === 0) {
 		return undefined;
 	}
 	const body = shapes
-		.map((shape, index) => shapeXml(shape, index, nodes, presentationGuidByNodeId, writeRun))
+		.map((shape, index) =>
+			shapeXml(shape, index, nodes, presentationGuidByNodeId, writeRun, allocateModelId),
+		)
 		.join('');
 	if (!body) {
 		return undefined;

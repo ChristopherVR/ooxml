@@ -30,6 +30,28 @@ describe('buildFabricatedDrawingXml', () => {
 		expect(buildFabricatedDrawingXml([], NODES, GUIDS)).toBeUndefined();
 	});
 
+	it('keeps the arrows between nodes with presentation points of their own', () => {
+		// Process and cycle layouts draw an arrow between nodes that belongs to no node.
+		const arrows: PptxSmartArtDrawingShape[] = [
+			...SHAPES,
+			{ id: 'sa-interp-1', shapeType: 'rightArrow', x: 120, y: 60, width: 20, height: 20 },
+			{ id: 'sa-interp-2', shapeType: 'rightArrow', x: 240, y: 60, width: 20, height: 20 },
+		];
+		expect(buildFabricatedDrawingXml(arrows, NODES, GUIDS)!.match(/prst="rightArrow"/gu)).toBe(
+			null,
+		);
+		let next = 0;
+		const allocated: string[] = [];
+		const xml = buildFabricatedDrawingXml(arrows, NODES, GUIDS, undefined, () => {
+			const guid = `{AAAAAAAA-0000-0000-0000-00000000000${++next}}`;
+			allocated.push(guid);
+			return guid;
+		})!;
+		expect(xml.match(/prst="rightArrow"/gu)).toHaveLength(2);
+		expect(allocated).toHaveLength(2);
+		for (const guid of allocated) expect(xml).toContain(`<dsp:sp modelId="${guid}">`);
+	});
+
 	it('serializes each shape with its own preset geometry', () => {
 		const xml = buildFabricatedDrawingXml(SHAPES, NODES, GUIDS)!;
 		expect(xml).toContain('prst="triangle"');

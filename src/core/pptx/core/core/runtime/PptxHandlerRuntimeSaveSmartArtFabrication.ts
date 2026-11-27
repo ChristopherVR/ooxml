@@ -125,11 +125,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			data.drawingShapes && data.drawingShapes.length > 0
 				? data.drawingShapes
 				: regenerateSmartArtDrawingShapes(data, el.width, el.height);
+		// Shapes of no node (the arrows of a process or cycle) get presentation points of their own.
+		const transitionPresentationGuids: string[] = [];
 		const drawingXml = buildFabricatedDrawingXml(
 			drawingShapes,
 			data.nodes,
 			presentationGuidByNodeId,
 			(style) => this.createRunPropertiesFromTextStyle(style),
+			() => {
+				const id = guid();
+				transitionPresentationGuids.push(id);
+				return id;
+			},
 		);
 		const drawingRelId = drawingXml
 			? ctx.slideRelationshipRegistry.nextRelationshipId()
@@ -149,6 +156,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					guidByNodeId,
 					presentationGuidByNodeId,
 					createModelId: guid,
+					transitionPresentationGuids,
 					...(drawingRelId !== undefined && { drawingRelId }),
 				},
 			),
