@@ -103,20 +103,38 @@ function dateOf(value: MailMergeValue): Date | undefined {
 	return undefined;
 }
 
+const NUMBER = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?$/i;
+
+function validDate(value: MailMergeValue): Date | undefined {
+	const date = dateOf(value);
+	return date && Number.isFinite(date.getTime()) ? date : undefined;
+}
+
+function validNumber(text: string): number | undefined {
+	const number = Number(text);
+	return NUMBER.test(text.trim()) && Number.isFinite(number) ? number : undefined;
+}
+
 function formatMergeValue(value: MailMergeValue, format: FieldFormat, locale: string): string {
 	let text = textOf(value);
 	if (format.datePicture !== undefined) {
-		const date = dateOf(value);
-		if (date && Number.isFinite(date.getTime()))
-			text = formatDatePicture(date, format.datePicture, { locale, utc: true });
-	} else if (
-		format.numberPicture !== undefined &&
-		/^[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?$/i.test(text.trim())
-	) {
-		const number = Number(text);
-		if (Number.isFinite(number)) text = formatMergeNumber(number, format.numberPicture);
+		const date = validDate(value);
+		if (date) text = formatDatePicture(date, format.datePicture, { locale, utc: true });
+	} else if (format.numberPicture !== undefined) {
+		const number = validNumber(text);
+		if (number !== undefined) text = formatMergeNumber(number, format.numberPicture);
 	}
 	return applyFieldFormat(text, format);
+}
+
+/** Why a non-empty value is written as it is rather than through the field's picture switch. */
+function pictureMismatch(value: MailMergeValue, format: FieldFormat): string | undefined {
+	if (!textOf(value)) return undefined;
+	if (format.datePicture !== undefined)
+		return validDate(value) ? undefined : 'not a date, so the \\@ picture was not applied';
+	if (format.numberPicture !== undefined && validNumber(textOf(value)) === undefined)
+		return 'not a number, so the \\# picture was not applied';
+	return undefined;
 }
 
 /** Character substitution used for vertical East Asian address text. */
@@ -238,8 +256,12 @@ export class MergeFields {
 				issue('unknown-field', column);
 				hooks.observe?.({ blockId, name: column, status: 'missing' });
 				if (hooks.missing === 'keep') return hooks.keepFields ? undefined : { text: cached };
-			} else hooks.observe?.({ blockId, name: column, status: 'filled' });
+			}
 			const value = record && Object.hasOwn(record, column) ? (record[column] ?? null) : null;
+			if (known) {
+				const reason = pictureMismatch(value, field.format);
+				hooks.observe?.({ blockId, name: column, status: 'filled', ...(reason && { reason }) });
+			}
 			if (!textOf(value)) return result('');
 			const text = format(value);
 			const merged = result(

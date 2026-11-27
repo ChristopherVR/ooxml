@@ -7,6 +7,8 @@ export interface MergeFieldEvent {
 	/** The column the field reads, or the field type when it could not be read. */
 	name: string;
 	status: 'filled' | 'missing' | 'invalid' | 'locked' | 'unsupported';
+	/** Why a filled value was not written through the field's picture switch. */
+	reason?: string;
 }
 
 /** How the headless merge (`mergeFields`) changes the projection the editor's merge uses. */

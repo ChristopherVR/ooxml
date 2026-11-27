@@ -19,6 +19,7 @@
 			"#inkml-runtime": ["./drawingml/inkml/runtime.ts"],
 			"ooxml-core/pptx": ["./pptx/index.ts"],
 			"ooxml-core/math": ["./math/index.ts"],
+			"ooxml-core/docx/mail-merge": ["./docx/mail-merge/index.ts"],
 			"ooxml-core/xml": ["./xml/public.ts"]
 		}
 	},

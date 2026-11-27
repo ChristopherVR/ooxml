@@ -219,6 +219,20 @@ export {
 } from './form-fill-fields';
 export { fillFormFields, type FormFillOptions, type FormFillResult } from './form-fill-write';
 export type { FormFieldValue } from './form-fill-values';
+// The headless MERGEFIELD merge loads on first use; the rest of mail merge is its own subpath.
+export { listMergeFields, mergeFields } from './merge-fields-loader';
+export type { MergeFieldInfo } from './mail-merge/list-fields';
+export type {
+	HeaderFooterSlot,
+	HtmlMergeIssue,
+	MergeFieldResult,
+	MergeFieldsData,
+	MergeFieldsOptions,
+	MergeFieldsResult,
+	MergeRegionInfo,
+	MergeRegionResult,
+	MergeStory,
+} from './mail-merge/headless';
 export * from './table-of-contents';
 export { resolveCellVisuals, type CellPlacement } from './table-visuals';
 export { DEFAULT_STYLES_XML, defaultStyleCatalogs } from './default-styles';

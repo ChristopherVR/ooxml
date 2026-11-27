@@ -30,11 +30,12 @@ body, and the Mailings controls require an editable, unshared document.
 
 `listMergeFields` and `mergeFields` fill the MERGEFIELD fields of one document from values, for
 a service that generates documents from `.docx` templates in Node or a worker, without a DOM or
-an editor. Both load their code on first use, so they return promises.
+an editor. They sit next to `listFormFields` and `fillFormFields` in `ooxml-core/docx` (and
+`docx-core`), and `ooxml-core/docx/mail-merge` exports the same two functions. Both load their
+code on first use, so they return promises; the main entry only carries the two loaders.
 
 ```ts
-import { loadDocx } from 'ooxml-core/docx';
-import { listMergeFields, mergeFields } from 'ooxml-core/docx/mail-merge';
+import { listMergeFields, loadDocx, mergeFields } from 'ooxml-core/docx';
 
 const template = await loadDocx(templateBytes);
 const { fields, regions } = await listMergeFields(template.model);
@@ -57,7 +58,9 @@ const bytes = await template.save(model);
 
 `listMergeFields(model)` returns `fields`, one entry per MERGEFIELD in story order (the body with
 its table cells and text boxes, then headers and footers, footnotes and endnotes): its `name` as
-written, its `instruction`, `story`, `kind` (`simple` for `w:fldSimple`, `complex` for
+written, its `instruction`, `story` (`body`, `header`, `footer`, `footnote`, `endnote` or
+`textBox`; a table cell or content control reports the story it sits in), in a header or
+footer its section `slot` (`default`, `first` or `even`), `kind` (`simple` for `w:fldSimple`, `complex` for
 `w:fldChar`), its `switches` as written, the `region` it repeats in, whether it is `locked` and
 whether it is `nested` in the code of another field. `regions` lists each region with its name,
 `kind` (`rows` or `paragraphs`) and story.
@@ -65,9 +68,12 @@ whether it is `nested` in the code of another field. `regions` lists each region
 `mergeFields(model, data, options)` returns a new model for the loaded template's `save()` (the
 input model is not changed), with:
 
-- `results`: one entry per MERGEFIELD evaluated, with its `name`, `story`, `status` (`filled`,
-  `missing`, `invalid`, `locked` or `unsupported`) and, inside a region, the `region` and the
-  zero-based `row`;
+- `results`: one entry per MERGEFIELD evaluated, with its `name`, `story` and `slot`, `status`
+  (`filled`, `missing`, `invalid`, `locked` or `unsupported`), a `reason` for every status but
+  `filled` (such as `no value named "Cell" in row 0 of region Rows or in values`), and, inside a
+  region, the `region` and the zero-based `row`. A `filled` field also has a `reason` when its
+  value does not match its picture switch and is written as it is (`the value is
+  not a number, so the \# picture was not applied`, and the same for `\@` and dates);
 - `regions`: each region with the number of `rows` written for it;
 - `htmlIssues`: what HTML values lost on the way in (`image-refused`, `link-refused`,
   `nested-table-flattened`).

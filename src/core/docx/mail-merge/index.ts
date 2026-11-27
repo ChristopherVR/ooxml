@@ -3,6 +3,7 @@ export * from './authoring';
 export * from './merge';
 export type { MergeFieldInfo } from './list-fields';
 export type {
+	HeaderFooterSlot,
 	HtmlMergeIssue,
 	MergeFieldResult,
 	MergeFieldsData,

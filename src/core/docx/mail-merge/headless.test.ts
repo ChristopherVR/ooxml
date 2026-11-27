@@ -120,7 +120,14 @@ describe('mergeFields', () => {
 		);
 		const { model, results } = await mergeFields(loaded.model, { values: { Name: 'Ada' } });
 		expect(text(model.blocks)).toEqual(['kept']);
-		expect(results).toEqual([{ name: 'Name', story: 'body', status: 'locked' }]);
+		expect(results).toEqual([
+			{
+				name: 'Name',
+				story: 'body',
+				status: 'locked',
+				reason: 'the field is locked (w:fldLock) and keeps its result',
+			},
+		]);
 	});
 
 	it('fills headers, footnotes and fields nested in IF', async () => {

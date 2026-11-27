@@ -17,12 +17,16 @@ export interface BlockList {
 	story: MergeStory;
 	/** The list is a table cell's paragraphs: it can hold paragraphs only. */
 	cell: boolean;
+	/** The header or footer slot of the section (the first one, when slots share content). */
+	slot?: HeaderFooterSlot;
 }
+
+export type HeaderFooterSlot = 'default' | 'first' | 'even';
 
 /** New blocks for a list; the same array when nothing changed. */
 export type ListMapper = (blocks: Block[], list: BlockList) => Block[];
 
-const SLOTS = ['default', 'first', 'even'] as const;
+const SLOTS: readonly HeaderFooterSlot[] = ['default', 'first', 'even'];
 
 function mapList(blocks: Block[], list: BlockList, fn: ListMapper): Block[] {
 	let changed = false;
@@ -93,7 +97,7 @@ export function mapBlockLists(model: DocumentModel, fn: ListMapper): DocumentMod
 			if (!content) continue;
 			let mapped = seen.get(content);
 			if (!mapped) {
-				const blocks = mapList(content.blocks, { story, cell: false }, fn);
+				const blocks = mapList(content.blocks, { story, cell: false, slot }, fn);
 				mapped = blocks === content.blocks ? content : { ...content, blocks };
 				seen.set(content, mapped);
 			}

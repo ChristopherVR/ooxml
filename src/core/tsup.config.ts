@@ -113,6 +113,8 @@ const shared = {
 		'y-protocols',
 		'lib0',
 		'ooxml-core/math',
+		// The docx entry loads mail merge by name on first use (`docx/merge-fields-loader.ts`).
+		'ooxml-core/docx/mail-merge',
 		'#embedded-workbook-chart',
 		'#xpath-runtime',
 		'#inkml-runtime',

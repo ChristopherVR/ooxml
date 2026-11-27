@@ -6,13 +6,15 @@ import type { DocumentModel, Paragraph } from '../model';
 import { mapMergeStory } from './cross-paragraph';
 import { mergeFieldColumn } from './field-values';
 import { listMergeRegions, regionMarker, type MergeRegionInfo } from './regions';
-import { forEachBlockList, type MergeStory } from './stories';
+import { forEachBlockList, type HeaderFooterSlot, type MergeStory } from './stories';
 
 export interface MergeFieldInfo {
 	/** The column the field reads, as written (`client.2.name`, `First name`). */
 	name: string;
 	instruction: string;
 	story: MergeStory;
+	/** In a header or footer, the section slot it fills. */
+	slot?: HeaderFooterSlot;
 	/** `w:fldSimple`, or a complex field (`w:fldChar`). */
 	kind: 'simple' | 'complex';
 	/** The switches as written, such as `\* Upper` or `\b "Dear "`. */
@@ -66,6 +68,7 @@ export function listMergeFields(model: DocumentModel): {
 					name,
 					instruction: span.instr,
 					story: list.story,
+					...(list.slot && { slot: list.slot }),
 					kind: paragraph.runs[span.from]?.field?.simple ? 'simple' : 'complex',
 					switches: switchesOf(span.instr),
 					...(region !== undefined && { region }),

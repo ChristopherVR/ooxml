@@ -17,9 +17,9 @@ import {
 	type MergeRegionInfo,
 	type MergeRegionResult,
 } from './regions';
-import { forEachBlockList, mapBlockLists, type MergeStory } from './stories';
+import { forEachBlockList, mapBlockLists, type HeaderFooterSlot, type MergeStory } from './stories';
 
-export type { MergeRegionInfo, MergeRegionResult, MergeStory, HtmlMergeIssue };
+export type { HeaderFooterSlot, MergeRegionInfo, MergeRegionResult, MergeStory, HtmlMergeIssue };
 
 export interface MergeFieldsData {
 	values: Readonly<Record<string, string>>;
@@ -44,10 +44,32 @@ export interface MergeFieldsOptions {
 export interface MergeFieldResult {
 	name: string;
 	story: MergeStory;
+	/** In a header or footer, the section slot it fills. */
+	slot?: HeaderFooterSlot;
 	status: MergeFieldEvent['status'];
+	/**
+	 * Why the field was not filled (`missing`, `invalid`, `locked`, `unsupported`), or why a filled
+	 * value was written as it is (a `\#` or `\@` picture its value does not match).
+	 */
+	reason?: string;
 	region?: string;
 	/** The region row, zero-based. */
 	row?: number;
+}
+
+const REASONS: Partial<Record<MergeFieldEvent['status'], string>> = {
+	invalid: 'the field instruction could not be read',
+	locked: 'the field is locked (w:fldLock) and keeps its result',
+	unsupported:
+		'the merge does not evaluate this field: a MERGEFIELD in the code of a field other than IF leaves the outer field with its result',
+};
+
+function reasonOf(event: MergeFieldEvent, place: { region: string; row: number } | undefined) {
+	if (event.status === 'filled') return event.reason && `the value is ${event.reason}`;
+	if (event.status !== 'missing') return REASONS[event.status];
+	return place
+		? `no value named "${event.name}" in row ${place.row} of region ${place.region} or in values`
+		: `no value named "${event.name}"`;
 }
 
 export interface MergeFieldsResult {
@@ -58,11 +80,12 @@ export interface MergeFieldsResult {
 	htmlIssues: HtmlMergeIssue[];
 }
 
-/** Each paragraph's story, and the region it repeats in. */
+/** Each paragraph's story, and its header or footer slot. */
 function paragraphStories(model: DocumentModel) {
-	const stories = new Map<string, MergeStory>();
+	const stories = new Map<string, { story: MergeStory; slot?: HeaderFooterSlot }>();
 	forEachBlockList(model, (blocks, list) => {
-		for (const block of blocks) if (block.type === 'paragraph') stories.set(block.id, list.story);
+		const where = { story: list.story, ...(list.slot && { slot: list.slot }) };
+		for (const block of blocks) if (block.type === 'paragraph') stories.set(block.id, where);
 	});
 	return stories;
 }
@@ -131,10 +154,13 @@ export function mergeFields(
 			observe: (event) => {
 				touched.add(event.blockId);
 				const place = regionOf.get(event.blockId);
+				const where = stories.get(event.blockId) ?? { story: 'body' };
+				const reason = reasonOf(event, place);
 				results.push({
 					name: event.name,
-					story: stories.get(event.blockId) ?? 'body',
+					...where,
 					status: event.status,
+					...(reason && { reason }),
 					...(place && { region: place.region, row: place.row }),
 				});
 			},
