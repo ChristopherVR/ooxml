@@ -20,6 +20,7 @@ export * from '../table-grid';
 export * from '../table-structure';
 export { DEFAULT_TABLE_LOOK } from '../table-defaults';
 export * from '../table-structure-merge';
+export * from '../table-draw';
 export type { IdFactory } from '../table-structure-cells';
 export * from './field-results';
 export { emptySimpleFieldResult } from './simple-field-input';
