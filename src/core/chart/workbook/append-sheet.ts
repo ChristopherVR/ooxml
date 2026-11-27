@@ -1,5 +1,6 @@
 // Allocate fresh chart data without rewriting existing worksheet cells or unknown package parts.
 import { resolvePartPath } from '../../opc/relationships';
+import { dateZipEntries } from '../../opc/reproducible';
 import { NS, buildXml, children, first, parseXml, type XmlElement } from '../../xml';
 import { chartWorkbookRowsXml } from './create';
 import { openEmbeddedPackage } from './writer';
@@ -170,6 +171,7 @@ export async function appendChartWorkbookSheet(
 	zip.file('xl/_rels/workbook.xml.rels', DECLARATION + buildXml(rels), { createFolders: false });
 	zip.file('[Content_Types].xml', DECLARATION + buildXml(types), { createFolders: false });
 	zip.file(part, chartWorkbookRowsXml(rows), { createFolders: false });
+	dateZipEntries(zip);
 	return {
 		bytes: await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }),
 		sheetName,

@@ -58,6 +58,8 @@ export function withDiagramDrawingRelationship(xml: string, relationshipId: stri
 export function buildGeneratedDiagramCache(
 	dataXml: string,
 	input: Omit<DiagramPreviewInput, 'nodes'>,
+	/** The source of new model ids: random GUIDs by default, a save's id source when reproducible. */
+	createModelId: () => string = createOfficeGuid,
 ):
 	| {
 			dataXml: string;
@@ -222,7 +224,7 @@ export function buildGeneratedDiagramCache(
 	const presentationIds = sourcePresentationIds(points, oldIds, drawing.shapes);
 	let serialized: ReturnType<typeof writeGeneratedDiagramDrawing>;
 	try {
-		serialized = writeGeneratedDiagramDrawing(drawing, { presentationIds });
+		serialized = writeGeneratedDiagramDrawing(drawing, { presentationIds, createModelId });
 	} catch {
 		return undefined;
 	}
@@ -270,7 +272,7 @@ export function buildGeneratedDiagramCache(
 		}
 		if (shape.sourceNodeId)
 			add(connections, NS.dgm, 'dgm:cxn', {
-				modelId: createOfficeGuid(),
+				modelId: createModelId(),
 				type: 'presOf',
 				srcId: shape.sourceNodeId,
 				destId: id,

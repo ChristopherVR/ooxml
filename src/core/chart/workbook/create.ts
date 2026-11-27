@@ -7,6 +7,8 @@
  * @module chart/workbook/create
  */
 import JSZip from 'jszip';
+import { OFFICE_THEME_FONTS } from '../../drawingml/office-theme-fonts';
+import { dateZipEntries } from '../../opc/reproducible';
 import type { ChartDataSheet } from '../data-sheet';
 import { formatCellAddress } from './cellref';
 import { DEFAULT_CHART_SHEET_NAME } from './layout';
@@ -49,26 +51,44 @@ export function chartDataWorksheetXml(sheet: ChartDataSheet): string {
 	return `${DECLARATION}<worksheet xmlns="${MAIN}" xmlns:r="${REL}"><dimension ref="A1:${last}"/><sheetData>${rows.join('')}</sheetData><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/></worksheet>`;
 }
 
-const STYLES = `${DECLARATION}<styleSheet xmlns="${MAIN}"><fonts count="1"><font><sz val="11"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+/** How a new chart workbook is written. */
+export interface ChartWorkbookOptions {
+	/**
+	 * The body font of the host document's theme, which Excel names on the Normal style with
+	 * `scheme="minor"`; by default `OFFICE_THEME_FONTS.minor`.
+	 */
+	minorFont?: string;
+	/** The date of the workbook's ZIP entries; by default 1980-01-01, as Office writes. */
+	zipDate?: Date;
+}
+
+const styles = (font: string) =>
+	`${DECLARATION}<styleSheet xmlns="${MAIN}"><fonts count="1"><font><sz val="11"/><color theme="1"/><name val="${escape(font)}"/><family val="2"/><scheme val="minor"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
 
 /** A new `.xlsx` package holding `sheet` on one worksheet named `sheetName`. */
 export function createChartWorkbook(
 	sheet: ChartDataSheet,
 	sheetName = DEFAULT_CHART_SHEET_NAME,
+	options: ChartWorkbookOptions = {},
 ): Promise<Uint8Array> {
-	return workbookPackage(chartDataWorksheetXml(sheet), sheetName);
+	return workbookPackage(chartDataWorksheetXml(sheet), sheetName, options);
 }
 
 /** A new `.xlsx` package holding `rows` (from row 1, `null` an empty cell) on one worksheet. */
 export function createChartWorkbookFromRows(
 	rows: readonly (readonly (string | number | null)[])[],
 	sheetName = DEFAULT_CHART_SHEET_NAME,
+	options: ChartWorkbookOptions = {},
 ): Promise<Uint8Array> {
-	return workbookPackage(chartWorkbookRowsXml(rows), sheetName);
+	return workbookPackage(chartWorkbookRowsXml(rows), sheetName, options);
 }
 
 /** The one-sheet package around `worksheetXml`. */
-function workbookPackage(worksheetXml: string, sheetName: string): Promise<Uint8Array> {
+function workbookPackage(
+	worksheetXml: string,
+	sheetName: string,
+	options: ChartWorkbookOptions,
+): Promise<Uint8Array> {
 	const zip = new JSZip();
 	zip.file(
 		'[Content_Types].xml',
@@ -87,7 +107,8 @@ function workbookPackage(worksheetXml: string, sheetName: string): Promise<Uint8
 		`${DECLARATION}<Relationships xmlns="${PKG_REL}"><Relationship Id="rId1" Type="${REL}/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${REL}/styles" Target="styles.xml"/></Relationships>`,
 	);
 	zip.file('xl/worksheets/sheet1.xml', worksheetXml);
-	zip.file('xl/styles.xml', STYLES);
+	zip.file('xl/styles.xml', styles(options.minorFont || OFFICE_THEME_FONTS.minor));
+	dateZipEntries(zip, options.zipDate);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }
 

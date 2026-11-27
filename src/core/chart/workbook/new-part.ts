@@ -25,7 +25,11 @@ import { chartSpaceDataSheet } from '../edit/data-sheet';
 import type { ChartSpace } from '../model';
 import { writeChartSpace } from '../write-space';
 import { parseChartFormulaRange } from './cellref';
-import { createChartWorkbook, createChartWorkbookFromRows } from './create';
+import {
+	createChartWorkbook,
+	createChartWorkbookFromRows,
+	type ChartWorkbookOptions,
+} from './create';
 
 export const CHART_PART_CONTENT_TYPE =
 	'application/vnd.openxmlformats-officedocument.drawingml.chart+xml';
@@ -68,6 +72,8 @@ export interface NewChartPartOptions {
 	rows?: readonly (readonly (string | number | null)[])[];
 	/** The sheet name; by default the one the first series' values formula names, else `Sheet1`. */
 	sheetName?: string;
+	/** How the new workbook is written (the host theme's body font, its ZIP entry date). */
+	workbook?: ChartWorkbookOptions;
 }
 
 /** The parts written for a new chart. */
@@ -118,8 +124,8 @@ export function stageChartPartWithWorkbook(
 	zip.file(
 		workbook,
 		options.rows
-			? createChartWorkbookFromRows(options.rows, sheetName)
-			: createChartWorkbook(chartSpaceDataSheet(space), sheetName),
+			? createChartWorkbookFromRows(options.rows, sheetName, options.workbook)
+			: createChartWorkbook(chartSpaceDataSheet(space), sheetName, options.workbook),
 	);
 	return {
 		partName,

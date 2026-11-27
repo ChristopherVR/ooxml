@@ -8,7 +8,7 @@
 import type JSZip from 'jszip';
 import { ensureContentTypeOverride } from '../../opc/package';
 import { buildRelationshipsXml, relationshipsPartFor } from '../../opc/relationships';
-import { createChartWorkbookFromRows } from '../workbook/create';
+import { createChartWorkbookFromRows, type ChartWorkbookOptions } from '../workbook/create';
 import {
 	CHART_WORKBOOK_CONTENT_TYPE,
 	CHART_WORKBOOK_RELATIONSHIP_TYPE,
@@ -39,6 +39,8 @@ export interface NewChartExPartOptions {
 	embeddingsFolder: string;
 	/** The worksheet name; `Sheet1` by default. */
 	sheetName?: string;
+	/** How the new workbook is written (the host theme's body font, its ZIP entry date). */
+	workbook?: ChartWorkbookOptions;
 }
 
 /**
@@ -84,7 +86,7 @@ export function stageChartExPartWithWorkbook(
 			]),
 		),
 	);
-	zip.file(workbook, createChartWorkbookFromRows(layout.rows, sheetName));
+	zip.file(workbook, createChartWorkbookFromRows(layout.rows, sheetName, options.workbook));
 	return {
 		partName,
 		workbookPartName: workbook,

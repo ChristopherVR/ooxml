@@ -22,6 +22,7 @@
  */
 import type JSZip from 'jszip';
 import { openZip } from '../../opc/zip-limits';
+import { dateZipEntries } from '../../opc/reproducible';
 import { parseRelationships, resolvePartPath } from '../../opc/relationships';
 import { buildXml, parseXml, type XmlDocument } from '../../xml/index';
 import { parseCellAddress, parseChartFormulaRange, rangeCellAddress } from './cellref';
@@ -297,12 +298,15 @@ export async function writeChartWorkbookUpdates(
 	return { bytes: await packed(zip), unresolved, changes };
 }
 
-const packed = (zip: JSZip) =>
-	zip.generateAsync({
+/** The workbook's bytes, every entry dated 1980-01-01 as Office writes its packages. */
+const packed = (zip: JSZip) => {
+	dateZipEntries(zip);
+	return zip.generateAsync({
 		type: 'uint8array',
 		compression: 'DEFLATE',
 		compressionOptions: { level: 6 },
 	});
+};
 
 /**
  * Puts back the cells a write-back changed (`ChartWorkbookWriteResult.changes`) wherever they still
