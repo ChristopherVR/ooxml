@@ -24,8 +24,10 @@ test('keeps focus on Add-ins when the Insert ribbon refits', async ({ page }) =>
 	await expect(dialog).toBeHidden();
 	await expect(get).toBeFocused();
 	await page.setViewportSize({ width: 800, height: 900 });
-	await expect(group).toHaveAttribute('data-collapsed', '');
-	await expect(group.getByRole('button', { name: 'Add-ins', exact: true })).toBeFocused();
+	await expect(group).toHaveAttribute('data-scale', 'small');
+	await expect(get).toBeFocused();
+	await get.press('Enter');
+	await expect(dialog.getByRole('searchbox')).toBeFocused();
 });
 
 for (const width of [800, 1280]) {
