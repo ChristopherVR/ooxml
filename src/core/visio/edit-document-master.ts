@@ -6,7 +6,9 @@ import {
 	applyVisioMasterFormat,
 	changesMasterSize,
 	inheritsMasterSize,
+	masterPlainText,
 	refreshInheritedCaches,
+	releasePlaceholderText,
 	snapshotVisioMasterFormat,
 	type VisioMasterFormat,
 } from './master-format';
@@ -86,6 +88,7 @@ export async function editVsdxDocumentMaster(
 	if (roots.length !== 1)
 		fail('UNSUPPORTED_MASTER_EDIT', 'Edit Master changes a master with one top-level shape.');
 	const document = await visioXml(pkg, documentPart!, 'VisioDocument');
+	const releaseText = edit.format.text !== undefined && !masterPlainText(roots[0]!);
 	const { changes, changed } = applyVisioMasterFormat(roots[0]!, document, edit.format);
 	if (!changed)
 		return {
@@ -105,6 +108,7 @@ export async function editVsdxDocumentMaster(
 					'Shapes on the drawing take their size from this master; resize them instead of the master.',
 				);
 			if (refreshInheritedCaches(instance, changes)) touched = true;
+			if (releaseText && releasePlaceholderText(instance)) touched = true;
 		}
 		if (touched) dirty.set(path, root);
 	}

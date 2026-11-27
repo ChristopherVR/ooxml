@@ -310,6 +310,24 @@ export function refreshInheritedCaches(
 	return changed;
 }
 
+/** The master shape's default plain text, empty when it has none. */
+export const masterPlainText = (shape: Element): string =>
+	decodeVisioPlainText(child(shape, 'Text')?.textContent ?? '');
+
+/**
+ * Let an instance show a master's new default text when its own text is only the empty
+ * placeholder a drop from a master without text writes (`<Text/>`, so character formats have
+ * somewhere to go). While the master had no text the two read the same; text the user typed, or
+ * any text with fields or format markers, stays. Returns whether the instance changed.
+ */
+export function releasePlaceholderText(instance: Element): boolean {
+	const texts = children(instance, 'Text');
+	const text = texts[0];
+	if (texts.length !== 1 || !text || elements(text).length || text.textContent) return false;
+	instance.removeChild(text);
+	return true;
+}
+
 /** True when the instance takes the master's size: it stores no Width or Height of its own. */
 export function inheritsMasterSize(instance: Element): boolean {
 	return ['Width', 'Height'].some((name) => {
