@@ -75,6 +75,36 @@ describe('glossary building blocks', () => {
 		expect(glossaryEntryKey({ name: 'a', gallery: 'g', category: 'c' })).toContain('a');
 	});
 
+	it('replaces the entry of the same name, gallery and category when a selection is saved', async () => {
+		const first = createDocument();
+		first.glossary = [
+			{
+				name: 'Note',
+				gallery: 'autoTxt',
+				category: 'General',
+				blocks: [{ type: 'paragraph', id: 'a', runs: [{ text: 'Old text' }] }],
+			},
+		];
+		const loaded = await loadDocx(await saveDocx(first));
+		loaded.model.glossary = [
+			{
+				name: 'Note',
+				gallery: 'autoTxt',
+				category: 'General',
+				blocks: [{ type: 'paragraph', id: 'b', runs: [{ text: 'New text' }] }],
+			},
+		];
+		const bytes = await loaded.save(loaded.model);
+		const xml = await must((await JSZip.loadAsync(bytes)).file('word/glossary/document.xml')).async(
+			'string',
+		);
+		expect(xml.match(/w:val="Note"/g)).toHaveLength(1);
+		expect(xml).toContain('New text');
+		expect(xml).not.toContain('Old text');
+		const entries = must((await loadDocx(bytes)).model.glossary);
+		expect(entries.map(glossaryPreview)).toEqual(['New text']);
+	});
+
 	it('keeps a glossary that Word wrote untouched and lists its entries', async () => {
 		const zip = await JSZip.loadAsync(await saveDocx(createDocument()));
 		const glossary = `<w:glossaryDocument xmlns:w="${W}"><w:docParts><w:docPart><w:docPartPr><w:name w:val="Footer note"/><w:category><w:name w:val="General"/><w:gallery w:val="placeholder"/></w:category></w:docPartPr><w:docPartBody><w:p><w:r><w:t>Footer text</w:t></w:r></w:p></w:docPartBody></w:docPart></w:docParts></w:glossaryDocument>`;

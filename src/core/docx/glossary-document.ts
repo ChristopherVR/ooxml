@@ -41,19 +41,38 @@ export interface GlossaryEntry {
 export const glossaryEntryKey = (entry: Pick<GlossaryEntry, 'name' | 'gallery' | 'category'>) =>
 	`${entry.gallery}\u0000${entry.category}\u0000${entry.name}`;
 
-function entryOf(part: XmlElement, index: number): GlossaryEntry | undefined {
+/**
+ * A `w:docPart`'s name, gallery and category, when it has a name and a body. Saving compares
+ * entries by these alone, which keeps the block parser out of the save path.
+ */
+function headingOf(part: XmlElement) {
 	const properties = first(part, 'docPartPr');
 	const name = getW(first(properties, 'name'), 'val');
 	const body = first(part, 'docPartBody');
 	if (!name || !body) return undefined;
 	const category = first(properties, 'category');
-	const description = getW(first(properties, 'description'), 'val');
-	return {
+	const heading = {
 		name,
 		gallery: getW(first(category, 'gallery'), 'val') ?? 'placeholder',
 		category: getW(first(category, 'name'), 'val') ?? 'General',
+	};
+	return { heading, properties, body };
+}
+
+/** The key of a `w:docPart` that has a name and a body. */
+const partKey = (part: XmlElement): string | undefined => {
+	const read = headingOf(part);
+	return read && glossaryEntryKey(read.heading);
+};
+
+function entryOf(part: XmlElement, index: number): GlossaryEntry | undefined {
+	const read = headingOf(part);
+	if (!read) return undefined;
+	const description = getW(first(read.properties, 'description'), 'val');
+	return {
+		...read.heading,
 		...(description ? { description } : {}),
-		blocks: parseBlocksFromContainer(body, `gl${index}-`),
+		blocks: parseBlocksFromContainer(read.body, `gl${index}-`),
 		loaded: true,
 	};
 }
@@ -190,22 +209,20 @@ export async function writeGlossaryEntries(
 	}
 	const dropped = new Set(removed.map(glossaryEntryKey));
 	for (const part of children(parts, 'docPart')) {
-		const entry = entryOf(part, 0);
-		if (entry && dropped.has(glossaryEntryKey(entry))) parts.removeChild(part);
+		const key = partKey(part);
+		if (key !== undefined && dropped.has(key)) parts.removeChild(part);
 	}
 	const present = new Set(
 		children(parts, 'docPart').flatMap((part) => {
-			const entry = entryOf(part, 0);
-			return entry ? [glossaryEntryKey(entry)] : [];
+			const key = partKey(part);
+			return key === undefined ? [] : [key];
 		}),
 	);
 	for (const entry of added) {
 		// Saving a selection under a name already in the gallery replaces that entry.
 		if (present.has(glossaryEntryKey(entry)))
-			for (const part of children(parts, 'docPart')) {
-				const old = entryOf(part, 0);
-				if (old && glossaryEntryKey(old) === glossaryEntryKey(entry)) parts.removeChild(part);
-			}
+			for (const part of children(parts, 'docPart'))
+				if (partKey(part) === glossaryEntryKey(entry)) parts.removeChild(part);
 		parts.appendChild(docPartElement(doc, entry));
 	}
 	zip.file(partName, buildXml(doc));
