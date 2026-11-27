@@ -15,6 +15,7 @@ describe('native short one-ended arrow stems', () => {
 					path: '',
 					setback: setback!,
 					beginSetback: beginSetback!,
+					filled: true,
 				}),
 			).toBeUndefined();
 	});
