@@ -69,6 +69,8 @@ export interface PdfTextSpacing {
 	scale?: number;
 	/** Invisible text (render mode 3): selectable and searchable over a picture of it. */
 	invisible?: boolean;
+	/** Horizontal shear of the text matrix (a synthetic oblique): the glyphs lean right by this slope. */
+	skew?: number;
 }
 
 /** The `Tz` and `Tr` operators a run needs, with a leading space; empty for the defaults. */
@@ -178,7 +180,7 @@ export class PdfVectorPage {
 		spacing: PdfTextSpacing = {},
 	): void {
 		this.op(
-			`BT /${this.font(baseFont)} ${num(size)} Tf 1 0 0 -1 ${num(x)} ${num(y)} Tm ${num(
+			`BT /${this.font(baseFont)} ${num(size)} Tf 1 0 ${num(spacing.skew ?? 0)} -1 ${num(x)} ${num(y)} Tm ${num(
 				spacing.character ?? 0,
 			)} Tc ${num(spacing.word ?? 0)} Tw${textState(spacing)} ${pdfLiteral(text)} Tj ET${textReset(spacing)}`,
 		);
@@ -208,7 +210,7 @@ export class PdfVectorPage {
 			if (piece === ' ' && word) parts.push(num(word));
 		}
 		this.op(
-			`BT /${name} ${num(size)} Tf 1 0 0 -1 ${num(x)} ${num(y)} Tm ${num(
+			`BT /${name} ${num(size)} Tf 1 0 ${num(spacing.skew ?? 0)} -1 ${num(x)} ${num(y)} Tm ${num(
 				spacing.character ?? 0,
 			)} Tc${textState(spacing)} [${parts.join(' ')}] TJ ET${textReset(spacing)}`,
 		);

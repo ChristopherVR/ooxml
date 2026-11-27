@@ -36,6 +36,8 @@ import { paintContentControlTag } from './pdf-content-control-tag';
 import type { DocxPdfReportBuilder } from './pdf-report';
 
 const DEFAULT_FAMILY = 'Calibri';
+/** The slope Word shears a face with when the font family has no italic (measured from its PDF). */
+const SYNTHETIC_ITALIC_SKEW = 1 / 3;
 const LEADERS: Record<string, string> = { dot: '.', hyphen: '-', middleDot: '\u00b7' };
 
 /** A CSS colour (or bare `RRGGBB`) as 0..1 channels; `null` for transparent or unknown. */
@@ -245,6 +247,8 @@ export class DocxPdfText {
 			page.embeddedText(embedded, sizePx, x, y, space ? `${text} ` : text, {
 				character: spacing,
 				scale,
+				// The family has no italic face: slant the regular one, as Word does.
+				...(italic && !embedded.italic ? { skew: SYNTHETIC_ITALIC_SKEW } : {}),
 				...(space ? { word: wordSpacing(scale, embedded.width(' ') * sizePx) } : {}),
 			});
 			return;
