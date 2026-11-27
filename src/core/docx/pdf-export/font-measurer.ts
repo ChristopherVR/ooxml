@@ -9,7 +9,8 @@
  */
 import { createFakeMeasurer, type LayoutFontSpec, type TextMeasurer } from '../layout/index';
 import type { PdfFontFile } from '../../pdf/write/pdf-embedded-font';
-import { designTextWidthEm, officeFontVerticalMetrics, symbolFontGlyph } from '../../text/index';
+import { designTextWidthEm, officeFontVerticalMetrics } from '../../text/index';
+import type { PdfSymbolGlyph } from '../../pdf/write/pdf-embedded-font';
 import { pairKerning, type PairKerning } from '../../text/truetype/kerning';
 import { DocxPdfFontFiles, type DocxPdfFontMatch, type FontFace } from './font-files';
 
@@ -27,6 +28,8 @@ export interface FontFileMeasurerOptions {
 	substitutions?: Readonly<Record<string, string>>;
 	/** Measures a family that resolves to no file; Office's measured advances, else a formula. */
 	estimate?: TextMeasurer;
+	/** Lets a symbol font's file measure the Unicode equivalents of its pictures (list labels). */
+	symbolGlyph?: PdfSymbolGlyph;
 }
 
 /**
@@ -119,7 +122,10 @@ export function createFontFileMeasurer(
 				previous = 0;
 				continue;
 			}
-			const glyph = symbolFontGlyph(font, face.family, code === 0xa0 ? 32 : code);
+			const at = code === 0xa0 ? 32 : code;
+			const glyph = options.symbolGlyph
+				? options.symbolGlyph(font, face.family, at)
+				: font.glyphFor(at);
 			if (!glyph) {
 				missing += char;
 				previous = 0;

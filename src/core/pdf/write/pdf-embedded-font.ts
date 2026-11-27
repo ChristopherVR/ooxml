@@ -9,7 +9,6 @@ import {
 	mayEmbedFontSubset,
 	parseTrueType,
 	subsetTrueType,
-	symbolFontGlyph,
 	type TrueTypeFont,
 	type TrueTypeSubset,
 } from '../../text/index';
@@ -17,6 +16,17 @@ import { toUnicodeCMap, type PdfCidFont, type PdfFontParts } from './pdf-cid-fon
 import { PdfTextLayerFont } from './pdf-text-layer-font';
 
 export type { PdfCidFont, PdfFontParts } from './pdf-cid-font';
+
+/**
+ * The glyph a symbol font's file draws for a code, its own or the picture a Unicode equivalent
+ * stands for (`symbolFontGlyph` of `text/symbol-fonts`, passed in so the glyph tables load only
+ * where they are used).
+ */
+export type PdfSymbolGlyph = (
+	font: Pick<TrueTypeFont, 'glyphFor' | 'symbolEncoded'>,
+	family: string,
+	code: number,
+) => number;
 
 /** A font file the host supplies for embedding. */
 export interface PdfFontFile {
@@ -38,25 +48,26 @@ export class PdfEmbeddedFont implements PdfCidFont {
 	private constructor(
 		file: PdfFontFile,
 		readonly font: TrueTypeFont,
+		readonly symbolGlyph?: PdfSymbolGlyph,
 	) {
 		this.family = file.family;
 		this.bold = !!file.bold;
 		this.italic = !!file.italic;
 	}
 	/** `undefined` when the bytes are not TrueType or the font's licence forbids embedding. */
-	static create(file: PdfFontFile): PdfEmbeddedFont | undefined {
+	static create(file: PdfFontFile, symbolGlyph?: PdfSymbolGlyph): PdfEmbeddedFont | undefined {
 		const font = parseTrueType(file.data);
 		// A PDF carries a subset of the outlines: restricted, no-subsetting and bitmap-only faces
 		// may not be embedded that way.
 		if (!font || !mayEmbedFontSubset(embeddingPermission(font.embeddingFlags))) return undefined;
-		return new PdfEmbeddedFont(file, font);
+		return new PdfEmbeddedFont(file, font, symbolGlyph);
 	}
 	/** Whether the font has a glyph for every character of `text` (controls excepted). */
 	covers(text: string): boolean {
 		for (const char of text) {
 			const code = char.codePointAt(0)!;
 			if (code < 32 || code === 0xa0) continue;
-			if (!this.#glyphOf(code)) return false;
+			if (!this.glyphOf(code)) return false;
 		}
 		return true;
 	}
@@ -68,11 +79,13 @@ export class PdfEmbeddedFont implements PdfCidFont {
 	}
 	#glyph(char: string): number {
 		const code = char.codePointAt(0)!;
-		return this.#glyphOf(code === 0xa0 || code < 32 ? 32 : code);
+		return this.glyphOf(code === 0xa0 || code < 32 ? 32 : code);
 	}
 	/** A symbol font also draws the Unicode equivalents of its pictures (a list's check mark). */
-	#glyphOf(code: number): number {
-		return symbolFontGlyph(this.font, this.family, code);
+	glyphOf(code: number): number {
+		return this.symbolGlyph
+			? this.symbolGlyph(this.font, this.family, code)
+			: this.font.glyphFor(code);
 	}
 	/** `text` as the hex digits of 2-byte CIDs (no angle brackets); marks the glyphs as used. */
 	encode(text: string): string {
@@ -138,12 +151,16 @@ export class PdfFontSet {
 	readonly #substitute: ((family: string) => string | undefined) | undefined;
 	constructor(
 		files: readonly PdfFontFile[] = [],
-		options: { embedAll?: boolean; substitute?: (family: string) => string | undefined } = {},
+		options: {
+			embedAll?: boolean;
+			substitute?: (family: string) => string | undefined;
+			symbolGlyph?: PdfSymbolGlyph;
+		} = {},
 	) {
 		this.embedAll = !!options.embedAll;
 		this.#substitute = options.substitute;
 		this.fonts = files.flatMap((file) => {
-			const font = PdfEmbeddedFont.create(file);
+			const font = PdfEmbeddedFont.create(file, options.symbolGlyph);
 			return font ? [font] : [];
 		});
 	}

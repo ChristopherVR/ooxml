@@ -23,7 +23,7 @@ export type GlyphPointMap = (u: number, v: number) => readonly [number, number];
 
 const glyphOf = (font: PdfEmbeddedFont, char: string): number => {
 	const code = char.codePointAt(0)!;
-	return font.font.glyphFor(code === 0xa0 || code < 32 ? 32 : code);
+	return font.glyphOf(code === 0xa0 || code < 32 ? 32 : code);
 };
 
 /** Where each glyph of `text` goes, as `embeddedText` writes it with `spacing`. */

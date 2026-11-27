@@ -8,7 +8,6 @@ import { resolveNumberingLevel } from './numbering-parse';
 import { NumberingCounters, substituteLvlText } from './numbering-counters';
 import { ListNumberFields } from './list-number-fields';
 import { resolveStyleNumbering } from './paragraph-styles';
-import { isSymbolEncodedFont, symbolCharToUnicode } from '../text/symbol-fonts';
 import {
 	cardinalWords,
 	letterLabel,
@@ -151,45 +150,4 @@ function paragraphLabel(
 	};
 }
 
-/**
- * Bullets of Word's bullet library by their private-use code (U+F0xx), for a label whose font is
- * not known to be a symbol font.
- */
-const SYMBOL_BULLETS: Record<string, string> = {
-	'': '•',
-	'': '▪',
-	'': '➢',
-	'': '❖',
-	'': '✓',
-	'': '■',
-	'': '❑',
-	'': '➩',
-	'': '○',
-};
-
-/** Where Word 16's own PDF names a symbol-font bullet differently from the shared tables. */
-const WORD_BULLET_NAMES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
-	wingdings: { '': '✓' },
-};
-
-/**
- * A list label as Unicode text. Bullets in Word's symbol fonts (Symbol, Wingdings, Webdings) are
- * codes that select the font's pictures (U+F0xx, or a byte); without those fonts they render as
- * missing glyphs, so each is shown as its Unicode equivalent in `font`: Symbol F02D is a minus
- * sign, F0AE an arrow, Wingdings F0FC a check mark. An unknown private-use bullet shows as `•`.
- */
-export function displayListLabel(text: string, font?: string): string {
-	const symbolic = isSymbolEncodedFont(font);
-	const names = symbolic ? WORD_BULLET_NAMES[font!.trim().toLowerCase()] : undefined;
-	let out = '';
-	for (const char of text) {
-		const privateUse = /^[-]$/.test(char);
-		if (!privateUse && !(symbolic && char > ' ')) {
-			out += char;
-			continue;
-		}
-		const named = symbolic ? (names?.[char] ?? symbolCharToUnicode(font, char)) : undefined;
-		out += named ?? (privateUse ? (SYMBOL_BULLETS[char] ?? '•') : char);
-	}
-	return out;
-}
+export { displayListLabel } from './symbol-bullets';

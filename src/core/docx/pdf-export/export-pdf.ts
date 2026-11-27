@@ -240,8 +240,13 @@ export async function exportDocxPdf(
 	signal?.throwIfAborted();
 	const mode: ReviewDisplayMode = options.markup === 'all' ? 'all' : 'final';
 	const files = new DocxPdfFontFiles(options.fonts ?? [], options.fontSubstitutions);
+	// The symbol fonts' glyph tables load with the export, not with the docx entry points.
+	const symbols = await import('../../text/symbol-fonts');
+	const { symbolFontGlyph: symbolGlyph } = symbols;
 	const fileMeasurer: FontFileMeasurer | undefined =
-		options.measurer || !files.faces.length ? undefined : createFontFileMeasurer(files);
+		options.measurer || !files.faces.length
+			? undefined
+			: createFontFileMeasurer(files, { symbolGlyph });
 	const measurer = options.measurer ?? fileMeasurer ?? createFakeMeasurer();
 	const report = new DocxPdfReportBuilder();
 	const projected = reviewDocumentFormatting(refreshComputedFields(model), mode);
@@ -275,9 +280,11 @@ export async function exportDocxPdf(
 		new PdfFontSet(options.fonts ?? [], {
 			embedAll: !!(options.pdfA || options.pdfUa),
 			substitute: (family) => files.match(family)?.family,
+			symbolGlyph,
 		}),
 		measurer,
 		report,
+		symbols,
 	);
 	const pictures = new DocxPdfPictures(options.media, options.decodePicture, report);
 	pictures.drawings = new DocxPdfDrawings(pictures, text, report);
