@@ -151,6 +151,14 @@ test.describe('editor keyboard shortcuts', () => {
 		const before = await slideElements(page).count();
 		await slideElements(page).filter({ hasText: 'Starter' }).first().click();
 		await slideStage(page).getByText('Starter', { exact: true }).first().dblclick();
+		// Angular mounts the cell editor after its next render; paste once it has the caret.
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => (document.activeElement as HTMLElement | null)?.isContentEditable === true,
+				),
+			)
+			.toBe(true);
 		await page.keyboard.press('ControlOrMeta+v');
 		await expect(slideElements(page)).toHaveCount(before);
 		await page.keyboard.type(' still editing');
