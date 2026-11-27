@@ -66,6 +66,14 @@ a:focus-visible {
 	border-color: var(--office-accent);
 	font-weight: var(--office-font-weight-bold);
 }
+@media (forced-colors: active) {
+	.pivots button[aria-selected='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}
 input[type='search'] {
 	flex: 1 1 14rem;
 	min-width: 0;

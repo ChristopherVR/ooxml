@@ -8,6 +8,32 @@ const fixture = new URL(
 	import.meta.url,
 );
 
+test('Office Add-ins distinguishes the selected tab in forced colours', async ({ page }) => {
+	await page.emulateMedia({ forcedColors: 'active' });
+	await page.goto('/');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.evaluate((element) =>
+		Reflect.set(element, Symbol.for('office-ui.add-in-storefront'), { kind: 'microsoft' }),
+	);
+	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	const command = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
+	await reveal(editor, command);
+	await command.click();
+	const tabs = editor.locator('office-ui-add-ins-dialog');
+	const store = tabs.getByRole('tab', { name: 'Store', exact: true });
+	const mine = tabs.getByRole('tab', { name: 'My Add-ins', exact: true });
+	const background = (tab: typeof store) =>
+		tab.evaluate((element) => getComputedStyle(element).backgroundColor);
+	await expect(store).toHaveAttribute('aria-selected', 'true');
+	const selected = await background(store);
+	expect(await background(mine)).not.toBe(selected);
+	await mine.click();
+	await expect(mine).toHaveAttribute('aria-selected', 'true');
+	expect(await background(mine)).toBe(selected);
+	expect(await background(store)).not.toBe(selected);
+});
+
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: reviews, cancels and installs an add-in from My Add-ins`, async ({
 		page,
