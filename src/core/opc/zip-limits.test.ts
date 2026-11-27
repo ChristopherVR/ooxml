@@ -156,13 +156,14 @@ describe('streamEntryGuarded', () => {
 		let paused = true;
 		let scheduled = false;
 		let sent = 0;
+		const availableChunks = 4 * 1024;
 		const listeners: Record<string, ((chunk?: Uint8Array) => void)[]> = { data: [], end: [] };
 		const tick = (): void => {
 			scheduled = false;
-			if (paused || sent === 1000) return;
+			if (paused || sent === availableChunks) return;
 			sent++;
 			for (const listener of listeners.data ?? []) listener(new Uint8Array(1024));
-			if (sent === 1000) for (const listener of listeners.end ?? []) listener();
+			if (sent === availableChunks) for (const listener of listeners.end ?? []) listener();
 			else {
 				scheduled = true;
 				setImmediate(tick);
