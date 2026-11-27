@@ -162,8 +162,9 @@ test('Draw tab folds at a narrow width and reads in the dark theme', async ({ pa
 	await page.emulateMedia({ colorScheme: 'dark' });
 	await openSample(page);
 	const draw = await openDraw(page);
-	const overflow = await draw.evaluate((panel) => panel.scrollWidth <= panel.clientWidth + 1);
-	expect(overflow).toBe(true);
+	await expect
+		.poll(() => draw.evaluate((panel) => panel.scrollWidth <= panel.clientWidth + 1))
+		.toBe(true);
 	// Each folded group shows its own icon, and its pop-out holds the group's controls.
 	const icons = await draw
 		.locator('.ribbon-group')
@@ -327,4 +328,89 @@ test('Draw: Undo from the ribbon after Ink to Shape, and the eraser on ink in li
 	await expect
 		.poll(async () => (await inline.count()) && (await inline.locator('path').count()))
 		.toBeLessThan(paths);
+});
+
+test('Draw: copy, cut and paste of Word ink keep its strokes and give it a part of its own', async ({
+	page,
+	context,
+}) => {
+	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await openSample(page);
+	const draw = await openDraw(page);
+	await draw.getByRole('button', { name: 'Pen: 0.5 mm, Red' }).click();
+	await drawOnPage(page, 520, 140, wave);
+	await expect(inkFloats(page)).toHaveCount(1);
+	await draw.getByRole('button', { name: 'Select', exact: true }).click();
+	const paths = await inkFloats(page).first().locator('path').count();
+	const select = async (index: number) => {
+		const box = (await inkFloats(page).nth(index).boundingBox())!;
+		await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+	};
+	const caretAt = async (text: string) => {
+		await editor(page).locator('.dve-print-line', { hasText: text }).first().click();
+		await page.keyboard.press('End');
+	};
+
+	// Copy leaves the original; paste brings a second drawing with the same strokes.
+	await select(0);
+	await page.keyboard.press('Control+c');
+	await expect(inkFloats(page)).toHaveCount(1);
+	await caretAt('A small plan');
+	await page.keyboard.press('Control+v');
+	await expect(inkFloats(page)).toHaveCount(2);
+	for (const index of [0, 1])
+		await expect(inkFloats(page).nth(index).locator('path')).toHaveCount(paths);
+
+	// Cut takes it away; paste puts it back.
+	await select(1);
+	await page.keyboard.press('Control+x');
+	await expect(inkFloats(page)).toHaveCount(1);
+	await caretAt('Start with your first');
+	await page.keyboard.press('Control+v');
+	await expect(inkFloats(page)).toHaveCount(2);
+
+	const { bytes, xml } = await savedDocument(page, 'draw-clipboard.docx');
+	expect(xml.match(/<w14:contentPart/g)).toHaveLength(2);
+	const zip = await JSZip.loadAsync(bytes);
+	expect(
+		Object.keys(zip.files).filter((name) => /^word\/ink\/ink\d+\.xml$/.test(name)),
+	).toHaveLength(2);
+	await reopenDocument(page, 'draw-clipboard.docx', bytes);
+	await expect(inkFloats(page)).toHaveCount(2);
+	await expect(inkFloats(page).nth(1).locator('path')).toHaveCount(paths);
+});
+
+test('Draw: a folded group shows whole German captions in the ribbon font', async ({ page }) => {
+	await page.setViewportSize({ width: 800, height: 700 });
+	await page.goto('/?locale=de');
+	await page.locator('html[data-demo-ready="true"]').waitFor({ state: 'attached' });
+	await page.locator('#sample').click();
+	await expect(editor(page).locator('.ProseMirror')).toContainText('Document title');
+	await editor(page).locator('[role="tab"][data-tab="draw"]').click();
+	const panel = editor(page).locator('[data-ribbon-tab="draw"]');
+	await expect(panel.locator('.ribbon-group')).toHaveCount(4);
+	await panel.locator('.ribbon-overflow-button').first().click();
+	const pop = editor(page).locator('.ribbon-overflow-panel');
+	await expect(pop.locator('button.dve-draw-command').first()).toBeVisible();
+	const clipped = await pop
+		.locator('button.dve-draw-command')
+		.evaluateAll((buttons) =>
+			buttons
+				.filter((button) =>
+					[...button.querySelectorAll('span')].some(
+						(span) =>
+							span.scrollWidth > span.clientWidth + 1 || span.scrollHeight > button.clientHeight,
+					),
+				)
+				.map((button) => button.textContent),
+		);
+	expect(clipped).toEqual([]);
+	await expect(pop.locator('button.dve-add-pen')).toContainText('Stift hinzufügen');
+	const fonts = await pop.evaluate((element) => {
+		const pens = element.querySelector('office-ui-ink-pens')!;
+		const button = element.querySelector('button.dve-draw-command')!;
+		return [getComputedStyle(pens).fontFamily, getComputedStyle(button).fontFamily];
+	});
+	expect(fonts[0]).toBe(fonts[1]);
 });

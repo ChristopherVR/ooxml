@@ -152,3 +152,22 @@ test('Excel Draw: a pen press never selects cells; one eraser stroke is one undo
 	await page.keyboard.press('Control+z');
 	await expect(drawn.locator('path')).toHaveCount(2);
 });
+
+test('Excel Draw: strokes drawn while the Draw surface still loads are kept, in order', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1280, height: 800 });
+	await openFixture(page, 'vanilla', 'excel-ink.xlsx');
+	await ribbon(page).getByRole('tab', { name: 'Draw', exact: true }).click();
+	// Right after the pen is picked, on a cold page: the first stroke can land before the surface
+	// is over the cells, and a quick second one must not race it.
+	await ribbon(page).getByRole('button', { name: 'Pen: 0.5 mm, Red' }).click();
+	await drawOnGrid(page, 300, 300, wave);
+	await drawOnGrid(page, 300, 330, [
+		[100, 0],
+		[200, 6],
+	]);
+	await expect(inks(page)).toHaveCount(2);
+	await expect(inks(page).nth(1).locator('path')).toHaveCount(2);
+	expect(await nameBoxValue(page)).toBe('A1');
+});
