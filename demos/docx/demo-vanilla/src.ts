@@ -159,6 +159,10 @@ get('blank').addEventListener('click', (event) => {
 	event.stopPropagation();
 	void openModel(createDocument(), 'Document1.docx');
 });
+// The gallery link names the published site, which is right wherever this demo runs on its own.
+// On the site itself (served under /ooxml/) the gallery is next door: link to that copy instead.
+if (location.pathname.startsWith('/ooxml/'))
+	document.getElementById('more-samples')?.setAttribute('href', '/ooxml/samples/');
 get('sample').addEventListener('click', (event) => {
 	event.stopPropagation();
 	void openModel(createSampleDocument(), 'Sample document.docx');

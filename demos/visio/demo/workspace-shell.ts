@@ -14,6 +14,10 @@ export function wireWorkspaceShell(
 		doc.body.dataset.workspace = '';
 	};
 	get('start-browse').addEventListener('click', () => actions.browse());
+	// The gallery link names the published site, which is right wherever this demo runs on its
+	// own. On the site itself (served under /ooxml/) the gallery is next door: link to that copy.
+	if (doc.location.pathname.startsWith('/ooxml/'))
+		doc.getElementById('more-samples')?.setAttribute('href', '/ooxml/samples/');
 	get('start-sample').addEventListener('click', () => actions.sample());
 	get('start-onedrive').addEventListener('click', () => actions.onedrive());
 	dropzone.addEventListener('click', (event) => {
