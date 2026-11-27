@@ -220,6 +220,14 @@ code {
 .post-icon:active {
 	transform: scale(0.985);
 }
+/* The switch shows the mode it turns on: the moon in light, the sun in dark. */
+.post-icon-sun,
+:root[data-theme='dark'] .post-icon-moon {
+	display: none;
+}
+:root[data-theme='dark'] .post-icon-sun {
+	display: block;
+}
 
 /* Hero: the tiles, the title, the metadata line and the picture in a frame. */
 .post-hero {

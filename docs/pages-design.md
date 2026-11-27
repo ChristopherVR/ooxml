@@ -19,7 +19,8 @@ rather than one stylesheet.
 - **Motion is fluid and purposeful.** One easing, four durations, entrances that settle once and
   hover states that lift; see Motion below. `prefers-reduced-motion` turns it all off.
 - **Dark first in the app, system in the docs.** The suite opens in dark mode on a first visit
-  (light stays one click away in Appearance). The docs follow the reader's system setting.
+  (light stays one click away in Appearance). The docs and the release posts follow the reader's
+  system setting until the reader picks a mode.
 
 ## Tokens
 
@@ -285,8 +286,11 @@ reads these shapes:
   `changes-openteams`: changelogs link to these anchors, and on Pages a link to one opens the
   list and scrolls to it. Headings inside a list stay out of the table of contents.
 
-**Article.** A 52 px header bar (brand, Docs, Releases, GitHub, the appearance switch, which
-shares `ooxml-suite-theme` with the suite and the hub, dark first). The hero is centred on a
+**Article.** A 52 px header bar (brand, Docs, Releases, GitHub, the appearance switch). The page
+follows `prefers-color-scheme` (`data-appearance-default="system"` on the template's root, read by
+`appearance-init.js` before the first paint) until the reader presses the switch, a toggle button
+showing the moon in light and the sun in dark; the choice is kept in `ooxml-suite-theme`, shared
+with the suite and the hub, and lasts for the page when storage is blocked. The hero is centred on a
 wash of the accent fading into the canvas: the five solid product tiles, the title at up to
 96 px with the version in the accent, the metadata line and the hero picture in a hairline
 frame. Below, the contents column (220 px, sticky, the current section marked with the

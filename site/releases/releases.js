@@ -1,6 +1,6 @@
 /**
- * A release post (scripts/build-release-notes.mjs renders it): the appearance switch shared with
- * the suite and the hub, reveals, the table of contents that marks the section in view, the
+ * A release post (scripts/build-release-notes.mjs renders it): the appearance switch (it follows
+ * the device until the reader picks a mode, which is kept with the suite's), reveals, the table of contents that marks the section in view, the
  * change lists a link opens, and the copy buttons on code samples.
  */
 import './showcase.js';
@@ -10,21 +10,22 @@ const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const appearance = document.querySelector('#appearance');
 
+// The reader's choice for this page when storage is blocked, so the switch still works.
+let chosen = null;
 function readTheme() {
 	try {
 		const saved = JSON.parse(localStorage.getItem(key) ?? 'null');
-		return saved && ['light', 'dark', 'system'].includes(saved.mode) ? saved : null;
+		return saved && ['light', 'dark', 'system'].includes(saved.mode) ? saved : chosen;
 	} catch {
-		return null;
+		return chosen;
 	}
 }
 function applyTheme() {
 	const mode = readTheme()?.mode;
-	// Dark first, like the suite: only a saved "light" (or a light system) turns it off.
+	// Until the reader picks a mode the post follows the device (appearance-init.js does the same
+	// before the first paint); a saved "light" or "dark", shared with the suite, wins.
 	const dark =
-		mode === 'dark' ||
-		(mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches) ||
-		(mode !== 'light' && mode !== 'system');
+		mode === 'dark' || (mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
 	root.dataset.theme = dark ? 'dark' : 'light';
 	root.style.colorScheme = dark ? 'dark' : 'light';
 	appearance?.setAttribute('aria-pressed', String(dark));
@@ -34,6 +35,7 @@ appearance?.addEventListener('click', () => {
 		...(readTheme() ?? { accent: 'blue' }),
 		mode: root.dataset.theme === 'dark' ? 'light' : 'dark',
 	};
+	chosen = next;
 	try {
 		localStorage.setItem(key, JSON.stringify(next));
 	} catch {}

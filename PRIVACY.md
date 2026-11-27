@@ -599,6 +599,13 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
 The documentation sites (`christophervr.github.io/ooxml/...`) bundle their own fonts and search
 index and make no third-party requests. Pages that embed a demo apply the sections above.
 
+The release posts (`/ooxml/releases/<version>/`) follow the device's light or dark setting. When
+the reader presses the appearance switch, the post stores the chosen mode on this device in
+localStorage under `ooxml-suite-theme`, the same key the suite and the documentation hub use, so
+the choice carries over between them. Nothing is sent. Clear the key, or choose the mode again in
+the suite's Appearance settings, to change it; if the browser blocks storage, the choice lasts
+until the page closes.
+
 ## Development tooling
 
 Scripts that are not shipped contact external services when a maintainer runs them: the npm
