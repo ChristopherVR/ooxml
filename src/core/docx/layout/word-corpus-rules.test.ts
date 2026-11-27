@@ -156,6 +156,23 @@ describe('Word line break references', () => {
 	);
 
 	it.each([
+		{ word: 'a', shrinkPt: 5.2, fits: true },
+		{ word: 'a', shrinkPt: 5.6, fits: false },
+		{ word: 'at', shrinkPt: 7.8, fits: true },
+		{ word: 'at', shrinkPt: 8.4, fits: false },
+	])(
+		'keeps a short last word $word squeezed by $shrinkPt pt: $fits',
+		({ word, shrinkPt, fits }) => {
+			// Word 16 keeps "a" and "at" at 0.364 of word plus space and drops them by 0.383 (issue #369).
+			const prefix = '0000 aa aa aa aa aa aa aa aa aa';
+			const first = `${prefix} ${word}`;
+			expect(wraps(`${first} extra`, first.length * 7.2 - shrinkPt, { align: 'justify' })[0]).toBe(
+				fits ? first : prefix,
+			);
+		},
+	);
+
+	it.each([
 		{ split: 1, shrinkPt: 12, fits: true },
 		{ split: 2, shrinkPt: 12, fits: true },
 		{ split: 3, shrinkPt: 12, fits: true },

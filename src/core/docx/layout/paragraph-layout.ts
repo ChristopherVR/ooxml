@@ -23,8 +23,10 @@ import { cachedParagraphLayout } from './paragraph-cache';
 
 // Word 16 mode 15 probes in Courier New, Times New Roman, Arial and Arial Narrow.
 // The line can give up a quarter of its spaces, with a smaller budget for a short next word.
+// Word 16 sweeps in Century Gothic (issue #369) keep "a" and "at" at 0.364 of word plus space and
+// drop them by 0.383, so the word part sits between those.
 const SPACE_SHRINK = 0.25;
-const WORD_SHRINK = 0.35;
+const WORD_SHRINK = 0.375;
 
 export interface ParagraphLayoutResult {
 	/** Lines with `yPx` relative to the paragraph box's own top (0 for the first line). */
