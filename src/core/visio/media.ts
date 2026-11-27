@@ -90,9 +90,30 @@ export async function readVisioImage(
 			'invalid-image-relationship',
 			'Foreign data does not reference an image relationship.',
 		);
-	if (pkg.getPartByteLength(rel.target) > limits.maxImageBytes)
+	return readVisioImagePart(pkg, rel.target, report, options, sourcePart);
+}
+
+/**
+ * Read and validate one internal bitmap part by name: a picture, or the stored preview of an
+ * embedded OLE object. Metafiles are not bitmaps and are refused here.
+ */
+export async function readVisioImagePart(
+	pkg: VisioPackage,
+	target: string,
+	report: Report,
+	options: VisioImageOptions = {},
+	sourcePart = target,
+): Promise<VisioImage | undefined> {
+	const limits: ImageLimits = { ...VISIO_RASTER_IMAGE_LIMITS, ...options };
+	if (Object.values(limits).some((value) => !Number.isSafeInteger(value) || value <= 0))
+		throw new VisioPackageError('INVALID_LIMIT', 'Image limits must be positive safe integers.');
+	const omit = (code: string, message: string) => {
+		report(code, message, { part: sourcePart });
+		return undefined;
+	};
+	if (pkg.getPartByteLength(target) > limits.maxImageBytes)
 		return omit('image-limit', 'Raster image bytes exceed the configured limit before inflation.');
-	const bytes = await pkg.readBytes(rel.target);
+	const bytes = await pkg.readBytes(target);
 	if (bytes.length > limits.maxImageBytes)
 		return omit('image-limit', 'Raster image bytes exceed the configured limit.');
 	let cache = validationCache.get(pkg);
@@ -100,10 +121,10 @@ export async function readVisioImage(
 		cache = { assets: new Map(), tiffPixels: 0, tiffPreviewBytes: 0 };
 		validationCache.set(pkg, cache);
 	}
-	const key = `${rel.target}\0${limits.maxImageBytes}/${limits.maxPixels}/${limits.maxDimension}`;
+	const key = `${target}\0${limits.maxImageBytes}/${limits.maxPixels}/${limits.maxDimension}`;
 	let pending = cache.assets.get(key);
 	if (!pending) {
-		pending = prepareImage(bytes, limits, cache, rel.target);
+		pending = prepareImage(bytes, limits, cache, target);
 		cache.assets.set(key, pending);
 	}
 	try {

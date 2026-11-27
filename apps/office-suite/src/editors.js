@@ -65,6 +65,8 @@ export function preloadEditor(kind) {
 }
 /** File commands the suite handles itself, for every editor (Visio raises only these). */
 export const SUITE_FILE_COMMANDS = new Set(['save', 'new', 'open', 'share']);
+/** Commands that carry a generated or embedded file (`fileName`, `bytes`) to open as a new session. */
+export const OPEN_BYTES_COMMANDS = new Set(['openMergedDocument', 'openEmbeddedDocument']);
 
 /**
  * What an editor showing the assistant's suggestions cannot do: every way its own commands take
@@ -341,7 +343,7 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	// (`ooxml-core/embedding`); the suite takes them over so files stay in its profile storage.
 	element.addEventListener('file-command', (event) => {
 		const { detail } = event;
-		if (detail.command === 'openMergedDocument' || SUITE_FILE_COMMANDS.has(detail.command)) {
+		if (OPEN_BYTES_COMMANDS.has(detail.command) || SUITE_FILE_COMMANDS.has(detail.command)) {
 			event.preventDefault();
 			// Native custom-element events are fire-and-forget; the suite callback reports failures.
 			void Promise.resolve()

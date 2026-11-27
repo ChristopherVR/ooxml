@@ -320,6 +320,10 @@ export const frCommands: Readonly<Record<string, string>> = {
 	'Edit Chart': 'Modifier le graphique',
 	'Edit Data': 'Modifier les données',
 	'Format Chart': 'Mettre en forme le graphique',
+	'Open Object': 'Ouvrir l’objet',
+	'Open the embedded file in its own editor.':
+		'Ouvrir le fichier incorporé dans son propre éditeur.',
+	'Select one embedded object to open it.': 'Sélectionnez un objet incorporé pour l’ouvrir.',
 	'Open a .vsdx file with members to fit.': 'Ouvrez un fichier .vsdx avec des membres à ajuster.',
 	'Open a .vsdx file to disband a container.':
 		'Ouvrez un fichier .vsdx pour dissocier un conteneur.',

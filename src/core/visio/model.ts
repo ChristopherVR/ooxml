@@ -279,6 +279,29 @@ export interface VisioEmbeddedObject {
 	width?: number;
 	height?: number;
 }
+/** What an embedded OLE object's part holds. */
+export type VisioOleObjectFormat =
+	| 'docx'
+	| 'xlsx'
+	| 'pptx'
+	| 'vsdx'
+	| 'macro-enabled'
+	/** A binary OLE container (`oleObject*.bin`): a package object, a PDF, another program's data. */
+	| 'ole'
+	| 'other';
+/**
+ * Any other embedded OLE object (Insert > Object): drawn from its saved preview (the shape's
+ * `image` or `foreignVector`) and kept byte for byte. Its bytes are read on demand from `part`.
+ */
+export interface VisioOleObject {
+	part: string;
+	format: VisioOleObjectFormat;
+	fileName: string;
+	/** ForeignData ShowAsIcon: the saved preview is the object's icon rather than its content. */
+	showAsIcon: boolean;
+	/** Why the object cannot be opened here, when it cannot. */
+	refusal?: string;
+}
 export interface VisioLayer {
 	id: string;
 	name: string;
@@ -335,6 +358,8 @@ export interface VisioShape {
 	layerIds?: string[];
 	image?: VisioImage;
 	embeddedObject?: VisioEmbeddedObject;
+	/** An embedded OLE object that is not a chart: what it holds and whether it opens. */
+	oleObject?: VisioOleObject;
 	foreignVector?: VisioPlacedForeignVector;
 	shapeData?: VisioShapeData[];
 	/** Controls rows: the yellow handles of the shape, in local y-up inches. */

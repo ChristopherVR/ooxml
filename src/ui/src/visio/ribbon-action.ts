@@ -68,6 +68,8 @@ export type VisioInsertItem =
 	| 'chart-data'
 	| 'chart-format'
 	| 'chart-edit'
+	/** Open on a selected embedded OLE object (Word, Excel, PowerPoint or Visio file). */
+	| 'object-open'
 	| 'link'
 	| 'screen-tip';
 /** Review and Process tab commands: comments, shape reports, diagram checks and subprocesses. */

@@ -49,6 +49,20 @@ export async function inspectEmbeddedVisioMetafile(
 		report('invalid-image-relationship', 'Metafile does not reference an image relationship.');
 		return;
 	}
+	return inspectVisioMetafilePart(pkg, rel.target, report, converter);
+}
+
+/**
+ * Inspect (and, with a converter, draw) one internal EMF part by name, under the same
+ * per-document budgets: a picture's metafile or the stored preview of an embedded OLE object.
+ */
+export async function inspectVisioMetafilePart(
+	pkg: VisioPackage,
+	target: string,
+	report: Report,
+	converter?: VisioMetafileTreeConverter,
+): Promise<VisioForeignVector | undefined> {
+	const rel = { target };
 	let state = states.get(pkg);
 	if (!state) {
 		state = {

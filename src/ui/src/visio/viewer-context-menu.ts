@@ -54,6 +54,12 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 				icon: 'fill',
 				action: { type: 'insert', item: 'chart-format' },
 			},
+			{
+				id: 'ctx-object-open',
+				label: 'Open Object',
+				icon: 'open',
+				action: { type: 'insert', item: 'object-open' },
+			},
 			'-',
 			{
 				id: 'ctx-group',

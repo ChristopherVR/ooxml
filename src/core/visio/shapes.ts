@@ -79,6 +79,7 @@ function mergeShape(base: RawShape, local: RawShape, context: ShapeContext): Raw
 	if (local.foreign && !local.image) delete result.image;
 	if (local.foreign && !local.foreignVector) delete result.foreignVector;
 	if (local.foreign && !local.embeddedObject) delete result.embeddedObject;
+	if (local.foreign && !local.oleObject) delete result.oleObject;
 	return result;
 }
 function cloneInherited(shape: RawShape, parentId: string, context: ShapeContext): RawShape {
@@ -197,7 +198,8 @@ export function normalizeShapes(
 				(shape.foreign || type === 'Foreign') &&
 				!shape.image &&
 				!shape.foreignVector &&
-				!shape.embeddedObject
+				!shape.embeddedObject &&
+				!shape.oleObject
 			)
 				report(
 					'unsupported-foreign-object',
@@ -352,6 +354,7 @@ export function normalizeShapes(
 							},
 						}
 					: {}),
+				...(shape.oleObject ? { oleObject: shape.oleObject } : {}),
 				...(shape.image
 					? {
 							image: {

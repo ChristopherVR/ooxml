@@ -320,6 +320,11 @@ export const deCommands: Readonly<Record<string, string>> = {
 	'Edit Chart': 'Diagramm bearbeiten',
 	'Edit Data': 'Daten bearbeiten',
 	'Format Chart': 'Diagramm formatieren',
+	'Open Object': 'Objekt öffnen',
+	'Open the embedded file in its own editor.':
+		'Die eingebettete Datei in ihrem eigenen Editor öffnen.',
+	'Select one embedded object to open it.':
+		'Wählen Sie ein eingebettetes Objekt aus, um es zu öffnen.',
 	'Open a .vsdx file with members to fit.':
 		'Öffnen Sie eine .vsdx-Datei mit Mitgliedern zum Anpassen.',
 	'Open a .vsdx file to disband a container.':

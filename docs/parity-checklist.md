@@ -1464,9 +1464,21 @@ installed Visio 16 build is used to check that saved files open without repair.
       external references), BMP, TIFF (decoded for display) and bounded classic EMF
       (`visio/edit-picture-formats.test.ts`, `e2e/visio/picture-format-insertion.spec.ts`, the
       security corpus); desktop Visio 16 reopens the BMP, TIFF and EMF pictures.
-- [ ] **P1** General OLE objects are not supported, and desktop Visio 16 shows an inserted SVG
-      blank (also with the documented fallback picture). EMF conversion covers classic vector
-      records only, BMP uncompressed and bitfield scanlines, and TIFF single-image strips.
+- [x] **P1** Embedded OLE objects (Insert > Object in Visio: other Office files, packages, binary
+      OLE containers) are drawn from the picture saved with them (an `image` relationship of the
+      embedded part: EMF through the metafile path, PNG, JPEG, GIF, BMP or TIFF), as an icon or
+      as content, whichever was stored, and every edit keeps the embedding and its preview byte for
+      byte. An embedded Word, Excel, PowerPoint or Visio file opens on double-click or the shape
+      menu's Open Object: the cancelable `file-command` event `openEmbeddedDocument` lets a host
+      open it (the Office suite opens it in its editor), else it downloads. Binary OLE containers,
+      macro-enabled documents, non-ZIP payloads and linked objects are refused with the reason
+      (`visio/ole-object.ts`, `ole-object.test.ts`, security corpus `visio-ole-objects.ts`).
+- [ ] **P1** OLE objects remainders: no Insert > Object in Visio, no in-place activation or
+      Convert, WMF previews are reported and not drawn, an object without a saved preview is not
+      drawn, edits to an opened embedded document do not flow back into the drawing, and desktop
+      Visio 16 shows an inserted SVG blank (also with the documented fallback picture). EMF
+      conversion covers classic vector records only, BMP uncompressed and bitfield scanlines, and
+      TIFF single-image strips.
 - [ ] **P1** Bevel and 3-D rotation are approximations, not Visio's renderer. Perspective
       foreshortening (camera distance fitted to Visio 16 renders), extrusion (flat-shaded side
       faces) and the contour are drawn (`solid-3d.ts`, `render-solid.ts`), and a themed top bevel

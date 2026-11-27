@@ -48,7 +48,7 @@ const sessions = new SuiteSessions(store, $('editors'), renderTabs, async (comma
 			notify(cloudSaveLabel(await store.get(id)));
 		} else if (command === 'open') chooseOpen();
 		else if (command === 'share') await share(id);
-		else if (command === 'openMergedDocument') {
+		else if (command === 'openMergedDocument' || command === 'openEmbeddedDocument') {
 			const doc = await store.create(detail.fileName, detail.bytes);
 			await open(doc.id, undefined, { focus: true });
 		} else await create((await store.get(id)).kind);

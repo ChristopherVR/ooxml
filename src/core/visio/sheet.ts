@@ -1,6 +1,6 @@
 import type { VisioForeignVector } from './foreign-vector';
 import { elements } from '../xml/index';
-import type { VisioDiagnostic, VisioEmbeddedObject, VisioImage } from './model';
+import type { VisioDiagnostic, VisioEmbeddedObject, VisioImage, VisioOleObject } from './model';
 import { metadata, metadataAttributes } from './metadata';
 
 export const VISIO_NS = 'http://schemas.microsoft.com/office/visio/2012/main';
@@ -51,6 +51,7 @@ export interface RawShape extends Sheet {
 	foreignData?: Element;
 	image?: VisioImage;
 	embeddedObject?: VisioEmbeddedObject;
+	oleObject?: VisioOleObject;
 	foreignVector?: VisioForeignVector;
 	deleted: boolean;
 }

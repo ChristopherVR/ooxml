@@ -3,6 +3,7 @@ import { inspectEmbeddedVisioMetafile } from './prepare-metafiles';
 import { readVisioImage, type VisioImageOptions } from './media';
 import { readEmbeddedChartObject } from './prepare-embedded';
 import { readEmbeddedEquationPreview } from './prepare-equation-object';
+import { readEmbeddedOleObject } from './ole-object';
 import type { VisioPackage } from './package';
 import type { RawShape, Report } from './sheet';
 
@@ -45,6 +46,21 @@ export async function prepareImages(
 						localReport,
 					);
 					if (embedded) shape.embeddedObject = embedded;
+					else {
+						const ole = await readEmbeddedOleObject(
+							pkg,
+							sourcePart,
+							shape.foreignData,
+							localReport,
+							options,
+							converter,
+						);
+						if (ole) {
+							shape.oleObject = ole.object;
+							if (ole.image) shape.image = ole.image;
+							if (ole.vector) shape.foreignVector = ole.vector;
+						}
+					}
 				}
 			} else {
 				const image = await readVisioImage(

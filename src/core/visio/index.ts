@@ -457,3 +457,9 @@ export type { VisioControlEdit } from './edit-control';
 export type { VisioActionEdit } from './edit-action';
 export { rewriteControlFormula } from './control-formula';
 export { visioTabStarts, VISIO_DEFAULT_TAB_SPACING, type VisioTabSegment } from './tab-stops';
+export {
+	classifyVisioOleEmbedding,
+	isOpenableVisioOleObject,
+	readVisioEmbeddedObject,
+	VISIO_EMBEDDED_OPEN_MAX_BYTES,
+} from './ole-object';

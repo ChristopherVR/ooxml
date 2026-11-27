@@ -21,6 +21,7 @@ import type { VisioInsertItem } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
 import { selectedShape, safeExternalHref } from './shape-inspector';
 import { InsertDialog } from './viewer-insert-dialog';
+import { oleObjectShape, openOleObject } from './viewer-ole-object';
 import type { ChartObjectData, ChartTarget, InsertChartDialog } from './viewer-insert-chart';
 import type { ChartEditMode, ChartObjectEditor } from './viewer-chart-editor';
 
@@ -92,8 +93,27 @@ export class ViewerInsert {
 			return undefined;
 		return selectedShape(state.document, state.selectedShape, state.pageIndex);
 	}
+	/**
+	 * Open the embedded OLE object `shapeId` on this page (Visio's double-click on an object):
+	 * see {@link openOleObject}. Opening only reads the drawing, so a read-only drawing opens it
+	 * too. False if the shape is not one.
+	 */
+	openObject(shapeId: string): boolean {
+		const state = this.controller.state;
+		const page = state.document?.pages[state.pageIndex];
+		const object = page && oleObjectShape(page.shapes, shapeId)?.oleObject;
+		if (!object || state.loading) return false;
+		void openOleObject(this.root.host as HTMLElement, this.controller, object, this.announce);
+		return true;
+	}
 	open(item: VisioInsertItem): void {
 		const state = this.controller.state;
+		if (item === 'object-open') {
+			const shape = this.#shape(state);
+			if (!shape?.oleObject || !this.openObject(shape.id))
+				this.announce('Select one embedded object to open it.');
+			return;
+		}
 		if (!this.#editable(state)) return;
 		if (item === 'picture') {
 			if (state.document?.pages[state.pageIndex]) this.input.click();
@@ -434,6 +454,13 @@ export class ViewerInsert {
 			chart.title = editing
 				? 'Insert a chart drawn from data you type or paste. Double-click it to edit.'
 				: 'Open a .vsdx file to insert a chart.';
+		}
+		const objectOpen = button('ctx-object-open');
+		if (objectOpen) {
+			const object = this.#shape(state)?.oleObject;
+			objectOpen.hidden = !object;
+			objectOpen.disabled = !object || Boolean(object.refusal);
+			objectOpen.title = object?.refusal ?? 'Open the embedded file in its own editor.';
 		}
 		const chartShape = shape?.embeddedObject ? shape : undefined;
 		for (const name of ['ctx-chart-data', 'ctx-chart-format']) {
