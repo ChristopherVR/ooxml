@@ -469,6 +469,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and SYMBOL (`docx/computed-fields.ts`, `computed-fields-extra.test.ts`). MERGEFIELD,
       INCLUDETEXT, INCLUDEPICTURE, INDEX/XE, TA/TOA and CITATION/BIBLIOGRAPHY keep their cached
       result (`layout/page-fields.ts`); Update Fields skips the `\n \r \w \p` switches.
+- [ ] **P2** A HYPERLINK written as a complex field (`w:fldChar` and `w:instrText`, as Word writes
+      table of contents entries and cross-reference links) is kept on save but is not followed as
+      a link, and its result edits as plain text (`docx/parse-warnings.ts`; the sample
+      `samples/docx/services-agreement-form.docx`).
+- [ ] **P2** Legacy form fields (FORMTEXT, FORMCHECKBOX, FORMDROPDOWN) are filled, toggled and
+      picked, but their entry and exit macros, calculated results and number or date formats are
+      not applied (`docx/parse-warnings.ts`).
 - [ ] **P2** DATE and TIME results name months and weekdays in the result run's `w:lang/@w:val`
       (through styles and document defaults; a month after a day number takes the contextual
       form, measured for Russian in Word 16), but AM/PM designators stay English, the `w:bidi`
@@ -726,6 +733,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       only. `eaVert`, `mongolianVert` and the WordArt vertical kinds are drawn as `vert`, without
       upright East Asian characters or stacked letters. Formatted text inside a shape (bold, sizes, borders, alignment other than
       centred) is read-only, so editing the shape keeps it.
+- [ ] **P2** On the editing surface a floating picture or text box is floated left or right, or set
+      on a line of its own: its exact position, its offsets and its place in front of or behind the
+      text are shown on Print Layout pages only, so a cover picture behind the text or a caption
+      box over a picture is drawn in the flow (`docx/parse-warnings.ts`; the samples
+      `samples/docx/technical-report.docx` and `community-newsletter.docx`).
+- [ ] **P1** A chart in a document cannot be edited (data, type or formatting), and the load note
+      still calls it a labelled placeholder (`docx/parse-warnings.ts`).
 - [x] **P2** Draft view's header, footer and note previews leave floating (`wp:anchor`) drawings
       out, as Word's Draft view does, and show inline pictures from the body's media cache
       (SVG originals and cropped or recoloured fills included) (`src/ui/src/docx/story-drawings.test.ts`).
@@ -1386,6 +1400,11 @@ installed Visio 16 build is used to check that saved files open without repair.
       and reported (Visio 16 shows no change on the front), perspective text and group children are
       not projected point by point, and the shipped Visio themes carry no `a:bevelT`, so the
       themed bevel path has no real-file evidence. Text has no Visio font metrics.
+- [ ] **P2** Arrowhead styles outside the common set are not drawn (style 13 in the sample
+      drawings); the viewer reports each one it leaves out (`src/ui/src/visio/arrowheads.ts`).
+- [ ] **P2** Shape text is measured and wrapped with browser fonts, so a block can run past its
+      saved text-box height where Visio fits it; the viewer reports it
+      (`src/ui/src/visio/render-text.ts`).
 - [x] **P2** `InfiniteLine` rows are drawn across the page (`infinite-line.ts`).
 - [x] **P2** Periodic NURBS are evaluated and drawn as closed loops (`nurbs.ts`, `nurbs-flatten.ts`;
       degrees 1-8, rational weights, seam continuity and affine knot normalization verified against
