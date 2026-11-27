@@ -13,17 +13,19 @@
 
 </div>
 
-The deployable Office application workspace (`ooxml-office`), shared by the integrated suite, the standalone PWAs and the desktop package. It mounts the real editors directly, with no demo iframes. Format logic stays in [`ooxml-core`](../../src/core#readme) and reusable controls in [`ooxml-ui`](../../src/ui#readme); this package only wires them together.
+`ooxml-office` is the deployable application shared by the integrated suite, the standalone PWAs and the [desktop build](../../desktop/README.md). It mounts the real editors directly, with no demo iframes, and owns only the wiring: document sessions, the shared profile and theme, Teams integration and the assistant. Format logic stays in [`ooxml-core`](../../src/core#readme) and reusable controls in [`ooxml-ui`](../../src/ui#readme). It is a private package, not an npm library.
 
 ## Three ways to open it
 
 The first visit asks where to start:
 
-- **OOXML Office**: every app in one workspace, opening on **Chat**: ask questions about your files, or ask for a document, workbook or deck and open what it drafts in its editor. The shared library, a tab per open document, the app launcher and search sit beside it, and **Ask AI** opens the same chat next to any open document. See [the assistant](../../docs/suite-integration.md) for providers, the offline preview and what it may change. It opens in dark mode. Settings (the gear in the header) holds the appearance, the user name, the display language and view options every app follows, the font download choice and a privacy overview of everything the suite connects to.
-- **One product on its own**: [Word](../../viewers/docx#readme), [Excel](../../viewers/xlsx#readme), [PowerPoint](../../viewers/pptx#readme), [Visio](../../viewers/visio#readme) or [Teams](../../viewers/teams#readme), each on its own site with its documentation and framework demos.
-- **Documentation**: the hub at [`/ooxml/docs/`](https://christophervr.github.io/ooxml/docs/) (`site/docs/`), one page that links every manual: the apps, `ooxml-core`, `ooxml-ui`, the MCP server, the suite and the desktop build.
+- **OOXML Office**: every app in one workspace, opening on **Chat**, where you ask about your files or ask for a document, workbook or deck and open the draft in its editor. The shared library, a tab per open document, the app launcher and search sit beside it, and **Ask AI** opens the same chat next to any document. Settings (the gear in the header) holds the appearance (dark by default), the user name, the display language and view options every app follows, the font download choice and a privacy overview of everything the suite connects to.
+- **One product on its own**: [Word](../../viewers/docx#readme), [Excel](../../viewers/xlsx#readme), [PowerPoint](../../viewers/pptx#readme), [Visio](../../viewers/visio#readme) or [Teams](../../viewers/teams#readme), each installable on its own under `apps/word/`, `apps/excel/`, `apps/powerpoint/`, `apps/visio/` and `apps/teams/`.
+- **Documentation**: the hub at [`/ooxml/docs/`](https://christophervr.github.io/ooxml/docs/) (`site/docs/`), which links every manual.
 
-In the browser the sidebar's Resources group links to the documentation and the [sample files](../../samples/README.md) (the gallery at [`/ooxml/samples/`](https://christophervr.github.io/ooxml/samples/), whose cards open a sample in its editor through `?sample=<id>`) and reopens the chooser; an installed app hides the group, since it has no browser chrome to come back through. The look of every page on the site follows [the pages design system](../../docs/pages-design.md).
+The suite and the standalone apps share local profiles and documents when served from the same origin. Install them from the account menu or the browser's install command. The look of every page follows [the pages design system](../../docs/pages-design.md).
+
+The start screen and the sidebar link to the [sample files](../../samples/README.md): the gallery at [`/ooxml/samples/`](https://christophervr.github.io/ooxml/samples/) opens a sample in its editor through `?sample=<id>`. The desktop app ships without the samples.
 
 ## Run it
 
@@ -31,10 +33,18 @@ From the repository root:
 
 ```sh
 bun install
-bun run build:suite
-bun run preview:suite
+bun run build:suite    # core, UI and suite bundle into suite-dist/
+bun run preview:suite  # serves it, by default on port 8123
 ```
 
-Output: `suite-dist/`. The root installs Office; `apps/word/`, `apps/excel/`, `apps/powerpoint/`, `apps/visio/` and `apps/teams/` each install independently. They share local profiles and documents when served from the same origin. Installation is available from the account menu or the browser's install command.
+## Status and limits
 
-See [integration and limitations](../../docs/suite-integration.md) and [desktop packaging](../../desktop/README.md). This is a private application package, not an npm-published library. Cloud identity, cloud drive and document coauthoring are separate integration work.
+Profiles are local conveniences, not sign-in. Files stay in the browser's IndexedDB and are never uploaded; Download always gives the saved bytes. The only cloud drive is a OneDrive connection the host configures, and document co-authoring is not yet wired to suite files. The full list is in [integration and limitations](../../docs/suite-integration.md); per-product gaps are in the [parity checklist](../../docs/parity-checklist.md).
+
+## Privacy and network use
+
+The suite uses the editors, so their privacy notes apply. On top of them: the assistant is offline by default and talks to a provider only when the user or the deployment's [`ai-config.json`](../../docs/suite-ai-config.md) selects one; OneDrive is off unless the host configures it; Settings > Fonts chooses Google Fonts (the default), your own font server, or no downloads; and the installed app checks its own origin for updates. Every request is listed in [PRIVACY.md](../../PRIVACY.md#ooxml-office-suite-appsoffice-suite-the-github-pages-site-and-the-desktop-app).
+
+## License
+
+[Apache-2.0](../../LICENSE).

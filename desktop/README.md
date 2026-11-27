@@ -1,15 +1,37 @@
 # OOXML Office desktop
 
-The private Tauri 2 host bundles the same suite and all five editors used on the web. It exposes narrowly scoped commands for selecting a folder, reading/searching within that folder and revealing a selected file in Explorer or Finder. A native picker must authorize each root in the running app; arbitrary paths, traversal and resolved links outside it are rejected. No disk write/delete commands are exposed.
+**The OOXML Office suite as a desktop app: a private Tauri 2 shell around the same bundle and the same five editors the web build ships.**
 
-Install the Tauri prerequisites (Rust, WebView2 and the Windows compiler, or Xcode on macOS). From the repository root run `bun install`, then from `desktop/` run `bun install` and `bun run build`. The before-build command builds the core, UI and suite assets. For development, build the suite once before `bun run dev`.
+This package (`ooxml-desktop`) is private and not published. It adds a few narrowly scoped native commands to the [Office suite](../apps/office-suite/README.md): choosing a folder, reading and searching inside that folder, and revealing a chosen file in Explorer or Finder. There are no disk write or delete commands.
 
-Windows produces an NSIS installer; macOS produces an app and DMG when built on a Mac. Artifacts are under `src-tauri/target/release/bundle/`. These are unsigned development builds; no signing, notarization, automatic updater or file associations are configured.
+## Build
 
-The editor code is bundled locally. AI and remote Teams connections still require a network and a configured provider/server. Files use the WebView's IndexedDB and are separate from your browser profile. Import and download are explicit; the app does not overwrite arbitrary disk files or synchronize a cloud drive.
+1. Install the Tauri prerequisites: Rust, plus WebView2 and the Windows compiler on Windows, or Xcode on macOS.
+2. From the repository root: `bun install`.
+3. From `desktop/`: `bun install`, then `bun run build`. The before-build step builds the core, the UI and the suite assets.
 
-The window only ever shows the bundled app (`src-tauri/src/navigation.rs`). A web or `mailto:` link opens in the system's default browser or mail client; navigating the window anywhere else, `file:` and `ftp:` addresses, and new in-app windows (`window.open`) are refused. The app carries the same Content Security Policy as the published site (`scripts/csp.mjs`, kept equal to `tauri.conf.json` by `scripts/csp.test.mjs`).
+For development, build the suite once (`bun run build:suite` at the root), then run `bun run dev` here. `bun run check` runs `cargo check` on the Rust side.
 
-See [suite integration](../docs/suite-integration.md) for supported workflows and remaining limits.
+Windows produces an NSIS installer; macOS produces an app and a DMG when built on a Mac. The output is under `src-tauri/target/release/bundle/`.
 
-Folder scans run on a background thread, with bounded traversal. Native folder authorization is renewed with the folder picker after restarting the app. Search is by filename and relative path, not document contents or a system-wide index.
+## Security model
+
+- **Folders by consent.** A native folder picker must authorise each root in the running app; arbitrary paths, traversal and resolved links outside it are refused. Authorisation is renewed through the picker after a restart.
+- **The window shows only the bundled app** (`src-tauri/src/navigation.rs`). A web or `mailto:` link opens in the system browser or mail client; navigating the window anywhere else, `file:` and `ftp:` addresses and new in-app windows (`window.open`) are refused.
+- **One Content Security Policy.** The app carries the same policy as the published site (`scripts/csp.mjs`), kept equal to `tauri.conf.json` by `scripts/csp.test.mjs`.
+
+## Privacy and network use
+
+The shell has no updater, telemetry or plugins. It reads the files the user opens and lists the file names inside a connected folder so they can be found; nothing is sent. AI and remote Teams connections still need a network and a provider or server you configure. The operating system's WebView (WebView2, WKWebView) may send its vendor's own diagnostics under the system's settings. See [PRIVACY.md](../PRIVACY.md#ooxml-office-suite-appsoffice-suite-the-github-pages-site-and-the-desktop-app).
+
+## Status and limits
+
+- These are unsigned development builds: no code signing, notarisation, automatic updates or file associations.
+- Files live in the WebView's IndexedDB, separate from your browser profile. Import and download are explicit; the app does not overwrite arbitrary disk files or synchronise a cloud drive.
+- Folder scans run on a background thread with bounded traversal. Search is by file name and relative path, not document contents or a system-wide index.
+
+See [suite integration](../docs/suite-integration.md) for the supported workflows and remaining limits.
+
+## License
+
+[Apache-2.0](../LICENSE).
