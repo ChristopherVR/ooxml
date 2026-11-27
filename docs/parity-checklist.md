@@ -856,7 +856,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Borders (2026-11-27).
 - [ ] **P2** Word tables: freeform Draw Table and the structural Eraser (merging cells), and
       splitting merged cells into arbitrary counts when the grid must be rebuilt.
-- [ ] **P1** Missing tabs: Equation; Picture Format has only Wrap Text, Crop and Format.
+- [x] **P1** Equation tab: Insert New Equation and Alt+=, the built-in gallery, Convert
+      (Professional and Linear), Normal Text, Unicode and LaTeX input, symbol and structure
+      galleries, and in-place editing of linear text that rebuilds the equation exactly.
+- [ ] **P2** Equation: Ink Equation is disabled (no handwriting recognition); equations whose
+      linear text cannot hold them (mixed run formatting, tracked changes, several equations in
+      one paragraph) open read-only.
+- [ ] **P1** Missing tabs: Picture Format has only Wrap Text, Crop and Format.
 - [ ] **P2** Draw tab: Ruler (Stencils) and Ink to Math are disabled with their reason (no ruler
       stencil, no handwriting recognizer); drawing, the eraser, the lasso, Ink to Shape, Ink
       Replay and the clipboard work and save as Word ink (`docx/ink.test.ts`,
@@ -877,8 +883,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       survive native DOCX and XLSX saves. The editors preview the gradient and text path.
 - [ ] **P2** Word and Excel WordArt still need multi-stop and themed gradient editing, 3-D effects,
       direct adjustment handles and glyph-envelope rendering for deformation presets.
-- [ ] **P1** Insert: Quick Parts, Signature Line and Online Video (shown as unavailable with a
-      reason). Header and Footer offer blank designs only.
+- [x] **P1** Insert: Quick Parts (Document Property controls bound to the core and extended
+      property parts, Field, Save Selection to Quick Part Gallery and the Building Blocks
+      Organizer over the glossary part), Signature Line (VML signature line) and Online Video
+      (a wp15 web video picture, on when the host sets `onlineVideoHosts`). Header and Footer
+      offer designs built from content controls, plus Edit and Remove.
+- [ ] **P2** Insert: Online Video has no search and plays only hosts the application allows;
+      Signature Line cannot be signed (no digital signature UI).
 - [x] **P1** Insert group order, command placement and label fit at 1600px and 1280px match Word
       in all six bindings (`e2e/docx/ribbon-insert-order.spec.ts`, 2026-11-27).
 - [x] **P1** Insert > 3D Models embeds a self-contained GLB 2.0 with a PNG fallback at the caret.
