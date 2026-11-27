@@ -187,6 +187,17 @@ body {
 	text-decoration: underline;
 	cursor: pointer;
 }
+/* The gallery of sample files on the site; outside the dropzone, so a click only follows it. */
+.landing-more {
+	margin: 0;
+	font:
+		13px 'Segoe UI',
+		Arial,
+		sans-serif;
+}
+.landing-more a {
+	color: var(--demo-excel);
+}
 .landing-error {
 	max-width: 900px;
 	margin: 0;

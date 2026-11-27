@@ -90,6 +90,14 @@
 	font-size: 13px;
 	text-decoration: underline;
 }
+/* The gallery of sample files on the site; outside the dropzone, so a click only follows it. */
+.start-more {
+	margin: 12px 0 0;
+	font-size: 13px;
+}
+.start-more a {
+	color: var(--vv-accent);
+}
 .start-limit {
 	max-width: 520px;
 	margin: 12px 0 0;
