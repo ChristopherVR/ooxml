@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openSample } from './helpers';
+import { openSample, reveal } from './helpers';
 
 type Paragraph = { type: string; id: string; runs: { text: string }[] };
 type WordEditor = HTMLElement & { documentModel: { blocks: Paragraph[] } };
@@ -152,12 +152,15 @@ test('an edited editor is collected once removed', async ({ page }) => {
 test('removing an editor leaves the popover of another editor open', async ({ page }) => {
 	await openSample(page);
 	const probe = await addEditor(page);
-	await probe.locator('.ribbon-panel:not([hidden]) [data-split-caret]:visible').first().click();
-	await expect(probe.locator('.ribbon-popover')).toHaveCount(1);
+	const caret = probe.locator('[aria-label="Font color"] + [data-split-caret]');
+	await reveal(probe, caret);
+	await caret.click();
+	const palette = probe.locator('.ribbon-popover:has(> .swatch)');
+	await expect(palette).toBeVisible();
 	await editor(page)
 		.first()
 		.evaluate((element) => element.remove());
-	await expect(probe.locator('.ribbon-popover')).toHaveCount(1);
+	await expect(palette).toBeVisible();
 });
 
 test('an editor removed while sharing a room it opened is collected', async ({ page }) => {
