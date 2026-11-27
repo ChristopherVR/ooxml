@@ -1,8 +1,8 @@
 // Templates with content controls for the tests: `sdt(properties, content)` builds a `w:sdt`.
-import JSZip from 'jszip';
 import { WORD_2012_NS } from '../content-control';
 import { template } from '../mail-merge/test-fixture';
 import type { DocumentModel } from '../model';
+import { openZip } from '../../opc/zip-limits';
 import { loadDocx } from '../parse';
 
 export { paragraph, run } from '../mail-merge/test-fixture';
@@ -27,7 +27,6 @@ export async function saveAndReload(
 	model: DocumentModel,
 ): Promise<{ model: DocumentModel; xml: string; bytes: Uint8Array }> {
 	const bytes = await loaded.save(model);
-	const xml =
-		(await (await JSZip.loadAsync(bytes)).file('word/document.xml')?.async('string')) ?? '';
+	const xml = (await (await openZip(bytes)).file('word/document.xml')?.async('string')) ?? '';
 	return { model: (await loadDocx(bytes)).model, xml, bytes };
 }
