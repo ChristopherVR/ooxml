@@ -5,6 +5,7 @@ import { applyShapeCreationStyles, outlineGeometrySections } from './edit-shape-
 import { visioOutlineShape } from './stencil-shapes';
 import { appendRelativeConnectionPoint } from './edit-connection-points';
 import type { VisioBuiltInMaster } from './stencil-masters';
+import { appendBuiltInBehaviours } from './stencil-master-behaviours';
 
 /** The one shape of a built-in master; instances name it through their `Master` attribute. */
 export const STENCIL_MASTER_SHAPE_ID = '5';
@@ -159,6 +160,7 @@ export function stencilMasterContents(
 		if (outline.rounding) setCell(shape, 'Rounding', outline.rounding * Math.min(width, height));
 		for (const section of outlineGeometrySections(shape, outline)) shape.appendChild(section);
 	}
+	appendBuiltInBehaviours(shape, builtIn);
 	return root;
 }
 
