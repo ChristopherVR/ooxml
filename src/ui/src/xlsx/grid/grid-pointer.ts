@@ -21,6 +21,11 @@ export interface PointerHost {
 	editor: CellEditor;
 	followLink(row: number, col: number): boolean;
 	fill(source: CellRange, target: CellRange): void;
+	/**
+	 * A Draw tool is on: a press on the cells is ink, never a selection, even before the drawing
+	 * surface has loaded over them.
+	 */
+	inking?(): boolean;
 }
 
 type DragKind = 'cells' | 'rows' | 'cols' | 'point' | 'fill';
@@ -124,6 +129,7 @@ export function wirePointer(host: PointerHost): () => void {
 		}
 		if (event.button !== 0) return;
 		event.preventDefault();
+		if (hit.area === 'cell' && host.inking?.()) return;
 		const sheet = view.sheet();
 		const editable = !view.ctx.readOnly();
 		if (target.closest('[data-handle="fill"]') && editable) {

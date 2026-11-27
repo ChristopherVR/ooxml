@@ -222,7 +222,7 @@ export function renderPenStrip(
 		const snapshot = drawState(ctx).snapshot;
 		const command = ctx.commands.get('draw.pens');
 		const enabled = ctx.commands.isEnabled('draw.pens');
-		strip.labels = inkPensLabels((text) => ctx.t(text));
+		strip.labels = inkPensLabels((text) => ctx.t(text), ctx.locale());
 		strip.pens = snapshot.pens;
 		strip.selected = snapshot.tool === 'pen' ? snapshot.pen : -1;
 		strip.disabled = !enabled;

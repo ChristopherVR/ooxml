@@ -126,6 +126,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 				ctx.session()?.fill(view.sheetIndex(), source, target);
 				selection.set({ ...selection.get(), ranges: [target] });
 			},
+			inking: () => inkTool !== undefined && !ctx.readOnly(),
 		}),
 		wireTooltips(view),
 		installNotePopups(view),

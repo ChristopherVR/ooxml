@@ -118,7 +118,7 @@ This is not Microsoft Excel. Content the model does not cover is kept through a 
 - Macros never run; a `.xlsm` keeps its VBA project on save.
 - External links, Power Query, OLAP and external-source PivotTables are kept but never refreshed, and `WEBSERVICE` is not evaluated.
 - A few functions are not implemented (`ASC`, `DBCS`, `JIS`, `PHONETIC`, `INFO`, `WEBSERVICE`) and show `#NAME?`.
-- Ink and OLE objects show as placeholders. In a shared room, pictures, other drawings and page setup stay local.
+- Ink is drawn, erased, lassoed, replayed and turned into shapes from the Draw tab, and saves as Excel ink (Ink to Math is not available). OLE objects show as placeholders. In a shared room, pictures, ink, other drawings and page setup stay local.
 
 ## Privacy and network use
 

@@ -1,10 +1,9 @@
 // Drawing over Excel's cells: the shared ink canvas over the grid turns pen strokes into ink anchored
 // to the cells (strokes drawn one after another join the same drawing, as in Excel), the eraser
-// removes the strokes it touches, the lasso selects strokes for Delete or Ink to Shape, and Ink
-// Replay redraws the sheet's ink in the order it was drawn. Coordinates of ink are pixels at 100%.
-import type { InkBox, InkCoordinate, InkStroke } from 'ooxml-core/drawingml';
-import { inkTools } from '../../ink/tools';
-import { anchorToPixelBox, pixelBoxToAnchor, type InkObject } from 'ooxml-core/xlsx';
+// removes the strokes it touches (once a frame, one undo step a gesture), the lasso selects strokes
+// for Delete or Ink to Shape, and Ink Replay redraws the sheet's ink in the order it was drawn.
+// Coordinates of ink are pixels at 100%.
+import type { InkCoordinate, InkStroke } from 'ooxml-core/drawingml';
 import type { GridInk, GridInkTool } from 'ooxml-core/xlsx/ui';
 import {
 	defineInkCanvas,
@@ -13,48 +12,66 @@ import {
 	type InkStrokeDetail,
 	type OfficeUiInkCanvas,
 } from '../../ink/ink-canvas';
-import { createInkReplay, type InkReplay } from '../../ink/ink-replay';
+import type { InkReplay } from '../../ink/ink-replay';
+import { inkTools } from '../../ink/tools';
 import type { GridView } from './grid-view';
+import { startInkReplay } from './ink-replay-run';
+import { InkSelection } from './ink-selection';
+import { anchorOf, fittedInk, sheetInks, zoomOf } from './ink-sheet';
 
 const JOIN_MS = 2000;
 const JOIN_PX = 48;
 
-interface Lassoed {
-	index: number;
-	ink: InkObject;
-	indexes: number[];
+/** Whether a key goes to something that takes Delete itself (a box, a list, a dialog). */
+function keepsOwnDelete(event: KeyboardEvent): boolean {
+	const path = event.composedPath();
+	const target = path[0];
+	if (
+		target instanceof HTMLInputElement ||
+		target instanceof HTMLTextAreaElement ||
+		target instanceof HTMLSelectElement ||
+		(target instanceof HTMLElement && target.isContentEditable)
+	)
+		return true;
+	return path.some((node) => node instanceof HTMLElement && node.matches('[role="dialog"]'));
 }
 
 export class InkLayer implements GridInk {
 	readonly #view: GridView;
 	readonly #canvas: OfficeUiInkCanvas;
+	readonly #selection: InkSelection;
 	#tool: GridInkTool | undefined;
-	#last: { sheet: number; index: number; ink: InkObject; at: number } | undefined;
-	#lassoed: Lassoed[] = [];
-	#boxes: HTMLElement[] = [];
+	#last: { sheet: number; index: number; ink: object; at: number } | undefined;
 	#replay: InkReplay | undefined;
+	/** Eraser points not yet applied, and the gesture they belong to (one undo step). */
+	#erase: { points: InkEraseDetail[]; frame: number | undefined; gesture: string | undefined } = {
+		points: [],
+		frame: undefined,
+		gesture: undefined,
+	};
+	#gestures = 0;
 	readonly #listeners = new AbortController();
 
 	constructor(view: GridView) {
 		this.#view = view;
+		this.#selection = new InkSelection(view);
 		defineInkCanvas(view.doc.defaultView?.customElements);
 		this.#canvas = view.doc.createElement('office-ui-ink-canvas') as OfficeUiInkCanvas;
 		this.#canvas.classList.add('xg-ink-surface');
 		const { signal } = this.#listeners;
-		this.#canvas.addEventListener(
-			'office-ink-stroke',
-			(event) => this.#stroke((event as CustomEvent<InkStrokeDetail>).detail),
-			{ signal },
-		);
-		this.#canvas.addEventListener(
-			'office-ink-erase',
-			(event) => this.#erase((event as CustomEvent<InkEraseDetail>).detail),
-			{ signal },
-		);
-		this.#canvas.addEventListener(
-			'office-ink-lasso',
-			(event) => this.#lasso((event as CustomEvent<InkLassoDetail>).detail),
-			{ signal },
+		const on = <T>(type: string, run: (detail: T) => void) =>
+			this.#canvas.addEventListener(type, (event) => run((event as CustomEvent<T>).detail), {
+				signal,
+			});
+		on<InkStrokeDetail>('office-ink-stroke', (detail) => this.#stroke(detail));
+		on<InkEraseDetail>('office-ink-erase', (detail) => this.#erasing(detail));
+		on<InkLassoDetail>('office-ink-lasso', (detail) =>
+			this.#selection.select(
+				detail.points.flatMap((point) => {
+					const at = this.#sheetPoint(point);
+					return at ? [at] : [];
+				}),
+			),
 		);
 		this.#canvas.addEventListener(
 			'wheel',
@@ -64,14 +81,9 @@ export class InkLayer implements GridInk {
 		view.doc.addEventListener('keydown', (event) => this.#key(event), { capture: true, signal });
 	}
 
-	/** Zoom as a factor: ink is kept at 100%, the grid's plane is drawn at the sheet's zoom. */
-	#factor(): number {
-		return this.#view.zoom() / 100;
-	}
-
 	setTool(tool: GridInkTool | undefined): void {
 		this.#tool = tool;
-		if (tool?.tool !== 'lasso') this.#clearLasso();
+		if (tool?.tool !== 'lasso') this.#selection.clear();
 		const canvas = this.#canvas;
 		if (!tool || this.#view.ctx.readOnly()) {
 			canvas.tool = '';
@@ -82,7 +94,7 @@ export class InkLayer implements GridInk {
 		canvas.label = this.#view.ctx.t('Drawing canvas');
 		canvas.tool = tool.tool;
 		canvas.color = tool.color;
-		canvas.width = tool.width * this.#factor();
+		canvas.width = tool.width * zoomOf(this.#view);
 		canvas.touch = tool.touch;
 	}
 
@@ -91,59 +103,31 @@ export class InkLayer implements GridInk {
 		const g = this.#view.geometry;
 		if (g.hit(point.x, point.y).area !== 'cell') return undefined;
 		const plane = g.planeAt(point.x, point.y);
-		const f = this.#factor();
+		const f = zoomOf(this.#view);
 		return { x: plane.x / f, y: plane.y / f };
 	}
 
-	/** Every ink drawing of the shown sheet with its box at 100%. */
-	#inks(): { index: number; ink: InkObject; box: InkBox }[] {
-		const sheet = this.#view.sheet();
-		if (!sheet) return [];
-		const f = this.#factor();
-		return sheet.drawings.flatMap((drawing, index) => {
-			if (drawing.kind !== 'ink') return [];
-			const box = anchorToPixelBox(sheet, drawing.anchor, this.#view.metrics);
-			return [
-				{
-					index,
-					ink: drawing,
-					box: { x: box.x / f, y: box.y / f, width: box.w / f, height: box.h / f },
-				},
-			];
-		});
-	}
-
-	#anchor(box: InkBox) {
-		const sheet = this.#view.sheet()!;
-		const f = this.#factor();
-		return pixelBoxToAnchor(
-			sheet,
-			{ x: box.x * f, y: box.y * f, w: box.width * f, h: box.height * f },
-			this.#view.metrics,
-		);
-	}
-
 	#stroke(detail: InkStrokeDetail): void {
-		const session = this.#view.ctx.session();
 		const tool = this.#tool;
-		const sheet = this.#view.sheet();
-		if (!session || !tool || !sheet || this.#view.ctx.readOnly()) return;
+		if (!this.#view.ctx.session() || !tool || !this.#view.sheet() || this.#view.ctx.readOnly())
+			return;
 		const end = detail.samples.at(-1)?.time ?? 0;
 		const now = Date.now();
 		const samples = detail.samples.flatMap((sample) => {
 			const point = this.#sheetPoint(sample);
 			return point ? [{ ...point, pressure: sample.pressure, time: now - end + sample.time }] : [];
 		});
-		const stroke = inkTools().inkStrokeFromSamples(samples, {
+		const tools = inkTools();
+		const stroke = tools.inkStrokeFromSamples(samples, {
 			kind: detail.tool,
 			color: tool.color,
 			width: tool.width,
 		});
-		const bounds = stroke && inkTools().inkStrokesBounds([stroke]);
+		const bounds = stroke && tools.inkStrokesBounds([stroke]);
 		if (!stroke || !bounds) return;
 		const sheetIndex = this.#view.sheetIndex();
 		const last = this.#last;
-		const target = last && this.#inks().find((entry) => entry.index === last.index);
+		const target = last && sheetInks(this.#view).find((entry) => entry.index === last.index);
 		if (
 			last &&
 			target &&
@@ -153,20 +137,23 @@ export class InkLayer implements GridInk {
 			bounds.x < target.box.x + target.box.width + JOIN_PX &&
 			bounds.x + bounds.width > target.box.x - JOIN_PX &&
 			bounds.y < target.box.y + target.box.height + JOIN_PX &&
-			bounds.y + bounds.height > target.box.y - JOIN_PX
+			bounds.y + bounds.height > target.box.y - JOIN_PX &&
+			// A drawing collects strokes up to a size its part is always read back whole at.
+			tools.canJoinInk(target.ink.strokes, [stroke])
 		) {
-			const kept = inkTools().transformInkStrokes(
-				inkTools().transformInkStrokes(
-					target.ink.strokes,
-					0,
-					0,
-					target.box.width / (target.ink.width || 1),
-					target.box.height / (target.ink.height || 1),
-				),
-				target.box.x,
-				target.box.y,
+			const { ink, box } = target;
+			const kept = tools.transformInkStrokes(
+				ink.strokes,
+				0,
+				0,
+				box.width / (ink.width || 1),
+				box.height / (ink.height || 1),
 			);
-			this.#place(sheetIndex, [...kept, stroke], target.index);
+			this.#place(
+				sheetIndex,
+				[...tools.transformInkStrokes(kept, box.x, box.y), stroke],
+				target.index,
+			);
 			return;
 		}
 		this.#place(sheetIndex, [stroke]);
@@ -188,7 +175,7 @@ export class InkLayer implements GridInk {
 			width: box.width,
 			height: box.height,
 		};
-		const anchor = this.#anchor(box);
+		const anchor = anchorOf(this.#view, box);
 		const placed =
 			index === undefined
 				? session.addInk(sheetIndex, anchor, { ...ink, name: this.#view.ctx.t('Ink') })
@@ -200,92 +187,55 @@ export class InkLayer implements GridInk {
 				: undefined;
 	}
 
-	#erase(detail: InkEraseDetail): void {
-		const session = this.#view.ctx.session();
-		const point = this.#sheetPoint(detail);
-		if (!session || !point || this.#view.ctx.readOnly()) return;
-		const reach = detail.radius / this.#factor();
-		const sheetIndex = this.#view.sheetIndex();
-		// Last first, so deleting an emptied drawing keeps the indexes before it.
-		for (const { index, ink, box } of this.#inks().reverse()) {
-			if (
-				point.x < box.x - reach ||
-				point.x > box.x + box.width + reach ||
-				point.y < box.y - reach ||
-				point.y > box.y + box.height + reach
-			)
-				continue;
-			const kx = ink.width / (box.width || 1);
-			const local = {
-				x: (point.x - box.x) * kx,
-				y: (point.y - box.y) * (ink.height / (box.height || 1)),
-			};
-			const kept = inkTools().eraseInkStrokes(ink.strokes, local, reach * kx);
-			if (kept.length !== ink.strokes.length)
-				session.setInk(sheetIndex, index, ink.anchor, {
-					strokes: kept,
-					width: ink.width,
-					height: ink.height,
-				});
-		}
-	}
-
-	#lasso(detail: InkLassoDetail): void {
-		this.#clearLasso();
-		const polygon = detail.points.flatMap((point) => {
-			const at = this.#sheetPoint(point);
-			return at ? [at] : [];
-		});
-		if (polygon.length < 3) return;
-		this.#lassoed = this.#inks().flatMap(({ index, ink, box }) => {
-			const local = polygon.map((point) => ({
-				x: ((point.x - box.x) * ink.width) / (box.width || 1),
-				y: ((point.y - box.y) * ink.height) / (box.height || 1),
-			}));
-			const indexes = inkTools().lassoInkStrokes(ink.strokes, local);
-			if (!indexes.length) return [];
-			this.#paintBox(ink, box, indexes);
-			return [{ index, ink, indexes }];
-		});
-		this.#view.ctx.requestRender();
-	}
-
-	#paintBox(ink: InkObject, box: InkBox, indexes: number[]): void {
-		const bounds = inkTools().inkStrokesBounds(indexes.map((index) => ink.strokes[index]!));
-		if (!bounds) return;
-		const f = this.#factor();
-		const kx = box.width / (ink.width || 1);
-		const ky = box.height / (ink.height || 1);
-		const frame = this.#view.doc.createElement('div');
-		frame.className = 'xg-ink-lasso';
-		frame.setAttribute('aria-hidden', 'true');
-		Object.assign(frame.style, {
-			left: `${(box.x + bounds.x * kx) * f}px`,
-			top: `${(box.y + bounds.y * ky) * f}px`,
-			width: `${bounds.width * kx * f}px`,
-			height: `${bounds.height * ky * f}px`,
-		});
-		this.#view.quads.main.drawings.append(frame);
-		this.#boxes.push(frame);
-	}
-
-	#clearLasso(): void {
-		for (const box of this.#boxes.splice(0)) box.remove();
-		if (!this.#lassoed.length) return;
-		this.#lassoed = [];
-		this.#view.ctx.requestRender();
-	}
-
-	#remove(selection: readonly Lassoed[]): void {
-		const session = this.#view.ctx.session();
-		if (!session) return;
-		const sheetIndex = this.#view.sheetIndex();
-		for (const { index, ink, indexes } of [...selection].sort((a, b) => b.index - a.index))
-			session.setInk(sheetIndex, index, ink.anchor, {
-				strokes: ink.strokes.filter((_, at) => !indexes.includes(at)),
-				width: ink.width,
-				height: ink.height,
+	/** Eraser moves are applied once a frame; the gesture is one undo step. */
+	#erasing(detail: InkEraseDetail): void {
+		const erase = this.#erase;
+		erase.gesture ??= `ink-erase-${++this.#gestures}`;
+		erase.points.push(detail);
+		if (!detail.done) {
+			erase.frame ??= this.#view.doc.defaultView?.requestAnimationFrame(() => {
+				erase.frame = undefined;
+				this.#flushErase();
 			});
+			return;
+		}
+		if (erase.frame !== undefined) this.#view.doc.defaultView?.cancelAnimationFrame(erase.frame);
+		erase.frame = undefined;
+		this.#flushErase();
+		erase.gesture = undefined;
+	}
+
+	#flushErase(): void {
+		const session = this.#view.ctx.session();
+		const points = this.#erase.points.splice(0);
+		const gesture = this.#erase.gesture;
+		if (!session || this.#view.ctx.readOnly()) return;
+		const sheetIndex = this.#view.sheetIndex();
+		for (const detail of points) {
+			const point = this.#sheetPoint(detail);
+			if (!point) continue;
+			const reach = detail.radius / zoomOf(this.#view);
+			// Last first, so deleting an emptied drawing keeps the indexes before it.
+			for (const entry of sheetInks(this.#view).reverse()) {
+				const { ink, box } = entry;
+				if (
+					point.x < box.x - reach ||
+					point.x > box.x + box.width + reach ||
+					point.y < box.y - reach ||
+					point.y > box.y + box.height + reach
+				)
+					continue;
+				const kx = ink.width / (box.width || 1);
+				const local = {
+					x: (point.x - box.x) * kx,
+					y: (point.y - box.y) * (ink.height / (box.height || 1)),
+				};
+				const kept = inkTools().eraseInkStrokes(ink.strokes, local, reach * kx);
+				if (kept.length === ink.strokes.length) continue;
+				const next = fittedInk(this.#view, entry, kept);
+				session.setInk(sheetIndex, entry.index, next.anchor, next.ink, gesture);
+			}
+		}
 	}
 
 	#key(event: KeyboardEvent): void {
@@ -294,67 +244,20 @@ export class InkLayer implements GridInk {
 			event.preventDefault();
 			return;
 		}
-		if ((event.key !== 'Delete' && event.key !== 'Backspace') || !this.#lassoed.length) return;
+		if (event.key !== 'Delete' && event.key !== 'Backspace') return;
+		if (!this.#selection.size || keepsOwnDelete(event)) return;
 		event.preventDefault();
 		event.stopPropagation();
-		this.#remove(this.#lassoed);
-		this.#clearLasso();
-	}
-
-	/** The lasso's strokes, or all strokes of the selected ink drawing. */
-	#selection(): Lassoed[] {
-		if (this.#lassoed.length) return this.#lassoed;
-		const index = this.#view.ctx.selection.get().drawing;
-		const drawing = index === undefined ? undefined : this.#view.sheet()?.drawings[index];
-		return index !== undefined && drawing?.kind === 'ink'
-			? [{ index, ink: drawing, indexes: drawing.strokes.map((_, at) => at) }]
-			: [];
+		this.#selection.remove(this.#selection.held());
+		this.#selection.clear();
 	}
 
 	hasSelection(): boolean {
-		return this.#selection().length > 0;
+		return this.#selection.held().length > 0;
 	}
 
 	async inkToShape(): Promise<boolean> {
-		const selection = this.#selection();
-		const session = this.#view.ctx.session();
-		if (!selection.length || !session) return false;
-		const { recognizeInkShape, inkShapeOf } = inkTools();
-		const sheetIndex = this.#view.sheetIndex();
-		const boxes = new Map(this.#inks().map((entry) => [entry.index, entry.box]));
-		const converted: Lassoed[] = [];
-		for (const item of selection) {
-			const box = boxes.get(item.index);
-			const strokes = item.indexes.map((index) => item.ink.strokes[index]!);
-			if (!box || !strokes[0]) continue;
-			const kx = box.width / (item.ink.width || 1);
-			const ky = box.height / (item.ink.height || 1);
-			const recognized = recognizeInkShape(
-				strokes.map((stroke) =>
-					inkTools()
-						.inkPathPoints(stroke.path)
-						.map((point) => ({
-							x: box.x + point.x * kx,
-							y: box.y + point.y * ky,
-						})),
-				),
-			);
-			if (!recognized) continue;
-			const shape = inkShapeOf(recognized, strokes[0].color, strokes[0].width);
-			session.addShape(sheetIndex, this.#anchor(shape.box), {
-				kind: 'outline',
-				preset: shape.preset,
-				name: this.#view.ctx.t('Shape'),
-				line: shape.line,
-				...(shape.rotation ? { rotation: shape.rotation } : {}),
-				...(shape.flipH ? { flipH: true } : {}),
-				...(shape.flipV ? { flipV: true } : {}),
-			});
-			converted.push(item);
-		}
-		this.#remove(converted);
-		this.#clearLasso();
-		return converted.length > 0;
+		return this.#selection.inkToShape();
 	}
 
 	replaying(): boolean {
@@ -366,46 +269,8 @@ export class InkLayer implements GridInk {
 			this.#stopReplay();
 			return;
 		}
-		const g = this.#view.geometry;
-		const f = this.#factor();
-		const main = g.box('main');
-		const { ox, oy } = g.origin('main');
-		const strokes = this.#inks().flatMap(({ ink, box }) => {
-			const kx = box.width / (ink.width || 1);
-			const ky = box.height / (ink.height || 1);
-			return ink.strokes.map((stroke) => ({
-				points: inkTools()
-					.inkPathPoints(stroke.path)
-					.map((point) => ({
-						x: main.x + (box.x + point.x * kx) * f - ox,
-						y: main.y + (box.y + point.y * ky) * f - oy,
-					})),
-				style: { ...stroke, width: stroke.width * f },
-			}));
-		});
-		const svg = this.#view.doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-		svg.classList.add('xg-ink-replay');
-		svg.setAttribute('aria-hidden', 'true');
-		svg.setAttribute('width', String(this.#view.view.clientWidth));
-		svg.setAttribute('height', String(this.#view.view.clientHeight));
-		this.#view.view.append(svg);
-		this.#view.root.classList.add('xg-ink-replaying');
-		const replay = createInkReplay(
-			svg,
-			strokes,
-			(time, duration, playing) => {
-				if (!playing && time >= duration && this.#replay) setTimeout(() => this.#stopReplay(), 400);
-			},
-			inkTools(),
-		);
-		if (!replay) {
-			svg.remove();
-			this.#view.root.classList.remove('xg-ink-replaying');
-			return;
-		}
-		this.#replay = replay;
-		replay.toggle();
-		this.#view.ctx.requestRender();
+		this.#replay = startInkReplay(this.#view, () => this.#replay && this.#stopReplay());
+		if (this.#replay) this.#view.ctx.requestRender();
 	}
 
 	#stopReplay(): void {
@@ -419,7 +284,9 @@ export class InkLayer implements GridInk {
 
 	destroy(): void {
 		this.#stopReplay();
-		this.#clearLasso();
+		this.#selection.clear();
+		if (this.#erase.frame !== undefined)
+			this.#view.doc.defaultView?.cancelAnimationFrame(this.#erase.frame);
 		this.#listeners.abort();
 		this.#canvas.remove();
 	}
