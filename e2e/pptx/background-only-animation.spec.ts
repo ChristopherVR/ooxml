@@ -1,8 +1,18 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright spec */
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 
 import { backgroundAnimationDeck } from './support/background-animation-deck';
 import { resetTabSession, slideStage } from './support/deck';
+
+function paintPixel(paint: Locator, property: 'backgroundColor' | 'borderTopColor') {
+	return paint.evaluate((node, key) => {
+		const canvas = node.ownerDocument.createElement('canvas');
+		const context = canvas.getContext('2d')!;
+		context.fillStyle = getComputedStyle(node)[key];
+		context.fillRect(0, 0, 1, 1);
+		return [...context.getImageData(0, 0, 1, 1).data];
+	}, property);
+}
 
 test('background fill and stroke emphasis changes paint while preserving foreground text', async ({
 	page,
@@ -26,12 +36,9 @@ test('background fill and stroke emphasis changes paint while preserving foregro
 	const shape = paint.locator('xpath=..');
 	await expect(paint).toBeVisible();
 	await page.keyboard.press('PageDown');
-	await expect
-		.poll(() => paint.evaluate((node) => getComputedStyle(node).backgroundColor))
-		.toBe('rgb(255, 0, 0)');
-	await expect
-		.poll(() => paint.evaluate((node) => getComputedStyle(node).borderTopColor))
-		.toBe('rgb(255, 0, 255)');
+	// Chromium may serialize an animation's final colour in OKLab. Compare its sRGB paint.
+	await expect.poll(() => paintPixel(paint, 'backgroundColor')).toEqual([255, 0, 0, 255]);
+	await expect.poll(() => paintPixel(paint, 'borderTopColor')).toEqual([255, 0, 255, 255]);
 	await expect.poll(() => shape.evaluate((node) => getComputedStyle(node).opacity)).toBe('0.4');
 	await expect(shape.getByText('Persistent text', { exact: true })).toBeVisible();
 	await expect
