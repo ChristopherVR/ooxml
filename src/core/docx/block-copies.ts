@@ -2,6 +2,7 @@ import { NS } from '../xml/index';
 import { mapStoryBlocks } from './cell-blocks';
 import type { Block, DocumentModel } from './model';
 import type { RelationshipAllocator } from './relationship-allocator';
+import { sharedWeakMap } from './shared-state';
 import { getW, importElement, WORD_NS, type XmlElement } from './xml';
 
 export interface BlockCopy {
@@ -12,7 +13,8 @@ export interface BlockCopy {
 
 export type BlockCopies = ReadonlyMap<string, BlockCopy>;
 
-const copiesByDocument = new WeakMap<DocumentModel, BlockCopies>();
+// Written by the merge (`ooxml-core/docx/mail-merge`), read by the writer (`ooxml-core/docx`).
+const copiesByDocument = sharedWeakMap<DocumentModel, BlockCopies>('docx.blockCopies.v1');
 
 export function rememberBlockCopies(model: DocumentModel, copies: BlockCopies): void {
 	if (copies.size) copiesByDocument.set(model, copies);

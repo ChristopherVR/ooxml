@@ -48,10 +48,13 @@ import { applyInkPartEdits } from './ink-save';
 import { maxWordId, numberRevisionIds } from './revision-ids';
 import { numberMoveNames } from './move-names';
 import { parseRelationships } from './package-parts';
+import { sharedWeakMap } from './shared-state';
 
 const RELS_PART = 'word/_rels/document.xml.rels';
 
-const contexts = new WeakMap<DocumentModel, PackageContext>();
+// Written by `loadDocx` in whichever entry loaded the package (`ooxml-core/docx/load` too), read
+// by `saveDocx` in the entry that saves it.
+const contexts = sharedWeakMap<DocumentModel, PackageContext>('docx.packageContexts.v1');
 
 /**
  * Saves of `model` patch the package `context` was read from. Saving never changes

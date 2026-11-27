@@ -159,6 +159,10 @@ console.log('all entry points import');\n`,
 	run('node', [visioSmoke], work);
 	run('node', [visioSmoke, '--missing-reader'], work);
 	console.log('Visio embedded chart loading and missing-reader diagnostics pass');
+	const mergeSmoke = 'docx-merge-smoke.mjs';
+	await copyFile(new URL(mergeSmoke, import.meta.url), path.join(work, mergeSmoke));
+	run('node', [mergeSmoke], work);
+	console.log('Word merge fields fill and save through every entry pairing (ESM and CJS)');
 
 	// A web host bundles the package for the browser, with no Node fallbacks: no browser entry may
 	// reach a Node built-in or a Node-only package (the Node-only subpaths are skipped).
