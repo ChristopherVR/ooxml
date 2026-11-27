@@ -1592,6 +1592,15 @@ installed Visio 16 build is used to check that saved files open without repair.
 
 ### Editing and behaviour
 
+- [ ] **P1** In the `order-to-delivery-flowchart` sample, dragging a step (or a lane, which moves
+      its steps) is refused with "A connector glued to this stencil shape cannot follow it yet":
+      stencil connectors glued through `_XFTRIGGER(Sheet.N!EventXFMod)` do not yet re-route when
+      their shape moves (`visio/edit-master-scope.ts` only proves that unrelated shapes may move).
+- [ ] **P2** Dragging a cross-functional frame by its title moves only the title shapes, so the
+      frame slides away from its lanes (seen in the `order-to-delivery-flowchart` sample).
+- [ ] **P2** Shape IDs repeat on the background (title block) page of the
+      `order-to-delivery-flowchart` sample; editing such a shape once was refused with "An existing
+      formula already refers to the new shape ID". Not yet investigated.
 - [x] **P0** Containers do nothing after insertion: members move with the container, drops and
       moves change membership, and it grows to fit (`edit-container-fit.ts`). Open: swimlanes, lists
       and a native Visio check of the written relationships (see the P1 item above).
