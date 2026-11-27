@@ -26,7 +26,9 @@ const outline: [string, number | null][] = [
 	['Alpha', 1],
 	['Alpha body', null],
 	['Beta', 1],
-	['Tail', null],
+	// A heading of its own: body text would belong to Beta's branch and end the document there,
+	// where a tracked move cannot land (see outline-tracked.test.ts in the core).
+	['Tail', 1],
 ];
 const context = (model: Partial<DocumentModel>, collaborating = false): OutlineEditContext => ({
 	editable: true,
