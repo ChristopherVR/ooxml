@@ -1118,6 +1118,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Cameo or inserting a live placeholder when the slide lacks one.
 - [ ] **P1** Slide-show narration, recording directly into a styled Cameo, native PowerPoint
       recording interoperability and Insert > Record Audio remain open.
+- [ ] **P1** Animation: a by-paragraph build (`sequence: 'byParagraph'`) is written as one
+      whole-shape effect with `p:bldP build="p"`, where PowerPoint writes one effect per paragraph
+      (`p:txEl/p:pRg`), and such per-paragraph timing trees are not read back as one high-level
+      animation (`pptx/core/services/animation-write-sequence-builders.ts`).
 - [x] **P1** Animation: Effect Options directions for Split, Zoom, Blinds and the shape reveals,
       Color Typewriter, emphasis effects from the file's own behaviours, and Blink timing
       (2026-11-27).
@@ -1542,6 +1546,11 @@ installed Visio 16 build is used to check that saved files open without repair.
       (`visio/__fixtures__/native-connector-copy-drop.json`).
 - [ ] **P1** Visio's redistribution of parallel or coincident Dynamic connector copies, and its
       free-ended routing around complex obstacle layouts.
+- [ ] **P1** A shape glued to a connector of a custom connector master (a 1-D master not built
+      like Visio's Dynamic connector, as the sample generators write) cannot be moved: the
+      connector cannot be rerouted, so `move-shape` refuses rather than leave it behind
+      (`edit-instance-geometry.ts`, `edit-stencil-connector.ts` `proveStencilConnector`).
+      Shapes glued with connectors this editor or Visio's Dynamic connector draws move.
 - [x] **P1** Corner handles keep the proportions and Shift keeps them on every handle
       (`src/core/visio/ui/shape-resize.ts`; ledger entry of 2026-10-30).
 - [x] **P1** Resize snaps the moving edge to other shapes' edges and centres and to shown guides,
