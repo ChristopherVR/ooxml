@@ -90,9 +90,8 @@ test.describe('landing dropzone browse controls', () => {
 
 	test('clicking empty dropzone space opens the native file chooser', async ({ page }) => {
 		await gotoLanding(page);
-		const box = (await dropzone(page).boundingBox())!;
 		// Inside the dashed border, well clear of the hint text and the buttons.
-		await expectFileChooser(page, () => page.mouse.click(box.x + 24, box.y + 16));
+		await expectFileChooser(page, () => dropzone(page).click({ position: { x: 24, y: 16 } }));
 	});
 
 	test('the "click to browse" hint label opens the native file chooser', async ({ page }) => {
