@@ -1,12 +1,15 @@
 // @vitest-environment node
-import { IDBFactory } from 'fake-indexeddb';
+import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createAddInPreferencesStore } from './add-in-preferences-store';
 
 const name = 'add-ins-test';
 const limit = 16 * 1024 * 1024;
 
-beforeEach(() => vi.stubGlobal('indexedDB', new IDBFactory()));
+beforeEach(() => {
+	vi.stubGlobal('indexedDB', new IDBFactory());
+	vi.stubGlobal('IDBKeyRange', IDBKeyRange);
+});
 afterEach(() => vi.unstubAllGlobals());
 
 it('enforces one profile budget across concurrent writes and allows replacement and removal', async () => {
