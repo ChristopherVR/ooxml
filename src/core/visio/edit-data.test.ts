@@ -3,7 +3,8 @@ import { createVsdx } from './create-document';
 import { parseVsdx } from './parser';
 import { editVsdx } from './edit';
 import { VisioPackage } from './package';
-import type { VisioDataColumn } from './data-recordsets';
+import { adoRecordsetXml, readAdoRecordset, type VisioDataColumn } from './data-recordsets';
+import { parseXml } from '../xml/index';
 import { visioRefreshReport } from './data-refresh';
 
 const columns: VisioDataColumn[] = [
@@ -34,6 +35,16 @@ async function imported(): Promise<Uint8Array> {
 }
 
 describe('external data recordsets', () => {
+	it('reads the row ids Visio saves, and never lists them as a data column', () => {
+		const xml = adoRecordsetXml(columns.slice(0, 1), [
+			{ id: '3', values: ['Web'] },
+			{ id: '7', values: ['Database'] },
+		]);
+		const ado = readAdoRecordset(parseXml(xml).documentElement, { characters: 0 }, () => {});
+		expect(ado.columns.map((column) => column.name)).toEqual(['Name']);
+		expect(ado.rowIds).toEqual(['3', '7']);
+	});
+
 	it('imports a table as DataRecordSets parts with relationships and content types', async () => {
 		const bytes = await imported();
 		const pkg = await VisioPackage.open(bytes);
@@ -50,9 +61,15 @@ describe('external data recordsets', () => {
 		expect(await text(bytes, 'visio/data/_rels/recordsets.xml.rels')).toContain(
 			'Target="data1.xml"',
 		);
-		expect(await text(bytes, 'visio/data/data1.xml')).toContain(
-			'<z:row c0="Web" c1="10" c2="2024-01-05T00:00:00"/>',
+		const rowset = await text(bytes, 'visio/data/data1.xml');
+		expect(rowset).toContain(
+			'<z:row c0="Web" c1="10" c2="2024-01-05T00:00:00" _Visio_RowID_="1"/>',
 		);
+		// Visio's data API finds rows by the row id column it saves after the data columns.
+		expect(rowset).toMatch(
+			/<s:AttributeType name="c2"[^>]*>.*?<\/s:AttributeType><s:AttributeType name="_Visio_RowID_" rs:number="4"/,
+		);
+		expect(rowset).toContain('<z:row c0="Database" c1="25.5" _Visio_RowID_="2"/>');
 		const document = await parseVsdx(bytes);
 		expect(document.dataRecordsets).toEqual([
 			expect.objectContaining({

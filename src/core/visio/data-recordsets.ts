@@ -86,6 +86,12 @@ const escape = (value: string) =>
 			})[char]!,
 	);
 
+/**
+ * The column Visio keeps each row's identity in (the RowID a RowMap names), after the data
+ * columns of every recordset it saves; its data API reads rows by it.
+ */
+export const VISIO_ROW_ID_COLUMN = '_Visio_RowID_';
+
 /** ADO persisted rowset XML (the Data Recordset part), as Visio saves external data. */
 export function adoRecordsetXml(
 	columns: readonly VisioDataColumn[],
@@ -97,17 +103,18 @@ export function adoRecordsetXml(
 				`<s:AttributeType name="c${index}" rs:name="${escape(column.name)}" rs:number="${index + 1}" rs:nullable="true" rs:write="true"><s:datatype dt:type="${ADO_TYPES[column.type]}"${column.type === 'string' ? ' dt:maxLength="4096"' : ''}/></s:AttributeType>`,
 		)
 		.join('');
+	const rowIdColumn = `<s:AttributeType name="${VISIO_ROW_ID_COLUMN}" rs:number="${columns.length + 1}" rs:nullable="true" rs:write="true"><s:datatype dt:type="int" dt:maxLength="4" rs:precision="10" rs:fixedlength="true"/></s:AttributeType>`;
 	const data = rows
 		.map(
 			(row) =>
 				`<z:row${row.values
 					.map((value, index) => (value === '' ? '' : ` c${index}="${escape(value)}"`))
-					.join('')}/>`,
+					.join('')} ${VISIO_ROW_ID_COLUMN}="${escape(row.id)}"/>`,
 		)
 		.join('');
 	return (
 		`<?xml version="1.0" encoding="utf-8"?>\n<xml xmlns:s="${ADO_NS.s}" xmlns:dt="${ADO_NS.dt}" xmlns:rs="${ADO_NS.rs}" xmlns:z="${ADO_NS.z}">` +
-		`<s:Schema id="RowsetSchema"><s:ElementType name="row" content="eltOnly" rs:updatable="true">${schema}<s:extends type="rs:rowbase"/></s:ElementType></s:Schema>` +
+		`<s:Schema id="RowsetSchema"><s:ElementType name="row" content="eltOnly" rs:updatable="true">${schema}${rowIdColumn}<s:extends type="rs:rowbase"/></s:ElementType></s:Schema>` +
 		`<rs:data>${data}</rs:data></xml>`
 	);
 }
@@ -141,7 +148,12 @@ export function readAdoRecordset(
 	root: Element,
 	budget: { characters: number },
 	check: () => void,
-): { columns: { name: string; type?: VisioDataColumnType }[]; rows: Map<string, string>[] } {
+): {
+	columns: { name: string; type?: VisioDataColumnType }[];
+	rows: Map<string, string>[];
+	/** Each row's `_Visio_RowID_`, when the rowset has that column. */
+	rowIds: (string | undefined)[];
+} {
 	if (root.localName !== 'xml') invalid('The recordset part is not ADO rowset XML.');
 	const all = (node: Element, local: string, ns: string): Element[] =>
 		Array.from(node.getElementsByTagNameNS(ns, local));
@@ -149,6 +161,7 @@ export function readAdoRecordset(
 	for (const type of all(root, 'AttributeType', ADO_NS.s)) {
 		check();
 		const key = type.getAttribute('name') ?? '';
+		if (key === VISIO_ROW_ID_COLUMN) continue;
 		const name = type.getAttributeNS(ADO_NS.rs, 'name') || key;
 		if (!key || name.length > 255) invalid('Invalid recordset column.');
 		const adoType = typeFromAdo(
@@ -158,6 +171,7 @@ export function readAdoRecordset(
 		if (columns.length > VISIO_DATA_LIMITS.maxColumns) invalid('Too many recordset columns.');
 	}
 	const rows: Map<string, string>[] = [];
+	const rowIds: (string | undefined)[] = [];
 	for (const data of all(root, 'data', ADO_NS.rs))
 		for (const row of elements(data)) {
 			check();
@@ -175,8 +189,10 @@ export function readAdoRecordset(
 				values.set(column.name, value);
 			}
 			rows.push(values);
+			const rowId = row.getAttribute(VISIO_ROW_ID_COLUMN);
+			rowIds.push(rowId && /^[1-9]\d{0,9}$/.test(rowId) ? rowId : undefined);
 		}
-	return { columns: columns.map(({ key: _key, ...column }) => column), rows };
+	return { columns: columns.map(({ key: _key, ...column }) => column), rows, rowIds };
 }
 
 /** Normalise an ADO cell to the model text of its column type. */
@@ -244,7 +260,7 @@ export async function readDataRecordsets(
 			name: name.slice(0, 255),
 			columns,
 			rows: ado.rows.map((row, index) => ({
-				id: String(index + 1),
+				id: ado.rowIds[index] ?? String(index + 1),
 				values: columns.map((column) => modelValue(row.get(column.name), column.type)),
 			})),
 			links: links.slice(0, VISIO_DATA_LIMITS.maxRows * 4),
