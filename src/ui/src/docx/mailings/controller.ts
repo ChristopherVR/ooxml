@@ -150,7 +150,7 @@ export class MailingsController {
 						if (!read) return;
 						void this.operation(
 							'Select Recipients',
-							'The recipient source could not be read. Use at most 1,000 rows, 64 columns, and a 5 MiB file.',
+							'The recipient source could not be read. Use at most 100,000 rows, 255 columns and a 32 MiB file (20 MiB for a workbook).',
 							async (current) => {
 								const data = await read();
 								if (!current()) return;

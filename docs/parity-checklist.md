@@ -555,8 +555,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `docs/docx-mail-merge.md`) reads CSV, TSV, `.xlsx` and host-supplied recipients, filters and
       sorts them, evaluates MERGEFIELD, NEXT, NEXTIF, SKIPIF, MERGEREC, MERGESEQ, ASK, FILLIN and
       IF, previews a record, checks for errors and writes one document or one per record; desktop
-      Word 16 opens a merged result without repair. Open: fields that span paragraphs, merges inside
-      text boxes, and locale-specific number and date results checked against Word.
+      Word 16 opens a merged result without repair. Fields that span paragraphs and fields in
+      DrawingML text boxes merge (`mail-merge/cross-paragraph.ts`), and local CSV and TSV
+      recipients are read in slices up to 100,000 records, 255 fields and 32 MiB (2026-11-27).
+      Open: legacy VML-only text boxes, fields that cross a table, recipient lists beyond the
+      in-memory caps (the records are still held in memory once read), and locale-specific
+      number and date results checked against Word.
 - [x] **P1** Find & Replace supports wildcards, whole words, prefix and suffix, ignore options,
       Special codes (`src/core/docx/find-pattern.ts`, `src/ui/src/docx/search-panel.ts`), and
       formatting search & replacement (`FindFormatCriteria`, `ReplaceFormatPatch` for font,

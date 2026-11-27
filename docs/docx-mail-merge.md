@@ -7,9 +7,19 @@ XLSX files, recipient filtering and sorting, field insertion and matching, recor
 validation, and combined DOCX and browser print output. A host can set
 `docxEditor.mailMergeDataSource` to offer its own provider. The cancelable `file-command` event
 with `command: 'openMergedDocument'`, `fileName` and `bytes` lets a host open the output as a
-separate session. Without a handler the editor downloads it. The editor keeps recipient data in
-memory and accepts up to 1,000 records, 64 fields and 5 MiB per local file. Large merges may need
-a smaller selection.
+separate session. Without a handler the editor downloads it.
+
+The editor reads a local CSV or TSV file in 1 MiB slices with an incremental parser
+(`mailMergeDelimitedChunks`), so the file text is never held whole, and builds each record as
+its row completes. Records are kept in memory once read, so every source (local files and the
+host's provider) is bounded: at most 100,000 records, 255 fields, 4 million values in all
+(for example 100,000 records of 40 fields), 16,384 characters per value and 32 Mi characters of
+values in all. A delimited file may be up to 32 MiB. An `.xlsx` workbook is a zip package that
+has to be in memory to be read, so it is capped at 20 MiB, its rows are then read one at a time.
+Edit Recipient List shows 20 records per page and Preview Results builds one record at a time.
+Finish & Merge still holds the merged document in memory, so its separate work limit
+(`mailMergeWithinWorkLimit`) can ask for a smaller selection when a large template meets a long
+list.
 
 Address Block and Greeting Line insert native fields using the selected matches. Finish & Merge
 asks for ASK and FILL-IN answers and can cancel the entire merge from a prompt. Preview and
@@ -65,11 +75,12 @@ to strings, numbers, booleans, dates, or `null`. Field names match the source he
 Supply `fields` when a column can be absent from every record or when ODSO mappings use
 column positions.
 
-| Source       | API                                           | Data interpretation                                                                                                                                                                                                                                |
-| ------------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CSV or TSV   | `mailMergeDelimitedText(text, { delimiter })` | The first row supplies trimmed field names. The delimiter defaults to auto-detection. Values stay strings.                                                                                                                                         |
-| XLSX         | `mailMergeXlsx(bytes, { sheet })`             | The first row supplies trimmed field names. `sheet` accepts a zero-based index or a name and defaults to the first sheet. Formulas use cached values. Date-formatted cells supply ISO text when the XLSX reader can represent the value as a date. |
-| Host records | `mailMergeRecords({ records, fields })`       | The host supplies the field names and typed values. A custom provider can implement the same interface.                                                                                                                                            |
+| Source               | API                                                                 | Data interpretation                                                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CSV or TSV           | `mailMergeDelimitedText(text, { delimiter })`                       | The first row supplies trimmed field names. The delimiter defaults to auto-detection. Values stay strings.                                                                                                                                         |
+| CSV or TSV, streamed | `mailMergeDelimitedChunks(() => chunks, { delimiter, dataLimits })` | The same rules, read from an iterable of text chunks (a `File` read in slices). `dataLimits` can bound records, fields, values, characters and value length while reading.                                                                         |
+| XLSX                 | `mailMergeXlsx(bytes, { sheet })`                                   | The first row supplies trimmed field names. `sheet` accepts a zero-based index or a name and defaults to the first sheet. Formulas use cached values. Date-formatted cells supply ISO text when the XLSX reader can represent the value as a date. |
+| Host records         | `mailMergeRecords({ records, fields })`                             | The host supplies the field names and typed values. A custom provider can implement the same interface.                                                                                                                                            |
 
 Blank headers are ignored and duplicate headers raise an error. The core reads bytes and
 records supplied by the host. The host owns credentials, source selection, requests, and

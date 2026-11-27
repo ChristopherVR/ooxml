@@ -1,5 +1,5 @@
 import {
-	mailMergeDelimitedText,
+	mailMergeDelimitedChunks,
 	mailMergeXlsx,
 	selectMailMergeRecipients,
 	type MailMergeData,
@@ -7,34 +7,87 @@ import {
 	type MailMergeValue,
 } from 'ooxml-core/docx/mail-merge';
 
-const INPUT_BYTES = 5 * 1024 * 1024;
-const DATA_LIMITS = { maxFields: 64, maxRecords: 1000 };
-const MAX_DATA_CHARS = 2 * 1024 * 1024;
+/**
+ * What the editor accepts from one recipient source. Delimited text is read in 1 MiB slices and
+ * never held whole; the records themselves stay in memory, so the caps bound that memory: at most
+ * 32 Mi characters of values and 4 million values (for example 100,000 records of 40 fields).
+ * An Excel workbook is a zip package that has to be read whole, so its file is capped lower.
+ */
+export const RECIPIENT_LIMITS = {
+	delimitedBytes: 32 * 1024 * 1024,
+	workbookBytes: 20 * 1024 * 1024,
+	records: 100_000,
+	fields: 255,
+	cells: 4_000_000,
+	characters: 32 * 1024 * 1024,
+	valueLength: 16_384,
+} as const;
+
+const DATA_LIMITS = {
+	maxFields: RECIPIENT_LIMITS.fields,
+	maxRecords: RECIPIENT_LIMITS.records,
+	maxCells: RECIPIENT_LIMITS.cells,
+	maxCharacters: RECIPIENT_LIMITS.characters,
+	maxValueLength: RECIPIENT_LIMITS.valueLength,
+};
+const CHUNK_BYTES = 1024 * 1024;
+
+/** A file's text, decoded as UTF-8 one slice at a time. */
+export async function* fileTextChunks(file: Blob, size = CHUNK_BYTES): AsyncGenerator<string> {
+	const decoder = new TextDecoder();
+	for (let start = 0; start < file.size; start += size) {
+		const bytes = await file.slice(start, start + size).arrayBuffer();
+		yield decoder.decode(bytes, { stream: true });
+	}
+	const rest = decoder.decode();
+	if (rest) yield rest;
+}
 
 export async function readRecipientFile(file: File): Promise<MailMergeData> {
-	if (file.size > INPUT_BYTES) throw new RangeError('Recipient file exceeds 5 MiB.');
 	const name = file.name.toLowerCase();
-	if (name.endsWith('.xlsx'))
-		return snapshotRecipients(
+	if (name.endsWith('.xlsx')) {
+		if (file.size > RECIPIENT_LIMITS.workbookBytes)
+			throw new RangeError('Recipient workbook exceeds 20 MiB.');
+		return checkedFields(
 			await mailMergeXlsx(await file.arrayBuffer(), {
 				dataLimits: DATA_LIMITS,
 				limits: {
-					maxInputBytes: INPUT_BYTES,
-					maxPartBytes: 12 * 1024 * 1024,
-					maxTotalBytes: 24 * 1024 * 1024,
+					maxInputBytes: RECIPIENT_LIMITS.workbookBytes,
+					maxPartBytes: 128 * 1024 * 1024,
+					maxTotalBytes: 192 * 1024 * 1024,
 					maxParts: 512,
-					maxXmlElements: 180_000,
+					maxXmlElements: 2_000_000,
 				},
 			}).read(),
 		);
-	if (name.endsWith('.csv') || name.endsWith('.tsv'))
-		return snapshotRecipients(
-			await mailMergeDelimitedText(await file.text(), {
+	}
+	if (name.endsWith('.csv') || name.endsWith('.tsv')) {
+		if (file.size > RECIPIENT_LIMITS.delimitedBytes)
+			throw new RangeError('Recipient file exceeds 32 MiB.');
+		return checkedFields(
+			await mailMergeDelimitedChunks(() => fileTextChunks(file), {
 				dataLimits: DATA_LIMITS,
 				...(name.endsWith('.tsv') && { delimiter: '\t' }),
 			}).read(),
 		);
+	}
 	throw new TypeError('Unsupported recipient file type.');
+}
+
+function checkField(field: unknown): asserts field is string {
+	if (
+		typeof field !== 'string' ||
+		!field.trim() ||
+		field.length > 128 ||
+		/[\u0000-\u001f\uE000\uE001]/.test(field)
+	)
+		throw new TypeError('Invalid recipient field name.');
+}
+
+/** Records read from a local file are built by the reader; only their field names need checks. */
+function checkedFields(data: MailMergeData): MailMergeData {
+	for (const field of data.fields ?? []) checkField(field);
+	return data;
 }
 
 function recipientValue(value: unknown): value is MailMergeValue {
@@ -54,14 +107,9 @@ export function snapshotRecipients(input: MailMergeData): MailMergeData {
 		throw new RangeError('Invalid recipient count.');
 	const names = new Set<string>();
 	let characters = 0;
+	let cells = 0;
 	const addField = (field: string) => {
-		if (
-			typeof field !== 'string' ||
-			!field.trim() ||
-			field.length > 128 ||
-			/[\u0000-\u001f\uE000\uE001]/.test(field)
-		)
-			throw new TypeError('Invalid recipient field name.');
+		checkField(field);
 		names.add(field);
 		if (names.size > DATA_LIMITS.maxFields) throw new RangeError('Too many recipient fields.');
 	};
@@ -77,11 +125,12 @@ export function snapshotRecipients(input: MailMergeData): MailMergeData {
 		for (const field in record) {
 			if (!Object.hasOwn(record, field)) continue;
 			addField(field);
+			if (++cells > DATA_LIMITS.maxCells) throw new RangeError('Too many recipient values.');
 			const value: unknown = record[field];
 			if (!recipientValue(value)) throw new TypeError('Invalid recipient value.');
 			if (typeof value === 'string') {
 				characters += value.length;
-				if (value.length > 16_384 || characters > MAX_DATA_CHARS)
+				if (value.length > DATA_LIMITS.maxValueLength || characters > DATA_LIMITS.maxCharacters)
 					throw new RangeError('Recipient text exceeds the size limit.');
 			}
 			values.push([field, value instanceof Date ? new Date(value.getTime()) : value]);

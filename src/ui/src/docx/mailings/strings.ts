@@ -29,12 +29,14 @@ const translations = {
 		fr: 'L’application hôte n’a pas enregistré de fournisseur de destinataires.',
 		'zh-CN': '宿主未注册收件人提供程序。',
 	},
-	'The recipient source could not be read. Use at most 1,000 rows, 64 columns, and a 5 MiB file.': {
-		de: 'Die Empfängerquelle konnte nicht gelesen werden. Verwenden Sie höchstens 1.000 Zeilen, 64 Spalten und eine 5-MiB-Datei.',
-		es: 'No se pudo leer el origen. Usa hasta 1000 filas, 64 columnas y un archivo de 5 MiB.',
-		fr: 'Impossible de lire la source. Utilisez au plus 1 000 lignes, 64 colonnes et un fichier de 5 Mio.',
-		'zh-CN': '无法读取收件人数据源。请使用最多 1,000 行、64 列且不超过 5 MiB 的文件。',
-	},
+	'The recipient source could not be read. Use at most 100,000 rows, 255 columns and a 32 MiB file (20 MiB for a workbook).':
+		{
+			de: 'Die Empfängerquelle konnte nicht gelesen werden. Verwenden Sie höchstens 100.000 Zeilen, 255 Spalten und eine 32-MiB-Datei (20 MiB bei einer Arbeitsmappe).',
+			es: 'No se pudo leer el origen. Usa hasta 100.000 filas, 255 columnas y un archivo de 32 MiB (20 MiB si es un libro).',
+			fr: 'Impossible de lire la source. Utilisez au plus 100 000 lignes, 255 colonnes et un fichier de 32 Mio (20 Mio pour un classeur).',
+			'zh-CN':
+				'无法读取收件人数据源。请使用最多 100,000 行、255 列且不超过 32 MiB 的文件（工作簿不超过 20 MiB）。',
+		},
 	'Filter recipients': {
 		de: 'Empfänger filtern',
 		es: 'Filtrar destinatarios',

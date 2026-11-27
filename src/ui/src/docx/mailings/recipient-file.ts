@@ -20,7 +20,7 @@ export function readLocalRecipients(file: File): Promise<MailMergeData> {
 		const timeout = setTimeout(() => {
 			finish();
 			reject(new Error('Reading recipients timed out.'));
-		}, 15_000);
+		}, 60_000);
 		worker.addEventListener(
 			'error',
 			(event) => {

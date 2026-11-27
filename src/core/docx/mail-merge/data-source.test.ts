@@ -8,6 +8,7 @@ import {
 	styleAt,
 } from '../../xlsx/index';
 import {
+	mailMergeDelimitedChunks,
 	mailMergeDelimitedText,
 	mailMergeRecords,
 	mailMergeXlsx,
@@ -68,5 +69,33 @@ describe('mail merge recipient data', () => {
 			],
 		});
 		await expect(mailMergeXlsx(bytes, { sheet: 'Missing' }).read()).rejects.toThrow('Missing');
+	});
+
+	it('reads delimited text chunk by chunk with the same records and bounded limits', async () => {
+		const text = 'Name,Postal\r\n"Doe, Jane",00120\r\nLee,"a\nb"\r\n';
+		const whole = await mailMergeDelimitedText(text).read();
+		const chunks = await mailMergeDelimitedChunks(() => [...text]).read();
+		expect(chunks).toEqual(whole);
+		async function* slow() {
+			yield 'Name\nAda\n';
+			yield 'Bea\nCal\n';
+		}
+		const limits = { maxFields: 4, maxRecords: 2 };
+		await expect(mailMergeDelimitedChunks(slow, { dataLimits: limits }).read()).rejects.toThrow(
+			RangeError,
+		);
+		const long = { maxFields: 4, maxRecords: 10, maxValueLength: 3 };
+		await expect(mailMergeDelimitedChunks(slow, { dataLimits: long }).read()).resolves.toEqual({
+			fields: ['Name'],
+			records: [{ Name: 'Ada' }, { Name: 'Bea' }, { Name: 'Cal' }],
+		});
+		const tight = { maxFields: 4, maxRecords: 10, maxCharacters: 8 };
+		await expect(mailMergeDelimitedChunks(slow, { dataLimits: tight }).read()).rejects.toThrow(
+			'too large',
+		);
+		const cells = { maxFields: 4, maxRecords: 10, maxCells: 2 };
+		await expect(mailMergeDelimitedChunks(slow, { dataLimits: cells }).read()).rejects.toThrow(
+			'values',
+		);
 	});
 });
