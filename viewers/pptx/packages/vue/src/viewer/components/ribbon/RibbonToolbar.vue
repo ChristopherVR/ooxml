@@ -65,7 +65,7 @@ interface Props extends RibbonProps {
 }
 
 const props = defineProps<Props>();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const rotation = computed(() => {
 	const patch = props.onPatchElement;
 	return patch && (() => ({ element: props.selectedElement, patch }));
@@ -399,6 +399,11 @@ onBeforeUnmount(() => detachOverflow?.());
 						v-if="s === 'home'"
 						:on-toggle-find-replace="props.onToggleFindReplace"
 						:on-select-all="props.onSelectAll"
+					/>
+
+					<pptx-ui-ribbon-home-add-ins
+						v-if="s === 'home'"
+						:state.prop="{ controls: {}, translate: t, locale }"
 					/>
 
 					<DrawSection

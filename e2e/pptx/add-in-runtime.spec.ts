@@ -43,12 +43,12 @@ for (const scenario of addInReviewScenarios) {
 			async openDialog() {
 				const homeTab = ribbonTab(page, 'Home');
 				if ((await homeTab.getAttribute('aria-selected')) !== 'true') await homeTab.click();
-				const group = page.locator('[data-ribbon-group="home.editing"]:visible');
-				const command = group.locator('button[data-ribbon-control="home.editing.addIns"]');
+				const group = page.locator('[data-ribbon-group="home.addIns"]:visible');
+				const command = group.locator('button[data-ribbon-control="home.addIns.addIns"]');
 				await expect(async () => {
 					if (!(await command.isVisible())) {
 						await group
-							.getByRole('button', { name: 'Editing', exact: true })
+							.getByRole('button', { name: 'Add-ins', exact: true })
 							.click({ timeout: 1_000 });
 					}
 					await command.click({ timeout: 2_000 });

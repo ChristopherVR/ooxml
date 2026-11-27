@@ -22,6 +22,7 @@ declare global {
 		'pptx-ui-ribbon-home-font': PptxUiRibbonHomeElement;
 		'pptx-ui-ribbon-home-paragraph': PptxUiRibbonHomeElement;
 		'pptx-ui-ribbon-home-editing': PptxUiRibbonHomeElement;
+		'pptx-ui-ribbon-home-add-ins': PptxUiRibbonHomeElement;
 		'pptx-ui-ribbon-home-slides': PptxUiRibbonHomeElement;
 		'pptx-ui-ribbon-home-drawing': PptxUiRibbonHomeElement;
 		'pptx-ui-ribbon-home-arrange-align': PptxUiRibbonHomeElement;
@@ -53,7 +54,7 @@ export function definePptxRibbonHome(
 			family,
 			(intent) => {
 				if (canRequestHome(family, this.model, intent)) {
-					if (intent.id === 'home.editing.addIns') {
+					if (intent.id === 'home.addIns.addIns') {
 						const host = officeAddInsMount(this);
 						if (host)
 							void openOfficeAddIns(
@@ -108,6 +109,8 @@ export const definePptxRibbonHomeParagraph = (registry: CustomElementRegistry) =
 	definePptxRibbonHome(registry, 'paragraph');
 export const definePptxRibbonHomeEditing = (registry: CustomElementRegistry) =>
 	definePptxRibbonHome(registry, 'editing');
+export const definePptxRibbonHomeAddIns = (registry: CustomElementRegistry) =>
+	definePptxRibbonHome(registry, 'add-ins');
 export const definePptxRibbonHomeSlides = (registry: CustomElementRegistry) =>
 	definePptxRibbonHome(registry, 'slides');
 export const definePptxRibbonHomeDrawing = (registry: CustomElementRegistry) =>

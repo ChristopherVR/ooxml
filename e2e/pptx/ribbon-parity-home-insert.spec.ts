@@ -132,6 +132,7 @@ test.describe('Home', () => {
 		['home.paragraph', 'Paragraph'],
 		['home.drawing', 'Drawing'],
 		['home.editing', 'Editing'],
+		['home.addIns', 'Add-ins'],
 	];
 	const IDS = [
 		'home.clipboard.paste',
@@ -154,6 +155,7 @@ test.describe('Home', () => {
 		'home.paragraph.justify',
 		'home.editing.find',
 		'home.editing.replace',
+		'home.addIns.addIns',
 		'home.drawing.shapes',
 		'home.drawing.arrange',
 		'home.drawing.shapeFill',

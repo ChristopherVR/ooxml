@@ -24,6 +24,7 @@ export const CONTROL_FACE: Readonly<Record<string, string>> = {
 	'home.font': 'home.font.bold',
 	'home.paragraph': 'home.paragraph.alignLeft',
 	'home.editing': 'home.editing.find',
+	'home.addIns': 'home.addIns.addIns',
 	'home.drawing': 'home.drawing.shapes',
 };
 /** Shared 20px artwork for the other tabs' groups. */

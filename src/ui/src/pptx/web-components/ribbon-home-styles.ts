@@ -5,6 +5,7 @@ export const RIBBON_HOME_TAGS = [
 	'pptx-ui-ribbon-home-font',
 	'pptx-ui-ribbon-home-paragraph',
 	'pptx-ui-ribbon-home-editing',
+	'pptx-ui-ribbon-home-add-ins',
 	'pptx-ui-ribbon-home-slides',
 	'pptx-ui-ribbon-home-drawing',
 	'pptx-ui-ribbon-home-arrange-align',

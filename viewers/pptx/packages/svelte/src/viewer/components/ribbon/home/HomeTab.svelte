@@ -10,6 +10,7 @@
 	 * host customisation can hide it (shared `ribbonCustomizationCss`).
 	 */
 
+	import { homeSnapshotTranslator } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import type { FindReplaceState } from '../../../editor/editor-find-replace.svelte';
@@ -34,6 +35,7 @@
 		onnavigateslide: (index: number) => void;
 	} = $props();
 	const t = useTranslator();
+	const addIns = $derived({ controls: {}, translate: homeSnapshotTranslator(['add-ins'], t) });
 </script>
 
 <div class="pptx-svelte-hometab" data-pptx-chrome="home-content">
@@ -60,6 +62,7 @@
 	</div>
 	<span class="pptx-svelte-hometab-sep" aria-hidden="true"></span>
 	<EditingGroup {editor} {findReplace} />
+	<pptx-ui-ribbon-home-add-ins state={addIns}></pptx-ui-ribbon-home-add-ins>
 </div>
 
 <style>

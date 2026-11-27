@@ -186,7 +186,8 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 		},
 		galleryHub,
 	);
-	el.append(clipboard.el, slides.el, font.el, paragraph.el, drawing.el, editing.el);
+	const addIns = doc.createElement('pptx-ui-ribbon-home-add-ins');
+	el.append(clipboard.el, slides.el, font.el, paragraph.el, drawing.el, editing.el, addIns);
 
 	return {
 		el,
@@ -230,6 +231,7 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 			});
 			paragraph.update({ canFormat, editable, text });
 			editing.update({ editable });
+			addIns.state = { controls: {}, translate: t };
 			drawing.update({
 				editable,
 				hasSelection,

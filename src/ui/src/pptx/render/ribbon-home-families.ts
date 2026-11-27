@@ -141,9 +141,6 @@ export const RIBBON_HOME_FAMILIES: Readonly<Record<RibbonHomeFamily, RibbonHomeF
 				control('home.editing.replace', 'pptx.ribbon.replace', 'Replace', undefined, {
 					text: text('pptx.ribbon.replace', 'Replace'),
 				}),
-				control('home.editing.addIns', 'pptx.insert.groupAddIns', 'Add-ins', undefined, {
-					text: text('pptx.insert.groupAddIns', 'Add-ins'),
-				}),
 			),
 			pills(
 				undefined,
@@ -152,6 +149,17 @@ export const RIBBON_HOME_FAMILIES: Readonly<Record<RibbonHomeFamily, RibbonHomeF
 					kind: 'menu',
 					popup: true,
 					items: HOME_SELECT_ITEMS,
+				}),
+			),
+		],
+	},
+	'add-ins': {
+		group: { id: 'home.addIns', captionKey: 'pptx.insert.groupAddIns', fallback: 'Add-ins' },
+		clusters: [
+			strip(
+				control('home.addIns.addIns', 'pptx.insert.groupAddIns', 'Add-ins', undefined, {
+					large: true,
+					text: text('pptx.insert.groupAddIns', 'Add-ins'),
 				}),
 			),
 		],

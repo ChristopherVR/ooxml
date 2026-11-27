@@ -38,6 +38,7 @@ import type { ToolbarProps } from './toolbar/toolbar-types';
 import { ToolbarPrimaryRow } from './toolbar/ToolbarPrimaryRow';
 import { useContextualRibbonTab } from './toolbar/useContextualRibbonTab';
 import { useDrawingArrange } from './toolbar/useDrawingArrange';
+import { WebHomeControls } from './toolbar/WebHomeControls';
 import { ToolbarLateTabs } from './ToolbarLateTabs';
 import { useViewerCustomizationContext } from './viewer-customization-context';
 import { useViewerOptionsContext } from './viewer-options-context';
@@ -393,6 +394,8 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 								onSelectAll={p.onSelectAll}
 							/>
 						)}
+
+						{sHome && <WebHomeControls family='add-ins' controls={{}} />}
 
 						{sDrw && (
 							<DrawSection

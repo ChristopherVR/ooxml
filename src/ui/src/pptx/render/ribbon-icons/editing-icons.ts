@@ -4,7 +4,7 @@ import type { RibbonIconArtwork } from './types';
 const addIns = getIcon('addIns');
 
 export const EDITING_ICONS: Record<string, RibbonIconArtwork> = {
-	'home.editing.addIns': {
+	'home.addIns.addIns': {
 		attrs: { stroke: 'currentColor', fill: 'none', viewBox: '0 0 24 24' },
 		children: [{ tag: 'path', attrs: { d: addIns?.d ?? '', transform: 'scale(1.2)' } }],
 	},

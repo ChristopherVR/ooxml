@@ -28,7 +28,7 @@ export function WebHomeControls({
 }: {
 	family: RibbonHomeFamily;
 	controls: RibbonHomeViewState['controls'];
-	onRequest: (id: RibbonControlId, part?: string, intent?: RibbonHomeIntent) => void;
+	onRequest?: (id: RibbonControlId, part?: string, intent?: RibbonHomeIntent) => void;
 	onPopup?: (id: string, open: boolean) => void;
 	layoutArtwork?: HomeLayoutArtwork;
 }): React.ReactElement {
@@ -46,7 +46,7 @@ export function WebHomeControls({
 	}, [layoutArtwork]);
 	useEffect(() => {
 		const host = ref.current;
-		if (!host) {
+		if (!host || !onRequest) {
 			return;
 		}
 		const listener = (event: Event) => {

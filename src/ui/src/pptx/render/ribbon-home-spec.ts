@@ -16,6 +16,7 @@ export type RibbonHomeFamily =
 	| 'font'
 	| 'paragraph'
 	| 'editing'
+	| 'add-ins'
 	| 'slides'
 	| 'drawing'
 	| 'arrange-align'

@@ -15,7 +15,7 @@ const clipboard = {
 	canFormatPaint: true,
 	showFormatPainter: true,
 };
-function mount(tag: 'clipboard' | 'font' | 'paragraph' | 'editing', controls = {}) {
+function mount(tag: 'clipboard' | 'font' | 'paragraph' | 'editing' | 'add-ins', controls = {}) {
 	const host = document.createElement(`pptx-ui-ribbon-home-${tag}`);
 	host.state = { controls };
 	document.body.append(host);
@@ -25,9 +25,13 @@ const button = (host: HTMLElement, id: string) =>
 	host.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"]`)!;
 
 describe('shared Home controls', () => {
-	it('opens Office Add-ins from the editing controls', async () => {
-		const host = mount('editing');
-		const addIns = button(host, 'home.editing.addIns');
+	it('opens Office Add-ins from its own Home group', async () => {
+		const host = mount('add-ins');
+		const addIns = button(host, 'home.addIns.addIns');
+		expect(addIns.closest('[data-ribbon-group]')?.getAttribute('data-ribbon-group')).toBe(
+			'home.addIns',
+		);
+		expect(button(mount('editing'), 'home.addIns.addIns')).toBeNull();
 		expect(addIns.textContent).toBe('Add-ins');
 		expect(addIns.querySelector('svg path')).toBeTruthy();
 		addIns.focus();

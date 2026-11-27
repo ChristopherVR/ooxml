@@ -942,6 +942,7 @@ Format Painter uses `home.clipboard.formatPainter`. SmartArt Format retains
 | `home.drawing`                      | Drawing                      |
 | `home.arrange`                      | Arrange (legacy group alias) |
 | `home.editing`                      | Editing                      |
+| `home.addIns`                       | Add-ins                      |
 | `insert.slides`                     | Slides                       |
 | `insert.tables`                     | Tables                       |
 | `insert.images`                     | Images                       |
@@ -1110,7 +1111,7 @@ Format Painter uses `home.clipboard.formatPainter`. SmartArt Format retains
 | `home.editing.find`                               | Find                                                                          |
 | `home.editing.replace`                            | Replace                                                                       |
 | `home.editing.select`                             | Select                                                                        |
-| `home.editing.addIns`                             | Add-ins                                                                       |
+| `home.addIns.addIns`                              | Add-ins                                                                       |
 | `insert.slides.newSlide`                          | New Slide                                                                     |
 | `insert.slides.reuseSlides`                       | Reuse Slides                                                                  |
 | `insert.tables.table`                             | Table                                                                         |

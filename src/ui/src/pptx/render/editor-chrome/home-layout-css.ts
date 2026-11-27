@@ -11,6 +11,7 @@ const GROUPS = [
 	'home.font',
 	'home.paragraph',
 	'home.editing',
+	'home.addIns',
 	'home.drawing',
 	'home.arrange',
 ]

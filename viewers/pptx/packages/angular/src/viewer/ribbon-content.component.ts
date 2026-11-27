@@ -20,13 +20,15 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	computed,
+	CUSTOM_ELEMENTS_SCHEMA,
 	inject,
 	Injector,
 	input,
 	output,
 	signal,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DEFAULT_INSERT_CHART_KIND } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
@@ -41,6 +43,7 @@ import { RibbonDrawingGroupComponent } from './ribbon-drawing-group.component';
 import { RibbonEditingSectionComponent } from './ribbon-editing-section.component';
 import { RibbonFileSectionComponent } from './ribbon-file-section.component';
 import { RibbonFontControlsComponent } from './ribbon-font-controls.component';
+import { homeLanguage, homeTranslator } from './ribbon-home-lang';
 import { RibbonHomeSectionComponent } from './ribbon-home-section.component';
 import { RibbonInsertSectionComponent } from './ribbon-insert-section.component';
 import { RibbonParagraphControlsComponent } from './ribbon-paragraph-controls.component';
@@ -51,6 +54,7 @@ import type { RibbonTab } from './ribbon-types';
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	host: { class: 'contents' },
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	imports: [
 		RibbonFileSectionComponent,
 		RibbonHomeSectionComponent,
@@ -123,6 +127,7 @@ import type { RibbonTab } from './ribbon-types';
 						{{ 'pptx.shortcuts.group.editing' | translate }}
 					</span>
 				</div>
+				<pptx-ui-ribbon-home-add-ins [state]="addIns()" />
 			}
 			@case ('insert') {
 				<pptx-ribbon-insert-section
@@ -158,6 +163,13 @@ import type { RibbonTab } from './ribbon-types';
 	`,
 })
 export class RibbonContentComponent {
+	private readonly translation = inject(TranslateService, { optional: true });
+	private readonly language = homeLanguage(this.translation);
+	protected readonly addIns = computed(() => ({
+		controls: {},
+		translate: homeTranslator(this.translation, this.language, ['add-ins']),
+	}));
+
 	private readonly injector = inject(Injector);
 
 	/** Home > Editing > Select > Select All (resolved lazily: only Home needs the editor). */
