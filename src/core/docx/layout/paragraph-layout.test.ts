@@ -102,19 +102,26 @@ describe('layoutParagraph alignment', () => {
 		).toEqual([10, 20, 10]);
 	});
 
-	it.each(['page', 'column'] as const)(
-		'keeps justifying a line ending in a %s break',
-		(breakAfter) => {
+	it.each([
+		['page', true],
+		['page', false],
+		['column', true],
+		['column', false],
+	] as const)(
+		'keeps a line ending in a %s break at its natural width (doNotExpandShiftReturn: %s)',
+		(breakAfter, doNotExpandShiftReturn) => {
 			const result = layoutParagraph(
-				paragraph([{ text: 'aa bb', breakAfter }, { text: 'cc dd' }], {
+				paragraph([{ text: 'aa bb', breakAfter }, { text: 'cc dd ee ff' }], {
 					align: 'justify',
-					doNotExpandShiftReturn: true,
+					...(doNotExpandShiftReturn ? { doNotExpandShiftReturn } : {}),
 				}),
 				60,
 				measurer,
 				noop,
 			);
-			expect(at(at(result.lines, 0).fragments, 1)).toMatchObject({ text: ' ', widthPx: 20 });
+			expect(at(at(result.lines, 0).fragments, 1)).toMatchObject({ text: ' ', widthPx: 10 });
+			// A wrapped line after the break is still justified.
+			expect(at(at(result.lines, 1).fragments, 1)).toMatchObject({ text: ' ', widthPx: 20 });
 		},
 	);
 

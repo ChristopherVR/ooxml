@@ -585,7 +585,12 @@ function measureParagraph(
 			fragments: alignFragments(
 				line.fragments,
 				width + (hangingPx.get(index) ?? 0),
-				index === lastIndex || softBreakLines?.has(index) === true,
+				// Measured in Word 16: a line ending in a page or column break keeps its natural
+				// width with or without doNotExpandShiftReturn.
+				index === lastIndex ||
+					softBreakLines?.has(index) === true ||
+					pageBreakAfterLine.has(index) ||
+					columnBreakAfterLine.has(index),
 				boxes[index]?.split ? 'left' : effectiveAlign,
 				squeezedLines.has(index),
 			).map((fragment) => ({ ...fragment, xPx: fragment.xPx + lineStart(index) })),
