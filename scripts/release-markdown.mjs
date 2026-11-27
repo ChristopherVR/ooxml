@@ -279,7 +279,7 @@ export function renderBlocks(blocks, ctx = {}) {
 				.map((row) => `<tr>${row.map((text, index) => cell('td', text, index)).join('')}</tr>`)
 				.join('');
 			parts.push(
-				`<div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`,
+				`<div class="table-wrap" tabindex="0"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`,
 			);
 		}
 	}

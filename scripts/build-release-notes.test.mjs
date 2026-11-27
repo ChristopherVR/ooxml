@@ -90,6 +90,8 @@ test('blocks: headings, nested lists, tables, code, quotes, alerts, comments and
 	);
 	assert.match(html, /<th>A<\/th><th style="text-align:center">B<\/th>/);
 	assert.match(html, /<td><code>x<\/code><\/td>/);
+	// A wide table scrolls in its wrapper, which the keyboard can reach.
+	assert.match(html, /<div class="table-wrap" tabindex="0"><table>/);
 	assert.match(html, /<code class="language-ts">const a = &quot;&lt;b&gt;&quot;;<\/code>/);
 	assert.match(
 		html,
