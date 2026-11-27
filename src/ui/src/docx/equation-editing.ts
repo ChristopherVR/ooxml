@@ -3,7 +3,10 @@
 // changes, a space after a control word runs math AutoCorrect (`\alpha`), and the Equation tab's
 // structures and symbols insert at the caret, selecting the first placeholder. The document shows
 // the built-up equation (Professional) or its linear text (Linear). An equation linear text cannot
-// rebuild exactly (`editableEquation`) is shown read-only, so editing never loses content.
+// rebuild exactly (`editableEquation`) is shown read-only, so editing never loses content; the
+// status says why (tracked changes, mixed formatting, other content). A display paragraph with
+// several equations is edited one equation at a time: the arrow keys at either end of the text move
+// to the previous or next one, and only the one being edited is rewritten (`replaceEquationPart`).
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { EQUATION_PLACEHOLDER, type EquationInputFormat } from 'ooxml-core/math';
@@ -14,6 +17,7 @@ import { emit } from './events';
 import editorCss from './styles/equation-editor.css?raw';
 import { focusView } from './focus-view';
 import { translate, type EditorLocale, type LocalizationKey } from './localization';
+import { editorLabel, NO_LINEAR, READ_ONLY } from './equation-editor-status';
 import { normalTextAround, placeholderArgument } from './equation-linear-text';
 
 export interface EquationEditingHost {
@@ -32,10 +36,6 @@ export function equationStyle(): HTMLStyleElement {
 	return style;
 }
 
-const NO_LINEAR: LocalizationKey =
-	'This equation cannot be shown in Linear without changing it, so it is kept as it is.';
-const READ_ONLY: LocalizationKey =
-	'This equation has content its linear text cannot hold, so it is kept as it is.';
 /** Status messages wait for typing to pause, so a screen reader is not interrupted per key. */
 const STATUS_DELAY_MS = 700;
 
@@ -43,6 +43,11 @@ export class EquationEditingBox {
 	readonly element: HTMLDivElement;
 	readonly input: HTMLInputElement;
 	private readonly status: HTMLElement;
+	/** Which equation of a display paragraph with several is shown ("Equation 2 of 3"). */
+	private readonly counter: HTMLElement;
+	/** The equation of the paragraph being edited, and how many the paragraph holds. */
+	private part = 0;
+	private parts = 1;
 	private pos: number | undefined;
 	/** The markup this box last wrote or read, so edits from elsewhere (undo, collaboration) reload it. */
 	private committed = '';
@@ -68,7 +73,10 @@ export class EquationEditingBox {
 		this.status = document.createElement('span');
 		this.status.className = 'dve-equation-editor-status';
 		this.status.setAttribute('role', 'status');
-		this.element.append(equationStyle(), this.input, this.status);
+		this.counter = document.createElement('span');
+		this.counter.className = 'dve-equation-editor-part';
+		this.counter.hidden = true;
+		this.element.append(equationStyle(), this.counter, this.input, this.status);
 		// An input method's text is built up once its composition ends, not at each update.
 		this.input.addEventListener('input', (event) => {
 			if (!(event as InputEvent).isComposing) this.commit();
@@ -83,6 +91,11 @@ export class EquationEditingBox {
 
 	get attachedAt(): number | undefined {
 		return this.pos;
+	}
+
+	/** Whether the box edits one equation of a display paragraph that holds several. */
+	get inPart(): boolean {
+		return this.parts > 1;
 	}
 
 	/** Whether the equation can be edited here; read-only ones keep their markup untouched. */
@@ -108,14 +121,12 @@ export class EquationEditingBox {
 		if (node?.type.name !== 'equation') return this.detach();
 		const omml = String(node.attrs.omml);
 		const fresh = !same || this.pos === undefined;
+		if (fresh) this.part = 0;
 		if (fresh || omml !== this.committed) this.load(omml);
 		this.pos = pos;
 		this.input.readOnly = !view.editable || !this.edit;
-		const locale = this.host.locale();
-		const label = translate(locale, 'Equation editor');
-		this.element.setAttribute('aria-label', label);
-		this.input.setAttribute('aria-label', label);
-		this.input.placeholder = translate(locale, 'Type equation here.');
+		this.label();
+		this.input.placeholder = translate(this.host.locale(), 'Type equation here.');
 		if (!this.element.isConnected) {
 			const root = this.host.toolbar()?.getRootNode();
 			(root instanceof ShadowRoot ? root : document.body).append(this.element);
@@ -132,8 +143,19 @@ export class EquationEditingBox {
 		}
 	}
 
+	/** The box's name, with the equation it edits when the paragraph holds several. */
+	private label(): void {
+		const { name, part } = editorLabel(this.host.locale(), this.part, this.parts);
+		this.counter.hidden = !part;
+		this.counter.textContent = part;
+		this.element.setAttribute('aria-label', name);
+		this.input.setAttribute('aria-label', name);
+	}
+
 	detach(): void {
 		this.pos = undefined;
+		this.part = 0;
+		this.parts = 1;
 		this.committed = '';
 		this.edit = undefined;
 		if (this.frame) cancelAnimationFrame(this.frame);
@@ -154,12 +176,37 @@ export class EquationEditingBox {
 		else this.statusTimer = setTimeout(() => (this.status.textContent = text), STATUS_DELAY_MS);
 	}
 
+	/** The part to pass the core: only a paragraph with several equations is edited by part. */
+	private target(): number | undefined {
+		return this.parts > 1 ? this.part : undefined;
+	}
+
 	private load(omml: string): void {
-		this.edit = kit().editableEquation(omml, this.host.format());
-		this.input.value = this.edit?.text ?? kit().linearizeEquation(omml, this.host.format()) ?? '';
+		const format = this.host.format();
+		this.parts = kit().equationParts(omml);
+		this.part = Math.min(this.part, this.parts - 1);
+		const part = this.target();
+		this.edit = kit().editableEquation(omml, format, part);
+		this.input.value = this.edit?.text ?? kit().linearizeEquation(omml, format, part) ?? '';
 		this.committed = omml;
-		this.setStatus(this.edit ? undefined : READ_ONLY, true);
+		const reason = this.edit ? undefined : kit().equationReadOnlyReason(omml, format, part);
+		this.setStatus(this.edit ? undefined : READ_ONLY[reason ?? 'content'], true);
 		this.input.readOnly = !this.edit || !this.host.view()?.editable;
+		this.label();
+	}
+
+	/** Moves the box to the previous or next equation of the paragraph; false at either end. */
+	private movePart(step: -1 | 1): boolean {
+		const view = this.host.view();
+		const node = this.pos === undefined ? null : view?.state.doc.nodeAt(this.pos);
+		const next = this.part + step;
+		if (!node || this.parts < 2 || next < 0 || next >= this.parts) return false;
+		this.part = next;
+		this.load(String(node.attrs.omml));
+		const caret = step > 0 ? 0 : this.input.value.length;
+		this.input.setSelectionRange(caret, caret);
+		this.host.refresh();
+		return true;
 	}
 
 	/** The equation on screen: in Draft its typeset maths, in Print Layout the page selection. */
@@ -213,13 +260,19 @@ export class EquationEditingBox {
 		const node = this.pos === undefined ? null : view?.state.doc.nodeAt(this.pos);
 		if (!view || !node || this.pos === undefined || !this.edit || this.input.readOnly) return false;
 		const format = this.host.format();
-		const omml = kit().writeEditedEquation({
+		const part = this.target();
+		const written = kit().writeEditedEquation({
 			text: this.input.value,
 			format,
-			display: Boolean(node.attrs.display),
+			// One equation of several is written as an `m:oMath` into its place in the paragraph.
+			display: part === undefined && Boolean(node.attrs.display),
 			linear: this.edit.linear,
 			frame: this.edit.frame,
 		});
+		const omml =
+			written && part !== undefined
+				? kit().replaceEquationPart(String(node.attrs.omml), part, written)
+				: written;
 		this.setStatus(
 			omml
 				? undefined
@@ -352,15 +405,15 @@ export class EquationEditingBox {
 			if (wrapped >= 0) input.setSelectionRange(wrapped, wrapped + 1);
 		} else if (event.key === 'ArrowRight' && start === end && end === input.value.length) {
 			event.preventDefault();
-			this.exit(true);
+			if (!this.movePart(1)) this.exit(true);
 		} else if (event.key === 'ArrowLeft' && start === end && start === 0) {
 			event.preventDefault();
-			this.exit(false);
+			if (!this.movePart(-1)) this.exit(false);
 		} else if (event.key === 'Escape' || event.key === 'Enter') {
 			event.preventDefault();
 			event.stopPropagation();
 			this.exit(true);
-		} else if (event.key === 'Backspace' && input.value === '' && this.editable) {
+		} else if (event.key === 'Backspace' && input.value === '' && this.editable && this.parts < 2) {
 			event.preventDefault();
 			const view = this.host.view();
 			const pos = this.pos;

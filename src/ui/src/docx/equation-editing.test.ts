@@ -195,15 +195,64 @@ describe('the equation editor', () => {
 	it('keeps an equation linear text cannot hold read-only, and Convert leaves it alone', () => {
 		const { view, box } = editor();
 		const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
-		const two = `<m:oMathPara xmlns:m="${M}"><m:oMath><m:r><m:t>a</m:t></m:r></m:oMath><m:oMath><m:r><m:t>b</m:t></m:r></m:oMath></m:oMathPara>`;
-		const pos = insertEquationXml(view, two, true)!;
+		const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const mixed = `<m:oMathPara xmlns:m="${M}" xmlns:w="${W}"><m:oMath><m:r><m:t>a</m:t></m:r><m:r><w:rPr><w:b/></w:rPr><m:t>b</m:t></m:r></m:oMath></m:oMathPara>`;
+		const pos = insertEquationXml(view, mixed, true)!;
 		box.sync(view, pos, true);
 		expect(box.input.readOnly).toBe(true);
 		expect(box.editable).toBe(false);
-		expect(box.element.querySelector('[role="status"]')?.textContent).toContain('kept as it is');
+		expect(box.element.querySelector('[role="status"]')?.textContent).toBe(
+			'This equation mixes formatting its linear text cannot hold, so it is kept as it is.',
+		);
 		box.insert('x');
 		convertAllEquations(view, true);
-		expect(equations(view)[0]).toBe(two);
+		expect(equations(view)[0]).toBe(mixed);
+	});
+
+	it('says an equation with tracked changes is kept until they are accepted or rejected', () => {
+		const { view, box } = editor();
+		const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
+		const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const tracked = `<m:oMath xmlns:m="${M}" xmlns:w="${W}"><w:ins w:id="1" w:author="A"><m:r><m:t>b</m:t></m:r></w:ins></m:oMath>`;
+		box.sync(view, insertEquationXml(view, tracked, false)!, true);
+		expect(box.editable).toBe(false);
+		expect(box.element.querySelector('[role="status"]')?.textContent).toContain(
+			'Accept or reject them to edit it.',
+		);
+	});
+
+	it('edits each equation of a display paragraph with several on its own', () => {
+		const { view, box } = editor();
+		const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
+		const first = `<m:oMath><m:r><m:t>a=b</m:t></m:r></m:oMath>`;
+		const two = `<m:oMathPara xmlns:m="${M}">${first}<m:oMath><m:r><m:t>c</m:t></m:r></m:oMath></m:oMathPara>`;
+		const pos = insertEquationXml(view, two, true)!;
+		box.sync(view, pos, true);
+		expect(box.editable).toBe(true);
+		expect(box.input.value).toBe('a=b');
+		expect(box.element.getAttribute('aria-label')).toBe('Equation editor, Equation 1 of 2');
+		// The right arrow at the end of the first equation moves to the second.
+		box.input.setSelectionRange(3, 3);
+		box.input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', cancelable: true }));
+		expect(box.input.value).toBe('c');
+		expect(box.element.getAttribute('aria-label')).toBe('Equation editor, Equation 2 of 2');
+		box.input.setSelectionRange(1, 1);
+		type(box, '/2');
+		const out = equations(view)[0]!;
+		expect(out.startsWith(`<m:oMathPara xmlns:m="${M}">${first}`)).toBe(true);
+		expect(out).toContain('<m:f>');
+		// The paragraph keeps both equations, and the box stays on the second one.
+		expect(equationKit().equationParts(out)).toBe(2);
+		box.sync(view, pos, false, true);
+		expect(box.input.value).toBe('c/2');
+		// Convert > All converts each equation on its own; the left arrow at the start goes back.
+		box.input.setSelectionRange(0, 0);
+		box.input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', cancelable: true }));
+		expect(box.input.value).toBe('a=b');
+		convertAllEquations(view, true);
+		const linear = equations(view)[0]!;
+		expect(linear).toContain(first);
+		expect(linear).not.toContain('<m:f>');
 	});
 
 	it('keeps the editor on the same equation when edits elsewhere move it', () => {
@@ -299,7 +348,8 @@ describe('the Equation gallery over a read-only equation', () => {
 		document.body.append(toolbar);
 		const { view } = editor();
 		const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
-		const two = `<m:oMathPara xmlns:m="${M}"><m:oMath><m:r><m:t>a</m:t></m:r></m:oMath><m:oMath><m:r><m:t>b</m:t></m:r></m:oMath></m:oMathPara>`;
+		const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const two = `<m:oMathPara xmlns:m="${M}" xmlns:w="${W}"><m:oMath><m:r><m:t>a</m:t></m:r><m:r><w:rPr><w:b/></w:rPr><m:t>b</m:t></m:r></m:oMath></m:oMathPara>`;
 		insertEquationXml(view, two, true);
 		const controller = new EquationController({
 			view: () => view,

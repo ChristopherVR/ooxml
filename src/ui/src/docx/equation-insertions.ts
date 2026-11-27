@@ -60,15 +60,14 @@ export function insertNewEquation(view: EditorView): number | undefined {
 
 /**
  * Convert > All: every equation to Professional or to Linear, as one step. An equation whose
- * linear text cannot hold it exactly is left as it is.
+ * linear text cannot hold it exactly is left as it is; in a display paragraph with several
+ * equations, each one is converted on its own and the others are left as they are.
  */
 export function convertAllEquations(view: EditorView, linear: boolean): void {
 	if (!view.editable) return;
 	let tr = view.state.tr;
 	for (const [pos, omml, display] of equationsIn(view.state)) {
-		const edit = kit().editableEquation(omml, 'unicode');
-		if (!edit || edit.linear === linear) continue;
-		const next = kit().writeEditedEquation({ ...edit, format: 'unicode', display, linear });
+		const next = convertedEquation(omml, display, linear);
 		const node = tr.doc.nodeAt(pos);
 		if (next && node && next !== omml)
 			tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, omml: next });
@@ -79,4 +78,22 @@ export function convertAllEquations(view: EditorView, linear: boolean): void {
 	if (selection instanceof NodeSelection && selection.node.type.name === 'equation')
 		tr = tr.setSelection(NodeSelection.create(tr.doc, tr.mapping.map(selection.from)));
 	view.dispatch(tr);
+}
+
+/** An equation's markup shown in Linear or Professional; undefined when nothing changes. */
+function convertedEquation(omml: string, display: boolean, linear: boolean): string | undefined {
+	const parts = kit().equationParts(omml);
+	if (parts < 2) {
+		const edit = kit().editableEquation(omml, 'unicode');
+		if (!edit || edit.linear === linear) return undefined;
+		return kit().writeEditedEquation({ ...edit, format: 'unicode', display, linear });
+	}
+	let next = omml;
+	for (let part = 0; part < parts; part++) {
+		const edit = kit().editableEquation(next, 'unicode', part);
+		if (!edit || edit.linear === linear) continue;
+		const math = kit().writeEditedEquation({ ...edit, format: 'unicode', display: false, linear });
+		next = (math && kit().replaceEquationPart(next, part, math)) ?? next;
+	}
+	return next;
 }

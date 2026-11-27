@@ -871,9 +871,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Equation tab: Insert New Equation and Alt+=, the built-in gallery, Convert
       (Professional and Linear), Normal Text, Unicode and LaTeX input, symbol and structure
       galleries, and in-place editing of linear text that rebuilds the equation exactly.
-- [ ] **P2** Equation: Ink Equation is disabled (no handwriting recognition); equations whose
-      linear text cannot hold them (mixed run formatting, tracked changes, several equations in
-      one paragraph) open read-only.
+- [ ] **P2** Equation: Ink Equation is disabled (no handwriting recognition); an equation whose
+      linear text cannot hold it (mixed run formatting, tracked changes inside it, properties its
+      notation cannot spell) opens read-only and the editor says which. A display paragraph with
+      several equations is edited one equation at a time, the others kept byte for byte
+      (`math/equation-parts.ts`, 2026-11-27).
 - [ ] **P1** Missing tabs: Picture Format has only Wrap Text, Crop and Format.
 - [ ] **P2** Draw tab: Ruler (Stencils) and Ink to Math are disabled with their reason (no ruler
       stencil, no handwriting recognizer); drawing, the eraser, the lasso, Ink to Shape, Ink
