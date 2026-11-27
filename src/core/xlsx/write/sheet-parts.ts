@@ -13,6 +13,7 @@ import { parseTable } from '../read/tables';
 import { chartWithCurrentCaches } from './chart-cache';
 import { commentParts, type PersonRegistry } from './comments';
 import { CommentIds } from './comment-ids';
+import { createGridMetrics } from '../layout/metrics';
 import { relativeTarget, savedDrawingShape, writeDrawing } from './drawing';
 import { embeddedObjectXml, mergeOleObjects } from './local-object';
 import type { MetadataPlan } from './metadata';
@@ -151,6 +152,7 @@ export function writeComments(
 			...(threadEnvelope ? { envelope: threadEnvelope } : {}),
 			ids: (ctx.commentIds ??= new CommentIds(ctx.workbook)),
 		},
+		createGridMetrics(sheet, { zoom: 100 }),
 	);
 	const commentsPart = name((n) => `xl/comments${n}.xml`);
 	writer.add(commentsPart, parts.comments, CONTENT_TYPES.comments);

@@ -3,6 +3,8 @@ import { formatAddress } from '../address';
 import type { Comment } from '../model';
 import { XML_HEADER, escapeText, tElement } from './xml-out';
 import type { PersonRegistry } from './comment-persons';
+import type { GridMetrics } from '../layout/metrics';
+import { noteBox } from './note-box';
 import { ThreadedCommentsWriter, type ThreadedCommentOptions } from './threaded-comments';
 export { PersonRegistry } from './comment-persons';
 export { guidFrom } from './comment-ids';
@@ -17,11 +19,19 @@ export interface CommentParts {
 	threaded?: string;
 }
 
-function vmlShape(comment: Comment, index: number, id: number): string {
+function vmlShape(comment: Comment, index: number, id: number, grid?: GridMetrics): string {
 	const { row, col } = comment.address;
-	const anchor = `${col + 1}, 15, ${Math.max(0, row - 1)}, 10, ${col + 3}, 15, ${row + 3}, 4`;
+	// A legacy note's box holds its text; a threaded comment's fallback keeps Excel's fixed box.
+	const box =
+		grid && !comment.replies
+			? noteBox(grid, row, col, comment.text)
+			: {
+					anchor: `${col + 1}, 15, ${Math.max(0, row - 1)}, 10, ${col + 3}, 15, ${row + 3}, 4`,
+					style: 'margin-left:59.25pt;margin-top:1.5pt;width:108pt;height:59.25pt',
+				};
+	const { anchor } = box;
 	return (
-		`<v:shape id="_x0000_s${id}" type="#_x0000_t202" style="position:absolute;margin-left:59.25pt;margin-top:1.5pt;width:108pt;height:59.25pt;z-index:${index + 1};visibility:hidden" fillcolor="#ffffe1" o:insetmode="auto">` +
+		`<v:shape id="_x0000_s${id}" type="#_x0000_t202" style="position:absolute;${box.style};z-index:${index + 1};visibility:hidden" fillcolor="#ffffe1" o:insetmode="auto">` +
 		'<v:fill color2="#ffffe1"/><v:shadow on="t" color="black" obscured="t"/><v:path o:connecttype="none"/>' +
 		'<v:textbox style="mso-direction-alt:auto"><div style="text-align:left"></div></v:textbox>' +
 		`<x:ClientData ObjectType="Note"><x:MoveWithCells/><x:SizeWithCells/><x:Anchor>${anchor}</x:Anchor><x:AutoFill>False</x:AutoFill><x:Row>${row}</x:Row><x:Column>${col}</x:Column></x:ClientData></v:shape>`
@@ -41,9 +51,9 @@ export interface VmlLayout {
 const NOTE_SHAPETYPE =
 	'<v:shapetype id="_x0000_t202" coordsize="21600,21600" o:spt="202" path="m,l,21600r21600,l21600,xe"><v:stroke joinstyle="miter"/><v:path gradientshapeok="t" o:connecttype="rect"/></v:shapetype>';
 
-function vmlXml(comments: readonly Comment[], layout: VmlLayout): string {
+function vmlXml(comments: readonly Comment[], layout: VmlLayout, grid?: GridMetrics): string {
 	const shapes = comments
-		.map((comment, index) => vmlShape(comment, index, layout.ids[index] ?? 0))
+		.map((comment, index) => vmlShape(comment, index, layout.ids[index] ?? 0, grid))
 		.join('');
 	const data = layout.blocks.join(',');
 	const base = layout.base;
@@ -79,6 +89,8 @@ export function commentParts(
 	sheetName: string,
 	layout?: VmlLayout,
 	threadOptions?: ThreadedCommentOptions,
+	/** The sheet's grid at 100% zoom: each legacy note's box is then sized to its text. */
+	grid?: GridMetrics,
 ): CommentParts {
 	const authors: string[] = [];
 	const authorId = (name: string) => {
@@ -109,6 +121,7 @@ export function commentParts(
 			blocks: [sheetNumber],
 			ids: sorted.map((_, index) => 1024 * sheetNumber + index + 1),
 		},
+		grid,
 	);
 	const parts: CommentParts = { comments: commentsXml, vml };
 	const threaded = threads.xml();
