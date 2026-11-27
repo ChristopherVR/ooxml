@@ -120,7 +120,11 @@ describe('now and ids (the shared reproducible save options)', () => {
 		const { handler, createSlide } = await PptxHandler.create({ title: 'Report', now: NOW });
 		const slide = createSlide('Title and Content')
 			.addTable({ rows: [{ cells: [{ text: 'a' }, { text: 'b' }] }] })
-			.addChart('bar', { series: [{ name: 'S', values: [1, 2] }], categories: ['x', 'y'] })
+			.addChart('bar', {
+				series: [{ name: 'S', values: [1, 2] }],
+				categories: ['x', 'y'],
+				embedWorkbook: true,
+			})
 			.build();
 		slide.elements.push({
 			type: 'smartArt',
