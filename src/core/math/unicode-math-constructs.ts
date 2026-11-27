@@ -72,13 +72,14 @@ export function wrapper(reader: LinearReader): Operand {
 	return built(`${command}{${argument(reader)}}`);
 }
 
-/** `"..."`: normal text, where `\"` is a quote. */
+/** `"..."`: normal text, where `\"` is a quote and `\\` a backslash. */
 export function normalText(reader: LinearReader): Operand {
 	reader.take();
 	let text = '';
 	for (let char = reader.peek(); char !== undefined && char !== '"'; char = reader.peek()) {
 		reader.take();
-		if (char === '\\' && reader.peek() === '"') text += reader.take();
+		const next = reader.peek();
+		if (char === '\\' && (next === '"' || next === '\\')) text += reader.take();
 		else text += char;
 	}
 	if (reader.peek() === '"') reader.take();

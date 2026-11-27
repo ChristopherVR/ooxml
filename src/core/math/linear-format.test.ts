@@ -147,6 +147,19 @@ describe('linear format details', () => {
 		expect(linearizeEquation(xml, 'unicode')).toBe('(a│b)');
 	});
 
+	it.each([
+		['a\\', '"a\\\\"'],
+		['a\\"b', '"a\\\\\\"b"'],
+		['say "hi"', '"say \\"hi\\""'],
+	])('escapes backslashes and quotes in normal text %j', (text, linear) => {
+		const xml = `<m:oMath xmlns:m="${M}"><m:r><m:rPr><m:nor m:val="1"/></m:rPr><m:t>${text.replace(/"/g, '&quot;')}</m:t></m:r></m:oMath>`;
+		expect(linearizeEquation(xml, 'unicode')).toBe(linear);
+		// The linear text reads back as the same normal text, closing quote included.
+		expect(unicodeMathToLatex(`${linear}+x`)).toBe(
+			`\\text{${text.replace(/\\/g, '\\backslash ')}}+x`,
+		);
+	});
+
 	it('returns undefined for markup it cannot read', () => {
 		expect(linearizeEquation('<broken', 'unicode')).toBeUndefined();
 	});

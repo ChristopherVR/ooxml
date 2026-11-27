@@ -78,7 +78,7 @@ const SPECIAL = new Set([
 
 function run(node: XmlRecord): string {
 	const text = readRunText(node);
-	if (flagOn(childNode(node, 'm:rPr'), 'm:nor')) return `"${text.replace(/"/g, '\\"')}"`;
+	if (flagOn(childNode(node, 'm:rPr'), 'm:nor')) return `"${text.replace(/["\\]/g, '\\$&')}"`;
 	return Array.from(text, (char) =>
 		SPECIAL.has(char) || isCombining(char) ? `\\${char}` : char,
 	).join('');
