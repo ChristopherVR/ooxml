@@ -7,7 +7,7 @@ import { resolveInkClock, strokeStart, timestampOffset } from './inkml-write-clo
  * an in-memory stroke list, in this project's own authored dialect (verified
  * to open in real PowerPoint; see the structural notes on {@link buildInkMlContent}).
  *
- * @module inkml-content-part-writer
+ * @module drawingml/inkml/inkml-content-part-writer
  */
 
 const INKML_NAMESPACE = 'http://www.w3.org/2003/InkML';
@@ -135,6 +135,12 @@ export function buildInkMlContent(
  * hairline, ignoring the colour too), the colour, and InkML `transparency` (0 opaque to 255
  * invisible), which the applications honour; `opacity` keeps the exact value for this library's
  * own reader.
+ *
+ * Earlier releases wrote the width without units (pixels, as this reader assumed), so PowerPoint
+ * drew re-saved ink as thin grey lines. Parts written that way still read back at their old
+ * pixel widths (a unitless value is pixels), and saving them again writes centimetres, so ink a
+ * deck re-saves now keeps its colour and thickness in PowerPoint, Word and Excel. A reader of
+ * these parts that assumed unitless pixel widths must now honour `units="cm"`.
  */
 function brushProperties(stroke: InkStroke): InkXmlObject[] {
 	const size = String((stroke.width * 2.54) / 96);

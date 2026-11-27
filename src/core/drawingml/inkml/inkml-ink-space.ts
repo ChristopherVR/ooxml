@@ -19,7 +19,7 @@ import { isFiniteNumber } from '../../units/finite';
  * are NOT scaled by that stretch (the 0.05 cm stroke renders ~2.4 px at 120
  * px/in whatever the box), so they convert straight to CSS pixels.
  *
- * @module core/utils/inkml-ink-space
+ * @module drawingml/inkml/inkml-ink-space
  */
 
 /** CSS pixels per inch, matching `EMU_PER_PIXEL` (914400 / 9525). */
