@@ -599,7 +599,8 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
 The documentation sites (`christophervr.github.io/ooxml/...`) bundle their own fonts and search
 index and make no third-party requests. Pages that embed a demo apply the sections above.
 
-The release posts (`/ooxml/releases/<version>/`) follow the device's light or dark setting. When
+The release posts (`/ooxml/releases/<version>/`) follow the device's light or dark setting,
+except a post designed dark first (2.5 and its migration guide), which opens dark. When
 the reader presses the appearance switch, the post stores the chosen mode on this device in
 localStorage under `ooxml-suite-theme`, the same key the suite and the documentation hub use, so
 the choice carries over between them. Nothing is sent. Clear the key, or choose the mode again in

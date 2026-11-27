@@ -20,7 +20,7 @@ rather than one stylesheet.
   hover states that lift; see Motion below. `prefers-reduced-motion` turns it all off.
 - **Dark first in the app, system in the docs.** The suite opens in dark mode on a first visit
   (light stays one click away in Appearance). The docs and the release posts follow the reader's
-  system setting until the reader picks a mode.
+  system setting until the reader picks a mode; a post designed dark first (2.5) opens dark instead.
 
 ## Tokens
 
@@ -290,7 +290,10 @@ reads these shapes:
 follows `prefers-color-scheme` (`data-appearance-default="system"` on the template's root, read by
 `appearance-init.js` before the first paint) until the reader presses the switch, a toggle button
 showing the moon in light and the sun in dark; the choice is kept in `ooxml-suite-theme`, shared
-with the suite and the hub, and lasts for the page when storage is blocked. The hero is centred on a
+with the suite and the hub, and lasts for the page when storage is blocked. A post whose
+`showcase.json` says `"appearance": "dark"` is rendered with `data-appearance-default="dark"`
+and opens dark when nothing is stored; a stored `light` or `dark` still wins, and a stored
+`system` follows the device. Its migration guide does the same. The hero is centred on a
 wash of the accent fading into the canvas: the five solid product tiles, the title at up to
 96 px with the version in the accent, the metadata line and the hero picture in a hairline
 frame. Below, the contents column (220 px, sticky, the current section marked with the

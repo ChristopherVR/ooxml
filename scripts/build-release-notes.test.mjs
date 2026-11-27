@@ -374,6 +374,8 @@ test('the 2.0 post leads with its release and renders the five interactive chapt
 	const showcase = JSON.parse(readFileSync(join(ROOT, 'docs/releases/2.0/showcase.json'), 'utf8'));
 	const html = renderReleasePage(source, readFileSync(join(ROOT, TEMPLATE), 'utf8'), { showcase });
 	assert.match(html, /aria-label="Install OOXML 2.0"/);
+	// 2.0 follows the device until the reader chooses.
+	assert.match(html, /<html lang="en" data-appearance-default="system">/);
 	assert.match(html, /data-copy-command="npm install pptx-react-viewer@5 react"/);
 	assert.match(html, /class="release-intro"/);
 	assert.doesNotMatch(html, /OOXML is an open-source Office stack/);
@@ -514,5 +516,25 @@ test('an edition is opt-in: its markup, assets and limits appear only when a pos
 				showcase: { edition: 'ribbon', sections: [{ id: 'excel', product: 'excel' }] },
 			}),
 		/No chapter with the id excel/,
+	);
+});
+
+test('a post follows the device unless its configuration says it opens dark', () => {
+	const template =
+		'<html data-appearance-default="{{appearance}}"><button title="{{appearanceTitle}}"></button>{{body}}</html>';
+	const source = '# Demo\n\n## One\n\nText.';
+	for (const showcase of [undefined, {}, { appearance: 'system' }, { appearance: 'light' }])
+		assert.match(
+			renderReleasePage(source, template, { showcase }),
+			/^<html data-appearance-default="system"><button title="Dark mode: follows your device until you choose">/,
+		);
+	assert.match(
+		renderReleasePage(source, template, { showcase: { appearance: 'dark' } }),
+		/^<html data-appearance-default="dark"><button title="Dark mode: on for this post until you choose">/,
+	);
+	// A migration guide is rendered without its post's showcase and is told the default.
+	assert.match(
+		renderReleasePage(source, template, { appearance: 'dark' }),
+		/^<html data-appearance-default="dark">/,
 	);
 });

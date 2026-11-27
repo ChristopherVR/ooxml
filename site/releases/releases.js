@@ -22,10 +22,14 @@ function readTheme() {
 }
 function applyTheme() {
 	const mode = readTheme()?.mode;
-	// Until the reader picks a mode the post follows the device (appearance-init.js does the same
-	// before the first paint); a saved "light" or "dark", shared with the suite, wins.
-	const dark =
-		mode === 'dark' || (mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+	// Until the reader picks a mode the post follows the device, or opens dark when it was designed
+	// dark first (`data-appearance-default` on the root; appearance-init.js does the same before
+	// the first paint). A saved "light" or "dark", shared with the suite, wins, and a saved
+	// "system" follows the device.
+	const followsDevice = mode === 'system' || (!mode && root.dataset.appearanceDefault === 'system');
+	const dark = followsDevice
+		? matchMedia('(prefers-color-scheme: dark)').matches
+		: mode !== 'light';
 	root.dataset.theme = dark ? 'dark' : 'light';
 	root.style.colorScheme = dark ? 'dark' : 'light';
 	appearance?.setAttribute('aria-pressed', String(dark));

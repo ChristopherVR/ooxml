@@ -134,8 +134,12 @@ export function renderReleasePage(
 		showcase,
 		edition = editionOf(showcase),
 		editionDir,
+		appearance = showcase?.appearance,
 	} = {},
 ) {
+	// A post follows the device's colour scheme until the reader chooses; one designed dark
+	// first (`"appearance": "dark"`) opens dark instead. A stored choice wins either way.
+	const darkFirst = appearance === 'dark';
 	const blocks = combine(parseBlocks(source));
 	const take = (index) => blocks.splice(index, 1)[0];
 	const titleAt = blocks.findIndex((b) => b.type === 'heading' && b.level === 1);
@@ -401,6 +405,10 @@ export function renderReleasePage(
 			: showcase?.sections
 				? ' release-event'
 				: '',
+		appearance: darkFirst ? 'dark' : 'system',
+		appearanceTitle: darkFirst
+			? 'Dark mode: on for this post until you choose'
+			: 'Dark mode: follows your device until you choose',
 		edition: edition ? ` data-edition="${escapeHtml(edition)}"` : '',
 		editionAssets: editionAssets(edition, editionDir),
 		heroIntro: heroIntro ? `<p class="release-intro">${renderInline(heroIntro.text, ctx)}</p>` : '',
@@ -495,6 +503,7 @@ export function writeReleasePages(out, { root = ROOT } = {}) {
 				// The migration guide wears its post's edition.
 				edition: editionOf(showcase),
 				editionDir: shared,
+				appearance: showcase?.appearance,
 			});
 		};
 		const post = `${POSTS_DIR}/${file}`;
