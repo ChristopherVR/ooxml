@@ -3,8 +3,8 @@ import { ribbonTabCueLabel } from './ribbon-tab-cue-label';
 /**
  * A cue that the ribbon's tab strip scrolls. The shared `office-ui-ribbon` already snaps its tabs
  * and keeps the active one in view; when more tabs lie past either edge this marks the ribbon
- * (`data-tabs-start` / `data-tabs-end`, which the stylesheet turns into a fade on that edge) and
- * keeps a chevron button in the ribbon's `end` slot that scrolls the strip by a page, wrapping
+ * with `data-tabs-start` or `data-tabs-end`, and hides partial labels at the edges. A chevron in
+ * the ribbon's `end` slot scrolls the strip by a page, wrapping
  * back to the first tab from the end. Returns a disposer.
  */
 export function wireRibbonTabCue(
@@ -25,17 +25,19 @@ export function wireRibbonTabCue(
 	const sync = () => {
 		frame = 0;
 		const strip = list;
-		const overflow = !!strip && strip.scrollWidth - strip.clientWidth > 1;
+		const reserved = button.assignedSlot?.getBoundingClientRect().width ?? 0;
+		const overflow = !!strip && strip.scrollWidth - strip.clientWidth - reserved > 1;
 		const atStart = !strip || strip.scrollLeft <= 1;
 		const atEnd = !strip || strip.scrollLeft >= strip.scrollWidth - strip.clientWidth - 1;
 		ribbon.toggleAttribute('data-tabs-start', overflow && !atStart);
 		ribbon.toggleAttribute('data-tabs-end', overflow && !atEnd);
 		button.hidden = !overflow;
 		if (strip) {
-			const { left } = strip.getBoundingClientRect();
+			const { left, right } = strip.getBoundingClientRect();
 			for (const label of strip.querySelectorAll('.tab-label')) {
 				const box = label.getBoundingClientRect();
 				label.toggleAttribute('data-clipped-start', overflow && box.left < left - 1);
+				label.toggleAttribute('data-clipped-end', overflow && box.right > right + 1);
 			}
 		}
 		const text = label();
@@ -91,8 +93,10 @@ export function wireRibbonTabCue(
 		list?.removeEventListener('scroll', schedule);
 		resize?.disconnect();
 		mutation?.disconnect();
-		for (const label of list?.querySelectorAll('[data-clipped-start]') ?? [])
+		for (const label of list?.querySelectorAll('[data-clipped-start], [data-clipped-end]') ?? []) {
 			label.removeAttribute('data-clipped-start');
+			label.removeAttribute('data-clipped-end');
+		}
 		button.remove();
 	};
 }

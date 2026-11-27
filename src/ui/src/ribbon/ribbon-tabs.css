@@ -60,7 +60,8 @@
 	color: var(--office-foreground);
 	background: var(--office-surface);
 }
-.tab-label[data-clipped-start] {
+.tab-label[data-clipped-start],
+.tab-label[data-clipped-end] {
 	opacity: 0;
 }
 [role='tab'][aria-selected='true'] {
@@ -89,6 +90,10 @@
 .file:focus-visible {
 	outline: var(--office-focus-width) solid var(--office-ring-on-accent);
 	outline-offset: calc(-1 * var(--office-focus-width));
+}
+slot[name='end'] {
+	display: flex;
+	flex: none;
 }
 ::slotted(.tab-scroll-more) {
 	flex: none;

@@ -132,6 +132,10 @@ test('the tab strip shows that more tabs exist and pages through them', async ({
 	await expect(ribbon).toHaveAttribute('data-tabs-end', '');
 	const more = viewer.getByRole('button', { name: 'More tabs', exact: true });
 	await expect(more).toBeVisible();
+	const strip = ribbon.getByRole('tablist');
+	const tab = strip.getByRole('tab', { selected: true });
+	await tab.focus();
 	await more.click();
 	await expect(ribbon).toHaveAttribute('data-tabs-start', '');
+	await expect(tab).toBeFocused();
 });

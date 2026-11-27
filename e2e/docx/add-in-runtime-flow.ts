@@ -154,6 +154,10 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 				await editor.getByRole('tab', { name: 'Home', exact: true }).click();
 				const more = editor.getByRole('button', { name: 'More tabs', exact: true });
 				await expect(more).toBeVisible();
+				await checkTabClipping(editor, 'right');
+				const strip = await editor.getByRole('tablist').first().boundingBox();
+				const cue = await more.boundingBox();
+				expect((strip?.x ?? 0) + (strip?.width ?? 0)).toBeLessThanOrEqual(cue?.x ?? 0);
 				await more.focus();
 				await more.press('Enter');
 				await expect(tab).toBeInViewport();
@@ -190,6 +194,8 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 			await open.click();
 		}
 		await expect(pane.getByRole('heading', { name: addInName })).toBeFocused();
+		if (host === 'Word' && page.viewportSize()?.width === 800)
+			await checkTabClipping(editor, 'right');
 		const separator = editor.getByRole('separator', { name: 'Resize add-in pane' });
 		await expect(separator).toHaveAttribute('aria-valuenow', '320');
 		await separator.focus();
