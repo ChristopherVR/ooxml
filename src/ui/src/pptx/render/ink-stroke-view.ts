@@ -22,6 +22,7 @@ import {
  */
 import type { NibMark } from './ink-tilt-nib';
 import { generateNibMarks } from './ink-tilt-nib';
+import { fillCircleGaps, fillNibGaps } from './ink-stamp-fill';
 
 /** Everything one stroke needs to decide its render mode. */
 export interface InkStrokeViewInput {
@@ -136,18 +137,21 @@ export function buildInkStrokeView(input: InkStrokeViewInput): InkStrokeView {
 	// varies (or a mixed document where this particular stroke has none).
 	if (tiltAngles && tiltAngles.length > 0) {
 		const magnitudes = tiltMagnitudes ?? tiltAngles.map(() => 0.5);
-		const nibMarks = generateNibMarks(
-			extractPathPoints(path),
-			pointWidthsFor(input),
-			tiltAngles,
-			magnitudes,
-			strokeConfig(width),
+		const nibMarks = fillNibGaps(
+			generateNibMarks(
+				extractPathPoints(path),
+				pointWidthsFor(input),
+				tiltAngles,
+				magnitudes,
+				strokeConfig(width),
+			),
 		);
 		return { ...base, circles: null, nibMarks };
 	}
 
+	// Stamps are drawn one per sample, so sparse samples need the gaps between them filled.
 	const circles = pressureCirclesFor(input);
-	return { ...base, circles, nibMarks: null };
+	return { ...base, circles: circles && fillCircleGaps(circles), nibMarks: null };
 }
 
 /** Per-point pressure circles, or `null` when neither channel has usable variation. */

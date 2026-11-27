@@ -66,7 +66,7 @@ describe('buildLiveInkStrokeView', () => {
 			tool: 'pen',
 		});
 		expect(view?.nibMarks).not.toBeNull();
-		expect(view?.nibMarks).toHaveLength(2);
+		expect(view?.nibMarks?.length).toBeGreaterThan(2);
 		expect(view?.circles).toBeNull();
 	});
 

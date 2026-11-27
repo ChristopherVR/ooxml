@@ -66,7 +66,7 @@ describe('buildContentPartStrokes - pressure circles (no tilt)', () => {
 		const [view] = buildContentPartStrokes(el);
 		expect(view.nibMarks).toBeNull();
 		expect(view.circles).not.toBeNull();
-		expect(view.circles).toHaveLength(3);
+		expect(view.circles?.length).toBeGreaterThan(3);
 	});
 });
 
@@ -85,9 +85,9 @@ describe('buildContentPartStrokes - tilt-driven nib marks', () => {
 		const [view] = buildContentPartStrokes(el);
 		expect(view.circles).toBeNull();
 		expect(view.nibMarks).not.toBeNull();
-		expect(view.nibMarks).toHaveLength(2);
+		expect(view.nibMarks?.length).toBeGreaterThan(2);
 		// Second point leans harder => its wide axis should exceed the first's.
-		expect(view.nibMarks?.[1].rPerp).toBeGreaterThan(view.nibMarks?.[0].rPerp ?? Infinity);
+		expect(view.nibMarks?.at(-1)?.rPerp).toBeGreaterThan(view.nibMarks?.[0].rPerp ?? Infinity);
 	});
 
 	it('should take tilt priority over pressure data when both are present', () => {

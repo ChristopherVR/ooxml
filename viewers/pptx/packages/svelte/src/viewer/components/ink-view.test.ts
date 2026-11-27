@@ -107,8 +107,8 @@ describe('inkView', () => {
 		const group = svg?.querySelector('g');
 		expect(group?.getAttribute('opacity')).toBe('0.8');
 		const circles = group?.querySelectorAll('circle');
-		// One circle per extracted path point: (0,0), (10,10), (20,20).
-		expect(circles?.length).toBe(3);
+		// The stamps at (0,0), (10,10) and (20,20), with the gaps between them filled.
+		expect(circles?.length).toBeGreaterThan(3);
 		expect(circles?.[0].getAttribute('fill')).toBe('#123456');
 	});
 

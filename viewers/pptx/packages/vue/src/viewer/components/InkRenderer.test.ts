@@ -67,11 +67,12 @@ describe('inkRenderer', () => {
 		// No plain <path> for the pressure stroke; a <g> of <circle>s instead.
 		expect(wrapper.findAll('path')).toHaveLength(0);
 		const circles = wrapper.findAll('circle');
-		expect(circles).toHaveLength(3);
+		// The three samples 50px apart, with the gaps between them filled.
+		expect(circles.length).toBeGreaterThan(3);
 		expect(circles[0].attributes('fill')).toBe('#ff0000');
 		// Higher pressure at the end yields a larger radius than the start.
 		const r0 = parseFloat(circles[0].attributes('r') ?? '0');
-		const r2 = parseFloat(circles[2].attributes('r') ?? '0');
+		const r2 = parseFloat(circles.at(-1)?.attributes('r') ?? '0');
 		expect(r2).toBeGreaterThan(r0);
 	});
 

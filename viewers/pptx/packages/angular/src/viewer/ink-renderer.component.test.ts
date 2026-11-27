@@ -106,10 +106,11 @@ describe('buildInkStrokes', () => {
 			}),
 		);
 		expect(strokes[0].circles).toBeDefined();
-		expect(strokes[0].circles).toHaveLength(3);
+		// The three samples, with the gaps between them filled so the stroke stays connected.
+		expect(strokes[0].circles!.length).toBeGreaterThan(3);
 		// Radius grows with pressure along the stroke.
 		const rs = strokes[0].circles!.map((c) => c.r);
-		expect(rs[2]).toBeGreaterThan(rs[0]);
+		expect(rs.at(-1)).toBeGreaterThan(rs[0]);
 	});
 
 	it('falls back to a varying inkWidths array as per-point widths', () => {
@@ -122,7 +123,7 @@ describe('buildInkStrokes', () => {
 			}),
 		);
 		expect(strokes[0].circles).toBeDefined();
-		expect(strokes[0].circles).toHaveLength(3);
+		expect(strokes[0].circles!.length).toBeGreaterThan(3);
 	});
 
 	it('projects calligraphic nib marks (not circles) when inkPointTiltX/Y carry a genuine lean', () => {

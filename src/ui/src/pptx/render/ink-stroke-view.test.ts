@@ -51,3 +51,38 @@ describe('buildInkStrokeView - blendMode', () => {
 		expect(view.blendMode).toBe('multiply');
 	});
 });
+
+describe('buildInkStrokeView - sparse samples stay connected', () => {
+	const gaps = (stamps: { cx: number; cy: number }[]) =>
+		stamps.slice(1).map((s, i) => Math.hypot(s.cx - stamps[i]!.cx, s.cy - stamps[i]!.cy));
+
+	it('fills the gaps between pressure circles far apart (ink reloaded with few points)', () => {
+		const view = buildInkStrokeView({
+			path: 'M 0 0 L 60 0 L 60 80',
+			color: '#000',
+			width: 3,
+			opacity: 1,
+			pressures: [0.2, 0.9, 0.4],
+		});
+		const circles = view.circles ?? [];
+		expect(circles.length).toBeGreaterThan(3);
+		expect(circles[0]).toMatchObject({ cx: 0, cy: 0 });
+		expect(circles.at(-1)).toMatchObject({ cx: 60, cy: 80 });
+		const smallest = Math.min(...circles.map((c) => c.r));
+		expect(Math.max(...gaps(circles))).toBeLessThanOrEqual(smallest);
+	});
+
+	it('fills the gaps between tilt nib marks too', () => {
+		const view = buildInkStrokeView({
+			path: 'M 0 0 L 50 0',
+			color: '#000',
+			width: 4,
+			opacity: 1,
+			tiltAngles: [0, Math.PI / 2],
+			tiltMagnitudes: [0.3, 0.8],
+		});
+		const marks = view.nibMarks ?? [];
+		expect(marks.length).toBeGreaterThan(2);
+		expect(Math.max(...gaps(marks))).toBeLessThanOrEqual(Math.min(...marks.map((m) => m.rTilt)));
+	});
+});
