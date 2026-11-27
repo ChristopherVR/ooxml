@@ -234,7 +234,7 @@ describe('declarative chart inputs', () => {
 		});
 		const series = element(xml, 'ser');
 		const outline = /<c:ser>.*?<c:spPr>(.*?)<\/c:spPr>/su.exec(series)?.[1] ?? '';
-		expect(outline).toMatch(/<a:ln[^>]*>\s*<a:noFill\s*\/>\s*<\/a:ln>/u);
+		expect(outline).toMatch(/<a:ln\b[^>]*>\s*<a:noFill\s*\/>\s*<\/a:ln>/u);
 		expect(outline).not.toContain('<a:solidFill>');
 		expect(element(series, 'marker')).toContain('C0504D');
 		expect(chart.series[0]!.lineNoFill).toBe(true);

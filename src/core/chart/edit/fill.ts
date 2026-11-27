@@ -183,7 +183,7 @@ export function setChartSeriesLine(
  * series drawn as a line, keeping the previous colour's transparency. `null` removes the paint so
  * the series takes its automatic colour again. Points lose their own paint of that kind, as in the
  * Format pane, unless `keepPointColors` is set: a caller that states every point override itself
- * (the save planner) keeps them.
+ * (the save planner) keeps them. A line-drawn series whose line has no fill is left unchanged.
  */
 export function setChartSeriesColor(
 	space: ChartSpace,
@@ -195,6 +195,9 @@ export function setChartSeriesColor(
 		const { series } = chartSeriesEntryAt(draft, index);
 		const shape = (series.spPr ??= {});
 		const line = paintsLine(draft, index);
+		// A line, scatter or radar series whose line is `a:noFill` draws no line: painting it would
+		// join the dots, so its colour edit leaves it alone.
+		if (line && shape.line?.fill?.kind === 'none') return;
 		const current = line ? shape.line?.fill : shape.fill;
 		const previous = current?.kind === 'solid' ? current.color : undefined;
 		const fill: DrawingFill | undefined = color
