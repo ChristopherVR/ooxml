@@ -1,0 +1,14 @@
+{
+	"technical-report": { "page": 1, "anchor": 0.37 },
+	"community-newsletter": { "page": 1 },
+	"services-agreement-form": { "page": 1 },
+	"financial-model": { "sheet": "Dashboard", "range": "B1:K26" },
+	"sales-analysis": { "sheet": "Dashboard", "range": "B1:M28" },
+	"operations-tracker": { "sheet": "Overview", "range": "B1:K30" },
+	"product-launch-keynote": { "slide": 3 },
+	"data-story-ridership": { "slide": 3 },
+	"studio-portfolio": { "slide": 4 },
+	"order-to-delivery-flowchart": { "page": 1, "anchor": "center" },
+	"platform-architecture": { "page": 1, "anchor": "center" },
+	"institute-org-chart": { "page": 1, "anchor": "center" }
+}
