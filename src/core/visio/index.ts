@@ -30,6 +30,7 @@ export {
 	type VisioRowMatch,
 } from './data-refresh';
 export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser';
+export { visioBackgroundFieldShapes, type VisioForegroundPage } from './background-fields';
 export type { VisioDocumentCache } from './document-level';
 export { readVisioStencil, type VisioStencilFile } from './stencil-file';
 export {

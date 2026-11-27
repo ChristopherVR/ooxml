@@ -21,6 +21,7 @@ import { renderForeignVectorShape } from './render-foreign-vector-shape';
 import { ForeignVectorBudget } from 'ooxml-core/visio/ui';
 import { RenderResources } from './render-resources';
 import { applyArrowheads } from './arrowheads';
+import { backgroundsUnder } from './render-background-fields';
 import {
 	assertViewableDocument,
 	composeVisioTransform,
@@ -86,7 +87,7 @@ export function renderPage(
 		options.layerVisibilityOverrides ?? EMPTY_LAYER_OVERRIDES,
 	);
 	const visible = overrides.size ? new WeakMap<VisioShape, boolean>() : undefined;
-	const pages = getVisioPageLayers(model, page.id);
+	const pages = backgroundsUnder(model, page, getVisioPageLayers(model, page.id));
 	for (const source of visible ? pages : []) {
 		const layerVisibilityOverrides = overrides.get(source.id);
 		for (const entry of resolveVisioPageVisibility(
