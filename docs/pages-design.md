@@ -184,7 +184,8 @@ composable per site; the hub in `site/docs/docs.css`; the release post in
 ## The pages
 
 - **Start screen** (`site/`, before the suite loads): a full page, not a dialog. The workspace
-  sits in the centre of a ring with the five products around it and the documentation beneath;
+  sits in the centre of a ring with the five products around it, and the documentation and the
+  sample files side by side beneath;
   the rings draw in, the centre settles, the products arrive one after another, and the outer
   ring turns once every two minutes (the site's one ambient motion). Narrow or short screens show
   the same buttons as a list.

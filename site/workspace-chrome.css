@@ -265,6 +265,20 @@
 	flex: none;
 	min-width: min(420px, 100%);
 }
+/* Beneath the ring: the documentation and the sample files, side by side where they fit. */
+.start-more {
+	flex: none;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 10px;
+	max-width: 100%;
+}
+/* A fixed minimum: a percentage here is ignored while the row measures itself, and the row
+   then comes out too narrow for both cards and wraps. */
+.start-more .start-docs {
+	min-width: 320px;
+}
 .start-docs .app-badge {
 	width: 32px;
 	height: 32px;
@@ -354,6 +368,15 @@
 	.start-docs {
 		min-width: 0;
 		width: min(100%, 420px);
+	}
+	.start-more {
+		flex-direction: column;
+		gap: 8px;
+		width: min(100%, 420px);
+	}
+	.start-more .start-docs {
+		min-width: 0;
+		width: 100%;
 	}
 	.start-center:hover,
 	.start-center:focus-visible {

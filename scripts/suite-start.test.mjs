@@ -55,6 +55,7 @@ test('the chooser opens bundled preview apps while the full site opens product s
 			['vsdx', 'visio', 'visio'],
 			['teams', 'teams', 'teams'],
 			['docs', 'docs', null],
+			['samples', 'samples', null],
 		]) {
 			click({ target: { closest: () => ({ dataset: { start: id } }) } });
 			const path = mode && app ? `apps/${app}` : site;

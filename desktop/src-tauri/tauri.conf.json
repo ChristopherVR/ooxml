@@ -5,7 +5,7 @@
 	"identifier": "io.github.christophervr.ooxml",
 	"build": {
 		"frontendDist": "../../suite-dist",
-		"beforeBuildCommand": "bun run --cwd .. build:suite"
+		"beforeBuildCommand": "bun run --cwd .. build:suite:desktop"
 	},
 	"app": {
 		"windows": [

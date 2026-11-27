@@ -6,8 +6,8 @@
  * boot.js shows it before the suite loads, and the app launcher can show it again later.
  *
  * The layout is a ring: the workspace in the centre, the products around it, the documentation
- * beneath. workspace-chrome.css draws the rings and the entrance; on narrow screens the same
- * buttons stack as a list.
+ * and the sample files beneath. workspace-chrome.css draws the rings and the entrance; on narrow
+ * screens the same buttons stack as a list.
  */
 import { $, apps, badge, escape, tag, teamsApp } from './ui.js';
 import { icon } from './icons.js';
@@ -21,7 +21,13 @@ const sites = {
 	vsdx: 'visio',
 	teams: 'teams',
 	docs: 'docs',
+	samples: 'samples',
 };
+/**
+ * The desktop app does not bundle the sample files (scripts/build-suite.mjs `--no-samples`), so
+ * it offers no way to the gallery.
+ */
+const hasSamples = () => !globalThis.window?.__TAURI_INTERNALS__;
 /** The products around the ring, clockwise from the top. */
 const products = [
 	...apps.map((a) => ({ id: a.id, name: a.name, tag: a.tag, detail: `.${a.id}` })),
@@ -30,6 +36,7 @@ const products = [
 const badges = {
 	office: '<span class="app-badge" style="--app:#0f6cbd">O</span>',
 	docs: `<span class="app-badge app-badge--docs">${icon('book')}</span>`,
+	samples: `<span class="app-badge app-badge--docs">${icon('doc')}</span>`,
 };
 /** A reload always asks again, even when the address points into the suite. */
 function reloaded() {
@@ -86,7 +93,7 @@ export function showChooser({ required = false, onSuite } = {}) {
 				)
 				.join('')}
 		</div>
-		<button class="start-card start-docs" data-start="docs">${badges.docs}<span><strong>Documentation</strong><small>Use the apps, embed an editor, or build on the library</small></span></button>`;
+		<div class="start-more"><button class="start-card start-docs" data-start="docs">${badges.docs}<span><strong>Documentation</strong><small>Use the apps, embed an editor, or build on the library</small></span></button>${hasSamples() ? `<button class="start-card start-docs" data-start="samples">${badges.samples}<span><strong>Sample files</strong><small>Reports, models, decks and diagrams to open</small></span></button>` : ''}</div>`;
 	const close = () => {
 		screen.remove();
 		document.removeEventListener('keydown', onKey);
@@ -145,7 +152,7 @@ export function mountResources() {
 	const rail = $('rail');
 	rail.insertAdjacentHTML(
 		'beforeend',
-		`<span class="nav-caption">Resources</span><a class="rail-link" href="${new URL('docs/', suiteBase)}">${icon('book')}<span>Documentation</span></a><a class="rail-link" href="${new URL('samples/', suiteBase)}">${icon('doc')}<span>Sample files</span></a><a class="rail-link" href="${new URL('releases/2.0/', suiteBase)}">${icon('spark')}<span>Release notes</span></a>`,
+		`<span class="nav-caption">Resources</span><a class="rail-link" href="${new URL('docs/', suiteBase)}">${icon('book')}<span>Documentation</span></a>${hasSamples() ? `<a class="rail-link" href="${new URL('samples/', suiteBase)}">${icon('doc')}<span>Sample files</span></a>` : ''}<a class="rail-link" href="${new URL('releases/2.0/', suiteBase)}">${icon('spark')}<span>Release notes</span></a>`,
 	);
 	if (product) return;
 	const sites = document.createElement('button');

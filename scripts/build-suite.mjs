@@ -1,4 +1,4 @@
-import { cp, mkdir } from 'node:fs/promises';
+import { cp, mkdir, rm } from 'node:fs/promises';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { bundleSuite } from './bundle-suite.mjs';
@@ -8,8 +8,15 @@ import { writeSamplesPage } from './build-samples-page.mjs';
 import { applyContentSecurityPolicy, assertContentSecurityPolicy } from './csp.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** The suite site (shell, bundle and installable apps) in `out`, `suite-dist` by default. */
-export async function buildSuite(out = join(root, 'suite-dist'), { logLevel } = {}) {
+/**
+ * The suite site (shell, bundle and installable apps) in `out`, `suite-dist` by default.
+ * `samples: false` (`--no-samples` on the command line) leaves the samples gallery and its files
+ * out: the desktop app is built that way, so its installer does not carry them.
+ */
+export async function buildSuite(
+	out = join(root, 'suite-dist'),
+	{ logLevel, samples = true } = {},
+) {
 	await mkdir(out, { recursive: true });
 	for (const name of [
 		'index.html',
@@ -36,8 +43,10 @@ export async function buildSuite(out = join(root, 'suite-dist'), { logLevel } = 
 	await cp(join(root, 'site', 'docs'), join(out, 'docs'), { recursive: true });
 	// The release posts (docs/releases/*.md) at releases/<name>/, styled by site/releases/.
 	writeReleasePages(out);
-	// The samples gallery (samples/manifest.json) at samples/, with the files it offers.
-	writeSamplesPage(out);
+	// The samples gallery (samples/manifest.json) at samples/, with the files it offers. An
+	// earlier build's copy must not survive a build without it.
+	if (samples) writeSamplesPage(out);
+	else await rm(join(out, 'samples'), { recursive: true, force: true });
 	await bundleSuite(join(out, 'suite.js'), { logLevel });
 	// The policy goes in before the PWA build, which copies the shell and hashes every file.
 	applyContentSecurityPolicy(out);
@@ -45,4 +54,5 @@ export async function buildSuite(out = join(root, 'suite-dist'), { logLevel } = 
 	assertContentSecurityPolicy(out);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) await buildSuite();
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href)
+	await buildSuite(undefined, { samples: !process.argv.includes('--no-samples') });
