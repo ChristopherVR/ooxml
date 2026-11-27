@@ -4,13 +4,15 @@
  * structures; linearizing is the reverse. An equation shown in Linear is saved as its linear
  * (UnicodeMath) text in math runs, each build-up operator in a run of its own, as Word saves it.
  *
- * Linear text cannot hold everything Office Math can (mixed run formatting, several equations in
- * one display paragraph, properties it has no spelling for), so `editableEquation` only offers an
- * equation for editing when its text rebuilds it exactly; anything else stays as it is.
+ * Linear text cannot hold everything Office Math can (mixed run formatting, tracked changes,
+ * properties it has no spelling for), so `editableEquation` only offers an equation for editing
+ * when its text rebuilds it exactly; anything else stays as it is. A display paragraph with several
+ * equations is edited one equation (`part`) at a time (`equation-parts.ts`).
  */
 import {
 	canonicalMath,
 	coalesceRuns,
+	hasTrackedChanges,
 	controlFormat,
 	onlyMathAndWord,
 	orderedEntries,
@@ -108,16 +110,29 @@ export function buildUpEquation(
 	return math && wrap(math, display, frame);
 }
 
-/** The single `m:oMath` of an equation and its paragraph properties; undefined for several. */
-function soleMath(tree: OmmlNode): { math: OmmlNode; paraProps?: OmmlNode } | undefined {
+/**
+ * The single `m:oMath` of an equation and its paragraph properties; undefined for several. With
+ * `part`, the `m:oMath` at that index of a display paragraph instead (its paragraph properties stay
+ * with the paragraph, so none are returned).
+ */
+export function equationMath(
+	tree: OmmlNode,
+	part?: number,
+): { math: OmmlNode; paraProps?: OmmlNode } | undefined {
 	const para = tree['m:oMathPara'];
 	if (para === undefined) {
 		const maths = ensureArr(tree['m:oMath']);
-		return maths.length === 1 ? { math: maths[0]! } : undefined;
+		return maths.length === 1 && (part ?? 0) === 0 ? { math: maths[0]! } : undefined;
+	}
+	const entries = orderedEntries(ensureArr(para)[0] ?? {});
+	if (part !== undefined) {
+		const maths = entries.filter(([tag]) => tag === 'm:oMath');
+		const math = maths[part]?.[1] as OmmlNode | undefined;
+		return math && { math };
 	}
 	let math: OmmlNode | undefined;
 	let paraProps: OmmlNode | undefined;
-	for (const [tag, value] of orderedEntries(ensureArr(para)[0] ?? {})) {
+	for (const [tag, value] of entries) {
 		if (tag === 'm:oMathParaPr') paraProps = value as OmmlNode;
 		else if (tag === 'm:oMath' && !math) math = value as OmmlNode;
 		else return undefined;
@@ -130,10 +145,17 @@ const linearize = (math: OmmlNode, format: EquationInputFormat) => {
 	return format === 'unicode' ? convertOmmlToUnicodeMath(tree) : convertOmmlToLatex(tree);
 };
 
-/** Linear text for an equation's markup, with `⬚` in each empty argument; undefined when unread. */
-export function linearizeEquation(omml: string, format: EquationInputFormat): string | undefined {
+/**
+ * Linear text for an equation's markup (or for its equation at `part`, see `equationMath`), with
+ * `⬚` in each empty argument; undefined when unread.
+ */
+export function linearizeEquation(
+	omml: string,
+	format: EquationInputFormat,
+	part?: number,
+): string | undefined {
 	try {
-		const sole = soleMath(parseOmml(omml));
+		const sole = equationMath(parseOmml(omml), part);
 		return sole && linearize(sole.math, format);
 	} catch {
 		return undefined;
@@ -182,7 +204,7 @@ function linearText(math: OmmlNode): string | undefined {
  */
 export function linearDisplayText(omml: string): string | undefined {
 	try {
-		const sole = soleMath(parseOmml(omml));
+		const sole = equationMath(parseOmml(omml));
 		return sole && linearText(sole.math);
 	} catch {
 		return undefined;
@@ -192,17 +214,20 @@ export function linearDisplayText(omml: string): string | undefined {
 /**
  * The equation as linear text the editor can change, when that text rebuilds it exactly (its
  * canonical form, see `canonicalMath`); undefined for an equation linear text would change:
- * several equations in one paragraph, mixed formatting, other namespaces, control characters with
- * more than the math font, or properties its notation cannot spell.
+ * several equations in one paragraph (unless `part` picks one of them), mixed formatting, other
+ * namespaces, control characters with more than the math font, or properties its notation cannot
+ * spell. Tracked changes are Word elements its notation has no spelling for, so they fail too.
  */
 export function editableEquation(
 	omml: string,
 	format: EquationInputFormat,
+	part?: number,
 ): EditableEquation | undefined {
 	try {
 		const tree = parseOmml(omml);
-		const sole = onlyMathAndWord(tree) ? soleMath(tree) : undefined;
-		if (!sole) return undefined;
+		const sole = equationMath(tree, part);
+		if (!sole || !onlyMathAndWord(part === undefined ? tree : sole.math)) return undefined;
+		if (hasTrackedChanges(sole.math)) return undefined;
 		const runFormat = sharedRunFormat(sole.math);
 		const control = controlFormat(sole.math);
 		if (runFormat === 'mixed' || control === 'other') return undefined;
@@ -257,7 +282,7 @@ export function writeEditedEquation(edit: {
 		: undefined;
 }
 
-const inner = (xml: string): OmmlNode => soleMath(parseOmml(xml))?.math ?? {};
+const inner = (xml: string): OmmlNode => equationMath(parseOmml(xml))?.math ?? {};
 
 /**
  * Math AutoCorrect as the space after a control word triggers it: when the text before `caret`

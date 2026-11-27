@@ -30,6 +30,12 @@ export {
 	mathAutoCorrect,
 	type EquationInputFormat,
 } from './linear-format';
+export {
+	equationParts,
+	equationReadOnlyReason,
+	replaceEquationPart,
+	type EquationReadOnlyReason,
+} from './equation-parts';
 export { MAX_LINEAR_NESTING, unicodeMathToLatex } from './unicode-math';
 export { canonicalMath, coalesceRuns } from './equation-canonical';
 export { convertOmmlToUnicodeMath } from './omml-to-unicode-math';

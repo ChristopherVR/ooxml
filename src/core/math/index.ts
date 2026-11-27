@@ -22,4 +22,5 @@ export { EQUATION_PLACEHOLDER, fillPlaceholders } from './equation-placeholder';
 export const loadEquationTools = () => import('./equation-tools');
 export type EquationTools = Awaited<ReturnType<typeof loadEquationTools>>;
 export type { EditableEquation, EquationFrame, EquationInputFormat } from './linear-format';
+export type { EquationReadOnlyReason } from './equation-parts';
 export type { EquationStructure, EquationStructureGroup } from './equation-structures';

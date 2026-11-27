@@ -227,6 +227,16 @@ export function onlyMathAndWord(node: OmmlNode): boolean {
 	);
 }
 
+/** WordprocessingML revision marks that can sit in Office Math (runs, properties, deletions). */
+const REVISIONS = new Set(['w:ins', 'w:del', 'w:moveFrom', 'w:moveTo', 'w:rPrChange', 'w:delText']);
+
+/** Whether `node` holds a tracked change anywhere below it. */
+export function hasTrackedChanges(node: OmmlNode): boolean {
+	return orderedEntries(node).some(
+		([key, value]) => REVISIONS.has(key) || (isNode(value) && hasTrackedChanges(value)),
+	);
+}
+
 /** Elements whose properties Word gives a control-character format (`m:ctrlPr`). */
 const STRUCTURES = new Set([
 	'm:acc',

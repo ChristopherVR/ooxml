@@ -51,7 +51,7 @@ describe('editing equations Word wrote', () => {
 
 	it.each([
 		[
-			'two equations in one display paragraph',
+			'two equations in one display paragraph, taken as a whole',
 			para(`<m:oMath>${run('a')}</m:oMath><m:oMath>${run('b')}</m:oMath>`),
 		],
 		[

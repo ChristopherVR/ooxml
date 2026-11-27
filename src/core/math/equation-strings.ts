@@ -74,6 +74,27 @@ const ROWS = [
 		'此公式包含其线性文本无法表示的内容，因此保持原样。',
 	],
 	[
+		'This equation has tracked changes its linear text cannot hold, so it is kept as it is. Accept or reject them to edit it.',
+		'Cette équation contient des modifications suivies que son texte linéaire ne peut pas représenter ; elle est conservée telle quelle. Acceptez-les ou refusez-les pour la modifier.',
+		'Diese Formel enthält nachverfolgte Änderungen, die ihr linearer Text nicht darstellen kann; sie bleibt unverändert. Nehmen Sie sie an oder lehnen Sie sie ab, um die Formel zu bearbeiten.',
+		'Esta ecuación tiene cambios con seguimiento que su texto lineal no puede representar, por lo que se conserva tal cual. Acéptelos o rechácelos para editarla.',
+		'此公式包含其线性文本无法表示的修订，因此保持原样。接受或拒绝这些修订后即可编辑。',
+	],
+	[
+		'This equation mixes formatting its linear text cannot hold, so it is kept as it is.',
+		'Cette équation combine des mises en forme que son texte linéaire ne peut pas représenter ; elle est conservée telle quelle.',
+		'Diese Formel mischt Formatierungen, die ihr linearer Text nicht darstellen kann; sie bleibt unverändert.',
+		'Esta ecuación combina formatos que su texto lineal no puede representar, por lo que se conserva tal cual.',
+		'此公式混合了其线性文本无法表示的格式，因此保持原样。',
+	],
+	[
+		'Equation {n} of {count}',
+		'Équation {n} sur {count}',
+		'Formel {n} von {count}',
+		'Ecuación {n} de {count}',
+		'第 {n} 个公式，共 {count} 个',
+	],
+	[
 		'This equation cannot be shown in Linear without changing it, so it is kept as it is.',
 		'Cette équation ne peut pas être affichée en mode linéaire sans être modifiée ; elle est conservée telle quelle.',
 		'Diese Formel kann nicht ohne Änderung linear angezeigt werden; sie bleibt unverändert.',
