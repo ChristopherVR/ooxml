@@ -303,5 +303,7 @@ The gzipped size budgets in `scripts/perf-budgets.json` moved with the new featu
 | `ooxml-ui/docx`                       | 580 KiB      | 616 KiB    | Mailings, Design, References and views (most deferred) |
 | `ooxml-core/automation/add-ins` (new) |              | 18 KiB     | add-in manifest validation                             |
 | `ooxml-core/docx/mail-merge` (new)    |              | 43 KiB     | the mail merge engine                                  |
+| `ooxml-core/docx/pdf-export` (new)    |              | 36 KiB     | Word Save as PDF without the editor                    |
+| `ooxml-core/pdf/write` (new)          |              | 27 KiB     | the shared vector PDF writer                           |
 
 Nothing to change in your code; if your own build enforces size limits, measure it again.
