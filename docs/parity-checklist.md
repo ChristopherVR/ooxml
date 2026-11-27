@@ -465,6 +465,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and SYMBOL (`docx/computed-fields.ts`, `computed-fields-extra.test.ts`). MERGEFIELD,
       INCLUDETEXT, INCLUDEPICTURE, INDEX/XE, TA/TOA and CITATION/BIBLIOGRAPHY keep their cached
       result (`layout/page-fields.ts`); Update Fields skips the `\n \r \w \p` switches.
+- [ ] **P2** DATE and TIME results name months and weekdays in the result run's `w:lang/@w:val`
+      (through styles and document defaults; a month after a day number takes the contextual
+      form, measured for Russian in Word 16), but AM/PM designators stay English, the `w:bidi`
+      and `w:eastAsia` languages are not consulted, and the `\@` switch of other date fields
+      (CREATEDATE, SAVEDATE, PRINTDATE, merge fields) still gives English names
+      (`docx/field-date.ts`, `docx/field-format.ts`).
+- [ ] **P2** A list number takes the paragraph mark's run properties only when its paragraph has
+      no visible text; a numbered paragraph with text still formats its number from its first run
+      (`docx/layout/adapter.ts`, `src/ui/src/docx/list-marker-display.ts`).
 - [ ] **P1** Canvases (`wpc`), legacy VML text boxes (`v:textbox`)
       and legacy VML WordArt, ink and gradient or picture fills are kept but not drawn.
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical
