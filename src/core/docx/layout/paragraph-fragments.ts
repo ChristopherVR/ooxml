@@ -27,6 +27,7 @@ export function buildFragments(
 				fontFallback: run?.fontFallback,
 				fontSizePt: run?.fontSizePt,
 				contentControlTag: run?.contentControlTag,
+				blockContentControlTag: run?.blockContentControlTag,
 				textScalePercent: run?.textScalePercent,
 				ligatures: run?.ligatures,
 				smallCaps: run?.smallCaps,

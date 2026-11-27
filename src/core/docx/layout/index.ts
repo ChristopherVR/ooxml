@@ -2,6 +2,7 @@
 export * from './units';
 export * from './measure';
 export { contentControlTagMetrics } from './content-control-tag-metrics';
+export * from './content-control-tag-shape';
 export { ligatureCss } from './ligatures';
 export * from './text-breaks';
 export * from './input';

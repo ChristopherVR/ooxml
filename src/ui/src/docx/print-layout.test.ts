@@ -110,6 +110,39 @@ describe('renderPrintLayout', () => {
 			['', '8px', 'true'],
 		]);
 	});
+
+	it("draws Word's arc-sided tag outlines, marker and title baseline in points", async () => {
+		const file = join(
+			import.meta.dirname,
+			'../../../core/docx/layout/fixtures/word-layout-reports/block-content-control-tags.docx',
+		);
+		const { model } = await loadDocx(new Uint8Array(await readFile(file)));
+		const { element } = renderPrintLayout(layoutDocumentModel(model, createFakeMeasurer()));
+		const tags = [...element.querySelectorAll<HTMLElement>('.dve-print-content-control-tag')];
+		const [start, end] = tags.map((tag) => {
+			const svg = tag.querySelector('svg.dve-print-content-control-tag-shape');
+			const [outline, arrow] = [...(svg?.querySelectorAll('path') ?? [])];
+			const viewBox = (svg?.getAttribute('viewBox') ?? '').split(' ').map(Number);
+			return { tag, svg, outline, arrow, viewBox, text: svg?.querySelector('text') };
+		});
+		for (const { outline, svg } of [start!, end!]) {
+			expect(svg?.getAttribute('height')).toBe(String(Number(((13.44 * 96) / 72).toFixed(3))));
+			expect(outline?.getAttribute('fill')).toBe('#fcfcfc');
+			expect(outline?.getAttribute('stroke')).toBe('#a0bed7');
+			expect(outline?.getAttribute('stroke-width')).toBe('1.08');
+		}
+		const width = at(start!.viewBox, 2);
+		expect(width * (96 / 72)).toBeCloseTo(Number.parseFloat(start!.tag.style.width), 2);
+		// The opening tag starts 2.28 pt in at the bottom and bows left to the box edge.
+		expect(start!.outline?.getAttribute('d')).toMatch(/^M 2\.28 13\.44 C -0\.\d+ /);
+		expect(end!.outline?.getAttribute('d')).toMatch(/^M 0 13\.44 C 3\.\d+ /);
+		expect(start!.arrow?.getAttribute('d')).toBe('M 2.34 6.78 L 4.5 5.1 L 4.5 8.46 Z');
+		expect(start!.text?.getAttribute('x')).toBe('9');
+		expect(start!.text?.getAttribute('y')).toBe('8.76');
+		expect(start!.text?.getAttribute('font-size')).toBe('8');
+		expect(end!.text?.getAttribute('x')).toBe('5.04');
+		expect(start!.tag.textContent).toBe('Block');
+	});
 	it('limits separators to their continuous-section band and numbers each section', () => {
 		const result = sampleResult();
 		const page = result.pages[0]!;

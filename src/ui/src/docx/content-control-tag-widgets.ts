@@ -2,6 +2,7 @@ import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { controlOccurrences, everyControlSpan } from 'ooxml-core/docx/ui';
 import { contentControlTagMetrics, cssFontStack } from 'ooxml-core/docx/layout';
+import { tagBoxStyle, tagEnds } from './content-control-tag-shape';
 
 export type TagEdge = 'start' | 'end';
 
@@ -35,15 +36,13 @@ function tagWidget(
 			tag.dataset.tagTitle = title;
 			if (inline) tag.dataset.inlineTag = '';
 			tag.setAttribute('aria-hidden', 'true');
-			const labelled = edge === 'start' || !inline;
 			const metrics = contentControlTagMetrics;
 			Object.assign(tag.style, {
 				fontFamily: cssFontStack(metrics.fontFamily),
 				fontSize: `${metrics.fontSizePt}pt`,
-				lineHeight: `${metrics.boxHeightPt}pt`,
-				minInlineSize: `${labelled ? metrics.minLabelWidthPt : metrics.inlineEndWidthPt}pt`,
-				paddingInline: labelled ? `${metrics.labelPaddingPt / 2}pt` : '0',
+				...tagBoxStyle(edge, inline),
 			});
+			tag.append(...tagEnds(tag.ownerDocument, edge, inline));
 			return tag;
 		},
 		{

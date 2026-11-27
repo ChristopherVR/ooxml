@@ -17,6 +17,7 @@ import {
 	pageLineNumberMarks,
 	type PrintLineNumbering,
 } from './print-line-numbers';
+import { paintPrintContentControlTag } from './print-content-control-tag';
 import { pageBorderBox } from './print-page-borders';
 import { resolveFragmentClick, type PrintFragmentHit } from './print-fragment-hit';
 import { pictureElement, type PictureUrl } from './print-picture';
@@ -156,6 +157,7 @@ function renderLine(
 			span.setAttribute('aria-hidden', 'true');
 			span.style.width = `${fragment.widthPx}px`;
 			if (fragment.boxHeightPx !== undefined) span.style.height = `${fragment.boxHeightPx}px`;
+			paintPrintContentControlTag(span, fragment);
 		}
 		span.dataset.sourceStart = String(fragment.sourceStart ?? 0);
 		span.dataset.sourceEnd = String(fragment.sourceEnd ?? 0);

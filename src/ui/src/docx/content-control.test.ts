@@ -99,7 +99,7 @@ describe('content controls in the editor', () => {
 				[...host.querySelectorAll('p')].map((p) =>
 					[...p.querySelectorAll<HTMLElement>('.dve-sdt-tag')].map((tag) => tag.dataset.tagTitle),
 				),
-			).toEqual([['Block'], [], [''], ['Rows', 'Cells'], [''], [], [''], []]);
+			).toEqual([['Block'], [], ['Block'], ['Rows', 'Cells'], ['Cells'], [], ['Rows'], []]);
 		} finally {
 			view.destroy();
 			host.remove();
@@ -108,8 +108,8 @@ describe('content controls in the editor', () => {
 
 	it('uses themed chrome and draws the label as generated content', () => {
 		expect(contentControlStyles).toContain('content: attr(data-tag-title)');
-		expect(contentControlStyles).toContain('var(--office-selected, #e8f0f8)');
-		expect(contentControlStyles).toContain('var(--office-foreground, #192a39)');
+		expect(contentControlStyles).toContain('var(--office-selected, #ecf2f7)');
+		expect(contentControlStyles).toContain('var(--office-foreground, #000000)');
 	});
 
 	it('draws every control with its kind, title and placeholder state', async () => {

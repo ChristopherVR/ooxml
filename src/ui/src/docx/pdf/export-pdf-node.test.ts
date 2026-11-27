@@ -51,11 +51,12 @@ describe('exportDocxPdf without a DOM', () => {
 		expect(tagged.text.match(/\bCondition\b/g)).toHaveLength(40);
 		expect(tagged.content.match(/ 10\.666667 Tf [^\n]*\(Condition\) Tj/g)).toHaveLength(40);
 		expect(
-			tagged.content.match(/0\.909804 0\.941176 0\.972549 rg\n[^\n]+ re\nf/g) ?? [],
+			tagged.content.match(/0\.92549 0\.94902 0\.968627 rg\n0\.627451 0\.745098 0\.843137 RG\n/g) ??
+				[],
 		).toHaveLength(240);
 		expect(tagged.pages).toBe(3);
 		expect(control.text).not.toContain('Condition');
-		expect(control.content).not.toContain('0.909804 0.941176 0.972549 rg');
+		expect(control.content).not.toContain('0.627451 0.745098 0.843137 RG');
 		expect(control.pages).toBe(2);
 	});
 	it('runs with no DOM globals', () => {

@@ -7,6 +7,8 @@
 import {
 	DEFAULT_FONT_SIZE_PT,
 	contentControlTagMetrics,
+	contentControlTagStyle,
+	contentControlTagTitleOffset,
 	fontMetrics,
 	ptToPx,
 	type LayoutFontSpec,
@@ -18,6 +20,7 @@ import type { PdfFontSet } from '../../export/pdf-embedded-font';
 import { encodeWinAnsi, pdfBaseFont, pdfTextWidth } from '../../export/pdf-fonts';
 import { parseColor, type Rgba } from '../../export/pdf-svg-style';
 import type { PdfVectorPage } from '../../export/pdf-vector';
+import { paintContentControlTag } from './pdf-content-control-tag';
 import type { DocxPdfReportBuilder } from './pdf-report';
 
 const DEFAULT_FAMILY = 'Calibri';
@@ -93,11 +96,11 @@ export class DocxPdfText {
 	): void {
 		const font = this.#font(fragment);
 		const baseline = this.baseline(fragment, line, lineTop);
-		const background = fragment.contentControlTag ? '#e8f0f8' : fragment.background;
-		if (background && fragment.widthPx > 0) {
-			const top = fragment.topPx !== undefined ? lineTop + fragment.topPx : lineTop;
+		const top = fragment.topPx !== undefined ? lineTop + fragment.topPx : lineTop;
+		if (fragment.contentControlTag) paintContentControlTag(page, fragment, x, top);
+		else if (fragment.background && fragment.widthPx > 0) {
 			const height = fragment.boxHeightPx ?? line.heightPx;
-			if (fillWith(page, background, 'transparent')) {
+			if (fillWith(page, fragment.background, 'transparent')) {
 				page.rect(x, top, fragment.widthPx, height);
 				page.op('f');
 			}
@@ -114,18 +117,12 @@ export class DocxPdfText {
 				fragment.leader === 'heavy' ? 2 : 1,
 			);
 		} else if (text.trim()) {
-			fillWith(page, fragment.contentControlTag ? '#192a39' : fragment.color);
-			if (fragment.contentControlTag) {
-				const widthPx = Math.min(fragment.widthPx, this.measurer.widthOf(text, font));
-				this.#text(
-					page,
-					text,
-					font,
-					x + (fragment.widthPx - widthPx) / 2,
-					baseline,
-					{ ...fragment, widthPx },
-					0,
-				);
+			const tag = fragment.contentControlTag;
+			fillWith(page, tag ? contentControlTagStyle.text : fragment.color);
+			if (tag) {
+				const offset = ptToPx(contentControlTagTitleOffset(tag, !!fragment.blockContentControlTag));
+				const widthPx = this.measurer.widthOf(text, font);
+				this.#text(page, text, font, x + offset, baseline, { ...fragment, widthPx }, 0);
 			} else if (fragment.smallCaps && !fragment.leader)
 				this.#smallCaps(page, text, font, x, baseline, fragment, gapPx);
 			else this.#text(page, text, font, x, baseline, fragment, fragment.leader ? 0 : gapPx);

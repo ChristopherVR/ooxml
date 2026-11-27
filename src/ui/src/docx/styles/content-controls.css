@@ -5,23 +5,60 @@
 	-webkit-box-decoration-break: clone;
 }
 .dve-sdt-tag {
+	/* Word's tag colours (its PDF export) behind the theme's tokens. */
+	--dve-sdt-tag-fill: var(--office-selected, #ecf2f7);
+	--dve-sdt-tag-stroke: var(--office-border, #a0bed7);
+	--dve-sdt-tag-middle: calc(100% - 4.56pt);
+	position: relative;
 	display: inline-block;
 	box-sizing: border-box;
-	box-shadow: inset 0 0 0 1px var(--office-border, #9cb4c9);
-	border-radius: 4px 0 0 4px;
-	background: var(--office-selected, #e8f0f8);
-	color: var(--office-foreground, #192a39);
+	/* The straight middle of the outline; the arc-sided ends are SVG (content-control-tag-shape.ts). */
+	background:
+		linear-gradient(var(--dve-sdt-tag-stroke), var(--dve-sdt-tag-stroke)) center top /
+			var(--dve-sdt-tag-middle) 1.08pt no-repeat,
+		linear-gradient(var(--dve-sdt-tag-stroke), var(--dve-sdt-tag-stroke)) center bottom /
+			var(--dve-sdt-tag-middle) 1.08pt no-repeat,
+		linear-gradient(var(--dve-sdt-tag-fill), var(--dve-sdt-tag-fill)) center /
+			var(--dve-sdt-tag-middle) 100% no-repeat;
+	color: var(--office-foreground, #000000);
 	font-style: normal;
 	font-weight: normal;
-	text-align: center;
+	text-align: start;
 	white-space: nowrap;
 	user-select: none;
+}
+.dve-sdt-tag:not([data-inline-tag]) {
+	--dve-sdt-tag-fill: var(--office-surface, #fcfcfc);
 }
 .dve-sdt-tag::before {
 	content: attr(data-tag-title);
 }
-.dve-sdt-tag[data-tag-edge='end'] {
-	border-radius: 0 4px 4px 0;
+.dve-sdt-tag-end {
+	position: absolute;
+	top: 0;
+	width: 2.28pt;
+	height: 100%;
+	pointer-events: none;
+}
+.dve-sdt-tag-end[data-side='left'] {
+	left: 0;
+}
+.dve-sdt-tag-end[data-side='right'] {
+	right: 0;
+}
+.dve-sdt-tag-fill {
+	fill: var(--dve-sdt-tag-fill);
+}
+.dve-sdt-tag-line {
+	fill: none;
+	stroke: var(--dve-sdt-tag-stroke);
+	stroke-width: 1.08;
+	stroke-linejoin: round;
+}
+.dve-sdt-tag-marker {
+	fill: var(--dve-sdt-tag-stroke);
+	stroke: var(--dve-sdt-tag-stroke);
+	stroke-width: 0.14;
 }
 .dve-sdt[data-sdt-placeholder],
 p[data-sdt-block] .dve-sdt[data-sdt-placeholder],

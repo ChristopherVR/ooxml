@@ -90,6 +90,32 @@ The PDF advances for `A` and `Lorem Ipsum Dolor` are 4.83 and 68.06 pt at the la
 The reporter's tagged and bounding-box files had 3 and 2 pages in both
 `ComputeStatistics(2)` and PDF, with 240 and zero PDF tag outlines respectively.
 
+The tag outlines in the PDF content streams are 227-point polylines on a 0.12 pt grid,
+filled and stroked with one `B*` and a round join (`1 j`). Comparing the tagged and
+bounding-box exports isolates them; they were the same at 8, 11, 16 and 24 pt and in
+Times New Roman. `content-control-tag-shape.ts` draws them with cubic arcs that stay
+within 0.13 pt of Word's vertices.
+
+| Outline property      | Word PDF                                                          |
+| --------------------- | ----------------------------------------------------------------- |
+| Inline fill           | `0.925 0.949 0.969 rg` (#ECF2F7)                                  |
+| Block, row, cell fill | `0.988 g` (#FCFCFC)                                               |
+| Stroke                | `0.627 0.745 0.843 RG` (#A0BED7), 1.08 pt                         |
+| Title                 | Tahoma 8.04 pt, `0 g`, baseline 4.68 pt above the box bottom      |
+| Box                   | 13.44 pt, from 1.68 pt below to 11.76 pt above the body baseline  |
+| Side edges            | Arcs of a circle of radius 11.04 pt, bowing 2.28 pt across        |
+| Opening tag           | Both edges bow left; the outline spans the whole advance          |
+| Closing tag           | Both edges bow right; inline, 9.84 pt of the 11.5 pt advance      |
+| Title start           | 6.72 pt inline, 9 pt block opening, 5.04 pt closing               |
+| Block marker          | Arrow and 0.6 pt bar, 3.36 pt high, from 5.1 pt below the box top |
+| Marker stroke         | Filled and stroked in the outline colour, 0.14 pt                 |
+
+The opening block marker is an arrow pointing left, tip 2.34 pt and base 4.5 pt from the
+left edge, with the bar from 5.58 pt. The closing marker points right, tip 2.82 pt and
+base 4.98 pt from the right edge, with the bar from 6.66 pt. The page's 11 pt opening
+tag runs from x 79.224 to 97.704 and y 729.6 to 743.04 on a 731.28 baseline; its
+closing tag runs from 127.1 to 136.94 and the next word starts at 138.62.
+
 In the 11 pt Arial tagged probe, COM put `Amet` and the wrapped `in` at (45, 63.5)
 and (45, 157.5). The PDF glyph boxes began at (45, 64.05) and (45, 158.15).
 The bounding-box probe broke at `luctus` at (45, 133.5) in COM and (45, 133.91) in PDF.

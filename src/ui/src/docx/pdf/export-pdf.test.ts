@@ -57,7 +57,7 @@ const paragraph = (text: string, props = '') =>
 	`<w:p><w:r>${props ? `<w:rPr>${props}</w:rPr>` : ''}<w:t xml:space="preserve">${text}</w:t></w:r></w:p>`;
 
 describe('exportDocxPdf', () => {
-	it('paints the six block, row and cell tags in the paper palette', async () => {
+	it('paints the six block, row and cell tags in the Word tag colours', async () => {
 		const file = join(
 			import.meta.dirname,
 			'../../../../core/docx/layout/fixtures/word-layout-reports/block-content-control-tags.docx',
@@ -70,8 +70,8 @@ describe('exportDocxPdf', () => {
 		expect(pdf.text).toMatch(/amet\s*Block/);
 		expect(pdf.text).toMatch(/adipiscing\s*Cells/);
 		expect(pdf.text).toMatch(/eiusmod\s*Rows/);
-		expect(pdf.content.match(/0\.909804 0\.941176 0\.972549 rg/g)).toHaveLength(6);
-		expect(pdf.content.match(/0\.098039 0\.164706 0\.223529 rg/g)).toHaveLength(6);
+		expect(pdf.content.match(/0\.988235 0\.988235 0\.988235 rg/g)).toHaveLength(6);
+		expect(pdf.content.match(/0\.627451 0\.745098 0\.843137 RG/g)).toHaveLength(6);
 	});
 
 	it('writes real text with no images for a text-only document', async () => {

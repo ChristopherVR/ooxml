@@ -13,6 +13,8 @@ export interface LayoutFragment {
 	fontFallback?: import('../font-table').FontFallback;
 	fontSizePt?: number;
 	contentControlTag?: 'start' | 'end';
+	/** A paragraph, row or cell tag rather than an inline control's. */
+	blockContentControlTag?: true;
 	textScalePercent?: number;
 	ligatures?: import('../ligatures').Ligatures;
 	smallCaps?: boolean;
