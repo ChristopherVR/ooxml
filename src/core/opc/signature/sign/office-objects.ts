@@ -2,12 +2,13 @@
 // clause 13; [MS-OFFCRYPTO] 2.5.2, "XAdES" and "SignatureInfoV1"): the Office details that tie a
 // signature to a signature line, and the XAdES signed properties naming the signing certificate.
 import { escapeXmlText } from '../xml-utils';
+import { OFFICE_DIGSIG_NS, OFFICE_OBJECT_ID } from './office-ids';
 
-export const OFFICE_DIGSIG_NS = 'http://schemas.microsoft.com/office/2006/digsig';
+export { OFFICE_DIGSIG_NS, OFFICE_OBJECT_ID };
+
 export const XADES_NS = 'http://uri.etsi.org/01903/v1.3.2#';
 export const SIGNATURE_ID = 'idPackageSignature';
 export const PACKAGE_OBJECT_ID = 'idPackageObject';
-export const OFFICE_OBJECT_ID = 'idOfficeObject';
 export const SIGNED_PROPERTIES_ID = 'idSignedProperties';
 const NO_PROVIDER = '{00000000-0000-0000-0000-000000000000}';
 

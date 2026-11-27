@@ -141,6 +141,7 @@ const {
 	'docx/index': docx,
 	'docx/embedded': docxEmbedded,
 	'docx/load/index': docxLoad,
+	'opc/index': opc,
 	...eagerEntries
 } = shared.entry;
 
@@ -172,6 +173,26 @@ export default defineConfig([
 	ownChunks('docx/index', docx, 'docx/chunks'),
 	ownChunks('docx/embedded', docxEmbedded, 'docx/embedded-chunks'),
 	ownChunks('docx/load/index', docxLoad, 'docx/load/chunks'),
+	// The package signer (`signature.signPackage`) downloads on the first signing, as a file of its
+	// own beside the OPC entry, so reading and verifying packages does not carry it.
+	{
+		...shared,
+		entry: { 'opc/index': opc, 'opc/sign-package': 'opc/signature/sign/sign-package.ts' },
+		format: ['esm'],
+		splitting: false,
+		esbuildPlugins: [
+			{
+				name: 'opc-lazy-signer',
+				setup(build) {
+					build.onResolve({ filter: /^\.\/sign-package$/ }, (args) =>
+						args.kind === 'dynamic-import'
+							? { path: './sign-package.mjs', external: true }
+							: undefined,
+					);
+				},
+			},
+		],
+	},
 	{
 		...shared,
 		entry: { 'automation/add-ins/index': addIns },

@@ -7,7 +7,7 @@ import { XMLDSIG_NS } from '../constants';
 import { childElements, localNameOf, parseStrictXml } from '../verify/dom';
 import { SIGNATURE_LIMITS } from '../verify/limits';
 import { isVerifiedSignatureState, type SignatureSummary } from '../state';
-import { OFFICE_DIGSIG_NS, OFFICE_OBJECT_ID } from './office-objects';
+import { OFFICE_DIGSIG_NS, OFFICE_OBJECT_ID } from './office-ids';
 
 const MAX_TEXT = 255;
 const MAX_IMAGE = 2 * 1024 * 1024;

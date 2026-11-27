@@ -91,7 +91,8 @@ export {
 	type SignatureSummary,
 } from './state';
 export { canonicalize } from './verify/c14n';
-export { signPackage, type SignPackageOptions } from './sign/sign-package';
+export { signPackage } from './sign/sign-on-demand';
+export type { SignPackageOptions } from './sign/sign-package';
 export { webCryptoPackageSigner, type PackageSigner } from './sign/signer';
 export type { OfficeSignatureDetails } from './sign/office-objects';
 export { withSignatureLineSignings } from './sign/office-info';
