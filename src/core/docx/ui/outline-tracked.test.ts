@@ -39,7 +39,8 @@ const paragraphs: Paragraph[] = [
 	{ type: 'paragraph', id: 'a', outlineLevel: 1, runs: [{ text: 'Alpha' }] },
 	{ type: 'paragraph', id: 'a-body', runs: [{ text: 'Alpha body' }] },
 	{ type: 'paragraph', id: 'b', outlineLevel: 1, runs: [{ text: 'Beta' }] },
-	{ type: 'paragraph', id: 'tail', runs: [{ text: 'Tail' }] },
+	// A heading of its own: body text would belong to Beta's branch and end the document there.
+	{ type: 'paragraph', id: 'tail', outlineLevel: 1, runs: [{ text: 'Tail' }] },
 ];
 const model: DocumentModel = { ...createDocument(), blocks: paragraphs };
 
