@@ -194,9 +194,9 @@ test('Table Layout selects a column, evaluates a formula and converts with undo'
 	await cells.first().click();
 	await page.keyboard.type('14');
 	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
-	await editor
-		.getByRole('combobox', { name: 'Select Table Parts', exact: true })
-		.selectOption('column');
+	const select = editor.getByRole('combobox', { name: 'Select Table Parts', exact: true });
+	await reveal(editor, select);
+	await select.selectOption('column');
 	await expect(editor.locator('.dve-selected-table-cell')).toHaveCount(2);
 	await cells.nth(2).click();
 	const repeat = editor.getByRole('button', { name: 'Repeat Header Rows', exact: true });
@@ -204,7 +204,9 @@ test('Table Layout selects a column, evaluates a formula and converts with undo'
 	await expect(
 		editor.getByRole('button', { name: 'Repeat Header Rows', exact: true }),
 	).toBeDisabled();
-	await editor.getByRole('button', { name: 'Formula', exact: true }).click();
+	const formulaCommand = editor.getByRole('button', { name: 'Formula', exact: true });
+	await reveal(editor, formulaCommand);
+	await formulaCommand.click();
 	const formula = dialogByHeading(editor, 'Formula');
 	await expect(formula.getByRole('textbox', { name: 'Formula', exact: true })).toHaveValue(
 		'=SUM(ABOVE)',
@@ -237,7 +239,9 @@ test('Home bold and alignment apply to all and only the selected column', async 
 	}
 	await cells.first().click();
 	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
-	await editor.getByRole('combobox', { name: 'Select Table Parts' }).selectOption('column');
+	const select = editor.getByRole('combobox', { name: 'Select Table Parts', exact: true });
+	await reveal(editor, select);
+	await select.selectOption('column');
 	await editor.getByRole('tab', { name: 'Home', exact: true }).click();
 	await editor.getByRole('button', { name: 'Bold', exact: true }).click();
 	await editor.getByRole('button', { name: 'Align right', exact: true }).click();
@@ -280,6 +284,7 @@ test('table ribbon group labels have their own space at 1700 pixels', async ({ p
 		expect(overlap).toEqual([]);
 	}
 	const alignment = editor.getByRole('group', { name: 'Cell Alignment controls' });
+	await expect(alignment.getByRole('combobox', { name: 'Text Direction' })).toBeVisible();
 	const buttons = alignment.locator('[data-table-command="align"]');
 	await expect(buttons).toHaveCount(9);
 	for (const button of await buttons.all()) {

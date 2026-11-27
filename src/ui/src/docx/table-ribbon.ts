@@ -1,5 +1,6 @@
 import type { TableLook } from 'ooxml-core/docx';
 import type { TableAutoFit } from 'ooxml-core/docx/ui';
+import { textDirectionMenu } from './arrange-ribbon';
 import type { BorderPen, TableBorderPreset } from './table-border-commands';
 import { group, menuSelect, row, spinner, stack, tool } from './ribbon-parts';
 import type { RibbonIcon } from './ribbon-icons';
@@ -259,7 +260,7 @@ function layout(panel: HTMLElement) {
 					),
 				),
 			),
-			command('Cell Margins', 'table', 'margins'),
+			stack(textDirectionMenu(true), command('Cell Margins', 'table', 'margins')),
 		),
 		group(
 			'Table Data',

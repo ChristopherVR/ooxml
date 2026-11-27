@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { clickInEditor, dialogByHeading, insertTableOfSize, newDocument } from './helpers';
+import { clickInEditor, dialogByHeading, insertTableOfSize, newDocument, reveal } from './helpers';
 
 test('Formula sums the Word numeric range above a cell with accounting text nearby', async ({
 	page,
@@ -16,7 +16,9 @@ test('Formula sums the Word numeric range above a cell with accounting text near
 	}
 	await clickInEditor(cells.nth(2));
 	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
-	await editor.getByRole('button', { name: 'Formula', exact: true }).click();
+	const command = editor.getByRole('button', { name: 'Formula', exact: true });
+	await reveal(editor, command);
+	await command.click();
 	const formula = dialogByHeading(editor, 'Formula');
 	await expect(formula.getByRole('textbox', { name: 'Formula', exact: true })).toHaveValue(
 		'=SUM(ABOVE)',

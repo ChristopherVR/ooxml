@@ -183,8 +183,6 @@ export async function loadTablePanels(root: HTMLElement) {
 	const layout = panelOf(root, 'table-layout');
 	if (design && layout) {
 		buildTablePanels(design, layout);
-		// Word puts Text Direction in Table Layout's Alignment group.
-		layout.append(group('Text', textDirectionMenu()));
 		setRibbonLocale(root, localeOf(root));
 		reapplyRibbonVisibility(root);
 	}

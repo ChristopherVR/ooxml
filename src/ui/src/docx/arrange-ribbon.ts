@@ -50,12 +50,19 @@ function menu(
 	return wrapper;
 }
 
-export function textDirectionMenu() {
-	return menu('direction', 'Text Direction', 'textBox', [
-		['horizontal', 'Horizontal'],
-		['clockwise', 'Rotate Text 90°'],
-		['counterclockwise', 'Rotate Text 270°'],
-	]);
+export function textDirectionMenu(inline = false) {
+	return menu(
+		'direction',
+		'Text Direction',
+		'textBox',
+		[
+			['horizontal', 'Horizontal'],
+			['clockwise', 'Rotate Text 90°'],
+			['counterclockwise', 'Rotate Text 270°'],
+		],
+		undefined,
+		inline,
+	);
 }
 
 function arrangeButton(label: string, icon: RibbonIcon, key: 'pane' | 'alt') {
