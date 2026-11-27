@@ -233,6 +233,21 @@ export type {
 	MergeRegionResult,
 	MergeStory,
 } from './mail-merge/headless';
+// Content control templating loads on first use too; it is also the docx/content-controls subpath.
+export {
+	fillContentControls,
+	flattenContentControls,
+	readContentControls,
+} from './content-controls-loader';
+export type {
+	ContentControlFillData,
+	ContentControlFillOptions,
+	ContentControlFillResult,
+	ContentControlFillStatus,
+	FillContentControlsResult,
+	FlattenContentControlsOptions,
+	ReadContentControlsOptions,
+} from './content-controls/types';
 export * from './table-of-contents';
 export { resolveCellVisuals, type CellPlacement } from './table-visuals';
 export { DEFAULT_STYLES_XML, defaultStyleCatalogs } from './default-styles';

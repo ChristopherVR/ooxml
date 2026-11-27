@@ -68,6 +68,10 @@ const common = {
 				replacement: fileURLToPath(new URL('./docx/mail-merge/index.ts', import.meta.url)),
 			},
 			{
+				find: /^ooxml-core\/docx\/content-controls$/,
+				replacement: fileURLToPath(new URL('./docx/content-controls/index.ts', import.meta.url)),
+			},
+			{
 				find: /^ooxml-core\/xml$/,
 				replacement: fileURLToPath(new URL('./xml/public.ts', import.meta.url)),
 			},

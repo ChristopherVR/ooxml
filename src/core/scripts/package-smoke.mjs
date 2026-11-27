@@ -163,6 +163,10 @@ console.log('all entry points import');\n`,
 	await copyFile(new URL(mergeSmoke, import.meta.url), path.join(work, mergeSmoke));
 	run('node', [mergeSmoke], work);
 	console.log('Word merge fields fill and save through every entry pairing (ESM and CJS)');
+	const controlsSmoke = 'docx-content-controls-smoke.mjs';
+	await copyFile(new URL(controlsSmoke, import.meta.url), path.join(work, controlsSmoke));
+	run('node', [controlsSmoke], work);
+	console.log('Word content controls fill and save through every entry pairing (ESM and CJS)');
 
 	// A web host bundles the package for the browser, with no Node fallbacks: no browser entry may
 	// reach a Node built-in or a Node-only package (the Node-only subpaths are skipped).

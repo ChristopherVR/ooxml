@@ -181,6 +181,11 @@
 			"import": "./dist/docx/load/index.mjs",
 			"require": "./dist/docx/load/index.cjs"
 		},
+		"./docx/content-controls": {
+			"types": "./dist/docx/content-controls/index.d.ts",
+			"import": "./dist/docx/content-controls/index.mjs",
+			"require": "./dist/docx/content-controls/index.cjs"
+		},
 		"./docx/mail-merge": {
 			"types": "./dist/docx/mail-merge/index.d.ts",
 			"import": "./dist/docx/mail-merge/index.mjs",

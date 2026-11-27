@@ -55,6 +55,7 @@ await writeFile('blank.docx', await saveDocx(createDocument()));
 | Review              | `listRevisions`, `acceptRevision`, `rejectRevision`, `acceptAllRevisions`, `rejectAllRevisions`, `revisionSpans`, and `compareDocuments` for a redline   |
 | Forms and fields    | `listFormFields`, `fillFormFields`, `updateTableOfContents`, `refreshComputedFields`, `refreshStyleRefFields`                                            |
 | Mail merge          | `listMergeFields`, `mergeFields` (MERGEFIELD values, TableStart/TableEnd regions and HTML values, loaded on first use)                                   |
+| Content controls    | `fillContentControls`, `readContentControls`, `flattenContentControls` (tagged control templates: HTML, repeats, optional blocks; loaded on first use)   |
 | Protection          | `enforceProtection`, `verifyProtectionPassword`                                                                                                          |
 | Contents and checks | `plainText`, `documentStats`, `inspectDocument`, `removeDocumentInformation`, `validateDocumentModel`                                                    |
 | Embedded documents  | `docx-core/embedded`: `readOleDocumentParagraphs`, `writeOleDocumentParagraphEdit`                                                                       |

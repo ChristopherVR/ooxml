@@ -664,11 +664,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       text, emptied comment parts are kept where Word deletes them, the glossary is not scrubbed,
       and the privacy flag cannot be turned off.
 - [ ] **P2** Content controls: picture, building-block gallery and repeating-section controls are
-      kept but cannot be inserted, and repeating items cannot be added or removed
-      (`docx/content-control-model.ts`). The writer writes `w15:repeatingSection` and
-      `w15:repeatingSectionItem` for a block or row control the model gives that kind, but the
-      model holds one control per block or row, so a section wrapping its items (nested `w:sdt`)
-      cannot be built from the model.
+      kept but cannot be inserted from the editor, and the editor cannot add or remove repeating
+      items (`docx/content-control-model.ts`). The model now records the block and row controls
+      around a block's or row's own (`outerContentControls`), and the writer places a new block or
+      row inside the controls it shares with the one before it, so headless templating
+      (`fillContentControls`, `docs/docx-content-controls.md`, #363) repeats section items at block
+      and row level. Inline controls nested in inline controls still keep only the innermost.
 - [x] **P2** Content controls shown as tags (`w15:appearance="tags"`) draw start and end tags for
       inline, paragraph, row and cell controls in the editor, Print Layout and PDF, with the
       advances, tagged line height and outlines measured from Word 16 through COM and its PDF

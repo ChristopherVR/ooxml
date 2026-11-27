@@ -15,6 +15,7 @@
 		"package/ooxml-core/diagram/builtin": 410624,
 		"package/ooxml-core/digest": 14336,
 		"package/ooxml-core/docx": 615424,
+		"package/ooxml-core/docx/content-controls": 29696,
 		"package/ooxml-core/docx/embedded": 421888,
 		"package/ooxml-core/docx/layout": 196608,
 		"package/ooxml-core/docx/load": 502784,

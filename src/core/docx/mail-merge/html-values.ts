@@ -17,6 +17,33 @@ export const MAX_HTML_VALUES = 1024;
 const PLACEHOLDER = /([-])/u;
 const SPLIT = /([-])/u;
 
+/**
+ * What HTML values read into `model` need: new block ids no block of it has, the lists they
+ * create (added to its numbering, `catalog()` after reading) and its heading styles.
+ */
+export function htmlMergeContext(model: DocumentModel): {
+	context: HtmlMergeContext;
+	catalog(): DocumentModel['numberingCatalog'];
+} {
+	let catalog = model.numberingCatalog;
+	const ids = new Set<string>();
+	forEachBlockList(model, (blocks) => blocks.forEach((block) => ids.add(block.id)));
+	let suffix = '-html';
+	while ([...ids].some((id) => id.includes(suffix))) suffix += 'l';
+	let serial = 0;
+	const context: HtmlMergeContext = {
+		id: () => `p${suffix}${serial++}`,
+		list: (kind) => {
+			const created = ensureListDefinition(catalog, kind);
+			catalog = created.catalog;
+			return created.numId;
+		},
+		headingStyle: (level) =>
+			model.paragraphStyles?.styles[`Heading${level}`] ? `Heading${level}` : undefined,
+	};
+	return { context, catalog: () => catalog };
+}
+
 export class HtmlValues {
 	private readonly values: string[] = [];
 	private readonly indexes = new Map<string, number>();
@@ -48,22 +75,7 @@ export class HtmlValues {
 	/** `model` with every placeholder replaced by its content. */
 	expand(model: DocumentModel): DocumentModel {
 		if (!this.values.length) return model;
-		let catalog = model.numberingCatalog;
-		const ids = new Set<string>();
-		forEachBlockList(model, (blocks) => blocks.forEach((block) => ids.add(block.id)));
-		let suffix = '-html';
-		while ([...ids].some((id) => id.includes(suffix))) suffix += 'l';
-		let serial = 0;
-		const context: HtmlMergeContext = {
-			id: () => `p${suffix}${serial++}`,
-			list: (kind) => {
-				const created = ensureListDefinition(catalog, kind);
-				catalog = created.catalog;
-				return created.numId;
-			},
-			headingStyle: (level) =>
-				model.paragraphStyles?.styles[`Heading${level}`] ? `Heading${level}` : undefined,
-		};
+		const { context, catalog: catalogOf } = htmlMergeContext(model);
 		const expanded = mapBlockLists(model, (blocks, list) => {
 			let changed = false;
 			const output: Block[] = [];
@@ -89,6 +101,7 @@ export class HtmlValues {
 				output.push({ type: 'paragraph', id: context.id(), runs: [{ text: '' }] });
 			return output;
 		});
+		const catalog = catalogOf();
 		return catalog === model.numberingCatalog
 			? expanded
 			: { ...expanded, ...(catalog && { numberingCatalog: catalog }) };

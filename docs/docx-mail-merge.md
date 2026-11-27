@@ -38,7 +38,8 @@ entries works (`loadDocx` from `ooxml-core/docx` or `loadDocument` from `ooxml-c
 either `mergeFields`, ESM or CommonJS): what the merge records for the writer is shared between
 the entries' bundles. The CommonJS build loads the merge with a dynamic `import()`, as the
 `math` and Visio chart loaders do, so a CommonJS test runner must allow it (Jest needs
-`--experimental-vm-modules`).
+`--experimental-vm-modules`). For templates whose variable parts are tagged content controls
+rather than MERGEFIELD fields, see [content control templates](docx-content-controls.md).
 
 ```ts
 import { listMergeFields, loadDocx, mergeFields } from 'ooxml-core/docx';

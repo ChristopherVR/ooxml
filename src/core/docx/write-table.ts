@@ -16,7 +16,7 @@ import {
 	patchTableProperties,
 } from './write-table-level-properties';
 import { placeTableControl, unwrapDroppedControls } from './write-table-controls';
-import { syncBlockControls } from './write-block-placement';
+import { placeCellParagraphs } from './write-block-placement';
 import { replaceSlots } from './write-slots';
 import { children, first, makeW, type XmlDocument, type XmlElement } from './xml';
 
@@ -224,9 +224,8 @@ export function writeTable(
 					source?.paragraphs[index],
 				);
 			});
-			replaceSlots(tc, oldParagraphs, nextParagraphs);
 			// A block control around a cell's paragraphs follows the model as in the body.
-			syncBlockControls(doc, flatParagraphs, cell.paragraphs, nextParagraphs);
+			placeCellParagraphs(doc, tc, flatParagraphs, cell.paragraphs, nextParagraphs);
 			writeNestedTables(doc, tc, cell, source?.model, writeParagraph);
 			return tc;
 		});

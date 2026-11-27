@@ -57,11 +57,14 @@ function parseCell(
 ): TableCell {
 	const props = first(cell, 'tcPr');
 	const result: TableCell = {
-		paragraphs: flatCellParagraphs(cell).map(({ element, control: paragraphControl }, pi) => {
-			const paragraph = parseParagraph(element, `${id}p${pi}`);
-			if (paragraphControl) paragraph.contentControl = paragraphControl;
-			return paragraph;
-		}),
+		paragraphs: flatCellParagraphs(cell).map(
+			({ element, control: paragraphControl, outer }, pi) => {
+				const paragraph = parseParagraph(element, `${id}p${pi}`);
+				if (paragraphControl) paragraph.contentControl = paragraphControl;
+				if (outer) paragraph.outerContentControls = outer.map((entry) => entry.control);
+				return paragraph;
+			},
+		),
 	};
 	if (control) result.contentControl = control;
 	const gridSpan = parseUnsignedInteger(getW(first(props, 'gridSpan'), 'val'));
@@ -253,9 +256,10 @@ export function parseTable(
 	if (cellMargins) table.cellMargins = cellMargins;
 	const tableFormatRevision = parsePropertyChange(tblPr, 'tblPrChange', 'tblPr', 'tableChange');
 	if (tableFormatRevision) table.formatRevision = tableFormatRevision;
-	const rowProperties = rowEntries.map(({ element, control }) => {
+	const rowProperties = rowEntries.map(({ element, control, outer }) => {
 		const properties = parseRowProperties(element);
 		if (control) properties.contentControl = control;
+		if (outer) properties.outerContentControls = outer.map((entry) => entry.control);
 		return properties;
 	});
 	if (rowProperties.some((row) => Object.keys(row).length)) table.rowProperties = rowProperties;

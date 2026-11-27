@@ -137,6 +137,11 @@ export interface Paragraph {
 	permissions?: import('./form-field-model').PermissionRange[];
 	/** The block-level content control (`w:sdt` around paragraphs) this paragraph belongs to. */
 	contentControl?: ContentControl;
+	/**
+	 * The block-level controls around `contentControl`, outermost first: a repeating section around
+	 * its item, a group around the controls it holds. A new paragraph is written inside each.
+	 */
+	outerContentControls?: ContentControl[];
 }
 /** Direct paragraph properties supported by the editor, in native Word units. */
 export type ParagraphFormatting = Pick<

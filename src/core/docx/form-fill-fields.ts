@@ -65,6 +65,7 @@ export interface FormFieldInfo {
 	story: FormFieldStory;
 	/** Whether `fillFormFields` sets it; when not, `reason` says why. */
 	fillable: boolean;
+	/** `nested table` is no longer given: a field in a table nested in a cell is filled too. */
 	reason?: 'disabled' | 'calculated' | 'locked' | 'bound' | 'nested table';
 }
 
@@ -111,7 +112,6 @@ function describeLegacy(site: FieldSite): Described {
 		...(field.helpText?.type === 'text' && field.helpText.value && { help: field.helpText.value }),
 	};
 	const blocked = (): Pick<FormFieldInfo, 'fillable' | 'reason'> => {
-		if (site.nested) return { fillable: false, reason: 'nested table' };
 		if (field.enabled === false) return { fillable: false, reason: 'disabled' };
 		// A field inside a control that locks its content cannot change.
 		const around = site.paragraph.runs[site.from]?.contentControl;
@@ -152,13 +152,14 @@ function describeLegacy(site: FieldSite): Described {
 
 function describeControl(site: FieldSite): Described {
 	const control = site.control!;
-	const fillable: Pick<FormFieldInfo, 'fillable' | 'reason'> = site.nested
-		? { fillable: false, reason: 'nested table' }
-		: isContentControlLocked(control, 'content')
-			? { fillable: false, reason: 'locked' }
-			: control.dataBound
-				? { fillable: false, reason: 'bound' }
-				: { fillable: true };
+	const fillable: Pick<FormFieldInfo, 'fillable' | 'reason'> = isContentControlLocked(
+		control,
+		'content',
+	)
+		? { fillable: false, reason: 'locked' }
+		: control.dataBound
+			? { fillable: false, reason: 'bound' }
+			: { fillable: true };
 	const base = {
 		source: 'control' as const,
 		story: site.story,

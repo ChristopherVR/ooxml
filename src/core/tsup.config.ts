@@ -105,6 +105,7 @@ const shared = {
 		'docx/layout/index': 'docx/layout/index.ts',
 		'docx/load/index': 'docx/load/index.ts',
 		'docx/mail-merge/index': 'docx/mail-merge/index.ts',
+		'docx/content-controls/index': 'docx/content-controls/index.ts',
 		'docx/ui/index': 'docx/ui/index.ts',
 		'collab/index': 'collab/index.ts',
 		'teams/index': 'teams/index.ts',
@@ -132,6 +133,8 @@ const shared = {
 		'ooxml-core/math',
 		// The docx entry loads mail merge by name on first use (`docx/merge-fields-loader.ts`).
 		'ooxml-core/docx/mail-merge',
+		// And content control templating (`docx/content-controls-loader.ts`).
+		'ooxml-core/docx/content-controls',
 		'#embedded-workbook-chart',
 		'#xpath-runtime',
 		'#inkml-runtime',

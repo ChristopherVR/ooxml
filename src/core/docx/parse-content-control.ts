@@ -32,6 +32,8 @@ export interface FlatBlock {
 	control?: ContentControl;
 	/** The innermost `w:sdt` element around it. */
 	sdt?: XmlElement;
+	/** The controls of the same level around `control`, outermost first, with their `w:sdt`. */
+	outer?: { control: ContentControl; sdt: XmlElement }[];
 }
 
 /** The `local` children of `parent`, looking through `w:sdt/w:sdtContent` wrappers in order. */
@@ -41,6 +43,7 @@ export function flatChildren(
 	level: 'block' | 'row' | 'cell' = 'block',
 	enclosing?: { control: ContentControl; sdt: XmlElement },
 	controls = new Map<XmlElement, ContentControl>(),
+	outer: { control: ContentControl; sdt: XmlElement }[] = [],
 ): FlatBlock[] {
 	const found: FlatBlock[] = [];
 	for (const child of Array.from(parent.childNodes).filter(isElement)) {
@@ -52,11 +55,13 @@ export function flatChildren(
 				control = parseContentControl(child, level);
 				controls.set(child, control);
 			}
-			found.push(...flatChildren(content, names, level, { control, sdt: child }, controls));
+			const chain = enclosing ? [...outer, enclosing] : outer;
+			found.push(...flatChildren(content, names, level, { control, sdt: child }, controls, chain));
 		} else if (names.some((name) => named(child, name)))
 			found.push({
 				element: child,
 				...(enclosing ? { control: enclosing.control, sdt: enclosing.sdt } : {}),
+				...(outer.length ? { outer } : {}),
 			});
 	}
 	return found;

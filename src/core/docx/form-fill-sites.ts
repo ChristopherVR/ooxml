@@ -60,7 +60,7 @@ export interface FieldSite {
 	paragraphs?: number[];
 	formField?: FormField;
 	control?: ContentControl;
-	/** The field is in a table nested in a cell, which this library keeps but does not edit. */
+	/** The field is in a table nested in a cell (filled as any other). */
 	nested?: boolean;
 	/** The text the runs of its document show, for its value and the labels around it. */
 	shown: ShownText;

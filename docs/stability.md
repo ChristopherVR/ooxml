@@ -52,8 +52,9 @@ Word (`docx-core`):
   (`parseRunStyleCatalog`, `parseTableStyleCatalog`, `parseNumberingCatalog`) and the
   style and numbering resolvers.
 - Editing commands: the `*-edit` modules (sections, content controls, list start overrides,
-  charts) and `fillFormFields`, `refreshStyleRefFields`, and the headless mail merge
-  `listMergeFields`, `mergeFields`.
+  charts) and `fillFormFields`, `refreshStyleRefFields`, the headless mail merge
+  `listMergeFields`, `mergeFields`, and content control templating `fillContentControls`,
+  `readContentControls`, `flattenContentControls` (also the `docx/content-controls` subpath).
 - Review (including `compareDocuments`, `revisionSpans` and `UNCOMPARED_DOCUMENT_PARTS`),
   document statistics, tables of contents, fields (`fieldName`, date fields) and notes numbering.
 

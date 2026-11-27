@@ -302,11 +302,12 @@ function parseContainer(container: XmlElement, idPrefix: string): Block[] {
 	const blocks: Block[] = [];
 	const fields = storyFieldResults(container);
 	let index = 0;
-	for (const { element: node, control } of flatBlocks(container)) {
+	for (const { element: node, control, outer } of flatBlocks(container)) {
 		const block = named(node, 'p')
 			? parseParagraph(node, `${idPrefix}p${index++}`, fields)
 			: parseTable(node, `${idPrefix}t${index++}`, fields);
 		if (control) block.contentControl = control;
+		if (outer) block.outerContentControls = outer.map((entry) => entry.control);
 		blocks.push(block);
 	}
 	resolvePermissions(blocks);

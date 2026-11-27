@@ -5,7 +5,9 @@
 import { rowEditKey, type BlockCopies } from './block-copies';
 import type { Paragraph, Table } from './model';
 import { flatCellParagraphs, flatCells, flatRows } from './parse-content-control';
+import { blockChain, placeCellParagraphs, placeControlledById } from './write-block-placement';
 import { replaceSlots } from './write-slots';
+import { placeTableControl } from './write-table-controls';
 import { makeW, type XmlDocument, type XmlElement } from './xml';
 
 type ParagraphWriter = (
@@ -33,7 +35,8 @@ export function writeMergedRows(
 	writeParagraph: ParagraphWriter,
 	rows: RowCopies,
 ): XmlElement {
-	const oldRows = flatRows(node).map((entry) => entry.element);
+	const flat = flatRows(node);
+	const oldRows = flat.map((entry) => entry.element);
 	if (oldRows.length !== base.rows.length)
 		throw new Error('The rows of a merged table do not match its source.');
 	const rowOf = new Map<string, number>();
@@ -58,7 +61,8 @@ export function writeMergedRows(
 			const tc = cells[index];
 			const baseCell = sourceRow[index]!;
 			if (!tc) return;
-			const oldParagraphs = flatCellParagraphs(tc).map((entry) => entry.element);
+			const flatParagraphs = flatCellParagraphs(tc);
+			const oldParagraphs = flatParagraphs.map((entry) => entry.element);
 			const used = new Set<number>();
 			const next = cell.paragraphs.map((paragraph) => {
 				const id = sourceId(paragraph.id);
@@ -68,10 +72,16 @@ export function writeMergedRows(
 				const before = old && { ...baseCell.paragraphs[at]!, id: paragraph.id };
 				return writeParagraph(doc, paragraph, old ?? makeW(doc, 'p'), before);
 			});
-			replaceSlots(tc, oldParagraphs, next);
+			placeCellParagraphs(doc, tc, flatParagraphs, cell.paragraphs, next);
+			// A copied cell control is the copy's own (`placeTableControl` gives it its new id).
+			placeTableControl(doc, tc, cell.contentControl, baseCell.contentControl);
 		});
 		return tr;
 	});
-	replaceSlots(node, oldRows, nextRows);
+	// Each row keeps or joins the row controls the model gives it: a repeating section's new item
+	// goes inside the section, after the item before it.
+	const chains = table.rows.map((_, index) => blockChain(table.rowProperties?.[index]));
+	if (!placeControlledById(doc, node, flat, chains, nextRows, null))
+		replaceSlots(node, oldRows, nextRows);
 	return node;
 }

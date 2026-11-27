@@ -61,6 +61,8 @@ export interface TableFloatingPosition {
 export interface TableRowProperties {
 	/** The `w:sdt` around this row: saving patches what changed, and wraps or unwraps the row. */
 	contentControl?: import('./content-control-model').ContentControl;
+	/** The row-level controls around `contentControl` (a repeating section around its item). */
+	outerContentControls?: import('./content-control-model').ContentControl[];
 	heightTwips?: Twips;
 	/** `exact` fixes the height; `atLeast` (Word's `atLeast` and `auto`) is a minimum. */
 	heightRule?: 'atLeast' | 'exact';

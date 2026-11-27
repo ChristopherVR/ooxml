@@ -85,6 +85,8 @@ export interface Table {
 	type: 'table';
 	/** The block-level content control (`w:sdt` around the table) this table belongs to. */
 	contentControl?: import('./content-control-model').ContentControl;
+	/** The block-level controls around `contentControl`, outermost first. */
+	outerContentControls?: import('./content-control-model').ContentControl[];
 	id: string;
 	/** Whether row, cell and paragraph structure can be edited without losing unsupported table XML. */
 	structureEditable?: boolean;

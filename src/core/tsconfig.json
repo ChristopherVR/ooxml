@@ -20,6 +20,7 @@
 			"ooxml-core/pptx": ["./pptx/index.ts"],
 			"ooxml-core/math": ["./math/index.ts"],
 			"ooxml-core/docx/mail-merge": ["./docx/mail-merge/index.ts"],
+			"ooxml-core/docx/content-controls": ["./docx/content-controls/index.ts"],
 			"ooxml-core/xml": ["./xml/public.ts"]
 		}
 	},
