@@ -3,6 +3,7 @@
 // "hidden rows, columns and filter settings" the hidden rows and columns and the auto-filter; with
 // "print settings" the page setup and print options. Hidden rows, columns, the filter range and
 // the print area go to hidden `Z_<GUID>_.wvu.*` names, as Excel stores them.
+import { createOfficeGuid } from '../../crypto/uuid';
 import { columnIndex, columnLabel, parseRange, quoteSheetName } from '../address';
 import type {
 	AutoFilter,
@@ -45,16 +46,6 @@ export interface CustomViewDraft {
 /** The views of the workbook, in the order Excel lists them. */
 export const customViewsOf = (workbook: Workbook): CustomWorkbookView[] =>
 	workbook.customViews ?? [];
-
-const newGuid = (): string => {
-	const id =
-		globalThis.crypto?.randomUUID?.() ??
-		'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-			const r = Math.floor(Math.random() * 16);
-			return (c === 'x' ? r : (r & 3) | 8).toString(16);
-		});
-	return `{${id.toUpperCase()}}`;
-};
 
 /** The prefix of the hidden names that belong to a view (`Z_9EDFE334_..._.wvu.`). */
 export const viewNamePrefix = (guid: string): string =>
@@ -177,7 +168,7 @@ export function addCustomView(ctx: EditContext, draft: CustomViewDraft): string 
 	return ctx.run('Add custom view', 'view', [{ kind: 'workbook' }], () => {
 		const same = customViewsOf(workbook).find((v) => v.name.toLowerCase() === name.toLowerCase());
 		if (same) removeView(workbook, same.guid);
-		const guid = newGuid();
+		const guid = createOfficeGuid();
 		const active = workbook.sheets[workbook.activeSheet];
 		const attrs: Record<string, string> = active ? { activeSheetId: String(active.sheetId) } : {};
 		workbook.customViews = [

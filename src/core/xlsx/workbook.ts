@@ -1,11 +1,16 @@
 import { OFFICE_COLORS } from '../drawingml/office-theme-colors';
+import {
+	OFFICE_THEME_FONTS,
+	themeFontPair,
+	type ThemeFontPair,
+} from '../drawingml/office-theme-fonts';
 import type { CellStyle, ThemePalette, Workbook, Worksheet } from './model';
 
 /** The Office 2013+ default theme ("Office") palette, used when a package has no theme part. */
 export const DEFAULT_THEME: ThemePalette = {
 	colors: [...OFFICE_COLORS],
-	majorFont: 'Calibri Light',
-	minorFont: 'Calibri',
+	majorFont: OFFICE_THEME_FONTS.major,
+	minorFont: OFFICE_THEME_FONTS.minor,
 };
 
 /** Excel's default row height for 11pt Calibri, in points. */
@@ -13,10 +18,13 @@ export const DEFAULT_ROW_HEIGHT = 15;
 /** Excel's default column width in characters (8.43 plus the 5px padding rounds to 8.43). */
 export const DEFAULT_COL_WIDTH = 8.43;
 
-/** The default cell format of a new workbook (11pt Calibri, General, no fill or border). */
-export function defaultCellStyle(): CellStyle {
+/**
+ * The default cell format of a new workbook (11pt in the theme's body font, General, no fill or
+ * border). Excel names the face and marks it `scheme="minor"`, so it follows the theme.
+ */
+export function defaultCellStyle(minorFont: string = OFFICE_THEME_FONTS.minor): CellStyle {
 	return {
-		font: { name: 'Calibri', size: 11, family: 2, scheme: 'minor', color: { theme: 1 } },
+		font: { name: minorFont, size: 11, family: 2, scheme: 'minor', color: { theme: 1 } },
 		fill: { type: 'pattern', pattern: 'none' },
 		border: {},
 		numFmt: 'General',
@@ -54,17 +62,25 @@ export function createWorksheet(name: string, sheetId: number): Worksheet {
 export interface CreateWorkbookOptions {
 	/** Sheet names to create; defaults to a single `Sheet1`. */
 	sheets?: string[];
+	/** The theme's heading and body fonts; by default `OFFICE_THEME_FONTS` (drawingml). */
+	themeFonts?: Partial<ThemeFontPair>;
 }
 
 /** A new, empty workbook. */
 export function createWorkbook(options: CreateWorkbookOptions = {}): Workbook {
 	const names = options.sheets?.length ? options.sheets : ['Sheet1'];
+	const fonts = themeFontPair(options.themeFonts);
 	return {
 		sheets: names.map((name, index) => createWorksheet(name, index + 1)),
-		styles: [defaultCellStyle()],
-		namedStyles: [{ name: 'Normal', style: defaultCellStyle(), builtinId: 0 }],
+		styles: [defaultCellStyle(fonts.minor)],
+		namedStyles: [{ name: 'Normal', style: defaultCellStyle(fonts.minor), builtinId: 0 }],
 		definedNames: [],
-		theme: { ...DEFAULT_THEME, colors: [...DEFAULT_THEME.colors] },
+		theme: {
+			...DEFAULT_THEME,
+			colors: [...DEFAULT_THEME.colors],
+			majorFont: fonts.major,
+			minorFont: fonts.minor,
+		},
 		activeSheet: 0,
 		date1904: false,
 		properties: {},

@@ -1,3 +1,4 @@
+import { createOfficeGuid } from '../../crypto/uuid';
 import {
 	NS,
 	buildXml,
@@ -140,7 +141,7 @@ export function appendSparklineXml(sheet: Worksheet, groupXml: string): string[]
 		)
 	) {
 		fresh.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xr2', revision);
-		fresh.setAttributeNS(revision, 'xr2:uid', `{${globalThis.crypto.randomUUID().toUpperCase()}}`);
+		fresh.setAttributeNS(revision, 'xr2:uid', createOfficeGuid());
 	}
 	groups.appendChild(fresh);
 	source[index] = buildXml(root);
