@@ -50,6 +50,19 @@ describe('Word ink', () => {
 		expect(await saved.file('word/document.xml')!.async('string')).toContain('w14:contentPart');
 	});
 
+	it('drops the stale fallback picture of ink whose strokes changed', async () => {
+		const loaded = await loadDocx(fixture('word-ink-floating.docx'));
+		const source = await JSZip.loadAsync(fixture('word-ink-floating.docx'));
+		const fallbacks = (xml: string) => (xml.match(/<mc:Fallback/g) ?? []).length;
+		const before = fallbacks(await source.file('word/document.xml')!.async('string'));
+		const edited = structuredClone(loaded.model);
+		inkImage(edited).ink!.strokes.splice(0, 1);
+		const zip = await JSZip.loadAsync(await loaded.save(edited));
+		const xml = await zip.file('word/document.xml')!.async('string');
+		expect(fallbacks(xml)).toBeLessThan(before);
+		expect(xml).toContain('<w14:contentPart');
+	});
+
 	it('saves erased strokes and reads them back', async () => {
 		const loaded = await loadDocx(fixture('word-ink-floating.docx'));
 		const edited = structuredClone(loaded.model);
@@ -212,6 +225,19 @@ describe('Word ink', () => {
 			inksIn(copy.blocks)[1]!.strokes.splice(0, 2);
 			const after = inksIn((await loadDocx(await again.save(copy))).model.blocks);
 			expect(after.map((ink) => ink.strokes.length)).toEqual([4, 2]);
+		});
+
+		it('keeps the original whole when an edited copy is saved', async () => {
+			const loaded = await loadDocx(fixture('word-ink-inline.docx'));
+			const edited = structuredClone(loaded.model);
+			const copy = structuredClone(inkRun(edited));
+			copy.image!.ink!.strokes.splice(0, 2);
+			edited.blocks.push({ type: 'paragraph', runs: [copy] } as Paragraph);
+			const bytes = await loaded.save(edited);
+			const inks = inksIn((await loadDocx(bytes)).model.blocks);
+			expect(inks.map((ink) => ink.strokes.length)).toEqual([4, 2]);
+			const zip = await JSZip.loadAsync(bytes);
+			expect(await zip.file('word/ink/ink1.xml')!.async('string')).toBe(await sourcePart());
 		});
 
 		it('keeps ink through a paragraph split and join', async () => {

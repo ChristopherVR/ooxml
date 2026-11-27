@@ -1,6 +1,7 @@
 import type { DOMOutputSpec, NodeSpec, MarkSpec } from 'prosemirror-model';
 import { inlineRunFormattingAttrs, inlineRunPropertiesDomAttrs } from './inline-run-properties';
 import { chartNodeSpec } from './chart-spec';
+import { inkClipboardAttrs, inkFromClipboard } from './ink-clipboard';
 import { isWordNavigableHref } from '../hyperlink';
 
 const safeAttrValue = (value: unknown): string => String(value ?? '').replace(/[;{}"]/g, '');
@@ -114,6 +115,7 @@ export const imageNodeSpec: NodeSpec = {
 				title: (el as HTMLElement).getAttribute('title') || null,
 				anchored: (el as HTMLElement).dataset.anchored === '1',
 				unsupported: (el as HTMLElement).dataset.unsupported || null,
+				...inkFromClipboard(el as HTMLElement),
 			}),
 		},
 	],
@@ -127,6 +129,7 @@ export const imageNodeSpec: NodeSpec = {
 							'data-docx-image-placeholder': '1',
 							...inlineRunPropertiesDomAttrs(node),
 							...(node.attrs.diagram ? { 'data-docx-smartart': '1' } : {}),
+							...inkClipboardAttrs(node),
 							class: 'dve-image-placeholder',
 							style: `width:${cssPixels(node.attrs.widthPx)}px;height:${cssPixels(node.attrs.heightPx)}px`,
 						},

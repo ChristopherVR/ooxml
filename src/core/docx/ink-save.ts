@@ -57,7 +57,7 @@ async function bodyInkParts(zip: JSZip) {
 }
 
 /**
- * Rewrites every kept ink part whose strokes changed since `base`, and removes the parts of the
+ * Rewrites the part of every ink that kept its drawing (`keptInk`) and whose strokes changed since `base`, and removes the parts of the
  * body's ink that the saved body no longer refers to (deleted, or moved to a part of its own),
  * with their relationships. Runs after the body is written.
  */
@@ -65,22 +65,20 @@ export async function applyInkPartEdits(
 	zip: JSZip,
 	model: DocumentModel,
 	base: DocumentModel | undefined,
+	keptInk: ReadonlySet<object>,
 ): Promise<void> {
 	if (!base) return;
 	const bodyParts = new Set(inksIn(base.blocks).flatMap((ink) => ink.partName ?? []));
 	const body = bodyParts.size ? await bodyInkParts(zip) : undefined;
-	const kept = (part: string) => !bodyParts.has(part) || Boolean(body?.parts.has(part));
 	const loaded = new Map<string, string>();
 	for (const ink of inksIn(documentDrawingBlocks(base)))
 		if (ink.partName) loaded.set(ink.partName, JSON.stringify(ink));
 	const changed = inkImages(documentDrawingBlocks(model)).filter((image) => {
 		const ink = image.ink!;
 		const before = loaded.get(ink.partName!);
+		// Only ink that kept its own drawing: a copy still names the part it was copied from.
 		return (
-			kept(ink.partName!) &&
-			!ink.truncated &&
-			before !== undefined &&
-			before !== JSON.stringify(ink)
+			keptInk.has(ink) && !ink.truncated && before !== undefined && before !== JSON.stringify(ink)
 		);
 	});
 	if (changed.length) {

@@ -244,6 +244,14 @@ export function createImageRun(
 	if (chart) return chart;
 	// Kept ink keeps its drawing (its part is saved by ink-save.ts); new ink gets a part on save.
 	if (base?.ink && oldDrawing && image.ink?.relId && image.ink.relId === base.ink.relId) {
+		allocator?.docPrIds.keptInk.add(image.ink);
+		// The fallback picture shows the strokes as they were: drop it once they change.
+		if (
+			oldContainer?.localName === 'AlternateContent' &&
+			JSON.stringify(image.ink.strokes) !== JSON.stringify(base.ink.strokes)
+		)
+			for (const child of Array.from(oldContainer.childNodes))
+				if (isElement(child) && child.localName === 'Fallback') oldContainer.removeChild(child);
 		if (image.widthPx !== base.widthPx || image.heightPx !== base.heightPx) {
 			updateExtent(oldDrawing, image.widthPx, image.heightPx);
 			patchInkXfrm(oldDrawing, image.widthPx, image.heightPx);

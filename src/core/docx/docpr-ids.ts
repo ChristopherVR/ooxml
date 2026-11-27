@@ -10,6 +10,11 @@ const OLE_SHAPE_ID = /<(?:[\w.-]+:)?shape\b[^>]*?\sid\s*=\s*["']_x0000_i(\d+)["'
 const VML_NS = 'urn:schemas-microsoft-com:vml';
 
 export class DocPrIdAllocator {
+	/**
+	 * The ink that kept its own drawing (and so its part) in this save. Only their parts may be
+	 * rewritten: a copy of ink still names the part it was copied from.
+	 */
+	readonly keptInk = new Set<object>();
 	private max = 0;
 	private used = new Set<number>();
 
