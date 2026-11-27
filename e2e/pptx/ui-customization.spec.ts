@@ -140,9 +140,8 @@ test.describe('UI customization', () => {
 		await callCustomization(page, 'hideRibbonControl', 'smartArtFormat.arrange.bringForward');
 		await expect(contextual).toBeHidden();
 		await ribbonTab(page, 'Home').click();
-		await expect(
-			page.locator('[data-ribbon-group="home.arrange"]').locator(bringForward),
-		).toBeVisible();
+		await page.locator('[data-ribbon-control="home.drawing.arrange"] button').click();
+		await expect(page.getByRole('menuitem', { name: 'Bring Forward', exact: true })).toBeVisible();
 	});
 
 	test('File > Options drops a hidden page and renders a locked setting read-only', async ({
