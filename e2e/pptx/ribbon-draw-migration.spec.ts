@@ -49,7 +49,8 @@ test('shared Draw choices retain native ink, undo and saved strokes', async ({ p
 	await writeFile(saved, bytes);
 	const zip = await JSZip.loadAsync(bytes);
 	const ink = await zip.file('ppt/ink/ink1.xml')!.async('string');
-	expect(ink).toMatch(/name="width" value="16"/u);
+	// A 16 px pen is written in centimetres (16 * 2.54 / 96), the unit Office reads.
+	expect(ink).toMatch(/name="width" value="0\.4233\d*" units="cm"/u);
 	expect(ink).toMatch(/name="color" value="#ff0000"/u);
 	expect(ink).toMatch(/<ink:timestamp[^>]*timeString="[^"]+Z"/u);
 	expect(ink).toMatch(/pva:sampleTimes="0(?:,\d+)+"/u);
