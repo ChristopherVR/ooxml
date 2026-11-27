@@ -12,7 +12,7 @@ import { settings } from './settings.js';
 import { mountProfile } from './profile.js';
 import { documentDatabase } from './profile-state.js';
 import { renderLibrary, toggleFavourite } from './home.js';
-import { product, mountProduct } from './product.js';
+import { product, mountProduct, suiteBase } from './product.js';
 import { mountFileActions } from './file-actions.js';
 import { mountDiskSearch } from './disk-search.js';
 import { mountPwa } from './pwa.js';
@@ -303,6 +303,24 @@ async function create(kind) {
 	void preloadEditor(kind)?.catch(() => {});
 	const name = `${blankNames[kind]} ${files.filter((d) => d.kind === kind).length + 1}.${kind}`;
 	const doc = await store.create(name, await blankDocument(kind));
+	await open(doc.id, undefined, { focus: true });
+}
+/**
+ * Opens the sample the address names (`?sample=<id>`, from the gallery at samples/): an earlier
+ * copy that was never edited, or a new one fetched from this site. See samples.js.
+ */
+async function openSample() {
+	const samples = await import('./samples.js');
+	const link = samples.takeSampleLink(location.href);
+	history.replaceState(null, '', link.href);
+	if (!link.id) throw new Error('That sample is not available.');
+	notify('Opening the sample...');
+	const sample = await samples.findSample(link.id, { base: suiteBase });
+	const doc =
+		samples.untouchedCopy(files, sample) ??
+		(await store.create(sample.name, await samples.downloadSample(sample), {
+			sourceUrl: sample.url,
+		}));
 	await open(doc.id, undefined, { focus: true });
 }
 async function importFiles(items) {
@@ -645,7 +663,9 @@ task(async () => {
 	await loadPolicy();
 	document.body.dataset.ai = assistantEnabled() ? 'on' : 'off';
 	const id = localDocumentId(location.href);
-	if (id) await open(id);
+	// A sample link from the gallery wins over the route: it is what the visitor asked for.
+	if (new URLSearchParams(location.search).has('sample')) await openSample();
+	else if (id) await open(id);
 	else if (localAttachmentId(location.href)) await showAttachment(localAttachmentId(location.href));
 	else if (location.hash === '#/teams' || (product === 'teams' && !location.hash))
 		await showTeams();

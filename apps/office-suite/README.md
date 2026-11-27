@@ -23,7 +23,7 @@ The first visit asks where to start:
 - **One product on its own**: [Word](../../viewers/docx#readme), [Excel](../../viewers/xlsx#readme), [PowerPoint](../../viewers/pptx#readme), [Visio](../../viewers/visio#readme) or [Teams](../../viewers/teams#readme), each on its own site with its documentation and framework demos.
 - **Documentation**: the hub at [`/ooxml/docs/`](https://christophervr.github.io/ooxml/docs/) (`site/docs/`), one page that links every manual: the apps, `ooxml-core`, `ooxml-ui`, the MCP server, the suite and the desktop build.
 
-In the browser the sidebar's Resources group links to the documentation and reopens the chooser; an installed app hides the group, since it has no browser chrome to come back through. The look of every page on the site follows [the pages design system](../../docs/pages-design.md).
+In the browser the sidebar's Resources group links to the documentation and the [sample files](../../samples/README.md) (the gallery at [`/ooxml/samples/`](https://christophervr.github.io/ooxml/samples/), whose cards open a sample in its editor through `?sample=<id>`) and reopens the chooser; an installed app hides the group, since it has no browser chrome to come back through. The look of every page on the site follows [the pages design system](../../docs/pages-design.md).
 
 ## Run it
 

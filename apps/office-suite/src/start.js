@@ -50,6 +50,8 @@ export function needsChooser() {
 		globalThis.ooxmlOneDriveOptions?.launchLinks?.param ??
 		'open';
 	if (url.searchParams.has(param) || url.searchParams.has('text')) return false;
+	// So does a sample picked in the gallery (samples.js).
+	if (url.searchParams.has('sample')) return false;
 	if (url.searchParams.has('suite')) {
 		url.searchParams.delete('suite');
 		history.replaceState(null, '', url);
@@ -132,10 +134,10 @@ export function mountStart() {
 	$('app-launcher').append(change);
 }
 /**
- * The Resources group at the end of the sidebar: the documentation hub, the release notes and, in
- * the suite, the start screen with the product sites. An installed app has no browser chrome to
- * come back through, so it shows none of them; the links open in the browser from the app launcher
- * there instead.
+ * The Resources group at the end of the sidebar: the documentation hub, the samples gallery, the
+ * release notes and, in the suite, the start screen with the product sites. An installed app has
+ * no browser chrome to come back through, so it shows none of them; the links open in the browser
+ * from the app launcher there instead.
  */
 export function mountResources() {
 	if (!/^https?:$/.test(location.protocol)) return;
@@ -143,7 +145,7 @@ export function mountResources() {
 	const rail = $('rail');
 	rail.insertAdjacentHTML(
 		'beforeend',
-		`<span class="nav-caption">Resources</span><a class="rail-link" href="${new URL('docs/', suiteBase)}">${icon('book')}<span>Documentation</span></a><a class="rail-link" href="${new URL('releases/2.0/', suiteBase)}">${icon('spark')}<span>Release notes</span></a>`,
+		`<span class="nav-caption">Resources</span><a class="rail-link" href="${new URL('docs/', suiteBase)}">${icon('book')}<span>Documentation</span></a><a class="rail-link" href="${new URL('samples/', suiteBase)}">${icon('doc')}<span>Sample files</span></a><a class="rail-link" href="${new URL('releases/2.0/', suiteBase)}">${icon('spark')}<span>Release notes</span></a>`,
 	);
 	if (product) return;
 	const sites = document.createElement('button');

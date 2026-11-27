@@ -403,6 +403,14 @@ The suite uses the editors above, so their sections apply. In addition:
   short-lived token for the sync server. No document or chat content is sent, and the token is
   kept in memory only. Leave the field empty to turn the request off; a sync server that needs a
   token then cannot be used.
+- **Sample files:** the gallery at `samples/` is a static page that shows thumbnails from the
+  site itself. Choosing "Open in Word" (or Excel, PowerPoint, Visio) there opens the suite with
+  `?sample=<id>` in the address; only then does the suite fetch `samples/manifest.json` and that
+  one sample file, both from its own origin, and add a copy to the library in this browser, as
+  with any opened file. Nothing is sent, the id can only select a file the manifest lists, and no
+  sample is fetched without that parameter. Offline, the request fails with a message and the
+  workspace opens as usual. There is no setting for it because nothing happens until the user
+  follows such a link.
 - **Updates:** the installed app checks its own origin for a new `sw.js` at start, on focus and
   hourly. The service worker caches only the app's own files, and serves a saved copy only while
   it matches the SHA-256 the build recorded for it; a copy that does not is deleted and fetched
