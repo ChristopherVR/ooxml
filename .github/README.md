@@ -15,6 +15,7 @@ One library for every format, real editors for every major framework, and no ser
 
 [**Open OOXML Office**](https://christophervr.github.io/ooxml/) &nbsp;&middot;&nbsp;
 [**Docs**](https://christophervr.github.io/ooxml/docs/) &nbsp;&middot;&nbsp;
+[**Samples**](https://christophervr.github.io/ooxml/samples/) &nbsp;&middot;&nbsp;
 [**Packages**](#packages) &nbsp;&middot;&nbsp;
 [**Quick start**](#quick-start) &nbsp;&middot;&nbsp;
 [**Changelog**](https://github.com/ChristopherVR/ooxml/releases) &nbsp;&middot;&nbsp;
@@ -94,6 +95,10 @@ Profiles are local conveniences, not sign-in; the only cloud drive is a OneDrive
 
 Word and Excel are labelled Stable and Visio and OpenTeams Beta under the [stability policy](../docs/stability.md); PowerPoint has not yet been assessed against it.
 
+## Samples
+
+Sample files to try: https://christophervr.github.io/ooxml/samples/
+
 ## Packages
 
 Every editor ships the same component for each framework. Pick the cell for your product and framework.
@@ -115,7 +120,7 @@ Shared by all of them:
 | [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp)                                   | One MCP server that composes the four format servers.                                                      |
 | [`@christophervr/pptx-viewer`](https://www.npmjs.com/package/@christophervr/pptx-viewer) | An interactive installer for the PowerPoint packages, and a drop-in for `pptx-react-viewer`.               |
 
-Each product's README has install steps and a snippet for every framework: [Word](../viewers/docx#readme), [Excel](../viewers/xlsx#readme), [PowerPoint](../viewers/pptx#readme), [Visio](../viewers/visio#readme), [OpenTeams](../viewers/teams#readme).
+Each product's README lists its packages and quick start, and each package README has the snippet, props and events for its framework: [Word](../viewers/docx#readme), [Excel](../viewers/xlsx#readme), [PowerPoint](../viewers/pptx#readme), [Visio](../viewers/visio#readme), [OpenTeams](../viewers/teams#readme).
 
 ## Quick start
 
