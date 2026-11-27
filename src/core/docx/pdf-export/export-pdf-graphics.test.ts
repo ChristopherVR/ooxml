@@ -71,7 +71,10 @@ function inspect(bytes: Uint8Array) {
 }
 
 /** A one-section document with an optional default header (and its media). */
-async function docx(body: string, options: { header?: string; sectPr?: string } = {}) {
+async function docx(
+	body: string,
+	options: { header?: string; sectPr?: string; png?: Uint8Array } = {},
+) {
 	const zip = new JSZip();
 	const headerRef = options.header ? '<w:headerReference w:type="default" r:id="rH"/>' : '';
 	zip.file(
@@ -92,7 +95,7 @@ async function docx(body: string, options: { header?: string; sectPr?: string } 
 			'word/_rels/header1.xml.rels',
 			`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId5" Type="${R}/image" Target="media/image1.png"/></Relationships>`,
 		);
-		zip.file('word/media/image1.png', PNG);
+		zip.file('word/media/image1.png', options.png ?? PNG);
 	}
 	return loadDocx(await zip.generateAsync({ type: 'uint8array' }));
 }
@@ -187,9 +190,21 @@ describe('exportDocxPdf graphics', () => {
 		const pdf = inspect(bytes);
 		// 468 x 234 pt centred on the 6.5 x 9 in text area of a Letter page, 96 px per inch.
 		expect(pdf.content).toContain('624 0 0 -312 96 684 cm\n/Im0 Do');
-		// The black pixel is washed out to light grey (0.09 x + 0.805).
-		expect([...pdf.images[0]!]).toEqual([205, 205, 205]);
+		// The black pixel is washed out to light grey (0.8), as Word does; white stays white.
+		expect([...pdf.images[0]!]).toEqual([204, 204, 204]);
 		expect(report.omitted).toEqual([]);
+	});
+
+	it('keeps white pixels white in a washed-out picture watermark', async () => {
+		const picture = `<w:r><w:pict><v:shape xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" id="WordPictureWatermark7" o:spid="_x0000_s2050" type="#_x0000_t75" style="position:absolute;width:100pt;height:50pt;mso-position-horizontal:center;mso-position-horizontal-relative:margin;mso-position-vertical:center;mso-position-vertical-relative:margin"><v:imagedata r:id="rId5" gain="19661f" blacklevel="22938f"/></v:shape></w:pict></w:r>`;
+		// One black and one white pixel.
+		const png = Buffer.from(
+			'iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAAD0lEQVR4nGNgYGD4//8/AAYBAv4CsjmuAAAAAElFTkSuQmCC',
+			'base64',
+		);
+		const loaded = await docx(para('Body'), { header: `<w:p>${picture}</w:p>`, png });
+		const { bytes } = await exportDocxPdf(loaded.model, { measurer, media: loaded.media! });
+		expect([...inspect(bytes).images[0]!]).toEqual([204, 204, 204, 255, 255, 255]);
 	});
 
 	it('draws a floating shape anchored in the header', async () => {

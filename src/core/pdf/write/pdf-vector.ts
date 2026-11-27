@@ -86,7 +86,7 @@ const textReset = (spacing: PdfTextSpacing): string =>
 export class PdfVectorPage {
 	readonly #ops: string[] = [];
 	readonly fonts = new Map<string, string>();
-	readonly alphas = new Map<string, { fill: number; stroke: number }>();
+	readonly alphas = new Map<string, { fill: number; stroke: number; blend?: string }>();
 	readonly images = new Map<string, PdfImageResource>();
 	readonly embeddedFonts = new Map<string, PdfCidFont>();
 	readonly shadings = new Map<string, PdfShading>();
@@ -147,12 +147,14 @@ export class PdfVectorPage {
 	lineStyle(width: number, cap: number, join: number, dash: readonly number[] = []): void {
 		this.op(`${num(width)} w ${cap} J ${join} j [${dash.map(num).join(' ')}] 0 d`);
 	}
-	/** Constant fill and stroke opacity (1 emits nothing). */
-	alpha(fill: number, stroke = fill): void {
-		let name = [...this.alphas].find(([, v]) => v.fill === fill && v.stroke === stroke)?.[0];
+	/** Constant fill and stroke opacity, with an optional blend mode name (`Lighten`). */
+	alpha(fill: number, stroke = fill, blend?: string): void {
+		let name = [...this.alphas].find(
+			([, v]) => v.fill === fill && v.stroke === stroke && v.blend === blend,
+		)?.[0];
 		if (!name) {
 			name = `GS${this.alphas.size}`;
-			this.alphas.set(name, { fill, stroke });
+			this.alphas.set(name, blend ? { fill, stroke, blend } : { fill, stroke });
 		}
 		this.op(`/${name} gs`);
 	}
@@ -420,7 +422,8 @@ export function buildVectorPdf(
 			([name, shading]) => `/${name} ${shadingDict(shading)}`,
 		);
 		const states = [...page.alphas].map(
-			([name, v]) => `/${name} << /ca ${num(v.fill)} /CA ${num(v.stroke)} >>`,
+			([name, v]) =>
+				`/${name} << /ca ${num(v.fill)} /CA ${num(v.stroke)}${v.blend ? ` /BM /${v.blend}` : ''} >>`,
 		);
 		const content = latin1(page.content);
 		const contentId = next++;

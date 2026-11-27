@@ -13,11 +13,13 @@ import type { DocxPdfStoryGraphics } from './pdf-story-graphics';
 const DEFAULT_FAMILY = 'Calibri';
 const DEFAULT_COLOR = '#c0c0c0';
 /**
- * DrawingML's washout maps each channel x to 0.09x + 0.805 (`WASHOUT_FILTER`): a grey of
- * 0.805 / 0.91 laid over the picture at 91% opacity, or the samples changed when they are decoded.
+ * Word's washout maps each channel x to min(1, 0.3x + 0.8) (gain 0.3, black level lifted to 0.8):
+ * black becomes light grey and white stays white, as Word's PDF shows (a picture's white
+ * background is not tinted). Applied to the samples when they are decoded; a JPEG, written as it
+ * is, gets a lightening grey layer (max(x, 0.8)) instead.
  */
-const WASHOUT_KEEP = 0.09;
-const WASHOUT_ADD = 0.805;
+const WASHOUT_GAIN = 0.3;
+const WASHOUT_FLOOR = 0.8;
 
 const washed = new WeakMap<PdfImageResource, PdfImageResource>();
 
@@ -27,7 +29,10 @@ function washedOut(resource: PdfImageResource): PdfImageResource | undefined {
 	if (!result) {
 		const data = new Uint8Array(resource.data.length);
 		for (let index = 0; index < data.length; index++)
-			data[index] = Math.round(resource.data[index]! * WASHOUT_KEEP + WASHOUT_ADD * 255);
+			data[index] = Math.min(
+				255,
+				Math.round(resource.data[index]! * WASHOUT_GAIN + WASHOUT_FLOOR * 255),
+			);
 		result = { ...resource, data };
 		washed.set(resource, result);
 	}
@@ -105,11 +110,11 @@ function paintPicture(painter: DocxPdfPainter, spec: PictureWatermarkSpec, page:
 	}
 	pictures.draw(pdf, picture, x, y);
 	if (!spec.washout || !resource) return;
-	// A JPEG is written as it is: the washout is a grey veil over the (opaque) picture.
-	const grey = WASHOUT_ADD / (1 - WASHOUT_KEEP);
+	// A JPEG is written as it is: a grey layer that only lightens, so black rises to the floor and
+	// white stays white.
 	pdf.save();
-	pdf.alpha(1 - WASHOUT_KEEP);
-	pdf.fillColor(grey, grey, grey);
+	pdf.alpha(1, 1, 'Lighten');
+	pdf.fillColor(WASHOUT_FLOOR, WASHOUT_FLOOR, WASHOUT_FLOOR);
 	pdf.rect(x, y, widthPx, heightPx);
 	pdf.op('f');
 	pdf.restore();
