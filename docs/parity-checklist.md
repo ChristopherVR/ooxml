@@ -838,13 +838,20 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Save as PDF (File > Export > Create a PDF, `exportPdf()`, `exportDocxPdf`) writes real
       text, vector borders, shading and rules, and pictures at their own resolution on the Print
       Layout pages, with headers, footers, page fields and footnotes, a page range, document
-      properties and a report, without a print dialog (`src/ui/src/docx/pdf/`, #318).
+      properties and a report, without a print dialog (`src/core/docx/pdf-export/`, #318).
 - [x] **P1** Save as PDF keeps hyperlinks, links to bookmarks, `\h` cross-references and table of
       contents entries clickable, writes headings or Word bookmarks as the PDF's bookmarks, tags
       the PDF for accessibility (headings, paragraphs, tables, figures with alt text, links;
       headers and footers as artifacts), writes PDF/A-2b metadata and an sRGB output intent, and
       with markup shows tracked changes in author colours with change bars and comments as notes
-      (`src/ui/src/docx/pdf/pdf-hooks.ts`, `export/pdf-structure.ts`, #318).
+      (`src/core/docx/pdf-export/pdf-hooks.ts`, `src/core/pdf/write/pdf-structure.ts`, #318).
+- [x] **P1** Save as PDF runs on a server: `ooxml-core/docx/pdf-export` loads no editor module and
+      needs no canvas; with the document's fonts it measures text from the font files (advance
+      widths, kerning where Word kerns, Word's line heights), substitutes a missing font through the
+      host's mapping or the substitution table and reports a font it had to estimate. On a Word 16
+      reference set (letter, three-page table with a repeated header row, header and footer with
+      page numbers, footnotes, a landscape section) the page counts and every line break match
+      Word's Save as PDF; layouts outside that set are not claimed (#362).
 - [x] **P1** Save as PDF writes charts and drawing shapes as vector paths with real text (through
       the shared SVG to PDF converter), text boxes with the lines the page engine laid out,
       watermarks (text turned and half transparent, pictures washed out), page borders and line
@@ -1733,7 +1740,7 @@ installed Visio 16 build is used to check that saved files open without repair.
       the connector's own text, and a refresh keeps the shape and connector IDs of rows that
       remain and is one undo step.
 - [x] **P1** PDF export writes vector paths, arrowheads, pictures and selectable text per page,
-      with a per-page report of what degraded (`src/ui/src/export/pdf-vector.ts`,
+      with a per-page report of what degraded (`src/core/pdf/write/pdf-vector.ts`,
       `visio/viewer-pdf.ts`).
 - [x] **P1** PDF Export has a page range (all, current page, from/to over the foreground pages),
       shows the per-page report on the Export page, draws linear and radial gradients as PDF

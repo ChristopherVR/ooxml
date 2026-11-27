@@ -1,12 +1,12 @@
 # Word PDF export: PDF/A
 
-`exportDocxPdf(model, { pdfA: true })` (`src/ui/src/docx/pdf/export-pdf.ts`, File > Export >
+`exportDocxPdf(model, { pdfA: true })` (`ooxml-core/docx/pdf-export`, `src/core/docx/pdf-export/export-pdf.ts`; File > Export >
 Create a PDF with "PDF/A compliant") writes an ISO 19005-2 (PDF/A-2) file. This page says what
 that means, how it is checked, and what it does not claim.
 
 ## What the file contains
 
-- XMP metadata (`src/ui/src/export/pdf-archive.ts`), uncompressed, with `pdfaid:part` 2 and the
+- XMP metadata (`src/core/pdf/write/pdf-archive.ts`), uncompressed, with `pdfaid:part` 2 and the
   title, author, subject, keywords, producer and dates of the document information dictionary.
   Both copies are written from the same cleaned value (`infoText`): characters XML cannot hold
   (control characters, U+FFFE, U+FFFF) are dropped and unpaired surrogates become U+FFFD, so the
@@ -26,7 +26,18 @@ PDF/A requires every font to be embedded, and the export can only embed font fil
 supplies (`fonts`, see [font-loading.md](./font-loading.md)). With `pdfA`, text in a family no
 supplied font is named for (a heading in Segoe UI, a chart in Aptos Narrow) is written with a
 supplied font that has its characters, reported in `report.substitutedFonts`, instead of an
-unembedded standard PDF font. Without `pdfA` those families keep the standard fonts, as before.
+unembedded standard PDF font. Without `pdfA`, a family whose substitute (`fontSubstitutions`, then
+the substitution table: Carlito for Calibri, Liberation Serif for Times New Roman...) is supplied
+is written with that file, as Word substitutes a missing font; any other keeps a standard font.
+
+## In Node
+
+`ooxml-core/docx/pdf-export` runs without the editor and without a canvas. Given `fonts` and no
+`measurer`, it lays the document out with those files (`createFontFileMeasurer`), so the PDF's
+line and page breaks come from the fonts it embeds; `report.fontMeasurement` lists how each
+family was measured (`supplied`, `mapping`, `substitute` or `estimated`). The output is
+deterministic: the same input, fonts and `now` give the same bytes. See the Node example and the
+Word comparison in `viewers/docx/docs/api.md` (Save as PDF in Node).
 
 The level the file declares follows what it contains (`pdfALevel`):
 
@@ -51,7 +62,7 @@ writes the PDF/UA-1 identification schema (`pdfuaid:part` = 1) in XMP and sets
 
 `scripts/pdfa-validate.mjs` exports a corpus with `pdfA: true` and validates it with
 [veraPDF](https://verapdf.org), the open-source reference validator. The corpus
-(`src/ui/src/docx/pdf/__fixtures__/pdfa-corpus.ts`) covers embedded fonts with accented and
+(`src/core/docx/pdf-export/__fixtures__/pdfa-corpus.ts`) covers embedded fonts with accented and
 non-WinAnsi characters, Unicode and XML-special metadata, a PNG with alpha and a JPEG, a table,
 hyperlinks and links to bookmarks, the outline, the structure tree, headers, footers, a footnote,
 tracked changes and comment notes (markup), a chart, shapes and a text box, a translucent text
