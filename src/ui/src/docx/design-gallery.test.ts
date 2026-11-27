@@ -234,7 +234,8 @@ it('provides keyboard navigation, custom colors and opt-in design defaults', asy
 	);
 	blank.documentModel = null;
 	blank.documentModel = createDocument();
-	expect((await loadDocx(await blank.saveBytes())).model.theme?.formatScheme).toBeUndefined();
+	// A document given explicitly keeps its own design: it saves with the default Office theme.
+	expect((await loadDocx(await blank.saveBytes())).model.theme?.formatScheme?.name).toBe('Office');
 	editor.wordDesignPreferences = undefined;
 	expect(button('Set as Default')?.disabled).toBe(true);
 });
