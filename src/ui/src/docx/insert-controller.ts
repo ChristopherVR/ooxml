@@ -50,7 +50,7 @@ import { insertLocalDrawing } from './insert-local-drawing';
 import { captureScreenshotFile } from '../form/display-clipping';
 import { pickOfficeIcon } from '../form/icon-picker';
 import { openOfficeAddIns } from '../ribbon/add-in-dialog';
-import { wordAddInSelection } from './add-in-selection';
+import { loadWordAddInSelection } from './add-in-selection-loader';
 import { insertTextBox, selectedTextBox, updateTextBox } from './text-box-commands';
 import { focusView } from './focus-view';
 import { updateBodyFields } from './body-fields';
@@ -153,7 +153,7 @@ export class InsertController {
 					(label) => translateUiText(toolbar, label),
 					'word',
 					this.locale,
-					() => wordAddInSelection(() => this.host.view()),
+					() => loadWordAddInSelection(() => this.host.view()),
 				);
 			}
 		} else if (action.type === 'insertIcon') {

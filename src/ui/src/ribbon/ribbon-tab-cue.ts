@@ -1,3 +1,5 @@
+import { ribbonTabCueLabel } from './ribbon-tab-cue-label';
+
 /**
  * A cue that the ribbon's tab strip scrolls. The shared `office-ui-ribbon` already snaps its tabs
  * and keeps the active one in view; when more tabs lie past either edge this marks the ribbon
@@ -5,7 +7,11 @@
  * keeps a chevron button in the ribbon's `end` slot that scrolls the strip by a page, wrapping
  * back to the first tab from the end. Returns a disposer.
  */
-export function wireRibbonTabCue(ribbon: HTMLElement, label: () => string): () => void {
+export function wireRibbonTabCue(
+	ribbon: HTMLElement,
+	label = () =>
+		ribbon.getAttribute('overflow-label') || ribbonTabCueLabel(ribbon.dataset.editorLocale ?? 'en'),
+): () => void {
 	const doc = ribbon.ownerDocument;
 	const view = doc.defaultView;
 	const button = doc.createElement('button');
@@ -69,7 +75,7 @@ export function wireRibbonTabCue(ribbon: HTMLElement, label: () => string): () =
 		childList: true,
 		attributes: true,
 		subtree: true,
-		attributeFilter: ['data-label', 'data-tab-hidden', 'overflow-label'],
+		attributeFilter: ['data-label', 'data-tab-hidden', 'overflow-label', 'data-editor-locale'],
 	});
 	attach();
 	return () => {

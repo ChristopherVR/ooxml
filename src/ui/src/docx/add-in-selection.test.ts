@@ -2,6 +2,7 @@ import { afterEach, expect, it } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { wordAddInSelection } from './add-in-selection';
+import { loadWordAddInSelection } from './add-in-selection-loader';
 import { schema } from './schema';
 
 let view: EditorView | undefined;
@@ -24,4 +25,12 @@ it('reads a read-only selection and writes multiline plain text as paragraphs wh
 	expect(view.state.doc.textBetween(0, view.state.doc.content.size, '\n')).toBe('first\n\nlast');
 	expect(view.state.doc.childCount).toBe(3);
 	view.state.doc.forEach((child) => expect(child.attrs).toEqual(paragraph.attrs));
+});
+
+it('drops a Word selection adapter if its view changes while loading', async () => {
+	view = new EditorView(document.body, { state: EditorState.create({ schema }) });
+	let current: EditorView | undefined = view;
+	const selection = loadWordAddInSelection(() => current);
+	current = undefined;
+	await expect(selection).resolves.toBeUndefined();
 });

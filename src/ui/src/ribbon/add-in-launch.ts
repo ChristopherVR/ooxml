@@ -68,7 +68,8 @@ export function addInLauncher(
 			return current?.url?.href === live.url.href && current.runtime === live.runtime;
 		};
 		if (!active()) return;
-		const access = (live.runtime.selection ?? selection)?.();
+		const access = await (live.runtime.selection ?? selection)?.();
+		if (!active()) return;
 		openAddInPane(host, {
 			id: manifest.id,
 			url: live.url,

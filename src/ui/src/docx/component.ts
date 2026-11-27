@@ -20,7 +20,7 @@ import { closeWordCount } from './word-count-panel';
 import { releaseStateCaches } from './state-caches';
 import type { CollaborationConfig, ClientReceiveResult, StepBatch } from 'ooxml-core/docx/ui';
 import { watchOfficeAddIns } from '../ribbon/add-in-dialog';
-import { wordAddInSelection } from './add-in-selection';
+import { loadWordAddInSelection } from './add-in-selection-loader';
 import { normalizeEditorLocale } from './localization';
 import {
 	applyThemeColors,
@@ -271,7 +271,7 @@ export class DocxEditorElement extends DocxEditorApi {
 				(label) => label,
 				'word',
 				() => this.locale,
-				() => wordAddInSelection(() => this.core.targetView()),
+				() => loadWordAddInSelection(() => this.core.targetView()),
 			);
 		this.core.room.resume();
 	}

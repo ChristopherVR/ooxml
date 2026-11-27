@@ -1,4 +1,3 @@
-import { ribbonTabCueLabel } from '../../ribbon/ribbon-tab-cue-label';
 /**
  * The ribbon renderer: the registered tabs (contextual ones only while their test passes), one panel per
  * tab with labelled groups and dialog launchers, KeyTips, hidden actions and overflow folding. The tab
@@ -112,7 +111,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 		root.setAttribute('aria-label', ctx.t('Ribbon'));
 		root.setAttribute('label', ctx.t('Ribbon tabs'));
 		root.setAttribute('file-label', ctx.t('File'));
-		root.setAttribute('overflow-label', ribbonTabCueLabel(ctx.locale()));
+		root.setAttribute('overflow-label', '');
 		root.setAttribute('collapse-label', ctx.t('Collapse the ribbon'));
 		for (const panel of panels()) panel.remove();
 		for (const tab of tabs) {
