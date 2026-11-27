@@ -9,8 +9,9 @@ import { formatMergeNumber } from './number-picture';
 import type { MailMergeFieldMapping } from './settings';
 import { mailMergeFieldMap } from './authoring';
 import { addressSwitches, greetingSwitches, renderMailingField } from './native-fields';
+import { MERGE_SWITCHES } from './merge-field-column';
+export { mergeFieldColumn } from './merge-field-column';
 
-const MERGE_SWITCHES = { b: 'arg', f: 'arg', m: 'flag', v: 'flag' } as const;
 const PROMPT_SWITCHES = { d: 'arg', o: 'flag' } as const;
 const MERGE_FIELDS = new Set([
 	'MERGEFIELD',
@@ -71,12 +72,6 @@ export interface FieldResult {
 	charFormat?: true;
 	/** Replace the field by its result even when the merge keeps fields (`MergeHooks.keepFields`). */
 	unlink?: true;
-}
-
-/** The column a MERGEFIELD instruction names (quoted names keep their spaces). */
-export function mergeFieldColumn(instruction: string): string | undefined {
-	const field = parseFieldInstruction(instruction, MERGE_SWITCHES, { numberPictures: true });
-	return field?.name === 'MERGEFIELD' && field.args.length === 1 ? field.args[0] : undefined;
 }
 
 function textOf(value: MailMergeValue): string {

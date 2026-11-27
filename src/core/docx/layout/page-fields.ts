@@ -4,6 +4,8 @@ import { fieldName } from '../field-runs';
 import { isFieldLocked } from '../field-lock';
 import { dateFieldResult } from '../field-date';
 import type { LayoutPageBox } from './result';
+import { fieldResultSpans } from '../field-result-spans';
+import { mergeFieldColumn } from '../mail-merge/merge-field-column';
 
 export interface PageFieldContext {
 	page: string;
@@ -30,6 +32,25 @@ export function fieldDisplayText(run: TextRun, values: PageFieldContext): string
 			values.languageOf?.(run) ?? run.language,
 		);
 	return run.text;
+}
+
+/**
+ * Word 16 shows a MERGEFIELD in a header or footer of a document that is not a mail merge main
+ * document (no `w:mailMerge` in its settings) as its field name in chevrons, «Name», rather than
+ * its saved result; the body keeps the result. `runs` with those results replaced, or `runs`.
+ */
+export function mergeFieldPlaceholders(runs: TextRun[]): TextRun[] {
+	let out = runs;
+	for (const span of fieldResultSpans(runs)) {
+		if (span.locked || span.removed || !span.runs.length) continue;
+		const name = mergeFieldColumn(span.instr);
+		if (name === undefined) continue;
+		if (out === runs) out = [...runs];
+		span.runs.forEach((at, index) => {
+			out[at] = { ...out[at]!, text: index === 0 ? `«${name}»` : '' };
+		});
+	}
+	return out;
 }
 
 /** Numeric page values, before formatting as Roman, letter or decimal labels. */

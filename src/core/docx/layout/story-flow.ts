@@ -7,6 +7,7 @@ import {
 	headerFooterForPage,
 	pageNumberValues,
 	fieldDisplayText,
+	mergeFieldPlaceholders,
 	sectionPageCounts,
 	type PageFieldContext,
 } from './page-fields';
@@ -146,7 +147,9 @@ function fillFields(blocks: Block[], values: PageFieldContext, model: DocumentMo
 				}).language,
 		};
 		let changed = false;
-		const runs = p.runs.map((run) => {
+		const source = model.mailMerge ? p.runs : mergeFieldPlaceholders(p.runs);
+		if (source !== p.runs) changed = true;
+		const runs = source.map((run) => {
 			if (!run.field) return run;
 			const text = fieldDisplayText(run, paragraphValues);
 			// DATE/TIME are evaluated for the page's time, instead of again during adaptation.

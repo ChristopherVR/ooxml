@@ -503,7 +503,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and bookmark references keep their cached result), AUTONUM, AUTONUMLGL, AUTONUMOUT, LISTNUM
       and SYMBOL (`docx/computed-fields.ts`, `computed-fields-extra.test.ts`). MERGEFIELD,
       INCLUDETEXT, INCLUDEPICTURE, INDEX/XE, TA/TOA and CITATION/BIBLIOGRAPHY keep their cached
-      result (`layout/page-fields.ts`); Update Fields skips the `\n \r \w \p` switches.
+      result (`layout/page-fields.ts`), except that a MERGEFIELD in a header or footer of a
+      document without mail merge settings shows «Name» in Print Layout and PDF, as Word 16 does
+      (#368); Update Fields skips the `\n \r \w \p` switches.
 - [ ] **P2** A HYPERLINK written as a complex field (`w:fldChar` and `w:instrText`, as Word writes
       table of contents entries and cross-reference links) is kept on save but is not followed as
       a link, and its result edits as plain text (`docx/parse-warnings.ts`; the sample
