@@ -214,6 +214,13 @@ composable per site; the hub in `site/docs/docs.css`; the release post in
   article and the outline grow with the window up to 1560 px together (1840 px from 2300 px) and
   stay centred in what the sidebar leaves. Under 1180 px the outline goes; under 820 px the
   sidebar becomes a header whose menu button opens the list.
+- **Samples gallery** (`site/samples/`, built by `scripts/build-samples-page.mjs` from
+  `samples/manifest.json`): the hub's page with its sidebar, search and outline, and one section
+  per product. A sample is a hub card in a joined grid with a preview above it: the thumbnail
+  bleeds to the card's edges at 16:9 behind a hairline, then the product's solid tile, the title,
+  one or two sentences, the features as a plain list under a hairline, the file name and size, and two 30 px
+  buttons (the accent "Open in Word", the outlined "Download"). The accent stays the suite's blue;
+  the product colours appear only on the tiles. The page ships no script of its own.
 - **Product docs landing**: hero with the product frame and the hero facts, the live demo (with its language select
   where the demo supports one), features as tool cards, status, quick start, FAQ, finale. The
   accent is the product colour. Every site keeps this order so the five landings read as one

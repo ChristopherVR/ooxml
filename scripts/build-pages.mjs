@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { bundleSuite } from './bundle-suite.mjs';
 import { buildPwa } from './build-pwa.mjs';
 import { writeReleasePages } from './build-release-notes.mjs';
+import { writeSamplesPage } from './build-samples-page.mjs';
 import { applyContentSecurityPolicy, assertContentSecurityPolicy } from './csp.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -60,6 +61,8 @@ mkdirSync(out, { recursive: true });
 cpSync(join(ROOT, 'site'), out, { recursive: true });
 // The release posts (docs/releases/*.md) at releases/<name>/; this also drops the page template.
 writeReleasePages(out);
+// The samples gallery at samples/, with the sample files and thumbnails; this drops its template too.
+writeSamplesPage(out);
 await bundleSuite(join(out, 'suite.js'));
 // The policy goes in before the PWA build, which copies the shell and hashes every file.
 applyContentSecurityPolicy(out, { base: SITE_BASE });

@@ -1,0 +1,139 @@
+/* The samples gallery: the documentation hub's page (../docs/docs.css) with one card per file.
+   A card is a hub card with a framed preview above it; see docs/pages-design.md. */
+.sample-grid {
+	align-items: stretch;
+}
+.sample-card {
+	grid-template-columns: auto 1fr;
+	grid-template-rows: auto auto auto 1fr auto auto;
+	padding: 0 20px 20px;
+	min-height: 0;
+}
+/* The preview is framed by the line colour, never by a shadow, and bleeds to the card's edges. */
+.sample-shot {
+	grid-column: 1 / -1;
+	margin: 0 -20px 12px;
+	border-bottom: 1px solid var(--line);
+	background: var(--sunken);
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+}
+.sample-shot img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: top center;
+	transition: transform var(--enter) var(--ease);
+}
+.sample-card:hover .sample-shot img {
+	transform: scale(1.02);
+}
+/* The tile sits beside the title only; the description takes the card's whole width. */
+.sample-card > .app-badge {
+	grid-row: auto;
+}
+.sample-card h3 {
+	grid-column: 2;
+	align-self: center;
+}
+.sample-card > p {
+	grid-column: 1 / -1;
+}
+.sample-features {
+	grid-column: 1 / -1;
+	align-self: start;
+	display: grid;
+	gap: 4px;
+	margin: 8px 0 0;
+	padding: 10px 0 0;
+	border-top: 1px solid var(--line);
+	list-style: none;
+}
+/* The features are phrases, some a line long, so they read as a list and not as chips. */
+.sample-features li {
+	position: relative;
+	padding-left: 14px;
+	font-size: 12.5px;
+	line-height: 1.45;
+	color: var(--muted);
+}
+.sample-features li::before {
+	content: '';
+	position: absolute;
+	left: 1px;
+	top: 0.62em;
+	width: 5px;
+	height: 5px;
+	border-radius: 1px;
+	background: var(--line-strong);
+}
+.sample-card > .sample-file {
+	grid-column: 1 / -1;
+	margin-top: 6px;
+	font-size: 12px;
+	color: var(--muted);
+}
+.sample-file code {
+	color: var(--text);
+}
+.sample-card > .hub-links {
+	grid-column: 1 / -1;
+	align-items: center;
+	gap: 8px;
+	padding-top: 4px;
+}
+/* The two ways in are buttons here: opening is the point of the page. */
+.sample-card .hub-links a {
+	display: inline-flex;
+	align-items: center;
+	height: 30px;
+	padding: 0 12px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	color: var(--text);
+	font-size: 12px;
+	font-weight: 600;
+	transition:
+		filter var(--fast) var(--ease),
+		background-color var(--fast) var(--ease);
+}
+.sample-card .hub-links a:hover {
+	border-color: var(--line-strong);
+	background: var(--hover);
+}
+.sample-card .hub-links a.sample-open {
+	border-color: var(--blue);
+	background: var(--blue);
+	color: var(--accent-fg);
+}
+.sample-card .hub-links a.sample-open:hover {
+	border-color: var(--blue);
+	background: var(--blue);
+	filter: brightness(0.92);
+}
+#about .hub-links {
+	padding-top: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sample-shot img {
+		transition: none;
+	}
+	.sample-card:hover .sample-shot img {
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.sample-card .hub-links a:active {
+		transform: scale(0.985);
+		transition: transform var(--press) var(--ease);
+	}
+}
+@media (forced-colors: active) {
+	.sample-card .hub-links a.sample-open {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

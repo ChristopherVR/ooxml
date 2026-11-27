@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="theme-color" content="#0f6cbd" />
+		<title>Samples - OOXML Office</title>
+		<meta
+			name="description"
+			content="Sample Word, Excel, PowerPoint and Visio files to open in OOXML Office or download: reports, models, decks and diagrams that use the features the editors support."
+		/>
+		<script src="../appearance-init.js"></script>
+		<link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="../themes.css" />
+		<link rel="stylesheet" href="../docs/docs.css" />
+		<link rel="stylesheet" href="samples.css" />
+		<script type="module" src="../docs/docs.js"></script>
+	</head>
+	<body>
+		<a class="docs-skip" href="#overview">Skip to content</a>
+		<div class="docs">
+			<aside class="docs-side">
+				<div class="docs-side-top">
+					<a class="docs-brand" href="../?suite" title="Open OOXML Office">
+						<span class="brand-symbol"><i></i><i></i><i></i><i></i></span>OOXML
+						<strong>Office</strong><span class="docs-brand-kind">samples</span>
+					</a>
+					<button
+						id="appearance"
+						class="docs-icon"
+						aria-label="Switch appearance"
+						title="Appearance"
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.6"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" />
+						</svg>
+					</button>
+					<button
+						id="docs-menu"
+						class="docs-icon docs-menu"
+						aria-label="Show the list of samples"
+						aria-expanded="false"
+						aria-controls="docs-nav"
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.6"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<path d="M4 7h16M4 12h16M4 17h16" />
+						</svg>
+					</button>
+				</div>
+				<label class="docs-search">
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.6"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"
+					>
+						<circle cx="10" cy="10" r="6" />
+						<path d="m15 15 6 6" />
+					</svg>
+					<input
+						id="docs-search"
+						type="search"
+						placeholder="Search"
+						aria-label="Search the samples"
+						aria-controls="docs-results"
+						autocomplete="off"
+					/><kbd>/</kbd>
+				</label>
+				<div id="docs-results" class="docs-results" role="region" aria-live="polite" hidden></div>
+				<nav id="docs-nav" class="docs-nav" aria-label="Samples">
+					<div class="docs-quick">
+						<a href="../?suite"
+							><svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.6"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								<rect x="3" y="4" width="18" height="16" rx="2" />
+								<path d="M3 9h18" /></svg
+							>Open OOXML Office</a
+						>
+						<a href="../docs/"
+							><svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.6"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" />
+								<path d="M5 17a3 3 0 0 1 3-3h11" /></svg
+							>Documentation</a
+						>
+						<a href="https://github.com/ChristopherVR/ooxml/tree/main/samples"
+							><svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.6"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 5l-4 14" /></svg
+							>Generators on GitHub</a
+						>
+					</div>
+					<h2>Samples</h2>
+					<a href="#overview" aria-current="page">Overview</a>
+					<!-- samples:nav -->
+					<h2>About</h2>
+					<a href="#about">How the samples are made</a>
+				</nav>
+			</aside>
+			<div class="docs-main">
+				<main class="docs-article">
+					<p class="docs-crumb">Samples <span>/</span> <strong>Overview</strong></p>
+					<h1 id="overview">Sample files</h1>
+					<p class="docs-lead">
+						<!-- samples:count -->
+						real Word, Excel, PowerPoint and Visio files that use what the editors can do: styles
+						and fields, formulas and PivotTables, animations and charts, swimlanes and shape data.
+						Open one in OOXML Office, or download it and open it in the application you already use.
+					</p>
+					<p class="docs-actions">
+						<a class="docs-primary" href="../?suite">Open OOXML Office</a
+						><a class="docs-secondary" href="#about">How the samples are made</a>
+					</p>
+
+					<!-- samples:sections -->
+
+					<section id="about" class="hub-section">
+						<div class="hub-section-bar">
+							<h2>How the samples are made</h2>
+							<span>Generated by scripts in the repository</span>
+						</div>
+						<p>
+							Every file here is written by a script in the repository, mostly through the same
+							library the editors run on, so each one can be rebuilt byte for byte and reviewed like
+							any other source. The companies, places and people in them are invented. The text is
+							set in open fonts (Rubik, Noto Sans and Noto Serif), and every picture is drawn by the
+							script that needs it.
+						</p>
+						<p>
+							Opening a sample downloads that one file from this site and adds a copy to the library
+							in your browser. Nothing is fetched until you ask for it, and nothing you change is
+							sent anywhere.
+						</p>
+						<nav class="hub-links">
+							<a href="https://github.com/ChristopherVR/ooxml/blob/main/samples/README.md"
+								>What each sample contains</a
+							><a href="https://github.com/ChristopherVR/ooxml/tree/main/samples/generators"
+								>The generator scripts</a
+							><a href="https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md"
+								>What the editors do not support yet</a
+							>
+						</nav>
+					</section>
+				</main>
+				<aside class="docs-outline" aria-label="On this page">
+					<h2>On this page</h2>
+					<!-- samples:outline -->
+					<a href="#about">How the samples are made</a>
+				</aside>
+				<footer class="hub-footer">
+					<span>OOXML Office · Apache-2.0</span>
+					<span class="hub-footer-links"
+						><a href="https://github.com/ChristopherVR/ooxml">GitHub</a
+						><a href="../docs/">Documentation</a><a href="../releases/2.0/">Release notes</a
+						><a href="https://github.com/ChristopherVR/ooxml/releases">Releases</a></span
+					>
+				</footer>
+			</div>
+		</div>
+	</body>
+</html>

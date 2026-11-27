@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { bundleSuite } from './bundle-suite.mjs';
 import { buildPwa } from './build-pwa.mjs';
 import { writeReleasePages } from './build-release-notes.mjs';
+import { writeSamplesPage } from './build-samples-page.mjs';
 import { applyContentSecurityPolicy, assertContentSecurityPolicy } from './csp.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -35,6 +36,8 @@ export async function buildSuite(out = join(root, 'suite-dist'), { logLevel } = 
 	await cp(join(root, 'site', 'docs'), join(out, 'docs'), { recursive: true });
 	// The release posts (docs/releases/*.md) at releases/<name>/, styled by site/releases/.
 	writeReleasePages(out);
+	// The samples gallery (samples/manifest.json) at samples/, with the files it offers.
+	writeSamplesPage(out);
 	await bundleSuite(join(out, 'suite.js'), { logLevel });
 	// The policy goes in before the PWA build, which copies the shell and hashes every file.
 	applyContentSecurityPolicy(out);
