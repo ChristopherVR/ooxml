@@ -860,7 +860,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Mailings: Envelopes, Labels and Update Labels, Word's native `ADDRESSBLOCK` and
       `GREETINGLINE` fields (checked with Word 16 field updates), interactive ASK and FILL-IN
       prompts, and Send Email Messages through a host `emailProvider` (2026-11-26).
-- [ ] **P2** Labels offer three vendor presets, not Word's label catalogue.
+- [x] **P2** Labels: Label Options searches a catalogue of 39 sheet products (Avery US Letter,
+      Online Labels, Avery A4, Avery Zweckform, HERMA) with their inkjet variants as aliases,
+      loaded on demand (`docx/mail-merge/label-catalogue.ts`), and the engine takes any custom
+      layout, vertical gaps included (2026-11-27).
+- [ ] **P2** Labels: Word's catalogue lists far more vendors and products, and Label Options has
+      no New Label (custom dimensions) or Details preview yet.
 - [x] **P1** Design: Themes, Colors, Fonts, Paragraph Spacing and Effects galleries (shared
       theme presets in `drawingml/theme-presets.ts`), custom colours, fonts and spacing, and Set
       as Default through the host's preference store, each one undo step and saved

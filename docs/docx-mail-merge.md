@@ -18,8 +18,14 @@ body, and the Mailings controls require an editable, unshared document.
 
 ## Envelopes and labels
 
-Headless hosts can call `await loadMailMergeStationery()` for the same presets and document
-operations.
+Headless hosts can call `await loadMailMergeStationery()` for the same label catalogue and
+document operations. The catalogue (`labelCatalogue`, `searchLabels(query, vendor)`,
+`findLabel(product, vendor)`) lists 39 sheet products from Avery US Letter, Online Labels,
+Avery A4, Avery Zweckform and HERMA with the dimensions their vendors publish, and their inkjet
+and colour variants as aliases (8160 finds 5160, J8160 finds L7160). It loads with the rest of
+the stationery code, on demand. `createLabels({ product: 'custom', spec })` takes any other
+layout, including labels with a vertical gap, which get spacer rows as in Word. Label Options
+searches by product number, alias or description within the selected vendor.
 
 Use Envelopes to add an opening envelope section to an existing document. The section records
 the page size, address positions, and optional first-page printer tray. The print driver resolves

@@ -267,9 +267,9 @@ export class MailingsController {
 	private openLabelSheet(merge: boolean): void {
 		const { core } = this;
 		const key = merge ? 'start' : 'labels';
-		void withStationery(core, key, ({ createLabels, labelPresets }) => {
+		void withStationery(core, key, ({ createLabels, labelVendors, searchLabels }) => {
 			this.show('Labels', (dialog) =>
-				labelsDialog(dialog, labelPresets, merge, (options) => {
+				labelsDialog(dialog, { labelVendors, searchLabels }, merge, (options) => {
 					if (mailingsReason(core, key) || (merge && !emptyBody(core))) return;
 					const sheet = createLabels(options);
 					if (merge) startLabels(core, sheet);

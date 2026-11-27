@@ -117,6 +117,18 @@ export const extendedMailingsTranslations = {
 		fr: 'Fournisseur d’étiquettes',
 		'zh-CN': '标签供应商',
 	},
+	'Find a product number': {
+		de: 'Produktnummer suchen',
+		es: 'Buscar un número de producto',
+		fr: 'Rechercher un numéro de produit',
+		'zh-CN': '查找产品编号',
+	},
+	'No matching products': {
+		de: 'Keine passenden Produkte',
+		es: 'No hay productos coincidentes',
+		fr: 'Aucun produit correspondant',
+		'zh-CN': '没有匹配的产品',
+	},
 	'Product number': {
 		de: 'Produktnummer',
 		es: 'Número de producto',

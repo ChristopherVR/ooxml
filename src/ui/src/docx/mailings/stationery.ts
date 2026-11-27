@@ -14,6 +14,7 @@ import {
 	numberInput,
 	row,
 	selectOf,
+	textInput,
 } from '../dialog-fields';
 import type { EditorCore } from '../editor-core';
 import { openMergedDocument } from '../file-commands';
@@ -129,16 +130,31 @@ export function envelopeDialog(
 		);
 }
 
+type LabelSpec = StationeryEngine['labelCatalogue'][number];
+
+/** "2.63 in × 1 in" on a Letter sheet, "63.5 mm × 38.1 mm" on a metric one. */
+export function labelSize(spec: LabelSpec): string {
+	const inches = spec.pageWidth === 12_240;
+	const value = (twips: number) =>
+		inches
+			? `${Math.round((twips / 1440) * 100) / 100} in`
+			: `${Math.round((twips / 1440) * 254) / 10} mm`;
+	return `${value(spec.width)} × ${value(spec.height)}`;
+}
+
 export function labelsDialog(
 	dialog: MailingsDialog,
-	labelPresets: StationeryEngine['labelPresets'],
+	engine: Pick<StationeryEngine, 'labelVendors' | 'searchLabels'>,
 	merge: boolean,
 	apply: (options: LabelOptions) => void,
 ): void {
 	const { t } = dialog;
-	const vendors = [...new Set(labelPresets.map(({ vendor }) => vendor))];
-	const vendor = selectOf(vendors.map((value) => [value, value]));
+	const vendor = selectOf(engine.labelVendors.map((value) => [value, value]));
+	const search = textInput();
+	search.maxLength = 32;
+	search.type = 'search';
 	const product = selectOf([]);
+	product.size = 6;
 	const text = textarea();
 	const mode = selectOf([
 		['page', t('Full page of the same label')],
@@ -147,29 +163,51 @@ export function labelsDialog(
 	const sheetRow = numberInput(1, 10, 1);
 	const column = numberInput(1, 3, 1);
 	const location = row(labelled(t('Label row'), sheetRow), labelled(t('Label column'), column));
-	const selected = () => labelPresets.find((option) => option.product === product.value);
+	let listed: LabelSpec[] = [];
+	const selected = () =>
+		listed.find((option) => option.product === product.value && option.vendor === vendor.value);
+	const output = dialogButton(t(merge ? 'Create merge template' : 'New Document'), true);
+	const valid = () =>
+		Boolean(selected()) &&
+		(merge ||
+			location.hidden ||
+			(sheetRow.checkValidity() &&
+				column.checkValidity() &&
+				sheetRow.value !== '' &&
+				column.value !== ''));
 	const position = () => {
 		const spec = selected();
-		if (!spec) return;
-		sheetRow.max = String(spec.rows);
-		column.max = String(spec.columns);
-		sheetRow.value = column.value = '1';
+		if (spec) {
+			sheetRow.max = String(spec.rows);
+			column.max = String(spec.columns);
+			sheetRow.value = column.value = '1';
+		}
+		output.disabled = !valid();
 	};
 	const products = () => {
+		listed = engine.searchLabels(search.value, vendor.value);
 		product.replaceChildren(
-			...labelPresets
-				.filter((spec) => spec.vendor === vendor.value)
-				.map(
-					(spec) => new Option(`${spec.product} (${spec.columns} × ${spec.rows})`, spec.product),
-				),
+			...listed.map(
+				(spec) =>
+					new Option(
+						`${spec.product} (${spec.columns} × ${spec.rows}, ${labelSize(spec)})`,
+						spec.product,
+					),
+			),
 		);
+		if (!listed.length) {
+			const none = new Option(t('No matching products'), '');
+			none.disabled = true;
+			product.append(none);
+		} else product.selectedIndex = 0;
 		position();
 	};
 	vendor.addEventListener('change', products);
+	search.addEventListener('input', products);
 	product.addEventListener('change', position);
-	products();
 	dialog.content.append(
 		labelled(t('Label vendor'), vendor),
+		labelled(t('Find a product number'), search),
 		labelled(t('Product number'), product),
 	);
 	if (!merge) {
@@ -180,13 +218,7 @@ export function labelsDialog(
 			location,
 		);
 	}
-	const output = dialogButton(t(merge ? 'Create merge template' : 'New Document'), true);
-	const valid = () =>
-		location.hidden ||
-		(sheetRow.checkValidity() &&
-			column.checkValidity() &&
-			sheetRow.value !== '' &&
-			column.value !== '');
+	products();
 	mode.addEventListener('change', () => {
 		location.hidden = mode.value !== 'single';
 		output.disabled = !valid();
@@ -195,10 +227,11 @@ export function labelsDialog(
 		input.addEventListener('input', () => (output.disabled = !valid()));
 	output.addEventListener('click', () => {
 		const spec = selected();
-		if (!spec || (!merge && !valid())) return;
+		if (!spec || !valid()) return;
 		dialog.close();
 		apply({
 			product: spec.product,
+			vendor: spec.vendor,
 			...(!merge && { text: text.value }),
 			...(!merge &&
 				mode.value === 'single' && {

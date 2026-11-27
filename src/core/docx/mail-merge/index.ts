@@ -14,7 +14,7 @@ export type {
 	MailMergeSourceReference,
 	MailMergeFieldMapping,
 } from './settings';
-export type { EnvelopeOptions, LabelOptions } from './stationery';
+export type { EnvelopeOptions, LabelOptions, LabelSpec } from './stationery';
 
 export function loadMailMergeStationery() {
 	return import('./stationery');

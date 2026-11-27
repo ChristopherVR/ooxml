@@ -1,50 +1,26 @@
-import { signedTwips, twips, twipsFromInches as inch, twipsToPixels } from '../../units/units';
+import { signedTwips, twips, twipsToPixels } from '../../units/units';
 import type { DocumentModel, SectionProperties, Table, TableCell } from '../model';
 import { documentParagraphs } from '../cell-blocks';
 import { mailMergeRule } from './authoring';
-import { mm, stationeryParagraph } from './stationery-format';
+import { stationeryParagraph } from './stationery-format';
+import { findLabel, type LabelSpec } from './label-catalogue';
 
-const letter = { pageWidth: inch(8.5), pageHeight: inch(11), top: inch(0.5) };
-export const labelPresets = [
-	{
-		vendor: 'Avery US Letter',
-		product: '5160',
-		columns: 3,
-		rows: 10,
-		...letter,
-		left: inch(0.1875),
-		width: inch(2.625),
-		height: inch(1),
-		gap: inch(0.125),
-	},
-	{
-		vendor: 'Avery US Letter',
-		product: '5163',
-		columns: 2,
-		rows: 5,
-		...letter,
-		left: inch(0.15625),
-		width: inch(4),
-		height: inch(2),
-		gap: inch(0.1875),
-	},
-	{
-		vendor: 'HERMA A4',
-		product: '4464',
-		columns: 3,
-		rows: 8,
-		pageWidth: mm(210),
-		pageHeight: mm(297),
-		left: twips(0),
-		top: mm(0.5),
-		width: mm(70),
-		height: mm(37),
-		gap: twips(0),
-	},
-] as const;
+/** The three presets earlier versions offered, kept for callers that list them. */
+export const labelPresets: readonly LabelSpec[] = (
+	[
+		['5160', 'Avery US Letter'],
+		['5163', 'Avery US Letter'],
+		['4464', 'HERMA A4'],
+	] as const
+).map(([product, vendor]) => findLabel(product, vendor)!);
 
 export interface LabelOptions {
-	product: (typeof labelPresets)[number]['product'];
+	/** A catalogue product number or alias (`labelCatalogue`). */
+	product: string;
+	/** The vendor, when two vendors sell the same product number. */
+	vendor?: string;
+	/** A custom label layout; it takes precedence over `product`. */
+	spec?: LabelSpec;
 	text?: string;
 	/** One-based row and column on a partly used sheet. */
 	single?: { row: number; column: number };
@@ -54,7 +30,13 @@ const noBorder = { style: 'nil' } as const;
 
 /** Creates one fixed-size label sheet. A merge template starts with a blank label grid. */
 export function createLabels(options: LabelOptions): DocumentModel {
-	const spec = labelPresets.find(({ product }) => product === options.product) ?? labelPresets[0];
+	const spec = options.spec ?? findLabel(options.product, options.vendor) ?? labelPresets[0]!;
+	if (spec.columns < 1 || spec.rows < 1 || spec.columns > 15 || spec.rows > 50)
+		throw new RangeError('Unsupported label layout.');
+	const spacer = spec.verticalGap > 0;
+	// Word lays a sheet out as a table: gap columns between labels, and spacer rows between rows
+	// when the labels have a vertical gap.
+	const sheetRows = spacer ? spec.rows * 2 - 1 : spec.rows;
 	const grid = Array.from({ length: spec.columns }, (_, col) =>
 		col > 0 && spec.gap ? [spec.gap, spec.width] : [spec.width],
 	).flat();
@@ -81,21 +63,25 @@ export function createLabels(options: LabelOptions): DocumentModel {
 			left: signedTwips(90),
 			right: signedTwips(90),
 		},
-		rowProperties: Array.from({ length: spec.rows }, () => ({
-			heightTwips: spec.height,
+		rowProperties: Array.from({ length: sheetRows }, (_, row) => ({
+			heightTwips: spacer && row % 2 ? spec.verticalGap : spec.height,
 			heightRule: 'exact',
 			cantSplit: true,
 		})),
-		rows: Array.from({ length: spec.rows }, (_, row) =>
+		rows: Array.from({ length: sheetRows }, (_, sheetRow) =>
 			grid.map((columnWidth, col): TableCell => {
-				const label = spec.gap ? col % 2 === 0 : true;
+				const row = spacer ? sheetRow / 2 : sheetRow;
+				const label = (spec.gap ? col % 2 === 0 : true) && Number.isInteger(row);
 				const column = spec.gap ? col / 2 + 1 : col + 1;
 				const selected =
 					!options.single || (row + 1 === options.single.row && column === options.single.column);
 				return {
 					widthTwips: columnWidth,
 					paragraphs: [
-						stationeryParagraph(`mail-label-${row}-${col}`, label && selected ? options.text : ''),
+						stationeryParagraph(
+							`mail-label-${sheetRow}-${col}`,
+							label && selected ? options.text : '',
+						),
 					],
 				};
 			}),
@@ -111,7 +97,10 @@ export function createLabels(options: LabelOptions): DocumentModel {
 		marginRightTwips: twips(Math.max(0, spec.pageWidth - spec.left - width)),
 		marginTopTwips: signedTwips(spec.top),
 		marginBottomTwips: signedTwips(
-			Math.max(0, spec.pageHeight - spec.top - spec.rows * spec.height),
+			Math.max(
+				0,
+				spec.pageHeight - spec.top - spec.rows * spec.height - (spec.rows - 1) * spec.verticalGap,
+			),
 		),
 		headerDistanceTwips: twips(0),
 		footerDistanceTwips: twips(0),
@@ -170,15 +159,29 @@ export function updateLabels(model: DocumentModel): DocumentModel {
 	const first = table?.rows[0]?.[0];
 	if (!table || !first || first.paragraphs.length > 64) return model;
 	const referenceWidth = first.widthTwips ?? table.grid?.[0];
-	const isGap = (cell: TableCell, column: number) => {
+	const referenceHeight = table.rowProperties?.[0]?.heightTwips;
+	const empty = (cell: TableCell) =>
+		cell.paragraphs.every(({ runs }) =>
+			runs.every((run) => !run.text && !run.field && !run.fieldCode && !run.image),
+		);
+	// A spacer row between label rows (labels with a vertical gap) stays empty.
+	const spacerRow = (row: number) => {
+		const height = table.rowProperties?.[row]?.heightTwips;
+		return (
+			referenceHeight !== undefined &&
+			height !== undefined &&
+			height < referenceHeight / 3 &&
+			table.rows[row]!.every(empty)
+		);
+	};
+	const isGap = (cell: TableCell, column: number, row: number) => {
 		const width = cell.widthTwips ?? table.grid?.[column];
 		return (
-			referenceWidth !== undefined &&
-			width !== undefined &&
-			width < referenceWidth / 3 &&
-			cell.paragraphs.every(({ runs }) =>
-				runs.every((run) => !run.text && !run.field && !run.fieldCode && !run.image),
-			)
+			spacerRow(row) ||
+			(referenceWidth !== undefined &&
+				width !== undefined &&
+				width < referenceWidth / 3 &&
+				empty(cell))
 		);
 	};
 	const sourceSize = first.paragraphs.reduce(
@@ -197,7 +200,7 @@ export function updateLabels(model: DocumentModel): DocumentModel {
 		...table,
 		rows: table.rows.map((row, rowIndex) =>
 			row.map((cell, column) => {
-				if (cell === first || isGap(cell, column)) return cell;
+				if (cell === first || isGap(cell, column, rowIndex)) return cell;
 				const paragraphs = first.paragraphs.map(({ bookmarks: _bookmarks, ...source }, index) => {
 					let id = cell.paragraphs[index]?.id;
 					if (!id) {

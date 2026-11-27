@@ -149,7 +149,9 @@ test('creates labels, propagates NEXT and opens the finished label document', as
 	await command('Start Mail Merge').click();
 	await modal.getByRole('combobox', { name: 'Start Mail Merge' }).selectOption('mailingLabels');
 	await button('OK').click();
-	await modal.getByRole('combobox', { name: 'Product number' }).selectOption('5163');
+	await modal.getByRole('searchbox', { name: 'Find a product number' }).fill('8163');
+	// 8163 is the inkjet product with the 5163 layout; the catalogue lists it under 5163.
+	await modal.getByRole('listbox', { name: 'Product number' }).selectOption('5163');
 	await button('Create merge template').click();
 	await expect(command('Update Labels')).toBeEnabled();
 	await command('Select Recipients').click();
