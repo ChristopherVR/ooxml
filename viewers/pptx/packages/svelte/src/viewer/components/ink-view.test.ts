@@ -117,7 +117,8 @@ describe('inkView', () => {
 			inkElement({ inkPaths: ['M 0 0 L 10 10 L 20 20'], inkWidths: [1, 2, 3] }),
 		);
 		expect(target.querySelector('svg path')).toBeNull();
-		expect(target.querySelectorAll('svg circle')).toHaveLength(3);
+		// The three per-point stamps, with the gaps between them filled.
+		expect(target.querySelectorAll('svg circle').length).toBeGreaterThan(3);
 	});
 
 	it('renders calligraphic nib ellipses when inkPointTiltX/Y carry a genuine lean, taking priority over pressure circles', () => {
