@@ -5,8 +5,9 @@ import {
 	chartShadowIntent,
 	chartTextFormatIntents,
 } from './shape-format';
+import type { DrawingColor } from '../../drawingml/types';
 
-const red = { kind: 'srgb', value: 'FF0000', transforms: [] } as const;
+const red: DrawingColor = { kind: 'srgb', value: 'FF0000', transforms: [] };
 const area = { kind: 'chartArea' } as const;
 
 describe('chart Format tab intents', () => {
