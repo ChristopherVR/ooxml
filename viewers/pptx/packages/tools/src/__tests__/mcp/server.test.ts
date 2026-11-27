@@ -2,6 +2,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { describe, it, expect, beforeAll } from 'vitest';
 
+import manifest from '../../../package.json';
 import { createServer } from '../../mcp/server';
 
 describe('mcp server', () => {
@@ -26,6 +27,13 @@ describe('mcp server tool registration', () => {
 
 		await server.connect(serverTransport);
 		await client.connect(clientTransport);
+	});
+
+	it('reports the package version to clients', () => {
+		expect(client.getServerVersion()).toStrictEqual({
+			name: 'pptx-viewer-tools',
+			version: manifest.version,
+		});
 	});
 
 	it('lists all registered tools', async () => {

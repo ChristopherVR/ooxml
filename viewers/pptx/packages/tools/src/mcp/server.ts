@@ -2,6 +2,9 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerAutomationTools } from 'ooxml-core/automation/node';
 import { pptxTools } from 'ooxml-core/pptx/automation';
 
+// The bundler inlines only `version`; the server reports this package's own release to clients.
+import { version } from '../../package.json';
+
 /** Optional configuration for the MCP server. */
 export interface McpContextOptions {
 	/**
@@ -12,7 +15,7 @@ export interface McpContextOptions {
 }
 
 export function createServer(options?: McpContextOptions): McpServer {
-	const server = new McpServer({ name: 'pptx-viewer-tools', version: '1.0.0' });
+	const server = new McpServer({ name: 'pptx-viewer-tools', version });
 	registerTools(server, options);
 	return server;
 }
