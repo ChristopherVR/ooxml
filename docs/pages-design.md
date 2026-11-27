@@ -314,6 +314,23 @@ figure, code card and change list reveals once (its top 15% into the view); the 
 stagger 60 ms apart; an opened list's body rises over 320 ms. All of it is off under reduced
 motion, which also swaps recordings for their paused videos.
 
+**Editions.** A post can have a look of its own without a second builder. Its
+`docs/releases/<name>/showcase.json` names an `edition`; the page then carries
+`data-edition="<edition>"` on `<body>` and loads `site/releases/edition-<edition>.css` (and
+`.js` when there is one) after the shared files, and every rule in that stylesheet is scoped to
+the attribute, so the other posts cannot pick it up. The post's migration guide wears the same
+edition. `scripts/release-edition.mjs` adds the markup an edition lays out, and only for a post
+that names one:
+
+- each `sections` entry may name a `product` (`word`, `excel`, `powerpoint`, `visio`,
+  `teams` or `office`); the hero's index becomes one row per product chapter with the chapter's
+  `###` features as links, and a last row for the other chapters listed;
+- a chapter opens with a `chapter-head` holding its `##` heading and, for a product, the same
+  features as tabs. A feature's tab is its heading without the chapter's name in front, so
+  `### Word Draw` under `## Word` is the tab "Draw" and keeps a unique anchor;
+- each `###` feature is wrapped: its heading, the recording that follows it, then its text
+  beside its limits (a paragraph that starts with `**Not yet:**`) and its `Learn more` link.
+
 ## Do not
 
 - Do not introduce a second palette, a paper tint, a scanline or a grain texture.

@@ -431,3 +431,86 @@ test('the migration guide labels and groups before-and-after code examples', () 
 	assert.match(html, /data-migration="before"><div[^>]*><span[^>]*>Before<\/span>/);
 	assert.match(html, /data-migration="after"><div[^>]*><span[^>]*>After<\/span>/);
 });
+
+test('an edition is opt-in: its markup, assets and limits appear only when a post names one', () => {
+	const source = [
+		'# Demo 3.1',
+		'',
+		'**Published:** January 2, 2027',
+		'',
+		'What the release does.',
+		'',
+		'## Word',
+		'',
+		'### Word Draw',
+		'',
+		'![Draws a line](draw.gif)',
+		'',
+		'Pens.',
+		'',
+		'**Not yet:** A ruler.',
+		'',
+		'Learn more about [ink](ink.md).',
+		'',
+		'### Views',
+		'',
+		'Read Mode.',
+		'',
+		'## Security',
+		'',
+		'Checked.',
+	].join('\n');
+	const template =
+		'<body {{edition}}>{{editionAssets}}<main class="post{{eventClass}}">{{heroIntro}}{{releaseIndex}}{{body}}</main>';
+	const plain = renderReleasePage(source, template);
+	assert.match(plain, /^<body><main class="post">/);
+	assert.match(
+		plain,
+		/<section class="post-section reveal" aria-labelledby="word">\n<h2 id="word">/,
+	);
+	assert.doesNotMatch(plain, /data-edition|chapter-head|class="feature|not-yet|ribbon-/);
+
+	const config = {
+		version: '3.1',
+		edition: 'ribbon',
+		sections: [
+			{ id: 'word', label: 'Word', product: 'word' },
+			{ id: 'security', label: 'Security' },
+		],
+	};
+	const html = renderReleasePage(source, template, { showcase: config });
+	assert.match(
+		html,
+		/^<body data-edition="ribbon">\n\t\t<link rel="stylesheet" href="\.\.\/edition-ribbon\.css" \/><main class="post post-edition post-indexed">/,
+	);
+	assert.match(html, /<p class="release-intro">What the release does\.<\/p>/);
+	assert.match(
+		html,
+		/<ul class="ribbon-tabs"><li><a href="#word-draw">Draw<\/a><\/li><li><a href="#views">Views<\/a><\/li><\/ul>/,
+	);
+	assert.match(html, /<ul class="ribbon-tabs"><li><a href="#security">Security<\/a><\/li><\/ul>/);
+	assert.match(
+		html,
+		/<div class="feature"><h3 id="word-draw">Word Draw<\/h3><figure class="post-figure reveal"><img [^>]+><\/figure><div class="feature-body"><div class="feature-text"><p>Pens\.<\/p><\/div><div class="feature-aside"><p class="not-yet"><strong>Not yet:<\/strong> A ruler\.<\/p>\n<p class="learn-more">Learn more about <a href="ink\.md">ink<\/a>\.<\/p><\/div><\/div><\/div>/,
+	);
+	assert.match(html, /<div class="feature"><h3 id="views">Views<\/h3><div class="feature-body">/);
+	// A guide rendered for the post wears the edition without the post's index.
+	const guide = renderReleasePage('# Guide\n\n## Upgrade\n\nSteps.', template, {
+		edition: 'ribbon',
+	});
+	assert.match(guide, /<main class="post post-edition">/);
+	assert.doesNotMatch(guide, /ribbon-index/);
+	// A name that is not a plain file stem is not an edition.
+	assert.doesNotMatch(
+		renderReleasePage(source, template, { showcase: { edition: '../x' } }),
+		/data-edition/,
+	);
+	// A section the post does not have is a mistake in its configuration.
+	assert.throws(
+		() =>
+			renderReleasePage(source, template, {
+				showcase: { edition: 'ribbon', sections: [{ id: 'excel', product: 'excel' }] },
+			}),
+		/No chapter with the id excel/,
+	);
+});

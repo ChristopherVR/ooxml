@@ -21,6 +21,9 @@
  * - `<a id="changes-<area>"></a>` before a `<details>` block marks it as an area's complete list;
  *   its `<summary>` takes the area's tile and a count of the bullets inside.
  *
+ * A post whose `showcase.json` names an `edition` gets a look of its own on the same template:
+ * see release-edition.mjs.
+ *
  * Relative links resolve against the post's folder: pictures are copied next to the page,
  * related release pages link locally and other repository paths link to GitHub.
  */
@@ -36,6 +39,15 @@ import {
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import {
+	chapterProduct,
+	chapterTile,
+	editionAssets,
+	editionOf,
+	renderChapterTabs,
+	renderEditionIndex,
+	renderFeature,
+} from './release-edition.mjs';
 import { LANGUAGE_NAMES, highlight } from './release-highlight.mjs';
 import { mediaResolver } from './release-media.mjs';
 import { renderReleaseIndex, renderShowcase } from './release-showcase.mjs';
@@ -116,7 +128,13 @@ function combine(blocks) {
 export function renderReleasePage(
 	source,
 	template,
-	{ link = (url) => url, media = (url) => ({ src: link(url, 'img') }), showcase } = {},
+	{
+		link = (url) => url,
+		media = (url) => ({ src: link(url, 'img') }),
+		showcase,
+		edition = editionOf(showcase),
+		editionDir,
+	} = {},
 ) {
 	const blocks = combine(parseBlocks(source));
 	const take = (index) => blocks.splice(index, 1)[0];
@@ -136,6 +154,16 @@ export function renderReleasePage(
 	let pillarsDone = false;
 	let inLede = true;
 	const parts = ['<div class="post-lede">'];
+	// An edition wraps each feature (a `###` and what follows it): `out` is where blocks go.
+	let out = parts;
+	let feature = null;
+	const closeFeature = () => {
+		if (!feature) return;
+		parts.push(renderFeature(feature));
+		feature = null;
+		out = parts;
+	};
+	const CHAPTER_TABS = (index) => `<!--chapter-tabs:${index}-->`;
 
 	const renderCode = (block) => {
 		const lang = LANGUAGE_NAMES[block.lang] ?? (block.lang ? block.lang.toUpperCase() : '');
@@ -229,6 +257,7 @@ export function renderReleasePage(
 			if (slot) {
 				const type = slot[1];
 				if (showcase?.[type]) {
+					closeFeature();
 					let end = i + 1;
 					while (
 						end < blocks.length &&
@@ -257,30 +286,57 @@ export function renderReleasePage(
 			}
 		}
 		if (block.type === 'heading' && block.level === 2 && openDetails === 0) {
+			closeFeature();
 			if (inLede) parts.push('</div>');
 			else parts.push('</section>');
 			inLede = false;
-			const id = nextSlug(plainText(block.text));
-			toc.push({ id, text: renderInline(block.text, ctx), children: [] });
-			parts.push(
-				`<section class="post-section reveal" aria-labelledby="${escapeHtml(id)}">`,
-				heading(2, id, renderInline(block.text, ctx)),
-			);
+			const plain = plainText(block.text);
+			const id = nextSlug(plain);
+			toc.push({ id, plain, text: renderInline(block.text, ctx), children: [] });
+			const title = heading(2, id, renderInline(block.text, ctx));
+			if (edition) {
+				const product = chapterProduct(showcase, id);
+				parts.push(
+					`<section class="post-section"${product ? ` data-product="${product}"` : ''} aria-labelledby="${escapeHtml(id)}">`,
+					product
+						? `<header class="chapter-head">${chapterTile(product, tile)}${title}${CHAPTER_TABS(toc.length - 1)}</header>`
+						: `<header class="chapter-head">${title}</header>`,
+				);
+			} else
+				parts.push(
+					`<section class="post-section reveal" aria-labelledby="${escapeHtml(id)}">`,
+					title,
+				);
 			continue;
 		}
 		if (block.type === 'heading') {
-			const id = nextSlug(plainText(block.text));
-			if (block.level === 3 && openDetails === 0 && toc.length)
-				toc[toc.length - 1].children.push({ id, text: renderInline(block.text, ctx) });
-			parts.push(heading(block.level, id, renderInline(block.text, ctx)));
-		} else if (block.type === 'code') {
+			const plain = plainText(block.text);
+			const id = nextSlug(plain);
+			const isFeature = block.level === 3 && openDetails === 0 && toc.length > 0;
+			if (isFeature)
+				toc[toc.length - 1].children.push({ id, plain, text: renderInline(block.text, ctx) });
+			const title = heading(block.level, id, renderInline(block.text, ctx));
+			if (edition && isFeature) {
+				closeFeature();
+				feature = { head: title, media: [], text: [], aside: [] };
+				out = feature.text;
+			} else out.push(title);
+		} else if (feature && block.type === 'figure' && !feature.text.length && !feature.media.length)
+			feature.media.push(renderFigure(block));
+		else if (feature && isOnly(block, /^(?:\*\*Not yet:\*\*|Learn more\b)/))
+			feature.aside.push(
+				isOnly(block, /^Learn more\b/)
+					? `<p class="learn-more">${renderInline(block.text, ctx)}</p>`
+					: `<p class="not-yet">${renderInline(block.text, ctx)}</p>`,
+			);
+		else if (block.type === 'code') {
 			const after = blocks[i + 1];
 			if (block.change === 'Before' && after?.type === 'code' && after.change === 'After') {
-				parts.push(`<div class="migration-pair">${renderCode(block)}${renderCode(after)}</div>`);
+				out.push(`<div class="migration-pair">${renderCode(block)}${renderCode(after)}</div>`);
 				i++;
-			} else parts.push(renderCode(block));
-		} else if (block.type === 'figure') parts.push(renderFigure(block));
-		else if (block.type === 'html') parts.push(renderHtml(block.html));
+			} else out.push(renderCode(block));
+		} else if (block.type === 'figure') out.push(renderFigure(block));
+		else if (block.type === 'html') out.push(renderHtml(block.html));
 		else if (
 			inLede &&
 			!pillarsDone &&
@@ -288,13 +344,13 @@ export function renderReleasePage(
 			block.items.every((item) => item.indent === 0 && item.text.startsWith('**'))
 		) {
 			pillarsDone = true;
-			parts.push(
+			out.push(
 				`<ul class="pillars reveal">${block.items.map((item) => `<li>${renderInline(item.text.replace(/\n/g, ' '), ctx)}</li>`).join('')}</ul>`,
 			);
 		} else if (isOnly(block, /^Learn more\b/))
-			parts.push(`<p class="learn-more">${renderInline(block.text, ctx)}</p>`);
+			out.push(`<p class="learn-more">${renderInline(block.text, ctx)}</p>`);
 		else
-			parts.push(
+			out.push(
 				renderBlocks([block], {
 					...ctx,
 					code: renderCode,
@@ -302,8 +358,12 @@ export function renderReleasePage(
 				}),
 			);
 	}
+	closeFeature();
 	parts.push(inLede ? '</div>' : '</section>');
-	const body = countChanges(parts.join('\n'));
+	const body = countChanges(parts.join('\n')).replace(
+		/<!--chapter-tabs:(\d+)-->/g,
+		(match, index) => renderChapterTabs(toc[Number(index)]),
+	);
 
 	const metaHtml = meta
 		? renderInline(meta.text, ctx)
@@ -333,14 +393,29 @@ export function renderReleasePage(
 			description.length > 200 ? `${description.slice(0, 197)}...` : description,
 		),
 		meta: metaHtml,
-		eventClass: showcase?.sections ? ' release-event' : '',
+		// An edition lays the page out itself; `post-indexed` says its hero holds the contents.
+		eventClass: edition
+			? showcase?.sections
+				? ' post-edition post-indexed'
+				: ' post-edition'
+			: showcase?.sections
+				? ' release-event'
+				: '',
+		edition: edition ? ` data-edition="${escapeHtml(edition)}"` : '',
+		editionAssets: editionAssets(edition, editionDir),
 		heroIntro: heroIntro ? `<p class="release-intro">${renderInline(heroIntro.text, ctx)}</p>` : '',
-		releaseIndex: renderReleaseIndex(showcase?.sections, showcase?.version),
+		releaseIndex: edition
+			? renderEditionIndex(showcase, toc, tile)
+			: renderReleaseIndex(showcase?.sections, showcase?.version),
 		hero: show('shell') || (hero ? renderFigure(hero, true) : ''),
 		toc: tocHtml,
 		body,
 	};
-	return template.replace(/\{\{(\w+)\}\}/g, (match, key) => (key in fill ? fill[key] : match));
+	// The two edition slots take the white space before them, so a post without an edition is
+	// byte for byte the page it was before editions (`<body {{edition}}>` renders as `<body>`).
+	return template
+		.replace(/\s*\{\{(edition|editionAssets)\}\}/g, (match, key) => fill[key])
+		.replace(/\{\{(\w+)\}\}/g, (match, key) => (key in fill ? fill[key] : match));
 }
 
 function chapterNotes(blocks, items) {
@@ -417,6 +492,9 @@ export function writeReleasePages(out, { root = ROOT } = {}) {
 			return renderReleasePage(readFileSync(path, 'utf8'), template, {
 				...mediaResolver({ root, postsDir: dirname(path), name, assets, relatedPage }),
 				showcase: show,
+				// The migration guide wears its post's edition.
+				edition: editionOf(showcase),
+				editionDir: shared,
 			});
 		};
 		const post = `${POSTS_DIR}/${file}`;
