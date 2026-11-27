@@ -376,7 +376,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Ribbon
 
-- [ ] **P1** Missing tabs: Draw and Chart Format (a pane instead).
+- [ ] **P1** Missing tabs: Chart Format (a pane instead).
+- [ ] **P2** Draw tab: Ruler (Stencils) and Ink to Math are disabled with their reason (no ruler
+      stencil, no handwriting recognizer), and ink stays local in a shared room; drawing, the
+      eraser, the lasso, Ink to Shape and Ink Replay work and save as Excel ink
+      (`xlsx/edit/ink.test.ts`, `e2e/xlsx/draw-tab.spec.ts`).
 - [x] **P1** PivotTable Analyze and PivotTable Design contextual tabs: options, field settings,
       refresh, change source, subtotals, grand totals, report layout, blank rows, the PivotTable
       style gallery and style options; Excel 16 reopens and refreshes the results (2026-11-26).
@@ -475,7 +479,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       no visible text; a numbered paragraph with text still formats its number from its first run
       (`docx/layout/adapter.ts`, `src/ui/src/docx/list-marker-display.ts`).
 - [ ] **P1** Canvases (`wpc`), legacy VML text boxes (`v:textbox`)
-      and legacy VML WordArt, ink and gradient or picture fills are kept but not drawn.
+      and legacy VML WordArt, VML ink and gradient or picture fills are kept but not drawn.
+      DrawingML ink (`w14:contentPart`) is drawn and edited on the Draw tab (`docx/ink.test.ts`).
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical
       text (`tbRl`, `btLr`), `eastAsianLayout`, `fitText` and emphasis marks are not laid out.
 - [x] **P1** Picture bullets (`numPicBullet`): resolved (VML `imagedata` and `w:drawing`), drawn as
@@ -837,7 +842,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Borders (2026-11-27).
 - [ ] **P2** Word tables: freeform Draw Table and the structural Eraser (merging cells), and
       splitting merged cells into arbitrary counts when the grid must be rebuilt.
-- [ ] **P1** Missing tabs: Draw and Equation; Picture Format has only Wrap Text, Crop and Format.
+- [ ] **P1** Missing tabs: Equation; Picture Format has only Wrap Text, Crop and Format.
+- [ ] **P2** Draw tab: Ruler (Stencils) and Ink to Math are disabled with their reason (no ruler
+      stencil, no handwriting recognizer); drawing, the eraser, the lasso, Ink to Shape, Ink
+      Replay and the clipboard work and save as Word ink (`docx/ink.test.ts`,
+      `e2e/docx/draw-tab.spec.ts`).
 - [x] **P1** Layout and Shape Format: the Arrange group (Position, Wrap Text, Bring Forward, Send
       Backward, Selection Pane with rename, Align, Group, Rotate) and Text Direction, with canvas
       multi-selection (`docx/arrange-controller.ts`, 2026-11-26).

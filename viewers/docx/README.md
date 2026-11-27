@@ -26,17 +26,18 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 
 ## Features
 
-|                         |                                                                                                                                                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Editor**              | Word-style ribbon, title bar with Tell me, File backstage, status bar, context menus, undo and redo, find and replace, zoom, and Editing and Viewing modes in one element.                                               |
-| **Print Layout**        | Paginated view with line breaking, widow and orphan control, keep rules, columns, table row splitting, page thumbnails and printing. The pagination is the editor's own and approximates Word's.                         |
-| **Document structure**  | Styles, lists and numbering, tables, sections and columns, headers and footers, footnotes and endnotes, fields such as TOC, content controls and form fields, pictures, shapes, text boxes, watermarks and page borders. |
-| **Review**              | Tracked changes (accept, reject, navigate) and a comments pane with replies and resolve.                                                                                                                                 |
-| **Charts and SmartArt** | Insert and edit both through the shared Office pickers, data sheet and panes (see below).                                                                                                                                |
-| **File formats**        | `.docx`; password-protected `.docx` through `loadDocument(bytes, { password })`; legacy Word 97-2003 `.doc` (main-body text, with paragraph text edits saved back as `.doc`).                                            |
-| **Collaboration**       | A transport-neutral protocol over validated ProseMirror steps with presence. Your application owns networking, identity, permissions and storage.                                                                        |
-| **Customization**       | Hide ribbon controls or whole tabs (the File tab included), add your own ribbon tabs, backstage pages and context menu commands, route Save and Open to your storage, theme with `--dve-*` tokens.                       |
-| **Localization**        | English, French, German, Spanish and Simplified Chinese through `locale`. Document content is never translated.                                                                                                          |
+|                         |                                                                                                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Editor**              | Word-style ribbon, title bar with Tell me, File backstage, status bar, context menus, undo and redo, find and replace, zoom, and Editing and Viewing modes in one element.                                                           |
+| **Print Layout**        | Paginated view with line breaking, widow and orphan control, keep rules, columns, table row splitting, page thumbnails and printing. The pagination is the editor's own and approximates Word's.                                     |
+| **Document structure**  | Styles, lists and numbering, tables, sections and columns, headers and footers, footnotes and endnotes, fields such as TOC, content controls and form fields, pictures, shapes, text boxes, watermarks and page borders.             |
+| **Review**              | Tracked changes (accept, reject, navigate) and a comments pane with replies and resolve.                                                                                                                                             |
+| **Charts and SmartArt** | Insert and edit both through the shared Office pickers, data sheet and panes (see below).                                                                                                                                            |
+| **Draw**                | Pens, pencil and highlighter with their colour and thickness, the eraser, Lasso Select, Ink to Shape and Ink Replay on the Print Layout pages; ink saves as Word ink and opens in Word. Ink to Math and the ruler are not available. |
+| **File formats**        | `.docx`; password-protected `.docx` through `loadDocument(bytes, { password })`; legacy Word 97-2003 `.doc` (main-body text, with paragraph text edits saved back as `.doc`).                                                        |
+| **Collaboration**       | A transport-neutral protocol over validated ProseMirror steps with presence. Your application owns networking, identity, permissions and storage.                                                                                    |
+| **Customization**       | Hide ribbon controls or whole tabs (the File tab included), add your own ribbon tabs, backstage pages and context menu commands, route Save and Open to your storage, theme with `--dve-*` tokens.                                   |
+| **Localization**        | English, French, German, Spanish and Simplified Chinese through `locale`. Document content is never translated.                                                                                                                      |
 
 ## Getting started
 
