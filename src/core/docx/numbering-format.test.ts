@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentModel, Paragraph } from './model';
 import type { NumberingCatalog } from './numbering-model';
-import { computeListLabels, formatListNumber, resolveParagraphNumbering } from './numbering-format';
+import {
+	computeListLabels,
+	displayListLabel,
+	formatListNumber,
+	resolveParagraphNumbering,
+} from './numbering-format';
 import { cardinalWords, letterLabel, ordinalWords, romanNumeral } from './numbering-text';
 import { at, must } from './test-support/access';
 import { twips } from './units';
@@ -287,5 +292,25 @@ describe('computeListLabels', () => {
 		expect(labels.get('cell-a')?.text).toBe('1.');
 		expect(labels.get('cell-b')?.text).toBe('2.');
 		expect(labels.get('after')?.text).toBe('3.');
+	});
+});
+
+describe('displayListLabel', () => {
+	it("shows symbol-font bullets as their font's Unicode pictures (issue #366)", () => {
+		// Word 16's PDF of the same bullets reads U+2212, U+2022, U+2192 and U+2713.
+		expect(displayListLabel('', 'Symbol')).toBe('−');
+		expect(displayListLabel('', 'Symbol')).toBe('•');
+		expect(displayListLabel('', 'Symbol')).toBe('→');
+		expect(displayListLabel('', 'Wingdings')).toBe('✓');
+		expect(displayListLabel('', 'Wingdings')).toBe('▪');
+		// A byte code in a symbol font is the same picture.
+		expect(displayListLabel('§', 'Wingdings')).toBe('▪');
+	});
+
+	it('keeps known library bullets without a symbol font and text bullets as they are', () => {
+		expect(displayListLabel('')).toBe('✓');
+		expect(displayListLabel('')).toBe('•');
+		expect(displayListLabel('o', 'Courier New')).toBe('o');
+		expect(displayListLabel('%1.', 'Calibri')).toBe('%1.');
 	});
 });

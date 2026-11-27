@@ -101,28 +101,6 @@ export const PDF_SYMBOL_FONT = 'Symbol';
 export const usesBuiltInEncoding = (baseFont: string): boolean =>
 	baseFont === PDF_SYMBOL_FONT || baseFont === 'ZapfDingbats';
 
-/**
- * Text in Office's Symbol font as codes of the standard PDF Symbol font, whose built-in encoding
- * Symbol follows: a private-use code U+F020..U+F0FF is its low byte, a code from 0x20 to 0xFF is
- * itself. `undefined` for any other family, or when a character has no code.
- */
-export function standardSymbolBytes(family: string, text: string): string | undefined {
-	const name = family
-		.split(',')[0]!
-		.trim()
-		.replace(/^["']|["']$/g, '')
-		.toLowerCase();
-	if (name !== 'symbol') return undefined;
-	let out = '';
-	for (const char of text) {
-		const code = char.codePointAt(0)!;
-		if (code >= 0xf020 && code <= 0xf0ff) out += String.fromCharCode(code - 0xf000);
-		else if (code >= 0x20 && code <= 0xff) out += char;
-		else return undefined;
-	}
-	return out;
-}
-
 /** A PDF literal string for a WinAnsi string. */
 export const pdfLiteral = (text: string): string =>
 	`(${text.replace(/[\\()]/g, '\\$&').replace(/[\r\n]/g, ' ')})`;

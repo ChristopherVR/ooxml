@@ -162,7 +162,7 @@ export class ListNumberFields {
 		else this.counters.set(numId, index, start);
 		if (target.kind === 'num')
 			return def.numFmt === 'bullet'
-				? displayListLabel(def.lvlText)
+				? displayListLabel(def.lvlText, def.markerFormat?.fontFamily)
 				: substituteLvlText(def.lvlText, numId, index, catalog, this.counters, Boolean(def.isLgl));
 		const value = (at: number) => this.counters.current(DEFAULT_ID, at, 1);
 		if (target.name === 'LegalDefault')

@@ -179,7 +179,7 @@ export function paragraphStylesPlugin(
 							...(label || node.attrs.listLabelText != null
 								? {
 										'data-list-label': label
-											? `${displayListLabel(label.text)}${label.suffix === 'space' ? ' ' : label.suffix === 'none' ? '' : '\t'}`
+											? `${displayListLabel(label.text, label.markerFormat?.fontFamily)}${label.suffix === 'space' ? ' ' : label.suffix === 'none' ? '' : '\t'}`
 											: '',
 									}
 								: {}),

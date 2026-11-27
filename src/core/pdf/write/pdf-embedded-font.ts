@@ -9,6 +9,7 @@ import {
 	mayEmbedFontSubset,
 	parseTrueType,
 	subsetTrueType,
+	symbolFontGlyph,
 	type TrueTypeFont,
 	type TrueTypeSubset,
 } from '../../text/index';
@@ -55,7 +56,7 @@ export class PdfEmbeddedFont implements PdfCidFont {
 		for (const char of text) {
 			const code = char.codePointAt(0)!;
 			if (code < 32 || code === 0xa0) continue;
-			if (!this.font.glyphFor(code)) return false;
+			if (!this.#glyphOf(code)) return false;
 		}
 		return true;
 	}
@@ -67,7 +68,11 @@ export class PdfEmbeddedFont implements PdfCidFont {
 	}
 	#glyph(char: string): number {
 		const code = char.codePointAt(0)!;
-		return this.font.glyphFor(code === 0xa0 || code < 32 ? 32 : code);
+		return this.#glyphOf(code === 0xa0 || code < 32 ? 32 : code);
+	}
+	/** A symbol font also draws the Unicode equivalents of its pictures (a list's check mark). */
+	#glyphOf(code: number): number {
+		return symbolFontGlyph(this.font, this.family, code);
 	}
 	/** `text` as the hex digits of 2-byte CIDs (no angle brackets); marks the glyphs as used. */
 	encode(text: string): string {

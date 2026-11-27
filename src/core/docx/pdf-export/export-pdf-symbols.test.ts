@@ -86,3 +86,51 @@ describe('exportDocxPdf symbols', () => {
 		expect(pdf.content).toMatch(/<0001> <F041>/i);
 	});
 });
+
+const bulletLevel = (id: number, char: string, font: string) =>
+	`<w:abstractNum w:abstractNumId="${id}"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="${char}"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:hint="default"/></w:rPr></w:lvl></w:abstractNum><w:num w:numId="${id + 1}"><w:abstractNumId w:val="${id}"/></w:num>`;
+const bulletDocx = (levels: [string, string][]) =>
+	docxModel(
+		levels
+			.map(
+				(_, index) =>
+					`<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="${index + 1}"/></w:numPr></w:pPr>${text('Item')}</w:p>`,
+			)
+			.join(''),
+		{
+			'word/numbering.xml': `<w:numbering xmlns:w="${W}">${levels.map(([char, font], index) => bulletLevel(index, char, font)).join('')}</w:numbering>`,
+			'word/_rels/document.xml.rels': `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rN" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/></Relationships>`,
+		},
+	);
+
+describe('exportDocxPdf symbol-font bullets (issue #366)', () => {
+	it('writes Symbol bullets as their own pictures, not all as a bullet', async () => {
+		// Word 16: Symbol F02D, F0B7 and F0AE are a minus sign, a bullet and a right arrow.
+		const model = await bulletDocx([
+			['', 'Symbol'],
+			['', 'Symbol'],
+			['', 'Symbol'],
+		]);
+		const { bytes, report } = await exportDocxPdf(model, { measurer });
+		const pdf = inspectPdf(bytes);
+		// Without the font file, in the standard Symbol font's codes for those pictures.
+		expect(pdf.text).toContain('-');
+		expect(pdf.text).toContain('\xb7');
+		expect(pdf.text).toContain('\xae');
+		expect(report.missingCharacters).toEqual([]);
+	});
+
+	it("draws a Wingdings check mark bullet with the supplied font's picture", async () => {
+		const model = await bulletDocx([['', 'Wingdings']]);
+		const font = syntheticTrueType([[0xf0fc, 1]], 0);
+		const { bytes, report } = await exportDocxPdf(model, {
+			measurer,
+			fonts: [{ family: 'Wingdings', data: font }],
+		});
+		const pdf = inspectPdf(bytes);
+		expect(report.embeddedFonts).toContain('Wingdings');
+		// The glyph is Wingdings' F0FC; it extracts as U+2713, as in Word's PDF.
+		expect(pdf.content).toMatch(/<0001> <2713>/i);
+		expect(report.missingCharacters).toEqual([]);
+	});
+});

@@ -22,9 +22,8 @@ import {
 	encodeWinAnsi,
 	pdfBaseFont,
 	pdfTextWidth,
-	standardSymbolBytes,
 } from '../../pdf/write/pdf-fonts';
-import { isSymbolEncodedFont, symbolTextToUnicode } from '../../text/symbol-fonts';
+import { isSymbolEncodedFont, symbolFontBytes, symbolTextToUnicode } from '../../text/symbol-fonts';
 import { parseColor, type Rgba } from '../../pdf/write/pdf-svg-style';
 import type { PdfVectorPage } from '../../pdf/write/pdf-vector';
 import { paintContentControlTag } from './pdf-content-control-tag';
@@ -215,7 +214,7 @@ export class DocxPdfText {
 		if (isSymbolEncodedFont(family) && !this.fonts.pick(family, bold, italic, text)) {
 			// Without the symbol font's file: Symbol's codes are the standard Symbol font's, and other
 			// symbol fonts' pictures are written as their Unicode equivalents where they have one.
-			const bytes = standardSymbolBytes(family, text);
+			const bytes = symbolFontBytes(family, text);
 			if (bytes !== undefined) {
 				this.report.substituted(family, PDF_SYMBOL_FONT);
 				const scale = fit(pdfTextWidth(bytes, PDF_SYMBOL_FONT) * sizePx);

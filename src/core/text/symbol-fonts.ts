@@ -1,3 +1,4 @@
+import type { TrueTypeFont } from './truetype/parse';
 import { DINGBAT_CODE_POINTS } from './symbol-dingbats';
 
 /**
@@ -251,6 +252,72 @@ export function symbolCharToUnicode(family: string | undefined, char: string): s
 	const known = TABLES.get(name)?.get(byte);
 	const standard = DINGBAT_CODE_POINTS[name]?.[byte - 0x21];
 	return known ?? (standard ? String.fromCodePoint(standard) : undefined);
+}
+
+const INVERSE = new Map<string, ReadonlyMap<string, number>>();
+
+/**
+ * The private-use code (U+F020..U+F0FF) of the glyph a symbol-encoded font draws for the Unicode
+ * character `char` (the inverse of `symbolCharToUnicode`, first code wins), or `undefined`. Lets a
+ * renderer with the font's file draw a label written in Unicode with the font's own picture.
+ */
+export function unicodeToSymbolCode(family: string | undefined, char: string): number | undefined {
+	const name = normaliseFamily(family);
+	if (!SYMBOL_ENCODED.has(name)) return undefined;
+	let inverse = INVERSE.get(name);
+	if (!inverse) {
+		const map = new Map<string, number>();
+		for (let byte = 0x21; byte <= 0xff; byte++) {
+			const symbol = symbolCharToUnicode(name, String.fromCharCode(byte));
+			if (symbol && !map.has(symbol)) map.set(symbol, 0xf000 + byte);
+		}
+		INVERSE.set(name, map);
+		inverse = map;
+	}
+	return inverse.get(char) ?? inverse.get(LOOKALIKES[char] ?? '');
+}
+
+/** Light and heavy marks that name the same picture (Word's PDF calls Wingdings F0FC U+2713). */
+const LOOKALIKES: Readonly<Record<string, string>> = {
+	'✓': '✔',
+	'✗': '✘',
+};
+
+/**
+ * The glyph `font` (a file of the symbol font `family`) draws for `code`: its own, else, for a
+ * Unicode equivalent such as a list label's check mark, the picture that character stands for.
+ */
+export function symbolFontGlyph(
+	font: Pick<TrueTypeFont, 'glyphFor' | 'symbolEncoded'>,
+	family: string,
+	code: number,
+): number {
+	const glyph = font.glyphFor(code);
+	if (glyph || !font.symbolEncoded) return glyph;
+	const alias = unicodeToSymbolCode(family, String.fromCodePoint(code));
+	return alias === undefined ? 0 : font.glyphFor(alias);
+}
+
+/**
+ * Text in Office's Symbol font as Symbol's byte codes, which are those of Adobe's standard Symbol
+ * font: a private-use code U+F020..U+F0FF is its low byte, a code from 0x20 to 0xFF is itself and
+ * a Unicode equivalent (a list label's minus sign or arrow) is the code of its picture. `undefined`
+ * for any other family, or when a character has no code.
+ */
+export function symbolFontBytes(family: string | undefined, text: string): string | undefined {
+	if (normaliseFamily(family) !== 'symbol') return undefined;
+	let out = '';
+	for (const char of text) {
+		const code = char.codePointAt(0)!;
+		if (code >= 0xf020 && code <= 0xf0ff) out += String.fromCharCode(code - 0xf000);
+		else if (code >= 0x20 && code <= 0xff) out += char;
+		else {
+			const symbol = unicodeToSymbolCode('Symbol', char);
+			if (symbol === undefined) return undefined;
+			out += String.fromCharCode(symbol - 0xf000);
+		}
+	}
+	return out;
 }
 
 /** Portable Unicode characters corresponding to the glyphs of a legacy symbol font. */

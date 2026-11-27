@@ -9,7 +9,7 @@
  */
 import { createFakeMeasurer, type LayoutFontSpec, type TextMeasurer } from '../layout/index';
 import type { PdfFontFile } from '../../pdf/write/pdf-embedded-font';
-import { designTextWidthEm, officeFontVerticalMetrics } from '../../text/index';
+import { designTextWidthEm, officeFontVerticalMetrics, symbolFontGlyph } from '../../text/index';
 import { pairKerning, type PairKerning } from '../../text/truetype/kerning';
 import { DocxPdfFontFiles, type DocxPdfFontMatch, type FontFace } from './font-files';
 
@@ -119,7 +119,7 @@ export function createFontFileMeasurer(
 				previous = 0;
 				continue;
 			}
-			const glyph = font.glyphFor(code === 0xa0 ? 32 : code);
+			const glyph = symbolFontGlyph(font, face.family, code === 0xa0 ? 32 : code);
 			if (!glyph) {
 				missing += char;
 				previous = 0;

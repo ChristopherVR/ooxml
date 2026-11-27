@@ -345,6 +345,7 @@ export function adaptDocumentModel(
 	function labelRun(label: ParagraphListLabel, base: LayoutRun): LayoutRun {
 		const marker = label.markerFormat;
 		const suffix = label.suffix === 'tab' ? '\t' : label.suffix === 'space' ? ' ' : '';
+		const markerFont = marker?.fontFamily ?? base.fontFamily;
 		const pictureWidthPx = label.picture
 			? (pictureBulletSizePt(
 					label.picture,
@@ -356,17 +357,17 @@ export function adaptDocumentModel(
 				3
 			: undefined;
 		return {
-			text: `${displayListLabel(label.text)}${suffix}`,
+			text: `${displayListLabel(label.text, markerFont)}${suffix}`,
 			synthetic: true,
 			marker: {
-				length: displayListLabel(label.text).length,
+				length: displayListLabel(label.text, markerFont).length,
 				alignment: label.alignment ?? 'left',
 				...(pictureWidthPx !== undefined ? { widthPx: pictureWidthPx } : {}),
 			},
 			...definedProps({
 				bold: marker?.bold ?? base.bold,
 				italic: marker?.italic ?? base.italic,
-				fontFamily: marker?.fontFamily ?? base.fontFamily,
+				fontFamily: markerFont,
 				fontSizePt: marker?.fontSizeHalfPoints ? marker.fontSizeHalfPoints / 2 : base.fontSizePt,
 			}),
 			...(marker?.color || base.color ? { color: marker?.color ?? base.color! } : {}),

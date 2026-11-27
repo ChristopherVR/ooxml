@@ -54,7 +54,7 @@ function paragraphNode(paragraph: Paragraph, labels: ListLabels, noteNumber?: No
 		'paragraph',
 		{
 			...paragraphAttrs(paragraph),
-			listLabelText: label ? displayListLabel(label.text) : null,
+			listLabelText: label ? displayListLabel(label.text, label.markerFormat?.fontFamily) : null,
 			listSuffix: label?.suffix ?? null,
 			listIndentLeftTwips: label?.indentLeftTwips ?? null,
 			listHangingTwips: label?.hangingTwips ?? null,

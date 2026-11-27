@@ -43,7 +43,7 @@ export function listMarkerDisplay(
 		...(bold ? { bold: true } : {}),
 		...(italic ? { italic: true } : {}),
 	};
-	const text = displayListLabel(label.text);
+	const text = displayListLabel(label.text, font.family);
 	const color =
 		own?.color ??
 		format.color ??
