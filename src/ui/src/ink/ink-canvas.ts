@@ -2,6 +2,7 @@ import { html, nothing, svg } from 'lit';
 import { OfficeElement, controlStyles, flag } from '../base';
 import { definer, emit } from '../registry';
 import css from './ink-canvas.css?raw';
+import { InkRuler } from './ink-ruler';
 
 /** The Draw tool the canvas captures for; anything else lets the pointer through. */
 export type InkCanvasTool = '' | 'pen' | 'pencil' | 'highlighter' | 'eraser' | 'lasso';
@@ -50,6 +51,10 @@ const MAX_SAMPLES = 4096;
  * product turns them into document ink. With no tool (the default) it is hidden and lets the
  * pointer through. Touch scrolls unless `touch` (Draw with Touch) is set; a pen or mouse always
  * draws. Escape abandons the gesture in progress (`office-ink-cancel`).
+ *
+ * `ruler` lays the ruler stencil over the surface, with or without a tool: it is dragged, rotated
+ * with the mouse wheel or Shift and the arrow keys (arrows alone move it), and a pen stroke begun
+ * near its edge follows the edge in a straight line. `locale` names it in the product's language.
  */
 export class OfficeUiInkCanvas extends OfficeElement {
 	static override styles = controlStyles(css);
@@ -60,6 +65,8 @@ export class OfficeUiInkCanvas extends OfficeElement {
 		zoom: { type: Number },
 		touch: { ...flag, reflect: true },
 		label: { type: String },
+		ruler: { ...flag, reflect: true },
+		locale: { type: String },
 	};
 	declare tool: InkCanvasTool;
 	declare color: string;
@@ -67,6 +74,13 @@ export class OfficeUiInkCanvas extends OfficeElement {
 	declare zoom: number;
 	declare touch: boolean;
 	declare label: string;
+	declare ruler: boolean;
+	declare locale: string;
+	readonly #ruler = new InkRuler();
+	/** The ruler being dragged: its pointer and where it was grabbed from its centre. */
+	#rulerDrag: { id: number; dx: number; dy: number } | undefined;
+	/** The stroke in progress follows the ruler's edge. */
+	#snap = false;
 	#samples: InkCanvasSample[] = [];
 	#pointer: number | undefined;
 	#start = 0;
@@ -89,6 +103,13 @@ export class OfficeUiInkCanvas extends OfficeElement {
 		this.zoom = 1;
 		this.touch = false;
 		this.label = '';
+		this.ruler = false;
+		this.locale = '';
+	}
+
+	/** The ruler's angle in degrees (-180..180), as the user turned it. */
+	get rulerAngle(): number {
+		return this.#ruler.angle;
 	}
 
 	override connectedCallback(): void {
@@ -115,6 +136,64 @@ export class OfficeUiInkCanvas extends OfficeElement {
 		this.ownerDocument.removeEventListener('keydown', this.#key, true);
 		this.#reset();
 	}
+
+	protected override updated(): void {
+		if (this.ruler && !this.#ruler.center) this.#placeRuler();
+	}
+
+	/** The ruler goes in the middle of what is visible of the surface, the first time it shows. */
+	#placeRuler(): void {
+		const rect = this.getBoundingClientRect();
+		const clip = this.parentElement?.getBoundingClientRect();
+		const view = this.ownerDocument.defaultView;
+		const left = Math.max(rect.left, clip?.left ?? -Infinity, 0);
+		const top = Math.max(rect.top, clip?.top ?? -Infinity, 0);
+		const right = Math.min(rect.right, clip?.right ?? Infinity, view?.innerWidth ?? Infinity);
+		const bottom = Math.min(rect.bottom, clip?.bottom ?? Infinity, view?.innerHeight ?? Infinity);
+		const scale = this.#scale();
+		const visible =
+			right > left && bottom > top
+				? {
+						x: (left - rect.left) / scale,
+						y: (top - rect.top) / scale,
+						width: (right - left) / scale,
+						height: (bottom - top) / scale,
+					}
+				: { x: 0, y: 0, width: 600, height: 300 };
+		this.#ruler.place(visible);
+		this.requestUpdate();
+	}
+
+	#onRuler(event: Event): boolean {
+		return event
+			.composedPath()
+			.some((node) => node instanceof Element && node.classList.contains('ruler'));
+	}
+
+	#grabRuler(event: PointerEvent): void {
+		event.preventDefault();
+		event.stopPropagation();
+		const point = this.#point(event);
+		const center = this.#ruler.center ?? point;
+		this.#rulerDrag = { id: event.pointerId, dx: center.x - point.x, dy: center.y - point.y };
+		const ruler = this.renderRoot.querySelector<SVGGElement>('.ruler');
+		ruler?.focus({ preventScroll: true });
+		ruler?.setPointerCapture?.(event.pointerId);
+	}
+
+	readonly #rulerKey = (event: KeyboardEvent): void => {
+		if (!this.#ruler.key(event)) return;
+		event.preventDefault();
+		event.stopPropagation();
+		this.requestUpdate();
+	};
+
+	readonly #rulerWheel = (event: WheelEvent): void => {
+		event.preventDefault();
+		event.stopPropagation();
+		this.#ruler.wheel(event);
+		this.requestUpdate();
+	};
 
 	protected override willUpdate(): void {
 		this.hostWrite(() => {
@@ -143,7 +222,10 @@ export class OfficeUiInkCanvas extends OfficeElement {
 	}
 
 	#press(event: PointerEvent): void {
-		if (!this.tool || this.#pointer !== undefined || event.button !== 0) return;
+		if (this.#pointer !== undefined || this.#rulerDrag || event.button !== 0) return;
+		// The ruler takes a finger too, as Office's does.
+		if (this.ruler && this.#onRuler(event)) return this.#grabRuler(event);
+		if (!this.tool) return;
 		if (event.pointerType === 'touch' && !this.touch) return;
 		event.preventDefault();
 		event.stopPropagation();
@@ -151,10 +233,23 @@ export class OfficeUiInkCanvas extends OfficeElement {
 		this.#start = event.timeStamp;
 		this.setPointerCapture?.(event.pointerId);
 		this.#samples = [];
+		const tool = this.tool;
+		this.#snap =
+			this.ruler &&
+			(tool === 'pen' || tool === 'pencil' || tool === 'highlighter') &&
+			this.#ruler.near(this.#point(event));
 		this.#add(event);
 	}
 
 	#drag(event: PointerEvent): void {
+		const grab = this.#rulerDrag;
+		if (grab && event.pointerId === grab.id) {
+			event.preventDefault();
+			const point = this.#point(event);
+			this.#ruler.moveTo({ x: point.x + grab.dx, y: point.y + grab.dy });
+			this.requestUpdate();
+			return;
+		}
 		if (event.pointerId !== this.#pointer) return this.#track(event);
 		event.preventDefault();
 		const coalesced = event.getCoalescedEvents?.() ?? [];
@@ -163,7 +258,7 @@ export class OfficeUiInkCanvas extends OfficeElement {
 
 	#add(event: PointerEvent): void {
 		if (this.#samples.length >= MAX_SAMPLES) return;
-		const point = this.#point(event);
+		const point = this.#snap ? this.#ruler.snap(this.#point(event)) : this.#point(event);
 		const pressure = event.pointerType === 'mouse' ? 0.5 : event.pressure || 0.5;
 		this.#samples.push({ ...point, pressure, time: Math.max(0, event.timeStamp - this.#start) });
 		if (this.tool === 'eraser') {
@@ -178,6 +273,10 @@ export class OfficeUiInkCanvas extends OfficeElement {
 	}
 
 	#release(event: PointerEvent, lost: boolean): void {
+		if (this.#rulerDrag?.id === event.pointerId) {
+			this.#rulerDrag = undefined;
+			return;
+		}
 		if (event.pointerId !== this.#pointer) return;
 		const samples = this.#samples;
 		const tool = this.tool;
@@ -221,6 +320,8 @@ export class OfficeUiInkCanvas extends OfficeElement {
 
 	#reset(): void {
 		this.#pointer = undefined;
+		this.#rulerDrag = undefined;
+		this.#snap = false;
 		this.#samples = [];
 		this.#cursor = undefined;
 		this.requestUpdate();
@@ -236,20 +337,30 @@ export class OfficeUiInkCanvas extends OfficeElement {
 		const opacity = tool === 'highlighter' ? 0.4 : tool === 'pencil' ? 0.72 : 1;
 		const cursor = tool === 'eraser' ? this.#cursor : undefined;
 		return html`<svg aria-hidden="true">
-			${
-				ink && points
-					? svg`<polyline class="live" points=${points} stroke=${color} stroke-width=${width} stroke-opacity=${opacity}></polyline>`
+				${
+					ink && points
+						? svg`<polyline class="live" points=${points} stroke=${color} stroke-width=${width} stroke-opacity=${opacity}></polyline>`
+						: nothing
+				}${
+					tool === 'lasso' && points
+						? svg`<polyline class="lasso" points=${points}></polyline>`
+						: nothing
+				}${
+					cursor
+						? svg`<circle class="eraser" cx=${cursor.x * scale} cy=${cursor.y * scale} r=${INK_ERASER_RADIUS * scale}></circle>`
+						: nothing
+				}</svg
+			>${
+				// Its own layer: the stroke being drawn is hidden from assistive technology, the ruler is not.
+				this.ruler && this.#ruler.center
+					? html`<svg class="ruler-layer">
+							${this.#ruler.render(scale, this.locale || undefined, {
+								keydown: this.#rulerKey,
+								wheel: this.#rulerWheel,
+							})}
+						</svg>`
 					: nothing
-			}${
-				tool === 'lasso' && points
-					? svg`<polyline class="lasso" points=${points}></polyline>`
-					: nothing
-			}${
-				cursor
-					? svg`<circle class="eraser" cx=${cursor.x * scale} cy=${cursor.y * scale} r=${INK_ERASER_RADIUS * scale}></circle>`
-					: nothing
-			}
-		</svg>`;
+			}`;
 	}
 }
 

@@ -194,6 +194,18 @@ function mountRuler(
 		drag = undefined;
 		body.style.cursor = 'grab';
 	});
+	// The mouse wheel turns the ruler a degree a notch (Shift: fifteen), as in Office.
+	body.addEventListener(
+		'wheel',
+		(event) => {
+			const notch = Math.sign(event.deltaY || event.deltaX);
+			if (!notch) return;
+			event.preventDefault();
+			event.stopPropagation();
+			state.change(state.center(), state.angle() + notch * (event.shiftKey ? 15 : 1));
+		},
+		{ passive: false },
+	);
 	svg.addEventListener('keydown', (event) => {
 		const delta = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[
 			event.key

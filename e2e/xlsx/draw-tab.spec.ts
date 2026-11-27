@@ -198,3 +198,37 @@ test('Excel: Undo and Redo on the title bar give focus back to the sheet', async
 	await goToCell(page, 'C4');
 	expect(await formulaBarValue(page)).toBe('6');
 });
+
+test('Draw > Ruler shows over the cells, turns with the wheel and straightens a stroke along it', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await openFixture(page, 'vanilla', 'excel-ink.xlsx');
+	await expect(inks(page)).toHaveCount(1);
+	await ribbon(page).getByRole('tab', { name: 'Draw', exact: true }).click();
+	const button = ribbon(page).getByRole('button', { name: 'Ruler', exact: true });
+	await button.click();
+	await expect(button).toHaveAttribute('aria-pressed', 'true');
+	const ruler = grid(page).locator('office-ui-ink-canvas[ruler] .ruler');
+	await expect(ruler).toHaveAttribute('aria-label', 'Ruler, 0 degrees');
+	await ribbon(page).getByRole('button', { name: 'Pen: 0.5 mm, Red' }).click();
+	const box = (await ruler.boundingBox())!;
+	await page.mouse.move(box.x + 40, box.y - 6);
+	await page.mouse.down();
+	for (const [dx, dy] of wave) await page.mouse.move(box.x + 40 + dx, box.y - 6 + dy / 3);
+	await page.mouse.up();
+	await expect(inks(page)).toHaveCount(2);
+	const ys = await inks(page)
+		.nth(1)
+		.locator('path')
+		.first()
+		.evaluate((path) =>
+			[...(path.getAttribute('d') ?? '').matchAll(/-?\d+(?:\.\d+)?/g)]
+				.map((match) => Number(match[0]))
+				.filter((_, index) => index % 2 === 1),
+		);
+	expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(1);
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await page.mouse.wheel(0, 100);
+	await expect(ruler).toHaveAttribute('aria-label', 'Ruler, 1 degrees');
+});

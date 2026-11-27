@@ -90,11 +90,13 @@ export class DocxDrawController {
 	sync(): void {
 		const scroller = this.#host.scroller();
 		const tool = this.#host.active() ? this.#host.state.canvasTool : '';
+		const ruler = this.#host.active() && this.#host.state.snapshot.ruler;
 		// The lasso holds strokes of one document: an edit or an undo drops it.
 		if (tool !== 'lasso') this.clearLasso();
 		else if (this.#lasso.follow(this.#host.view()?.state.doc)) this.#host.refresh();
-		if (!scroller || !tool) {
+		if (!scroller || (!tool && !ruler)) {
 			this.#canvas.tool = '';
+			this.#canvas.ruler = false;
 			scroller?.classList.remove('dve-inking');
 			this.#canvas.remove();
 			return;
@@ -113,6 +115,8 @@ export class DocxDrawController {
 		this.#canvas.color = pen.color;
 		this.#canvas.width = pen.width * (sheet ? scaleOf(sheet) : 1);
 		this.#canvas.touch = this.#host.state.snapshot.touch;
+		this.#canvas.ruler = ruler;
+		this.#canvas.locale = this.#host.locale();
 	}
 
 	/** Lasso selection or the selected ink, for Ink to Shape. */

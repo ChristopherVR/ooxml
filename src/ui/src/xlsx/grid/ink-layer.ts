@@ -38,6 +38,7 @@ export class InkLayer implements GridInk {
 	readonly #canvas: OfficeUiInkCanvas;
 	readonly #selection: InkSelection;
 	#tool: GridInkTool | undefined;
+	#ruler = false;
 	#last: { sheet: number; index: number; ink: object; at: number } | undefined;
 	#replay: InkReplay | undefined;
 	/** Eraser points not yet applied, and the gesture they belong to (one undo step). */
@@ -78,18 +79,27 @@ export class InkLayer implements GridInk {
 		view.doc.addEventListener('keydown', (event) => this.#key(event), { capture: true, signal });
 	}
 
+	/** The ruler stays on the canvas while the tool changes; `setTool` places the canvas. */
+	setRuler(on: boolean): void {
+		this.#ruler = on;
+	}
+
 	setTool(tool: GridInkTool | undefined): void {
 		this.#tool = tool;
 		if (tool?.tool !== 'lasso') this.#selection.clear();
 		const canvas = this.#canvas;
-		if (!tool || this.#view.ctx.readOnly()) {
+		const ruler = this.#ruler && !this.#view.ctx.readOnly();
+		canvas.ruler = ruler;
+		if ((!tool && !ruler) || this.#view.ctx.readOnly()) {
 			canvas.tool = '';
 			canvas.remove();
 			return;
 		}
 		if (canvas.parentElement !== this.#view.view) this.#view.view.append(canvas);
 		canvas.label = this.#view.ctx.t('Drawing canvas');
-		canvas.tool = tool.tool;
+		canvas.locale = this.#view.ctx.locale();
+		canvas.tool = tool?.tool ?? '';
+		if (!tool) return;
 		canvas.color = tool.color;
 		canvas.width = tool.width * zoomOf(this.#view);
 		canvas.touch = tool.touch;

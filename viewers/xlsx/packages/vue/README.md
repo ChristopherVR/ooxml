@@ -108,7 +108,7 @@ Excel is **Stable** under the [stability policy](https://github.com/ChristopherV
 - `.xlsb` and `.ods` do not open.
 - Macros never run (a `.xlsm` keeps its VBA project). External links, data connections and Power Query are kept with their cached values and never refreshed.
 - PivotTables from external or OLAP sources and advanced pivot filters are kept but not editable; the sparkline style gallery is missing.
-- Ink is drawn, erased and saved as Excel ink from the Draw tab (Ink to Math is not available). Older OLE objects show as placeholders; form controls cannot be moved or resized, and buttons run no macro.
+- Ink is drawn, erased and saved as Excel ink from the Draw tab, with the Ruler, and shared in a shared workbook (Ink to Math needs a handwriting recognizer the host supplies with `setInkMathRecognizer`; none is built in). Older OLE objects show as placeholders; form controls cannot be moved or resized, and buttons run no macro.
 - In a shared room, pictures, ink, other drawings, page setup and PivotTables are not shared.
 
 See [features and limitations](https://christophervr.github.io/ooxml/xlsx/features) and the [parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md).

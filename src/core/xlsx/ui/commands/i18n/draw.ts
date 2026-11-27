@@ -77,11 +77,11 @@ export const DRAW_STRINGS: Translations = {
 	],
 	Stencils: ['Gabarits', 'Schablonen', 'Plantillas', '模具'],
 	Ruler: ['Règle', 'Lineal', 'Regla', '标尺'],
-	'The ruler is not available in this editor.': [
-		'La règle n’est pas disponible dans cet éditeur.',
-		'Das Lineal ist in diesem Editor nicht verfügbar.',
-		'La regla no está disponible en este editor.',
-		'此编辑器中没有标尺。',
+	'Show the ruler and draw straight lines along its edge.': [
+		'Afficher la règle et tracer des lignes droites le long de son bord.',
+		'Das Lineal anzeigen und gerade Linien an seiner Kante zeichnen.',
+		'Mostrar la regla y dibujar líneas rectas a lo largo de su borde.',
+		'显示标尺并沿其边缘绘制直线。',
 	],
 	'Draw ink with this pen. Select it again to change its color and thickness.': [
 		'Dessinez à l’encre avec ce stylet. Sélectionnez-le de nouveau pour modifier sa couleur et son épaisseur.',

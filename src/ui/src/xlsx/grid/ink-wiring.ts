@@ -17,6 +17,7 @@ export function wireGridInk(view: GridView): GridInkWiring {
 	let layer: InkLayer | undefined;
 	let loading: Promise<InkLayer> | undefined;
 	let tool: GridInkTool | undefined;
+	let ruler = false;
 	let destroyed = false;
 	const early = new EarlyInk(view);
 	const report = (cause: unknown) =>
@@ -30,6 +31,7 @@ export function wireGridInk(view: GridView): GridInkWiring {
 				if (destroyed) throw new Error('The grid was destroyed.');
 				const built = new InkLayer(view);
 				layer = built;
+				built.setRuler(ruler);
 				built.setTool(tool);
 				for (const stroke of early.take()) built.stroke(stroke, stroke.pen);
 				early.deliver = (stroke) => built.stroke(stroke, stroke.pen);
@@ -43,10 +45,14 @@ export function wireGridInk(view: GridView): GridInkWiring {
 	const start = () => void load().catch((cause: unknown) => !destroyed && report(cause));
 	return {
 		ink: {
+			setRuler(on) {
+				ruler = on;
+				layer?.setRuler(on);
+			},
 			setTool(next) {
 				tool = next;
 				if (layer) layer.setTool(next);
-				else if (next) start();
+				else if (next || ruler) start();
 			},
 			hasSelection: () => layer?.hasSelection() ?? false,
 			inkToShape: async () => (await load()).inkToShape(),

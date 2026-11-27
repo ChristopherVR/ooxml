@@ -50,3 +50,45 @@ svg {
 	stroke: var(--office-foreground);
 	stroke-width: 1;
 }
+/* The ruler stencil shows with or without a tool; with none, only the ruler takes the pointer. */
+:host([ruler]) {
+	display: block;
+}
+:host([ruler][tool='']),
+:host([ruler]:not([tool])) {
+	pointer-events: none;
+}
+.ruler-layer {
+	z-index: 1;
+}
+.ruler {
+	pointer-events: auto;
+	cursor: grab;
+	touch-action: none;
+	outline: none;
+}
+.ruler-body {
+	fill: var(--office-surface);
+	fill-opacity: 0.92;
+	stroke: var(--office-foreground);
+	stroke-width: 1;
+}
+.ruler:focus-visible .ruler-body {
+	stroke: var(--office-accent);
+	stroke-width: 2;
+}
+.ruler-ticks {
+	fill: none;
+	stroke: var(--office-foreground);
+	stroke-width: 1;
+}
+.ruler-number,
+.ruler-angle {
+	fill: var(--office-foreground);
+	font: 10px var(--office-font);
+	text-anchor: middle;
+	user-select: none;
+}
+.ruler-angle {
+	font-size: 12px;
+}

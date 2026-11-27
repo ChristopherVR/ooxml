@@ -4,7 +4,7 @@ import type { InkCanvasTool } from './ink-canvas';
 
 /**
  * The Draw tab's state, shared by Word and Excel: the tool (Select, Lasso Select, Eraser or a pen
- * of the gallery), the pen gallery and Draw with Touch. DOM-free; each product's ribbon renders
+ * of the gallery), the pen gallery, Draw with Touch and the ruler. DOM-free; each product's ribbon renders
  * it and its drawing surface reads `canvasTool`.
  */
 export type DrawTool = 'select' | 'lasso' | 'eraser' | 'pen';
@@ -15,6 +15,8 @@ export interface DrawStateSnapshot {
 	/** Index of the pen in `pens` the next stroke draws with. */
 	pen: number;
 	touch: boolean;
+	/** The ruler stencil is shown on the drawing surface. */
+	ruler: boolean;
 }
 
 export class DrawState {
@@ -22,10 +24,17 @@ export class DrawState {
 	#pens: InkPen[] = DEFAULT_INK_PENS.map((pen) => ({ ...pen }));
 	#pen = 0;
 	#touch = false;
+	#ruler = false;
 	readonly #listeners = new Set<() => void>();
 
 	get snapshot(): DrawStateSnapshot {
-		return { tool: this.#tool, pens: this.#pens, pen: this.#pen, touch: this.#touch };
+		return {
+			tool: this.#tool,
+			pens: this.#pens,
+			pen: this.#pen,
+			touch: this.#touch,
+			ruler: this.#ruler,
+		};
 	}
 
 	/** The pen the next stroke draws with. */
@@ -96,6 +105,13 @@ export class DrawState {
 	setTouch(on: boolean): void {
 		if (this.#touch === on) return;
 		this.#touch = on;
+		this.#changed();
+	}
+
+	/** Shows or hides the ruler; it stays where it was left while hidden. */
+	setRuler(on: boolean): void {
+		if (this.#ruler === on) return;
+		this.#ruler = on;
 		this.#changed();
 	}
 }

@@ -68,7 +68,7 @@ Word is **Stable** under the [stability policy](../../docs/stability.md): a semv
 - Pagination, line breaking and table AutoFit are the editor's own and approximate Word's; there is no kerning or complex-script shaping, and right-to-left runs are not reordered.
 - A legacy `.doc` is converted to `.docx` on open, without revision marks, form-field data, macros and some drawings.
 - Collaboration covers the body and comments; headers, footers and notes are incomplete.
-- Draw has no Ink to Math or Ruler, and the Equation tab has no handwriting input; inserted or edited SmartArt uses an approximate layout until Word lays it out again.
+- Draw's Ink to Math and the Equation tab's Ink Equation need a handwriting recognizer the host supplies (`setInkMathRecognizer`); none is built in, and legacy VML ink is shown read only; inserted or edited SmartArt uses an approximate layout until Word lays it out again.
 
 The [support roadmap](docs/parity-roadmap.md), [outstanding work](docs/outstanding-work.md) and the [parity checklist](../../docs/parity-checklist.md) list every known gap.
 

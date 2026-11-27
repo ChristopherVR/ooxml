@@ -35,14 +35,13 @@ export function drawState(ctx: EditorContext): DrawState {
 
 function syncInkTool(ctx: EditorContext, state: DrawState): void {
 	const tool = state.canvasTool;
-	ctx
-		.grid()
-		?.ink?.()
-		.setTool(
-			tool
-				? { tool, color: state.pen.color, width: state.pen.width, touch: state.snapshot.touch }
-				: undefined,
-		);
+	const ink = ctx.grid()?.ink?.();
+	ink?.setRuler?.(state.snapshot.ruler);
+	ink?.setTool(
+		tool
+			? { tool, color: state.pen.color, width: state.pen.width, touch: state.snapshot.touch }
+			: undefined,
+	);
 }
 
 const hasInk = (ctx: EditorContext): boolean =>
@@ -122,13 +121,18 @@ export function drawCommands(): Command[] {
 				if (change) drawState(ctx).updatePen(change);
 			},
 		}),
-		viewing({
+		editing({
 			id: 'draw.ruler',
 			label: 'Ruler',
+			description: 'Show the ruler and draw straight lines along its edge.',
 			icon: icon('ruler'),
-			unavailable: 'The ruler is not available in this editor.',
-			enabled: () => false,
-			run: () => undefined,
+			lock: 'objects',
+			unavailable: 'An editable sheet that allows objects is required.',
+			checked: (ctx) => drawState(ctx).snapshot.ruler,
+			run: (ctx) => {
+				const state = drawState(ctx);
+				state.setRuler(!state.snapshot.ruler);
+			},
 		}),
 		editing({
 			id: 'draw.touch',

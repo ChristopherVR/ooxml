@@ -73,6 +73,8 @@ export interface GridInkTool {
 
 export interface GridInk {
 	setTool(tool: GridInkTool | undefined): void;
+	/** Shows or hides the Draw tab's ruler over the cells, with or without a tool. */
+	setRuler?(on: boolean): void;
 	/** Strokes held by the lasso, or a selected ink drawing. */
 	hasSelection(): boolean;
 	/** Ink to Shape on the selection; false when no shape was recognised. */

@@ -382,9 +382,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 ### Ribbon
 
 - [ ] **P1** Missing tabs: Chart Format (a pane instead).
-- [ ] **P2** Draw tab: Ruler (Stencils) is disabled with its reason (no ruler stencil); drawing,
-      the eraser, the lasso, Ink to Shape and Ink Replay work and save as Excel ink
-      (`xlsx/edit/ink.test.ts`, `e2e/xlsx/draw-tab.spec.ts`). Ink to Math opens the Ink Equation
+- [x] **P2** Draw tab: drawing, the eraser, the lasso, Ink to Shape and Ink Replay work and save
+      as Excel ink (`xlsx/edit/ink.test.ts`, `e2e/xlsx/draw-tab.spec.ts`). The Ruler (Stencils)
+      lies over the cells; it is dragged, turned with the mouse wheel or Shift and the arrow keys,
+      and a stroke begun at its edge is drawn straight along it (`ink/ink-ruler.test.ts`); it does
+      not measure lengths or show a protractor. Ink to Math opens the Ink Equation
       dialog with the host's recognizer (`setInkMathRecognizer`, none built in; disabled with its
       reason without one) and inserts an equation text box (`xlsx/commands/ink-math.test.ts`).
       Ink is shared in a shared workbook, last writer wins per drawing
@@ -908,9 +910,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Equation dialog with the host's recognizer (`setInkMathRecognizer`, none built in; disabled
       with its reason without one; `docx/ink-equation.test.ts`).
 - [ ] **P1** Missing tabs: Picture Format has only Wrap Text, Crop and Format.
-- [ ] **P2** Draw tab: Ruler (Stencils) is disabled with its reason (no ruler stencil); drawing,
-      the eraser, the lasso, Ink to Shape, Ink Replay and the clipboard work and save as Word ink
-      (`docx/ink.test.ts`, `e2e/docx/draw-tab.spec.ts`). Ink to Math opens the Ink Equation dialog
+- [x] **P2** Draw tab: drawing, the eraser, the lasso, Ink to Shape, Ink Replay and the clipboard
+      work and save as Word ink (`docx/ink.test.ts`, `e2e/docx/draw-tab.spec.ts`). The Ruler
+      (Stencils) lies on the pages as in PowerPoint and Excel (shared `office-ui-ink-canvas`),
+      turned with the wheel or Shift and the arrow keys; it scrolls with the pages and does not
+      measure lengths. Ink to Math opens the Ink Equation dialog
       with the host's recognizer, as Ink Equation does, and inserts at the caret; the selected ink
       on the page is not sent (write on the dialog's pad).
 - [x] **P1** Layout and Shape Format: the Arrange group (Position, Wrap Text, Bring Forward, Send

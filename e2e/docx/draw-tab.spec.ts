@@ -438,3 +438,38 @@ test('Draw: Undo on the title bar keeps the keyboard on the document while drawi
 	await page.keyboard.press('Control+z');
 	await expect(inkFloats(page)).toHaveCount(0);
 });
+
+test('Draw > Ruler: a stroke drawn along its edge is straight, and it turns from the keyboard', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await openSample(page, 'vanilla');
+	const draw = await openDraw(page);
+	const button = draw.getByRole('button', { name: 'Ruler', exact: true });
+	await button.click();
+	await expect(button).toHaveAttribute('aria-pressed', 'true');
+	const ruler = editor(page).locator('office-ui-ink-canvas[ruler] .ruler');
+	await expect(ruler).toHaveAttribute('aria-label', 'Ruler, 0 degrees');
+	await draw.getByRole('button', { name: 'Pen: 0.5 mm, Red' }).click();
+	const box = (await ruler.boundingBox())!;
+	// A wavy stroke begun just above the edge follows it.
+	await page.mouse.move(box.x + 40, box.y - 6);
+	await page.mouse.down();
+	for (const [dx, dy] of wave) await page.mouse.move(box.x + 40 + dx, box.y - 6 + dy / 3);
+	await page.mouse.up();
+	await expect(inkFloats(page)).toHaveCount(1);
+	const ys = await inkFloats(page)
+		.locator('path')
+		.first()
+		.evaluate((path) =>
+			[...(path.getAttribute('d') ?? '').matchAll(/-?\d+(?:\.\d+)?/g)]
+				.map((match) => Number(match[0]))
+				.filter((_, index) => index % 2 === 1),
+		);
+	expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(1);
+	await ruler.focus();
+	await page.keyboard.press('Shift+ArrowRight');
+	await expect(ruler).toHaveAttribute('aria-label', 'Ruler, 1 degrees');
+	await button.click();
+	await expect(ruler).toHaveCount(0);
+});

@@ -107,6 +107,11 @@ export function handleDrawAction(core: EditorCore, action: DrawAction): void {
 		case 'touch':
 			state.setTouch(!state.snapshot.touch);
 			break;
+		case 'ruler':
+			// The ruler lies on the pages, as ink does.
+			if (!state.snapshot.ruler) toPages(core);
+			state.setRuler(!state.snapshot.ruler);
+			break;
 		case 'inkToShape':
 			void controller(core).then((draw) => {
 				draw?.inkToShape();
@@ -128,7 +133,7 @@ export function handleDrawAction(core: EditorCore, action: DrawAction): void {
 			void controller(core).then((draw) => draw?.replay());
 			return;
 	}
-	if (state.canvasTool) void controller(core);
+	if (state.canvasTool || state.snapshot.ruler) void controller(core);
 }
 
 /**

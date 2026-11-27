@@ -177,7 +177,7 @@ export type RibbonAction =
 	| { type: 'draw'; key: 'addPen'; value: 'pen' | 'pencil' | 'highlighter' }
 	| { type: 'draw'; key: 'penColor'; value: string }
 	| { type: 'draw'; key: 'thickness'; value: number }
-	| { type: 'draw'; key: 'touch' | 'inkToShape' | 'inkToMath' | 'replay' }
+	| { type: 'draw'; key: 'touch' | 'ruler' | 'inkToShape' | 'inkToMath' | 'replay' }
 	| {
 			type: 'shape';
 			key: 'fill' | 'outline' | 'weight' | 'width' | 'height' | 'wrap';

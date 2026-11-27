@@ -72,7 +72,7 @@ export function buildDrawPanel(panel: HTMLElement): void {
 			addPen,
 			large('Draw with Touch', 'drawTouch', { type: 'draw', key: 'touch' }, 'touch'),
 		),
-		group('Stencils', large('Ruler', 'ruler', null, 'ruler')),
+		group('Stencils', large('Ruler', 'ruler', { type: 'draw', key: 'ruler' }, 'ruler')),
 		group(
 			'Convert',
 			large('Ink to Shape', 'inkToShape', { type: 'draw', key: 'inkToShape' }, 'inkToShape'),
@@ -88,6 +88,7 @@ const DESCRIPTIONS: Record<string, DrawText> = {
 	lasso: 'Draw around ink to select it.',
 	eraser: 'Erase the ink strokes you touch.',
 	touch: 'Draw with your finger as well as a pen or mouse.',
+	ruler: 'Show the ruler and draw straight lines along its edge.',
 	inkToShape: 'Turn ink you drew into a shape.',
 	inkToMath: 'Turn handwritten math into an equation.',
 	replay: 'Watch the ink being drawn again, in the order it was drawn.',
@@ -157,7 +158,10 @@ export function syncDrawRibbon(
 		pens.disabledReason = availability.draw ? t(availability.draw) : '';
 	}
 	const ruler = button('ruler');
-	if (ruler) describe(ruler, locale, 'The ruler is not available in this editor.');
+	if (ruler) {
+		ruler.setAttribute('aria-pressed', String(snapshot.ruler));
+		describe(ruler, locale, availability.draw);
+	}
 	const addPen = button('addPen');
 	if (addPen)
 		describe(
