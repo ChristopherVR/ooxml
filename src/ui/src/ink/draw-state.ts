@@ -101,7 +101,7 @@ export class DrawState {
 }
 
 /** The pen strip's texts in the product's language (`t` translates English). */
-export function inkPensLabels(t: (text: string) => string): InkPensLabels {
+export function inkPensLabels(t: (text: string) => string, locale?: string): InkPensLabels {
 	const colorNames = Object.fromEntries(INK_PEN_COLORS.map(({ name }) => [name, t(name)]));
 	return {
 		group: t('Pens'),
@@ -118,5 +118,7 @@ export function inkPensLabels(t: (text: string) => string): InkPensLabels {
 		moreColors: t('More Colors...'),
 		colorNames,
 		description: t('Draw ink with this pen. Select it again to change its color and thickness.'),
+		standardColors: t('Standard Colors'),
+		...(locale ? { locale } : {}),
 	};
 }

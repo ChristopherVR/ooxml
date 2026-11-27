@@ -3,9 +3,11 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { DrawState, inkPensLabels } from './draw-state';
 import { defineInkCanvas, type InkStrokeDetail, type OfficeUiInkCanvas } from './ink-canvas';
 import { defineInkPens, type OfficeUiInkPens } from './ink-pens';
+import { defineColorGrid } from '../form/color-grid';
 
 beforeAll(() => {
 	defineInkCanvas();
+	defineColorGrid();
 	defineInkPens();
 });
 afterEach(() => document.body.replaceChildren());
@@ -98,13 +100,80 @@ describe('office-ui-ink-pens', () => {
 		pens.shadowRoot!.querySelector<HTMLButtonElement>('.pen')!.click();
 		const menu = pens.shadowRoot!.querySelector('.menu');
 		expect(menu?.getAttribute('role')).toBe('dialog');
-		menu!.querySelector<HTMLButtonElement>('.swatch[aria-label="Red"]')!.click();
+		// The colours are the shared colour grid, Office's ink colours first.
+		const grid = menu!.querySelector('office-ui-color-grid')!;
+		grid.shadowRoot!.querySelector<HTMLButtonElement>('.swatch[aria-label="Red"]')!.click();
 		menu!.querySelector<HTMLButtonElement>('.thickness[aria-label="2 mm"]')!.click();
 		expect(changes).toEqual([
 			{ index: 0, color: '#E81123' },
 			{ index: 0, width: 7.56 },
 		]);
-		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+		const escape = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+		document.dispatchEvent(escape);
+		expect(pens.shadowRoot!.querySelector('.menu')).toBeNull();
+		// Escape belongs to the menu, and focus goes back to its pen, which opens it again.
+		expect(escape.defaultPrevented).toBe(true);
+		const pen = pens.shadowRoot!.querySelector<HTMLButtonElement>('.pen')!;
+		expect(pens.shadowRoot!.activeElement).toBe(pen);
+		pen.click();
+		expect(pens.shadowRoot!.querySelector('.menu')).not.toBeNull();
+	});
+
+	it('moves the checked thickness with the arrow keys, one tab stop for the group', () => {
+		const { pens } = strip();
+		pens.selected = 0;
+		const widths: number[] = [];
+		pens.addEventListener('office-ink-pen-change', (event) => {
+			const width = (event as CustomEvent<{ width?: number }>).detail.width;
+			if (width) {
+				widths.push(width);
+				pens.pens = pens.pens.map((pen, index) => (index ? pen : { ...pen, width }));
+			}
+		});
+		pens.shadowRoot!.querySelector<HTMLButtonElement>('.pen')!.click();
+		const radios = () => [...pens.shadowRoot!.querySelectorAll<HTMLButtonElement>('.thickness')];
+		expect(radios().filter((radio) => radio.tabIndex === 0)).toHaveLength(1);
+		const checked = radios().find((radio) => radio.getAttribute('aria-checked') === 'true')!;
+		checked.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+		expect(widths).toHaveLength(1);
+		expect(
+			radios()
+				.find((radio) => radio.tabIndex === 0)
+				?.getAttribute('aria-checked'),
+		).toBe('true');
+	});
+
+	it('says why it is unavailable and keeps the pens focusable', () => {
+		const { pens } = strip();
+		pens.disabled = true;
+		pens.disabledReason = 'Editing is unavailable.';
+		const pen = pens.shadowRoot!.querySelector<HTMLButtonElement>('.pen')!;
+		expect(pen.disabled).toBe(false);
+		expect(pen.getAttribute('aria-disabled')).toBe('true');
+		expect(pen.getAttribute('aria-description')).toBe('Editing is unavailable.');
+		let picked = 0;
+		pens.addEventListener('office-ink-pen-select', () => picked++);
+		pen.click();
+		expect(picked).toBe(0);
+	});
+
+	it('names thicknesses in the product language and opens a dialog', () => {
+		const { pens } = strip();
+		pens.labels = inkPensLabels((text) => text, 'de');
+		pens.selected = 0;
+		const pen = pens.shadowRoot!.querySelector<HTMLButtonElement>('.pen')!;
+		expect(pen.getAttribute('aria-label')).toBe('Pen: 0,5 mm, Black');
+		expect(pen.getAttribute('aria-haspopup')).toBe('dialog');
+	});
+
+	it('closes its menu when focus leaves the strip', () => {
+		const { pens } = strip();
+		const outside = document.createElement('button');
+		document.body.append(outside);
+		pens.selected = 0;
+		pens.shadowRoot!.querySelector<HTMLButtonElement>('.pen')!.click();
+		expect(pens.shadowRoot!.querySelector('.menu')).not.toBeNull();
+		pens.dispatchEvent(new FocusEvent('focusout', { relatedTarget: outside, bubbles: true }));
 		expect(pens.shadowRoot!.querySelector('.menu')).toBeNull();
 	});
 });

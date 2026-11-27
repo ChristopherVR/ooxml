@@ -4,10 +4,13 @@
  * never downloads them. Idempotent; a no-op without a DOM.
  */
 export async function registerInkElements(registry?: CustomElementRegistry): Promise<void> {
-	const [{ defineInkPens }, { defineInkCanvas }] = await Promise.all([
+	const [{ defineInkPens }, { defineInkCanvas }, { defineColorGrid }] = await Promise.all([
 		import('./ink-pens'),
 		import('./ink-canvas'),
+		import('../form/color-grid'),
 	]);
+	// The pen menu's colours.
+	defineColorGrid(registry);
 	defineInkPens(registry);
 	defineInkCanvas(registry);
 }

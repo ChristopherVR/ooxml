@@ -30,6 +30,10 @@ export interface InkPensLabels {
 	colorNames?: Readonly<Record<string, string>>;
 	/** Tooltip line under a pen's name. */
 	description: string;
+	/** Heading of Office's standard colours under the ink colours. */
+	standardColors?: string;
+	/** The product's language, for thicknesses (`0,5 mm` in German). */
+	locale?: string;
 }
 
 export const DEFAULT_INK_PENS_LABELS: InkPensLabels = {

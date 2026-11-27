@@ -25,7 +25,7 @@
 	color: inherit;
 	cursor: pointer;
 }
-.pen:hover:not(:disabled) {
+.pen:hover:not([aria-disabled='true']) {
 	background: var(--office-selected);
 }
 .pen[aria-pressed='true'] {
@@ -36,9 +36,14 @@
 	outline: var(--office-focus-width) solid var(--office-ring);
 	outline-offset: var(--office-focus-offset);
 }
-.pen:disabled {
+.pen[aria-disabled='true'] {
 	cursor: default;
 	opacity: 0.45;
+}
+.pen svg,
+.thickness span {
+	/* A pen's colour is what it draws: keep it in forced colours too. */
+	forced-color-adjust: none;
 }
 .pen svg {
 	display: block;
@@ -52,20 +57,16 @@
 	stroke: var(--office-control-border);
 	stroke-width: 1;
 }
-.more {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
+.colors {
+	display: block;
 	margin-top: 8px;
-	padding: 4px 2px;
-	cursor: pointer;
 }
-.more input {
-	width: 32px;
-	height: 22px;
-	padding: 0;
-	border: var(--office-border-width) solid var(--office-control-border);
-	background: transparent;
+.more-input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
 }
 .pen .caret {
 	position: absolute;
@@ -82,7 +83,7 @@
 	position: fixed;
 	z-index: var(--office-z-popover);
 	box-sizing: border-box;
-	width: 228px;
+	width: 248px;
 	max-height: calc(100vh - 16px);
 	overflow: auto;
 	padding: 8px;
@@ -105,7 +106,6 @@
 	gap: 4px;
 }
 .thickness,
-.swatch,
 .remove {
 	box-sizing: border-box;
 	border: var(--office-border-width) solid transparent;
@@ -126,32 +126,14 @@
 	border-radius: var(--office-radius-full);
 	background: currentColor;
 }
-.colors {
-	display: grid;
-	grid-template-columns: repeat(6, 1fr);
-	gap: 4px;
-}
-.swatch {
-	height: 28px;
-	padding: 3px;
-}
-.swatch span {
-	display: block;
-	height: 100%;
-	border: var(--office-border-width) solid var(--office-control-border);
-	border-radius: var(--office-radius-full);
-}
 .thickness:hover,
-.swatch:hover,
 .remove:hover {
 	background: var(--office-selected);
 }
-.thickness[aria-checked='true'],
-.swatch[aria-checked='true'] {
+.thickness[aria-checked='true'] {
 	border-color: var(--office-accent);
 }
 .thickness:focus-visible,
-.swatch:focus-visible,
 .remove:focus-visible {
 	outline: var(--office-focus-width) solid var(--office-ring);
 }
@@ -169,8 +151,7 @@
 }
 @media (forced-colors: active) {
 	.pen[aria-pressed='true'],
-	.thickness[aria-checked='true'],
-	.swatch[aria-checked='true'] {
+	.thickness[aria-checked='true'] {
 		border-color: Highlight;
 	}
 }
