@@ -23,9 +23,9 @@ describe('createOfficeGuid', () => {
 			// Regression test for the CodeQL js/insecure-randomness finding: the
 			// fallback path must source its bytes from the Web Crypto CSPRNG
 			// whenever it is available, even when `randomUUID` specifically is not.
-			const getRandomValues = vi.fn((array: Uint8Array) => {
+			const getRandomValues = vi.fn((array: Uint32Array) => {
 				for (let i = 0; i < array.length; i++) {
-					array[i] = i % 256;
+					array[i] = (i * 0x9e3779b9) >>> 0;
 				}
 				return array;
 			});
@@ -33,7 +33,7 @@ describe('createOfficeGuid', () => {
 
 			const id = createOfficeGuid();
 
-			expect(getRandomValues).toHaveBeenCalledWith(expect.any(Uint8Array));
+			expect(getRandomValues).toHaveBeenCalledWith(expect.any(Uint32Array));
 			expect(id).toMatch(GUID_RE);
 			// The variant nibble (`{XXXXXXXX-XXXX-4XXX-VXXX-XXXXXXXXXXXX}`, index
 			// 20 once wrapped in braces) must stay in the RFC 4122 `10xx` range,

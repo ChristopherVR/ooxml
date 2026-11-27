@@ -37,6 +37,7 @@ export * from './gradient-geometry';
 export * from './rect-path-gradient';
 export * from './shape-path-gradient';
 export * from './theme-model';
+export * from './office-theme-fonts';
 export * from './theme';
 export * from './format-scheme';
 export * from './theme-color';

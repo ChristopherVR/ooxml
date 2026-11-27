@@ -19,3 +19,4 @@ export { zlibCompress } from './zlib';
 export { readDeclaredFonts, type DeclaredFonts } from './declared-fonts';
 export * from './package-image';
 export * from './embeddable-office-package';
+export * from './reproducible';
