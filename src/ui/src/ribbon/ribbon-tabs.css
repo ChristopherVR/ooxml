@@ -63,20 +63,21 @@
 /*
  * When the tabs do not fit (a phone, or a host's add-in tabs) the strip scrolls: the edge with more
  * tabs fades out and the chevron in the end slot pages through them (ribbon-tab-cue.ts sets the
- * attributes). A tab under the fade stays focusable; the arrow keys scroll it into view.
+ * attributes). A tab under the fade stays focusable; the arrow keys scroll it into view. The fade is
+ * as wide as the chevron (a target); a mask reads only alpha, so its opaque stop is plain black.
  */
 :host([data-tabs-end]) [role='tablist'] {
-	mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+	mask-image: linear-gradient(to right, black calc(100% - var(--office-target-size)), transparent);
 }
 :host([data-tabs-start]) [role='tablist'] {
-	mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+	mask-image: linear-gradient(to left, black calc(100% - var(--office-target-size)), transparent);
 }
 :host([data-tabs-start][data-tabs-end]) [role='tablist'] {
 	mask-image: linear-gradient(
 		to right,
 		transparent,
-		#000 28px,
-		#000 calc(100% - 28px),
+		black var(--office-target-size),
+		black calc(100% - var(--office-target-size)),
 		transparent
 	);
 }
