@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { resetTabSession } from './support/deck';
+import { inspector, resetTabSession } from './support/deck';
 import { openFormatSection } from './support/format-pane';
 
 const deck = resolve(
@@ -40,23 +40,23 @@ test('the slide is inset from both screen edges', async ({ page }) => {
 test('the Format sheet is one column and nothing is clipped sideways', async ({ page }) => {
 	await load(page);
 	await bar(page).getByRole('button', { name: 'Format' }).tap();
-	const tabs = page.getByRole('tab');
-	await expect(tabs.first()).toBeVisible();
+	const format = inspector(page);
+	const tabs = format.getByRole('tab');
+	await expect(tabs).toHaveCount(2);
+	await expect(tabs.nth(0)).toHaveAccessibleName('Elements');
+	await expect(tabs.nth(1)).toHaveAccessibleName('Properties');
 	const boxes = await tabs.evaluateAll((items) =>
 		items.map((item) => {
 			const { x, y, width, height } = item.getBoundingClientRect();
 			return { x, y, width, height };
 		}),
 	);
-	expect(boxes.length).toBeGreaterThanOrEqual(3);
 	// A compact row: one line, none of them a tall tile.
 	expect(Math.max(...boxes.map((b) => b.y)) - Math.min(...boxes.map((b) => b.y))).toBeLessThan(8);
 	expect(Math.max(...boxes.map((b) => b.height))).toBeLessThanOrEqual(64);
 	// Properties sit below the tabs, full width, within the screen.
-	const clipped = await page.evaluate(() => {
-		const tab = document.querySelector('[role="tab"]');
-		const root = tab?.closest('aside, section, [role="dialog"]') ?? document.body;
-		return [...root.querySelectorAll('input, select, button, label')]
+	const clipped = await format.locator('input, select, button, label').evaluateAll((controls) => {
+		return controls
 			.map((element) => element.getBoundingClientRect())
 			.filter((rect) => rect.width > 0 && (rect.right > innerWidth + 1 || rect.left < -1)).length;
 	});
