@@ -38,6 +38,8 @@ export interface RibbonTabRowItem {
 export interface RibbonTabRowState {
 	readonly items: readonly RibbonTabRowItem[];
 	readonly manifestLocale?: string;
+	/** Product labels for the add-in dialog and panes (`pptx.addIns.<label>`, else the label). */
+	readonly addInText?: (label: string) => string;
 	/** The selected tab's id, or empty when the active tab is not in the row. */
 	readonly selected: string;
 	/** The tab list's accessible name. */
@@ -99,6 +101,11 @@ export function buildRibbonTabRow(input: RibbonTabRowInput): RibbonTabRowState {
 		selected: items.some((tab) => tab.id === active) ? active : '',
 		label: input.translate(RIBBON_TAB_ROW_LABEL_KEY),
 		manifestLocale: input.translate('pptx.addIns.manifestLocale'),
+		addInText: (label) => {
+			const key = `pptx.addIns.${label}`;
+			const value = input.translate(key);
+			return value && value !== key ? value : label;
+		},
 	};
 }
 

@@ -73,6 +73,15 @@ describe('buildRibbonTabRow', () => {
 		expect(off.selected).toBe('');
 		expect(buildRibbonTabRow(input).items[1]!.title).toBe('home');
 	});
+
+	it('translates add-in dialog labels through pptx.addIns keys, keeping the label otherwise', () => {
+		const state = buildRibbonTabRow({
+			...input,
+			translate: (key) => (key === 'pptx.addIns.Close' ? 'Fermer' : key),
+		});
+		expect(state.addInText?.('Close')).toBe('Fermer');
+		expect(state.addInText?.('Cancel')).toBe('Cancel');
+	});
 });
 
 describe('pptx-ui-ribbon-tabs', () => {

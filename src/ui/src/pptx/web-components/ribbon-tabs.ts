@@ -81,7 +81,7 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 				if (host)
 					this.#stopAddIns = watchOfficeAddIns(
 						host,
-						(label) => label,
+						(label) => this.#model?.addInText?.(label) ?? label,
 						'powerpoint',
 						() => this.#model?.manifestLocale ?? 'en',
 					);
