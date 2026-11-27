@@ -12,6 +12,21 @@ import type { ViewerController, ViewerState } from './controller';
 import { pagePoint } from './viewer-page-point';
 
 const SVG = 'http://www.w3.org/2000/svg';
+/** Fired on the viewport when a connector end drag starts or ends (see `viewer-line-endpoints`). */
+export const CONNECTOR_END_DRAG_EVENT = 'visio-connector-end-drag';
+
+/** Marks the viewport while a connector end is dragged, so connection points show meanwhile. */
+export function setConnectorEndDragging(viewport: HTMLElement, dragging: boolean): void {
+	if (dragging === connectorEndDragging(viewport)) return;
+	if (dragging) viewport.dataset.connectorEndDrag = '';
+	else delete viewport.dataset.connectorEndDrag;
+	const View = viewport.ownerDocument.defaultView?.Event ?? Event;
+	viewport.dispatchEvent(new View(CONNECTOR_END_DRAG_EVENT));
+}
+
+function connectorEndDragging(viewport: HTMLElement): boolean {
+	return viewport.dataset.connectorEndDrag !== undefined;
+}
 const MARKER_PX = 4;
 export interface SelectedConnectionPoint {
 	pageId: string;
@@ -36,7 +51,7 @@ function placedShapes(page: VisioPage): Map<string, { shape: VisioShape; world: 
 }
 
 /**
- * View > Visual Aids > Connection Points (Visio's blue x markers) and Home > Tools > Connection
+ * View > Visual Aids > Connection Points (Visio's blue x markers, shown only while connecting) and Home > Tools > Connection
  * Point (Ctrl+Shift+1): a click on a local 2D shape adds a point there, a click on a point selects
  * it, and Delete removes the selected point. Edits go through the core and undo like any other.
  */
@@ -74,8 +89,15 @@ export class ViewerConnectionPoints {
 		const page = this.#page(state);
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
 		if (this.#selected && (!page || this.#selected.pageId !== page.id)) this.#selected = undefined;
+		// As in Visio, markers show only while connecting, never at rest: with the Connection Point
+		// or Connector tool, or (when the Connection Points visual aid is on) while a connector end
+		// is dragged.
 		const shown =
-			!!page && !!svg && (this.#visible || this.options.active() || this.options.showing());
+			!!page &&
+			!!svg &&
+			(this.options.active() ||
+				this.options.showing() ||
+				(this.#visible && connectorEndDragging(this.viewport)));
 		const key = [svg, page, state.zoom, shown, this.options.active(), this.#selected];
 		if (key.every((value, i) => value === this.#key[i]) && this.#overlay?.isConnected) return;
 		this.#key = key;
@@ -117,6 +139,11 @@ export class ViewerConnectionPoints {
 			signal: events.signal,
 			capture: true,
 		});
+		this.viewport.addEventListener(
+			CONNECTOR_END_DRAG_EVENT,
+			() => this.render(this.controller.state),
+			{ signal: events.signal },
+		);
 		return () => {
 			++this.#request;
 			events.abort();

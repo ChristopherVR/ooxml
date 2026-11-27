@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { pointerViewer } from './__fixtures__/pointer-viewer';
-import { ViewerConnectionPoints } from './viewer-connection-points';
+import { setConnectorEndDragging, ViewerConnectionPoints } from './viewer-connection-points';
 import { ViewerConnectorTool } from './viewer-connector-tool';
 
 afterEach(() => {
@@ -120,6 +120,36 @@ it('refuses connection points on shapes the core cannot edit', async () => {
 		ui.pointer('pointerdown', ui.group('2'), 70, 40);
 		expect(ui.edits).toHaveLength(0);
 		expect(ui.announce).toHaveBeenCalledWith(expect.stringMatching(/master instances/));
+	} finally {
+		ui.close();
+	}
+});
+
+it('shows markers only while connecting, never at rest', async () => {
+	const ui = await pointsViewer();
+	try {
+		await ui.controller.applyEdits([
+			{ type: 'add-connection-point', pageId: '1', shapeId: '1', x: 0.5, y: 0.5 },
+		]);
+		ui.use('points');
+		expect(ui.markers()).toHaveLength(1);
+		// The visual aid is on by default, yet a plain page shows no blue x on any shape.
+		ui.use('none');
+		expect(ui.points.visible).toBe(true);
+		expect(ui.markers()).toHaveLength(0);
+		ui.use('connector');
+		expect(ui.markers()).toHaveLength(1);
+		ui.use('none');
+		// Dragging a connector end shows them until the drag ends.
+		setConnectorEndDragging(ui.viewport, true);
+		expect(ui.markers()).toHaveLength(1);
+		setConnectorEndDragging(ui.viewport, false);
+		expect(ui.markers()).toHaveLength(0);
+		// With the visual aid off, a connector end drag shows none.
+		ui.points.toggle();
+		setConnectorEndDragging(ui.viewport, true);
+		expect(ui.markers()).toHaveLength(0);
+		setConnectorEndDragging(ui.viewport, false);
 	} finally {
 		ui.close();
 	}

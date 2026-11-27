@@ -19,6 +19,7 @@ import type { ViewerController, ViewerState } from './controller';
 import { pagePoint } from './viewer-draw-tool';
 import { handleGestureIsCurrent, wireHandleEvents } from './viewer-handle-events';
 import { connectorGlueAt, type ConnectorGlueHit } from './viewer-connector-tool';
+import { setConnectorEndDragging } from './viewer-connection-points';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const pointOptions = { snap: false, bounded: false } as const;
@@ -190,6 +191,7 @@ export class ViewerLineEndpoints {
 			startY: event.clientY,
 		};
 		this.viewport.setPointerCapture?.(event.pointerId);
+		setConnectorEndDragging(this.viewport, true);
 	}
 	#move(event: PointerEvent): void {
 		const drag = this.#drag;
@@ -246,6 +248,7 @@ export class ViewerLineEndpoints {
 		const drag = this.#drag;
 		this.#drag = undefined;
 		this.#target(undefined);
+		if (drag) setConnectorEndDragging(this.viewport, false);
 		if (drag && this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
 		return () => drag?.preview.remove();
