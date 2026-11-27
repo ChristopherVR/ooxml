@@ -22,6 +22,7 @@ The list comes from comparing the published 2.1.2 packages with this release: th
 - **Elements, events and tokens:** no custom element tag, element event or `--office-*` token was removed or renamed. PowerPoint adds two internal tags, `pptx-ui-contextual-ribbon` and `pptx-ui-picture-ribbon`, and `ooxml-ui` adds `office-ui-ink-canvas` and `office-ui-ink-pens` for the Draw tabs.
 - **Bindings:** the React, Vue, Angular, Svelte, Solid and vanilla packages export the same components and props as before; Excel adds an optional `imageProvider` prop and Word an optional `onlineVideoHosts` prop.
 - **Requirements:** Node.js 22.3 or newer, the last two major versions of Chrome, Edge, Firefox and Safari (Safari 16.4 at least), and the peer ranges of the bindings are unchanged.
+- **Add-ins:** an add-in installs only after consent and runs only if you enable the runtime. Nothing an earlier host configured changes.
 - **OpenTeams, Visio and the MCP servers:** nothing to change.
 
 ## Upgrade the packages together
@@ -49,6 +50,8 @@ After:
 	}
 }
 ```
+
+`ooxml-core` no longer lists `xml-crypto` as an optional peer dependency: signature verification canonicalises XML itself. If you installed it only for `ooxml-core`, you can remove it.
 
 Then check that one version of each is installed:
 
@@ -130,6 +133,14 @@ setOfficeAddInStorefront(editor, 'off');
 ```
 
 Tests that expected a Store tab must enable it first; tests of the default should expect My Add-ins to be selected.
+
+Three more add-in settings are new, and each is off or local until you choose otherwise:
+
+- **Installed add-ins are remembered.** Upload My Add-in installs an XML manifest, a unified `manifest.json` or a `.zip` package after a consent step. An editor you embed keeps installs in memory for the session. The suite and the demos pass the IndexedDB store from `ooxml-ui/suite`, which keeps up to 16 MiB of add-in files for each profile on the device. Pass a store of your own with `setOfficeAddInPreferences(editor, store)`, or `null` to keep nothing.
+- **Task panes run only when you turn the runtime on.** `setOfficeAddInRuntime(editor, { origins, frameSrcEnforced: true })` runs an installed add-in's pane in a sandboxed frame from the HTTPS origins you list. Set `frameSrcEnforced` only after your page's Content Security Policy restricts `frame-src` to those origins, redirects included; without it the runtime blocks every pane. `setOfficeAddInRuntime(editor, null)` turns execution off again.
+- **Marketplace links resolve through your backend, or not at all.** `setOfficeAddInMarketplaceResolver` receives a Marketplace link's public asset id and returns the package; the library makes no request of its own. Pass `null` to turn resolution off.
+
+If your page sets a Content Security Policy, add the publisher origins you approve to `frame-src` before you enable the runtime; nothing else in the policy changes.
 
 ## Ribbon layouts follow Microsoft 365
 
