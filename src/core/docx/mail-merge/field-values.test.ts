@@ -133,16 +133,16 @@ describe('Word mail merge field evaluation', () => {
 		expect(plain(previewMailMerge(loaded.model, data, 4).document.blocks[0])).toBe('DeeDee42');
 	});
 
-	it('reports a merge field spanning paragraphs and preserves its saved result', async () => {
+	it('merges a field whose saved result spans paragraphs as one field', async () => {
+		// Cross-paragraph fields merge since e6ac2ff8ee: the covered paragraphs are evaluated
+		// together and keep the id of the paragraph whose mark ends them.
 		const longField =
 			paragraph(marker('begin') + code(' MERGEFIELD Name ') + marker('separate')) +
 			paragraph(run('Saved cross-paragraph value') + marker('end') + simple('MERGEFIELD Name'));
 		const loaded = await template(longField);
 		const preview = previewMailMerge(loaded.model, { records: [{ Name: 'Ada' }] }, 1);
-		expect(preview.issues).toEqual([
-			{ code: 'invalid-instruction', recordNumber: 1, blockId: 'p0', field: 'MERGEFIELD' },
-		]);
-		expect(plain(preview.document.blocks[1])).toBe('Saved cross-paragraph valueAda');
-		expect(preview.document.blocks[0]).toBe(loaded.model.blocks[0]);
+		expect(preview.issues).toEqual([]);
+		expect(preview.document.blocks.map((block) => block.id)).toEqual([loaded.model.blocks[1]!.id]);
+		expect(plain(preview.document.blocks[0])).toBe('AdaAda');
 	});
 });
