@@ -1,3 +1,4 @@
+import { inkSvg } from '../../../drawingml/inkml/svg';
 import { renderSvgPreview } from '../../../drawingml/svg-preview';
 import { renderWordArtSvg } from '../../../drawingml/word-art-svg';
 import type { SecurityCase } from '../case';
@@ -30,5 +31,20 @@ export const cases: readonly SecurityCase[] = [
 			};
 		},
 		expected: { link: '', style: '' },
+	},
+	{
+		name: 'ink strokes print only the path and colour text that passed the check',
+		limits: { ms: 1_000, heapMb: 64 },
+		run() {
+			let reads = 0;
+			const path = { toString: () => (reads++ === 0 ? 'M 1 1 L 2 2' : '"/><p>x</p><path d="') };
+			const svg = Reflect.apply(inkSvg, undefined, [
+				[{ path, color: '#ff0000', width: 1, opacity: 1 }],
+				'10" data-x="',
+				10,
+			]) as string;
+			return { markup: svg.includes('<p>'), attribute: svg.includes('data-x') };
+		},
+		expected: { markup: false, attribute: false },
 	},
 ];

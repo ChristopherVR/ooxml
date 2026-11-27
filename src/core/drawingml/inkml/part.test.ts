@@ -206,4 +206,24 @@ describe('inkSvg', () => {
 		expect(svg).not.toContain('script');
 		expect(svg).not.toContain('onload');
 	});
+
+	it('never prints a non-string path or colour that changes after its check', () => {
+		const shifting = (safe: string) => {
+			let reads = 0;
+			return { toString: () => (reads++ === 0 ? safe : '"/><script>x</script><path d="') };
+		};
+		const svg = Reflect.apply(inkSvg, undefined, [
+			[
+				{ path: shifting('M 1 1 L 2 2'), color: '#ff0000', width: 1, opacity: 1 },
+				{ path: 'M 0 0 L 1 1', color: shifting('#00ff00'), width: '2" onload="x', opacity: 1 },
+			],
+			'10" onload="x',
+			10,
+		]) as string;
+		expect(svg).not.toContain('script');
+		expect(svg).not.toContain('onload');
+		expect(svg).toContain('width="1"');
+		expect(svg).toContain('stroke="#000000"');
+		expect(svg.match(/<path /g)).toHaveLength(1);
+	});
 });

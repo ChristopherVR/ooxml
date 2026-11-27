@@ -56,7 +56,8 @@ export function inkObjectFromXml(xml: string): InkXmlObject {
 
 const escapeText = (value: string): string =>
 	value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const escapeAttribute = (value: string): string => escapeText(value).replace(/"/g, '&quot;');
+/** `value` safe inside a double-quoted XML or SVG attribute. */
+export const escapeAttribute = (value: string): string => escapeText(value).replace(/"/g, '&quot;');
 
 function serialize(name: string, value: InkXmlObject | string, out: string[]): void {
 	if (typeof value === 'string') {
