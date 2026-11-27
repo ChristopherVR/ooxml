@@ -300,9 +300,9 @@ The gzipped size budgets in `scripts/perf-budgets.json` moved with the new featu
 | `ooxml-core/pptx`                     | 1,494 KiB    | 1,470 KiB  | legacy writer and previews deferred                    |
 | `ooxml-core/xlsx`                     | 831 KiB      | 890 KiB    | PivotCharts, rich values and equations                 |
 | `ooxml-core/docx`                     | 574 KiB      | 601 KiB    | design, styles and arrangement                         |
-| `ooxml-ui/docx`                       | 580 KiB      | 616 KiB    | Mailings, Design, References and views (most deferred) |
+| `ooxml-ui/docx`                       | 580 KiB      | 643 KiB    | Mailings, Design, References and views (most deferred) |
 | `ooxml-core/automation/add-ins` (new) |              | 18 KiB     | add-in manifest validation                             |
-| `ooxml-core/docx/mail-merge` (new)    |              | 43 KiB     | the mail merge engine                                  |
+| `ooxml-core/docx/mail-merge` (new)    |              | 50 KiB     | the mail merge engine                                  |
 | `ooxml-core/docx/pdf-export` (new)    |              | 36 KiB     | Word Save as PDF without the editor                    |
 | `ooxml-core/pdf/write` (new)          |              | 27 KiB     | the shared vector PDF writer                           |
 
