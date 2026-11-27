@@ -18,14 +18,18 @@ export function wordAddInSelection(current: () => EditorView | undefined): Offic
 			const lines = text.split(/\r\n?|\n/);
 			const { schema } = state;
 			const paragraph = schema.nodes.paragraph;
-			const marks = state.storedMarks ?? state.selection.$from.marks();
+			const { $from } = state.selection;
+			const marks = state.storedMarks ?? $from.marks();
 			const transaction =
 				lines.length > 1 && paragraph
 					? state.tr.replaceSelection(
 							new Slice(
 								Fragment.from(
 									lines.map((line) =>
-										paragraph.create(null, line ? schema.text(line, marks) : undefined),
+										paragraph.create(
+											$from.parent.attrs,
+											line ? schema.text(line, marks) : undefined,
+										),
 									),
 								),
 								1,
