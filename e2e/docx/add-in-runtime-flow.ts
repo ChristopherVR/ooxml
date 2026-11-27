@@ -55,6 +55,27 @@ interface Flow {
 	host: 'Word' | 'Excel' | 'PowerPoint';
 }
 
+async function checkTabClipping(editor: Locator, edge: 'left' | 'right') {
+	const strip = editor.getByRole('tablist').first();
+	await expect
+		.poll(() =>
+			strip.evaluate((list, side) => {
+				const bounds = list.getBoundingClientRect();
+				const labels = Array.from(list.querySelectorAll('[role="tab"] > span'));
+				return labels.some((label) => {
+					const box = label.getBoundingClientRect();
+					return (
+						box.left < bounds.right &&
+						box.right > bounds.left &&
+						(side === 'left' ? box.left < bounds.left - 1 : box.right > bounds.right + 1) &&
+						getComputedStyle(label).opacity !== '0'
+					);
+				});
+			}, edge),
+		)
+		.toBe(false);
+}
+
 export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor, host }: Flow) {
 	const parentOrigin = new URL(page.url()).origin;
 	await page.route(`${paneOrigin}/**`, (route) => {
@@ -129,6 +150,7 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 		if (file.name === 'manifest.json') {
 			const tab = editor.getByRole('tab', { name: addInName, exact: true });
 			if (host !== 'PowerPoint' && (page.viewportSize()?.width ?? 0) === 800) {
+				await checkTabClipping(editor, 'left');
 				await editor.getByRole('tab', { name: 'Home', exact: true }).click();
 				const more = editor.getByRole('button', { name: 'More tabs', exact: true });
 				await expect(more).toBeVisible();

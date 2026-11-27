@@ -60,6 +60,9 @@
 	color: var(--office-foreground);
 	background: var(--office-surface);
 }
+.tab-label[data-clipped-start] {
+	opacity: 0;
+}
 [role='tab'][aria-selected='true'] {
 	color: var(--office-accent-ink);
 }

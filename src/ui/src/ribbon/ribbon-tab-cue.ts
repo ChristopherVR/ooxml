@@ -31,6 +31,13 @@ export function wireRibbonTabCue(
 		ribbon.toggleAttribute('data-tabs-start', overflow && !atStart);
 		ribbon.toggleAttribute('data-tabs-end', overflow && !atEnd);
 		button.hidden = !overflow;
+		if (strip) {
+			const { left } = strip.getBoundingClientRect();
+			for (const label of strip.querySelectorAll('.tab-label')) {
+				const box = label.getBoundingClientRect();
+				label.toggleAttribute('data-clipped-start', overflow && box.left < left - 1);
+			}
+		}
 		const text = label();
 		button.setAttribute('aria-label', text);
 		button.title = text;
@@ -84,6 +91,8 @@ export function wireRibbonTabCue(
 		list?.removeEventListener('scroll', schedule);
 		resize?.disconnect();
 		mutation?.disconnect();
+		for (const label of list?.querySelectorAll('[data-clipped-start]') ?? [])
+			label.removeAttribute('data-clipped-start');
 		button.remove();
 	};
 }

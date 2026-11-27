@@ -392,7 +392,7 @@ export class OfficeUiRibbon extends OfficeElement {
 								title=${ifDefined(tab.title)}
 								aria-selected=${String(tab.id === selected)}
 								tabindex=${tab.id === selected ? 0 : -1}
-								>${tab.label}</button
+								><span class="tab-label">${tab.label}</span></button
 							>`,
 					)}
 				</div>
