@@ -1,6 +1,6 @@
 /**
  * A new chart workbook is the same bytes whenever it is written (its ZIP entries are dated
- * 1980-01-01, as Office writes) and names the host theme's body font on its Normal style.
+ * 1980-01-01, as Office writes, and it has no folder entries) and names the host theme's body font on its Normal style.
  */
 import JSZip from 'jszip';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -27,6 +27,11 @@ describe('createChartWorkbookFromRows', () => {
 		expect(Buffer.from(second).equals(Buffer.from(first))).toBe(true);
 		const view = new DataView(first.buffer, first.byteOffset);
 		expect(view.getUint16(12, true)).toBe(0x21);
+	});
+
+	it('writes only parts, no folder entries', async () => {
+		const zip = await JSZip.loadAsync(await createChartWorkbookFromRows(rows));
+		expect(Object.keys(zip.files).filter((name) => name.endsWith('/'))).toEqual([]);
 	});
 
 	it('names the default theme body font, or the host theme one, as the minor scheme font', async () => {

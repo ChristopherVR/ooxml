@@ -90,24 +90,26 @@ function workbookPackage(
 	options: ChartWorkbookOptions,
 ): Promise<Uint8Array> {
 	const zip = new JSZip();
-	zip.file(
+	// Office writes no folder entries; JSZip adds one per parent folder unless told not to.
+	const file = (name: string, text: string) => zip.file(name, text, { createFolders: false });
+	file(
 		'[Content_Types].xml',
 		`${DECLARATION}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`,
 	);
-	zip.file(
+	file(
 		'_rels/.rels',
 		`${DECLARATION}<Relationships xmlns="${PKG_REL}"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
 	);
-	zip.file(
+	file(
 		'xl/workbook.xml',
 		`${DECLARATION}<workbook xmlns="${MAIN}" xmlns:r="${REL}"><sheets><sheet name="${escape(sheetName)}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
 	);
-	zip.file(
+	file(
 		'xl/_rels/workbook.xml.rels',
 		`${DECLARATION}<Relationships xmlns="${PKG_REL}"><Relationship Id="rId1" Type="${REL}/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${REL}/styles" Target="styles.xml"/></Relationships>`,
 	);
-	zip.file('xl/worksheets/sheet1.xml', worksheetXml);
-	zip.file('xl/styles.xml', styles(options.minorFont || OFFICE_THEME_FONTS.minor));
+	file('xl/worksheets/sheet1.xml', worksheetXml);
+	file('xl/styles.xml', styles(options.minorFont || OFFICE_THEME_FONTS.minor));
 	dateZipEntries(zip, options.zipDate);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }
