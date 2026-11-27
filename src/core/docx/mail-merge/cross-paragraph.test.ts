@@ -82,7 +82,7 @@ describe('merge fields across paragraphs', () => {
 
 	it('joins and splits paragraphs at their marks', () => {
 		const group: Paragraph[] = [
-			{ type: 'paragraph', id: 'a', runs: [{ text: 'one' }], alignment: 'center' },
+			{ type: 'paragraph', id: 'a', runs: [{ text: 'one' }], align: 'center' },
 			{ type: 'paragraph', id: 'b', runs: [{ text: 'two' }] },
 		];
 		const joined = joinParagraphs(group);
