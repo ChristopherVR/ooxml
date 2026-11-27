@@ -1411,8 +1411,10 @@ installed Visio 16 build is used to check that saved files open without repair.
       and reported (Visio 16 shows no change on the front), perspective text and group children are
       not projected point by point, and the shipped Visio themes carry no `a:bevelT`, so the
       themed bevel path has no real-file evidence. Text has no Visio font metrics.
-- [ ] **P2** Arrowhead styles outside the common set are not drawn (style 13 in the sample
-      drawings); the viewer reports each one it leaves out (`src/ui/src/visio/arrowheads.ts`).
+- [x] **P2** Every built-in arrowhead style 1 to 45 (style 13 in the sample drawings) is drawn
+      from glyphs and setbacks measured in Visio 16 SVG exports (`filled-arrow.ts`,
+      `open-arrow.ts`); custom `USE()` line ends are still reported, and off a straight
+      round-capped line a glyph is drawn without its setback (`src/ui/src/visio/arrowheads.ts`).
 - [ ] **P2** Shape text is measured and wrapped with browser fonts, so a block can run past its
       saved text-box height where Visio fits it; the viewer reports it
       (`src/ui/src/visio/render-text.ts`).

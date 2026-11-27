@@ -6,6 +6,8 @@ import {
 } from 'ooxml-core/visio';
 import { safeColor, svgElement } from './render-svg';
 let markerId = 0;
+/** Codes drawn by the generic marker when their native glyph cannot be laid out. */
+const GENERIC = new Set([2, 4, 5, 6]);
 /** Native measured arrow subsets with explicit filled-path fallbacks. */
 export function applyArrowheads(
 	path: SVGPathElement,
@@ -27,21 +29,24 @@ export function applyArrowheads(
 	for (const side of ['start', 'end'] as const) {
 		const code = side === 'start' ? style.startArrow : style.endArrow;
 		if (!code) continue;
-		if (![1, 2, 3, 4, 5, 6, 7, 9].includes(code)) {
+		const size = side === 'start' ? (style.startArrowSize ?? 2) : (style.endArrowSize ?? 2);
+		const filledArrow = side === 'start' ? filledStart : filledEnd;
+		const openPath = visioOpenArrowPath(code, size, style.lineWidth);
+		// Codes 1 to 45 are Visio's built-in line ends; others name a custom (USE) line end.
+		if (!filledArrow && !openPath && !GENERIC.has(code)) {
 			warnings.add(`Arrowhead style ${code} is not rendered in this build.`);
 			continue;
 		}
-		const size = side === 'start' ? (style.startArrowSize ?? 2) : (style.endArrowSize ?? 2);
 		const id = `visio-arrow-${++markerId}`;
 		const marker = svgElement('marker');
 		marker.id = id;
-		const filledArrow = side === 'start' ? filledStart : filledEnd;
-		if (filledArrow && layout) {
+		// Off a straight round-capped line the glyph keeps its shape but the line is not set back.
+		const setback = layout ? (side === 'start' ? layout.startSetback : layout.endSetback) : 0;
+		if (filledArrow && (layout || !GENERIC.has(code))) {
+			if (!layout)
+				warnings.add('Arrowheads on curved or square-capped lines are not set back from the end.');
 			marker.setAttribute('viewBox', '-1 -1 2 2');
-			marker.setAttribute(
-				'refX',
-				String(-(side === 'start' ? layout.startSetback : layout.endSetback)),
-			);
+			marker.setAttribute('refX', String(-setback));
 			marker.setAttribute('refY', '0');
 			marker.setAttribute('markerWidth', '2');
 			marker.setAttribute('markerHeight', '2');
@@ -50,8 +55,17 @@ export function applyArrowheads(
 			marker.setAttribute('overflow', 'visible');
 			const glyph = svgElement('path');
 			glyph.setAttribute('d', filledArrow.path);
-			glyph.setAttribute('fill', safeColor(style.lineColor));
-			glyph.setAttribute('stroke', 'none');
+			if (filledArrow.filled) {
+				glyph.setAttribute('fill', safeColor(style.lineColor));
+				glyph.setAttribute('stroke', 'none');
+			} else {
+				// A closed outline (hollow triangle, ring, diamond) drawn with the line's own stroke.
+				glyph.setAttribute('fill', 'none');
+				glyph.setAttribute('stroke', safeColor(style.lineColor));
+				glyph.setAttribute('stroke-width', String(style.lineWidth));
+				glyph.setAttribute('stroke-linecap', 'round');
+				glyph.setAttribute('stroke-linejoin', 'round');
+			}
 			glyph.setAttribute('opacity', String(style.lineOpacity));
 			marker.append(glyph);
 			defs.append(marker);
@@ -64,7 +78,6 @@ export function applyArrowheads(
 			);
 			continue;
 		}
-		const openPath = visioOpenArrowPath(code, size, style.lineWidth);
 		if (openPath) {
 			// These native open styles have no setback and use round caps
 			// independent of the connector's line cap.

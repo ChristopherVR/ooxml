@@ -126,9 +126,9 @@ describe('line ends', () => {
 		expect(
 			result.svg.querySelector('[data-shape-id="c1"] path')?.getAttribute('marker-end'),
 		).toMatch(/^url\(#visio-arrow-/);
-		line.style.endArrow = 45;
+		line.style.endArrow = 46;
 		expect(renderPage(model, model.pages[0]!).warnings).toContain(
-			'Arrowhead style 45 is not rendered in this build.',
+			'Arrowhead style 46 is not rendered in this build.',
 		);
 	});
 });

@@ -405,6 +405,7 @@ export {
 export { visioOpenArrowExtent, visioOpenArrowPath } from './open-arrow';
 export {
 	visioFilledArrow,
+	visioHasSetbackArrow,
 	trimVisioArrowLine,
 	layoutVisioFilledArrowLine,
 	type VisioFilledArrow,

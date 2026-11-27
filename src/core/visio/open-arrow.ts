@@ -1,4 +1,4 @@
-/** Unit span in inches of open BeginArrow/EndArrow codes 1, 3, 7 and 9 at unit drawing scale.
+/** Unit span in inches of every native BeginArrow/EndArrow glyph at unit drawing scale.
  * Measured against Visio 16 SVG exports: seven sizes and three line weights.
  * The stroke contributes to the span; it is not a stroke-relative multiplier.
  */
@@ -15,6 +15,16 @@ const nativeGlyphs: Readonly<Record<number, string>> = {
 	3: 'M 2 1 L 0 0 L 2 -1',
 	7: 'M 1.84309 -0.959456 C 1.43792 -0.380801 0.784503 -0.0260255 0.078527 -0.00137091 L 0.0785229 0.00137043 C 0.784499 0.0260231 1.43791 0.380798 1.84309 0.959452',
 	9: 'M 1 -1 L -1 1',
+	12: 'M 3 1 L 0 0 L 3 -1',
+	23: 'M 2.5 1 L 1.5 -1',
+	24: 'M 1.5 -0.75 L 1.5 0.75',
+	25: 'M 1.5 -0.75 L 1.5 0.75 M 2.25 -0.75 L 2.25 0.75',
+	26: 'M 1.5 -0.75 L 1.5 0.75 M 2.25 -0.75 L 2.25 0.75 M 3 -0.75 L 3 0.75',
+	27: 'M 0 -0.75 L 1.5 0 L 0 0.75',
+	28: 'M 0 -0.75 L 1.5 0 L 0 0.75 M 2 -0.75 L 2 0.75',
+	43: 'M 2 -1 L 0 0 L 2 1 M 4 -1 L 2 0 L 4 1',
+	44: 'M 2 -1 L 0 0 L 2 1 M 3 0.75 L 3 -0.75',
+	45: 'M 2 -1 L 0 0 L 2 1 M 4 -1 L 2 0 L 4 1 M 5 0.75 L 5 -0.75',
 };
 
 /** Supported native open-arrow path in local y-up inches, anchored at (0, 0).

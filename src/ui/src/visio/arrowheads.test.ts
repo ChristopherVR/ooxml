@@ -118,13 +118,38 @@ describe('code-5 concave arrows', () => {
 		expect(result.svg.querySelectorAll('marker,[marker-start],[marker-end]')).toHaveLength(0);
 		result.dispose();
 	});
-	it.each([8, 17, 45, 254])('keeps unsupported code %s explicit', (code) => {
+	it.each([46, 254])('keeps unsupported code %s explicit', (code) => {
 		const { model, shape } = scene();
 		shape.style.startArrow = 0;
 		shape.style.endArrow = code;
 		const result = renderPage(model, model.pages[0]!);
 		expect(result.svg.querySelectorAll('marker')).toHaveLength(0);
 		expect(result.warnings).toContain(`Arrowhead style ${code} is not rendered in this build.`);
+		result.dispose();
+	});
+	it.each([
+		[13, 'filled'],
+		[14, 'outline'],
+		[12, 'open'],
+		[45, 'open'],
+	] as const)('draws built-in style %s (%s) without a notice', (code, kind) => {
+		const { model, shape } = scene('M 0 0 L 2 0');
+		shape.style.startArrow = 0;
+		shape.style.endArrow = code;
+		const result = renderPage(model, model.pages[0]!);
+		const glyph = result.svg.querySelector('marker path')!;
+		expect(glyph).not.toBeNull();
+		expect(result.warnings).not.toContain(`Arrowhead style ${code} is not rendered in this build.`);
+		if (kind === 'filled') {
+			expect(glyph.getAttribute('fill')).not.toBe('none');
+			expect(glyph.getAttribute('stroke')).toBe('none');
+		} else {
+			expect(glyph.getAttribute('fill')).toBe('none');
+			expect(glyph.getAttribute('stroke')).not.toBe('none');
+		}
+		// A set-back glyph trims the line so it does not run through the arrowhead.
+		const line = result.svg.querySelector('[marker-end]')!.getAttribute('d')!;
+		if (kind !== 'open') expect(line).not.toMatch(/L 2 0\s*$/);
 		result.dispose();
 	});
 	it.each([0, 2, 6])('bounds size %s and exports inert local references', (size) => {
