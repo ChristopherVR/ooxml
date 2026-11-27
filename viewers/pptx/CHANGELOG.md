@@ -4,46 +4,27 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
-## 2026-11-26
+## Unreleased
 
-_Releases: pptx-react-viewer@5.2.0, pptx-vue-viewer@5.2.0, pptx-angular-viewer@5.2.0, pptx-svelte-viewer@5.2.0, pptx-vanilla-viewer@4.2.0_
+<!-- release-notes: 2.5 -->
 
-### Features
+_Releases: pptx-viewer-mcp@3.0.1, pptx-viewer-core@5.0.1, pptx-react-viewer@5.2.0, @christophervr/pptx-viewer@3.0.1, pptx-vue-viewer@5.2.0, pptx-angular-viewer@5.2.0, pptx-svelte-viewer@5.2.0, pptx-vanilla-viewer@4.2.0_
 
-- **visio:** Insert svg, bmp, tiff and bounded emf pictures ([5a9f3c5](https://github.com/ChristopherVR/ooxml/commit/5a9f3c5e2394a974b5391578c422bccc42e6145f))
-- **pptx:** Enable animation painter and ribbon timing ([4b1dda0](https://github.com/ChristopherVR/ooxml/commit/4b1dda0d031e2039e2ab07b3ad04b73e38f88554))
-- **docx:** Enable document design galleries and defaults ([efeb0d6](https://github.com/ChristopherVR/ooxml/commit/efeb0d6b4384bd5ca9cdc6cec8accac3a2742657))
-- **math:** Add excel equations and visio equation previews ([39a38b6](https://github.com/ChristopherVR/ooxml/commit/39a38b64a207fffd9d751d066a0ded87028df929))
-- **xlsx:** Add pivot charts and recommended pivot tables ([927d085](https://github.com/ChristopherVR/ooxml/commit/927d085027d31fc9e7caa43330a7e84f395c1ee2))
-- **pptx:** Add shared picture format editing commands ([7acd30a](https://github.com/ChristopherVR/ooxml/commit/7acd30a9ea9d1bcb95a33c41b78140ed6142d5b0))
+Every PowerPoint package is released with `ooxml-core` 2.5.0 and `ooxml-ui` 2.5.0: the React, Vue, Angular and Svelte viewers move to 5.2.0, the vanilla viewer to 4.2.0, and `pptx-viewer-core`, `@christophervr/pptx-viewer` and `pptx-viewer-mcp` to 5.0.1, 3.0.1 and 3.0.1. In all five bindings the Draw tab gains Lasso Select, pen presets, the Ruler, Ink to Shape, Ink Replay and Ink to Math through a host recognizer; the Animation Painter and timing edits work on effects PowerPoint wrote; selecting a video, an audio clip or a SmartArt graphic shows its Format and Playback tabs; Picture Format gains Picture Layout; Home docks a Comments pane and moves Arrange into Drawing; and a large deck paints its opening slide before the rest is parsed. Slide exports in React and Angular use the slide's own size, the installer passes `--root` in the MCP configuration it writes, and `pptx-viewer-mcp` reports its own version. The bindings' 5.2.0 and 4.2.0 were prepared on 2026-11-26 but never published; their changes are part of this release. Upgrade every OOXML package together; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#ribbon-layouts-follow-microsoft-365) covers the Home ribbon and the ink brush widths.
 
-### Bug Fixes
+**[Introducing OOXML 2.5](https://christophervr.github.io/ooxml/releases/2.5/)** tells the story of this release. Every change to PowerPoint is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.5/#changes-powerpoint) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.5.md#changes-powerpoint)).
 
-- **chart:** Shift cells and shrink table on row and series removal ([6d581bd](https://github.com/ChristopherVR/ooxml/commit/6d581bd4d1df8bdceb43092c93edda94898232a0))
-- **pptx:** Sync picture source and removal state with peers ([ba919ac](https://github.com/ChristopherVR/ooxml/commit/ba919ac34e76987ba91f8d20b4898d9df0bb020a))
-- **pptx:** Disable alt text when the vanilla pane is absent ([4489fd9](https://github.com/ChristopherVR/ooxml/commit/4489fd90f9e2d9790a4580474f1a1d0a29b6e5ba))
+### Packages
 
-### Performance
-
-- **pptx:** Reuse parsed chart style definitions ([8c1feca](https://github.com/ChristopherVR/ooxml/commit/8c1fecadd661e66c97b5a2cd7e4ebf6f205f3bb7))
-- **pptx:** Reuse relationships during save part binding ([ca3d21c](https://github.com/ChristopherVR/ooxml/commit/ca3d21cb9165ec462a45e3f8de33a9ba10d561c2))
-- **pptx:** Scan smartart text order in one pass ([15444c2](https://github.com/ChristopherVR/ooxml/commit/15444c2d3e6be3adcf9d9d53ec65ce54ee9fbf0c))
-- **xml:** Avoid allocating arrays for first child lookup ([d95c79a](https://github.com/ChristopherVR/ooxml/commit/d95c79af01f944fea9f0ef11241d0e2a9d49ab64))
-- **opc:** Retain compressed media and unchanged zip entries ([c20a088](https://github.com/ChristopherVR/ooxml/commit/c20a0889aebf0bcf9e1062a8acac517dbe1798cd))
-- **pptx:** Reuse parsed template, theme and chart xml ([bcedde8](https://github.com/ChristopherVR/ooxml/commit/bcedde8266cfa1690b73194dce927b7c04a43eec))
-- **pptx:** Hash sampled slide payloads directly ([3b5eb6d](https://github.com/ChristopherVR/ooxml/commit/3b5eb6d439f7bd5f3cc3b2006b870264f712e24d))
-- **pptx:** Keep deflate level 6 for new and edited parts ([0173788](https://github.com/ChristopherVR/ooxml/commit/0173788bef28a24918dd99869307b51ca904996d))
-
-### Refactor
-
-- **drawingml:** Share the insert shapes palette across products ([bc83e4f](https://github.com/ChristopherVR/ooxml/commit/bc83e4fec93f54174702433ae08314946ab2d503))
-
-### Testing
-
-- **pptx:** Reuse fixture work and split integration sweeps ([c23c720](https://github.com/ChristopherVR/ooxml/commit/c23c72070f97636539c9d20015a1f0c8c9efe186))
-- **ci:** Share vitest worker limits and balance unit shards ([1d6667b](https://github.com/ChristopherVR/ooxml/commit/1d6667b903f3387e16a641359c4d773b7991346e))
-- **pptx:** Verify angular arrange group ids in rendered html ([ca4da27](https://github.com/ChristopherVR/ooxml/commit/ca4da27ed2369d35b612ff6a31ee631aa1c919c7))
-- **angular:** Scan signal inputs once per test fixture ([8ec2767](https://github.com/ChristopherVR/ooxml/commit/8ec27678b0fa1cffe1b8da70c030de7ece96f51f))
+- [`pptx-viewer-mcp` 3.0.1](packages/tools/CHANGELOG.md)
+- [`pptx-viewer-core` 5.0.1](packages/core/CHANGELOG.md)
+- [`pptx-react-viewer` 5.2.0](packages/react/CHANGELOG.md)
+- [`@christophervr/pptx-viewer` 3.0.1](packages/cli/CHANGELOG.md)
+- [`pptx-vue-viewer` 5.2.0](packages/vue/CHANGELOG.md)
+- [`pptx-angular-viewer` 5.2.0](packages/angular/CHANGELOG.md)
+- [`pptx-svelte-viewer` 5.2.0](packages/svelte/CHANGELOG.md)
+- [`pptx-vanilla-viewer` 4.2.0](packages/vanilla/CHANGELOG.md)
+- Released with them: [`ooxml-core` 2.5.0](../../src/core/CHANGELOG.md) and [`ooxml-ui` 2.5.0](../../src/ui/CHANGELOG.md)
 
 ## 2026-11-25
 

@@ -4,22 +4,27 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
-## 2026-11-26
+## Unreleased
 
-_Releases: docx-react-viewer@2.1.0, docx-vue-viewer@2.1.0, docx-angular-viewer@2.1.0, docx-svelte-viewer@2.1.0, docx-solid-viewer@2.1.0, docx-vanilla-viewer@2.1.0_
+<!-- release-notes: 2.5 -->
 
-### Features
+_Releases: docx-viewer-mcp@2.0.1, docx-core@2.0.1, docx-react-viewer@2.1.0, docx-vue-viewer@2.1.0, docx-angular-viewer@2.1.0, docx-svelte-viewer@2.1.0, docx-solid-viewer@2.1.0, docx-vanilla-viewer@2.1.0_
 
-- **docx:** Enable the mailings ribbon workflow ([d471275](https://github.com/ChristopherVR/ooxml/commit/d471275f03cdb4c76101d9757efc75bfc1e1dda6))
+Every Word package is released with `ooxml-core` 2.5.0 and `ooxml-ui` 2.5.0: the six bindings move to 2.1.0, and `docx-core` and `docx-viewer-mcp` to 2.0.1. The bindings mount the 2.5 Word editor, with the Mailings, Design, References, Draw and Equation tabs, Read Mode, Outline, Web Layout and Focus, Quick Parts, Signature Line and Sign, Online Video, the Table Design and Layout tabs and the Arrange group, and they take the new optional props `onlineVideoHosts`, `onlineVideoSearch`, `buildingBlocksStore` and `documentSigner`, each off until you set it. Line wrapping, contextual spacing (#359) and multiple line spacing (#360) now lay out as Word 16 does, and the headless mail merge and Save as PDF in Node are in `ooxml-core/docx/mail-merge` and `ooxml-core/docx/pdf-export`. The bindings' 2.1.0 was prepared on 2026-11-26 but never published; its changes are part of this release. Upgrade every OOXML package together; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#word-view-modes-have-six-values) covers the six view modes, the Insert ribbon order and the new host services.
 
-### Dependencies
+**[Introducing OOXML 2.5](https://christophervr.github.io/ooxml/releases/2.5/)** tells the story of this release. Every change to Word is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.5/#changes-word) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.5.md#changes-word)).
 
-- **deps:** Bump the angular group with 8 updates ([4870238](https://github.com/ChristopherVR/ooxml/commit/4870238d776526df79c345320638f45c3cff0674))
-- **deps:** Reconcile angular dependency updates ([117066d](https://github.com/ChristopherVR/ooxml/commit/117066d9bf22e78aded860206f0bd2a54ed0c3f1))
+### Packages
 
-### Chores
-
-- **ci:** Integrate Office fixes and dependency updates ([3d436e0](https://github.com/ChristopherVR/ooxml/commit/3d436e0c7505cee722dafa343e5c6c2b290e5e24))
+- [`docx-viewer-mcp` 2.0.1](mcp/CHANGELOG.md)
+- [`docx-core` 2.0.1](packages/core/CHANGELOG.md)
+- [`docx-react-viewer` 2.1.0](packages/react/CHANGELOG.md)
+- [`docx-vue-viewer` 2.1.0](packages/vue/CHANGELOG.md)
+- [`docx-angular-viewer` 2.1.0](packages/angular/CHANGELOG.md)
+- [`docx-svelte-viewer` 2.1.0](packages/svelte/CHANGELOG.md)
+- [`docx-solid-viewer` 2.1.0](packages/solid/CHANGELOG.md)
+- [`docx-vanilla-viewer` 2.1.0](packages/vanilla/CHANGELOG.md)
+- Released with them: [`ooxml-core` 2.5.0](../../src/core/CHANGELOG.md) and [`ooxml-ui` 2.5.0](../../src/ui/CHANGELOG.md)
 
 ## 2026-11-21
 

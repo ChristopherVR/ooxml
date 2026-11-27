@@ -4,6 +4,28 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
+## Unreleased
+
+<!-- release-notes: 2.5 -->
+
+_Releases: xlsx-viewer-mcp@2.0.1, @christophervr/xlsx-core@2.0.1, @christophervr/xlsx-react-viewer@2.1.0, xlsx-vue-viewer@2.1.0, xlsx-angular-viewer@2.1.0, xlsx-svelte-viewer@2.1.0, xlsx-solid-viewer@2.1.0, xlsx-vanilla-viewer@2.1.0_
+
+Every Excel package is released with `ooxml-core` 2.5.0 and `ooxml-ui` 2.5.0: the six bindings move to 2.1.0, and `@christophervr/xlsx-core` and `xlsx-viewer-mcp` to 2.0.1. The bindings mount the 2.5 Excel editor, with Recommended PivotTables, PivotCharts, the PivotTable Analyze and Design tabs, the Chart Format tab, Picture Format and Shape Format, the Draw tab with ink saved as Excel ink, Place in Cell and linked data cards, and more of Insert and Page Layout; PivotTables, in-cell pictures and ink are shared in collaboration. They take a new optional `imageProvider` prop for `IMAGE()`, which fetches nothing until you set it, and forward `googleFonts` in every binding. Non-English interface languages now load on first use. Upgrade every OOXML package together; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#excel-command-string-tables-moved-behind-loadeditorstrings) covers the string tables, the Insert ribbon and the shared workbook changes.
+
+**[Introducing OOXML 2.5](https://christophervr.github.io/ooxml/releases/2.5/)** tells the story of this release. Every change to Excel is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.5/#changes-excel) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.5.md#changes-excel)).
+
+### Packages
+
+- [`xlsx-viewer-mcp` 2.0.1](mcp/CHANGELOG.md)
+- [`@christophervr/xlsx-core` 2.0.1](packages/core/CHANGELOG.md)
+- [`@christophervr/xlsx-react-viewer` 2.1.0](packages/react/CHANGELOG.md)
+- [`xlsx-vue-viewer` 2.1.0](packages/vue/CHANGELOG.md)
+- [`xlsx-angular-viewer` 2.1.0](packages/angular/CHANGELOG.md)
+- [`xlsx-svelte-viewer` 2.1.0](packages/svelte/CHANGELOG.md)
+- [`xlsx-solid-viewer` 2.1.0](packages/solid/CHANGELOG.md)
+- [`xlsx-vanilla-viewer` 2.1.0](packages/vanilla/CHANGELOG.md)
+- Released with them: [`ooxml-core` 2.5.0](../../src/core/CHANGELOG.md) and [`ooxml-ui` 2.5.0](../../src/ui/CHANGELOG.md)
+
 ## 2026-11-21
 
 <!-- release-notes: 2.0 -->

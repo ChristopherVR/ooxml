@@ -4,6 +4,28 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
+## Unreleased
+
+<!-- release-notes: 2.5 -->
+
+_Releases: visio-viewer-mcp@2.0.1, visio-core@2.0.1, visio-react-viewer@2.0.1, visio-vue-viewer@2.0.1, visio-angular-viewer@2.0.1, visio-svelte-viewer@2.0.1, visio-solid-viewer@2.0.1, visio-vanilla-viewer@2.0.1_
+
+Every Visio package moves to 2.0.1, released with `ooxml-core` 2.5.0 and `ooxml-ui` 2.5.0. The bindings keep their props and mount the 2.5 Visio editor: stencils you make yourself with New Stencil, Add Selected Shape, Edit Master and Save Stencil, SVG, BMP, TIFF and EMF pictures, embedded OLE objects drawn from their saved previews with Open Object, connectors that copy, drop, reroute and space as Visio routes them, and Get Add-ins. The Svelte load handle now passes the file name through. Upgrade every OOXML package together; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#visio-recordsets-are-numbered-from-1) covers the one change to check, recordsets numbered from 1.
+
+**[Introducing OOXML 2.5](https://christophervr.github.io/ooxml/releases/2.5/)** tells the story of this release. Every change to Visio is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.5/#changes-visio) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.5.md#changes-visio)).
+
+### Packages
+
+- [`visio-viewer-mcp` 2.0.1](mcp/CHANGELOG.md)
+- [`visio-core` 2.0.1](packages/core/CHANGELOG.md)
+- [`visio-react-viewer` 2.0.1](packages/react/CHANGELOG.md)
+- [`visio-vue-viewer` 2.0.1](packages/vue/CHANGELOG.md)
+- [`visio-angular-viewer` 2.0.1](packages/angular/CHANGELOG.md)
+- [`visio-svelte-viewer` 2.0.1](packages/svelte/CHANGELOG.md)
+- [`visio-solid-viewer` 2.0.1](packages/solid/CHANGELOG.md)
+- [`visio-vanilla-viewer` 2.0.1](packages/vanilla/CHANGELOG.md)
+- Released with them: [`ooxml-core` 2.5.0](../../src/core/CHANGELOG.md) and [`ooxml-ui` 2.5.0](../../src/ui/CHANGELOG.md)
+
 ## 2026-11-21
 
 <!-- release-notes: 2.0 -->

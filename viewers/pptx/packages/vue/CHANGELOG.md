@@ -3,42 +3,6 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [5.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@5.2.0) - 2026-11-26
-
-### Features
-
-- **visio:** Insert svg, bmp, tiff and bounded emf pictures ([5a9f3c5](https://github.com/ChristopherVR/ooxml/commit/5a9f3c5e2394a974b5391578c422bccc42e6145f))
-- **pptx:** Enable animation painter and ribbon timing ([4b1dda0](https://github.com/ChristopherVR/ooxml/commit/4b1dda0d031e2039e2ab07b3ad04b73e38f88554))
-- **docx:** Enable document design galleries and defaults ([efeb0d6](https://github.com/ChristopherVR/ooxml/commit/efeb0d6b4384bd5ca9cdc6cec8accac3a2742657))
-- **math:** Add excel equations and visio equation previews ([39a38b6](https://github.com/ChristopherVR/ooxml/commit/39a38b64a207fffd9d751d066a0ded87028df929))
-- **xlsx:** Add pivot charts and recommended pivot tables ([927d085](https://github.com/ChristopherVR/ooxml/commit/927d085027d31fc9e7caa43330a7e84f395c1ee2))
-- **pptx:** Add shared picture format editing commands ([7acd30a](https://github.com/ChristopherVR/ooxml/commit/7acd30a9ea9d1bcb95a33c41b78140ed6142d5b0))
-
-### Bug Fixes
-
-- **chart:** Shift cells and shrink table on row and series removal ([6d581bd](https://github.com/ChristopherVR/ooxml/commit/6d581bd4d1df8bdceb43092c93edda94898232a0))
-- **pptx:** Sync picture source and removal state with peers ([ba919ac](https://github.com/ChristopherVR/ooxml/commit/ba919ac34e76987ba91f8d20b4898d9df0bb020a))
-
-### Performance
-
-- **pptx:** Reuse parsed chart style definitions ([8c1feca](https://github.com/ChristopherVR/ooxml/commit/8c1fecadd661e66c97b5a2cd7e4ebf6f205f3bb7))
-- **pptx:** Reuse relationships during save part binding ([ca3d21c](https://github.com/ChristopherVR/ooxml/commit/ca3d21cb9165ec462a45e3f8de33a9ba10d561c2))
-- **pptx:** Scan smartart text order in one pass ([15444c2](https://github.com/ChristopherVR/ooxml/commit/15444c2d3e6be3adcf9d9d53ec65ce54ee9fbf0c))
-- **xml:** Avoid allocating arrays for first child lookup ([d95c79a](https://github.com/ChristopherVR/ooxml/commit/d95c79af01f944fea9f0ef11241d0e2a9d49ab64))
-- **opc:** Retain compressed media and unchanged zip entries ([c20a088](https://github.com/ChristopherVR/ooxml/commit/c20a0889aebf0bcf9e1062a8acac517dbe1798cd))
-- **pptx:** Reuse parsed template, theme and chart xml ([bcedde8](https://github.com/ChristopherVR/ooxml/commit/bcedde8266cfa1690b73194dce927b7c04a43eec))
-- **pptx:** Hash sampled slide payloads directly ([3b5eb6d](https://github.com/ChristopherVR/ooxml/commit/3b5eb6d439f7bd5f3cc3b2006b870264f712e24d))
-- **pptx:** Keep deflate level 6 for new and edited parts ([0173788](https://github.com/ChristopherVR/ooxml/commit/0173788bef28a24918dd99869307b51ca904996d))
-
-### Refactor
-
-- **drawingml:** Share the insert shapes palette across products ([bc83e4f](https://github.com/ChristopherVR/ooxml/commit/bc83e4fec93f54174702433ae08314946ab2d503))
-
-### Testing
-
-- **pptx:** Reuse fixture work and split integration sweeps ([c23c720](https://github.com/ChristopherVR/ooxml/commit/c23c72070f97636539c9d20015a1f0c8c9efe186))
-- **ci:** Share vitest worker limits and balance unit shards ([1d6667b](https://github.com/ChristopherVR/ooxml/commit/1d6667b903f3387e16a641359c4d773b7991346e))
-
 ## [5.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@5.1.2) - 2026-11-25
 
 ## [5.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@5.1.1) - 2026-11-25

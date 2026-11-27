@@ -3,52 +3,44 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [2.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.2.0) - 2026-11-26
+## [2.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.5.0) - Unreleased
 
-### Features
+<!-- release-notes: 2.5 -->
 
-- **xlsx:** Add insert and page layout ribbon authoring ([ceb43a2](https://github.com/ChristopherVR/ooxml/commit/ceb43a28739e7bf82d2146c796e2cdd90e5dc33c))
-- **visio:** Insert svg, bmp, tiff and bounded emf pictures ([5a9f3c5](https://github.com/ChristopherVR/ooxml/commit/5a9f3c5e2394a974b5391578c422bccc42e6145f))
-- **docx:** Create and edit Word styles ([af13684](https://github.com/ChristopherVR/ooxml/commit/af13684eadae7ca4d67174dba468986e73afdd7e))
-- **pptx:** Enable animation painter and ribbon timing ([4b1dda0](https://github.com/ChristopherVR/ooxml/commit/4b1dda0d031e2039e2ab07b3ad04b73e38f88554))
-- **docx:** Enable document design galleries and defaults ([efeb0d6](https://github.com/ChristopherVR/ooxml/commit/efeb0d6b4384bd5ca9cdc6cec8accac3a2742657))
-- **docx:** Enable the mailings ribbon workflow ([d471275](https://github.com/ChristopherVR/ooxml/commit/d471275f03cdb4c76101d9757efc75bfc1e1dda6))
-- **math:** Add excel equations and visio equation previews ([39a38b6](https://github.com/ChristopherVR/ooxml/commit/39a38b64a207fffd9d751d066a0ded87028df929))
-- **xlsx:** Add pivot charts and recommended pivot tables ([927d085](https://github.com/ChristopherVR/ooxml/commit/927d085027d31fc9e7caa43330a7e84f395c1ee2))
-- **visio:** Support connector copies, drops and obstacle reroutes ([10508da](https://github.com/ChristopherVR/ooxml/commit/10508dac84b251dfea75e4080339dcd29d92809b))
-- **pptx:** Add shared picture format editing commands ([7acd30a](https://github.com/ChristopherVR/ooxml/commit/7acd30a9ea9d1bcb95a33c41b78140ed6142d5b0))
+This release brings the Word, Excel, PowerPoint and Visio ribbons closer to Microsoft 365. Word gains the Mailings, Design, References, Draw and Equation tabs, Read Mode, Outline, Web Layout and Focus, Quick Parts, Signature Line and Sign, Online Video and the Table Design and Layout tabs; Excel the PivotTable, Chart Format, Picture Format, Shape Format and Draw tabs and Place in Cell; PowerPoint ink tools, the Animation Painter and the Video, Audio, Playback and SmartArt Format tabs; and Visio stencil menus and Open Object for embedded files. One Office Add-ins dialog serves every editor: installs need consent, task panes run only when the host turns the runtime on, and the Store stays hidden until the host links a marketplace. A shared ink canvas, pen strip and Ruler serve the three Draw tabs, and one `setInkMathRecognizer` serves Ink to Math everywhere. Optional tools load on first use, and every new service (signing, video search, shared building blocks, handwriting recognition) is off until the host supplies it. Version 2.2.0 was prepared on 2026-11-26 but never published; its changes are part of this release. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md) gives the before and after for each change below.
 
-### Bug Fixes
+**[Introducing OOXML 2.5](https://christophervr.github.io/ooxml/releases/2.5/)** tells the story of this release. Every change to the shared UI is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.5/#changes-ui-mcp) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.5.md#changes-ui-mcp)).
 
-- **xlsx:** Let slicer and timeline modifier clicks reach their handlers ([aebbe1c](https://github.com/ChristopherVR/ooxml/commit/aebbe1cddd997ea5aeb0d23a936598f92039e7d6))
-- **visio:** Ignore drops that carry no file list ([8b092a0](https://github.com/ChristopherVR/ooxml/commit/8b092a0b7da67e3cc8b478ec67372a0827e96a59))
-- **ui:** Preserve selection pane highlights in forced colors ([fcd8f85](https://github.com/ChristopherVR/ooxml/commit/fcd8f85abb2987460fe56c3338f69551d6b87137))
-- **xlsx:** Raise open form controls above worksheet drawings ([3d66252](https://github.com/ChristopherVR/ooxml/commit/3d66252c93ace5e16c2872c08c53934e520c0137))
-- **docx:** Drop ribbon helpers the mailings tab no longer uses ([bbea5a1](https://github.com/ChristopherVR/ooxml/commit/bbea5a199d57610f8ece95081869c504335ae584))
-- **pptx:** Use shared controls in picture dialogs ([3bf14b4](https://github.com/ChristopherVR/ooxml/commit/3bf14b43793e75b79b38423d457b6872e8b389d8))
-- **pptx:** Build the picture ribbon on office element ([fa15013](https://github.com/ChristopherVR/ooxml/commit/fa15013b70dd5a1ab3fb76d0e10ac54a6508d83c))
-- **docx:** Register mailings recipient navigation actions ([6b0ad1b](https://github.com/ChristopherVR/ooxml/commit/6b0ad1b8ec396ff277f3c4a712ef8ed816280d8e))
-- **pptx:** Render picture ribbon controls before connection ([0b8c1b3](https://github.com/ChristopherVR/ooxml/commit/0b8c1b3afd1c3beed0f2cd8fa3763ba6e9dd39df))
-- **docx:** Name the mailings worker source after its built file ([3aad4fd](https://github.com/ChristopherVR/ooxml/commit/3aad4fdc597a119432116f3c1cdae7589c3ca134))
-- **pptx:** Keep the picture worker inert outside a worker ([b277270](https://github.com/ChristopherVR/ooxml/commit/b2772708d1e447ea1b5670620bc4f72b0adf46f5))
+### Behaviour changes
 
-### Performance
+- **Word view modes:** `viewMode` in `getNavigationProps()` and the `onViewModeChange` callback carry `DocumentView`, one of six views, instead of `'draft' | 'print'`; `DOCUMENT_VIEWS` and `isDocumentView` are exported from `ooxml-ui/docx` ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#word-view-modes-have-six-values)).
+- **Add-ins Store:** hidden until `setOfficeAddInStorefront` enables it, so Get Add-ins opens on My Add-ins; task panes run only after `setOfficeAddInRuntime` ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#the-add-ins-store-is-off-until-the-host-enables-it)).
+- **Ribbon layouts:** PowerPoint Home's Arrange moved into Drawing and its Comments group to the header button, Excel's Insert, PivotTable and Sparkline commands and Word's Insert order follow Microsoft 365, and Word and Excel show a Draw tab; every 2.1 ribbon ID still hides what it hid ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#ribbon-layouts-follow-microsoft-365)).
+- **Signed documents:** a document with a valid signature opens read-only with an Edit Anyway bar ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#new-host-services-are-off-until-you-supply-them)).
+- **On-demand code:** more of each editor loads from your origin on first use, so deploy every file of `dist` ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#more-code-loads-on-first-use)).
+- **Dependencies:** `emf-converter` is pinned to 5.0.1 ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#upgrade-the-packages-together)).
 
-- **xlsx:** Defer locale and chart tools at startup ([f23356c](https://github.com/ChristopherVR/ooxml/commit/f23356c61fbee8b0fa9003bfef3661506f965aa0))
-- **visio:** Index contextual ribbon sources once per render ([8016dea](https://github.com/ChristopherVR/ooxml/commit/8016dea1c6f5596e8fc14ae4fb823a3aabc11791))
+### Added
 
-### Refactor
+- **Shared:** the Office Add-ins dialog and its settings (`setOfficeAddInCatalog`, `setOfficeAddInStorefront`, `setOfficeAddInPreferences`, `setOfficeAddInMarketplaceResolver`, `setOfficeAddInRuntime`) with the pane client `connectOfficeAddIn`; the `office-ui-ink-canvas` and `office-ui-ink-pens` elements, Ink Replay and the Ink Equation dialog behind `setInkMathRecognizer`.
+- **Word:** the editor properties and binding props `mailMergeDataSource`, `emailProvider`, `onlineVideoHosts`, `onlineVideoSearch` (with `createYouTubeVideoSearch`), `buildingBlocksStore` (with `createBuildingBlocksStore` in `ooxml-ui/suite`) and `documentSigner`; `exportDocxPdf` now wraps `ooxml-core/docx/pdf-export`.
+- **Excel:** the `imageProvider` property and binding prop.
+- **PowerPoint:** `configurePptxDraw`, the docked Comments pane, Picture Layout and the progressive deck rules controller.
+- **Visio:** the stencil menus and dialogs, Edit Master, picture insertion for SVG, BMP, TIFF and EMF, and the `openEmbeddedDocument` file command.
 
-- **drawingml:** Share the insert shapes palette across products ([bc83e4f](https://github.com/ChristopherVR/ooxml/commit/bc83e4fec93f54174702433ae08314946ab2d503))
+### Fixed
 
-### Testing
+- **Focus and keyboard:** dialogs return focus to their openers across shadow roots, ribbon focus survives a group folding, folded groups restore from left to right with captions broken between words, and disabled commands expose their reason to assistive technology.
 
-- **docx:** Expect the body chart on page 2 in cell floats ([ff64226](https://github.com/ChristopherVR/ooxml/commit/ff64226b0f573c072d8c52ecf02419a4cad283d7))
-- **xlsx:** Wait for lazy locales before checking labels ([d794d02](https://github.com/ChristopherVR/ooxml/commit/d794d0297ef06eac010161bf96d0e005faaba6b4))
-- **xlsx:** Await german strings in registry and search tests ([befe278](https://github.com/ChristopherVR/ooxml/commit/befe278e98f0126c6e5ff80dd53d2cc2fed98858))
-- **ci:** Share vitest worker limits and balance unit shards ([1d6667b](https://github.com/ChristopherVR/ooxml/commit/1d6667b903f3387e16a641359c4d773b7991346e))
-- **ui:** Reuse the generated manifest across assertions ([5d1889f](https://github.com/ChristopherVR/ooxml/commit/5d1889f155f5b2158369af2e7ce2f0d6699f84f3))
-- **ci:** Refresh unit test timings after the suite split ([d3672fb](https://github.com/ChristopherVR/ooxml/commit/d3672fbe7b110fd7d96ef3cd0f29339d70795a4d))
+### Released together
+
+- [`ooxml-core` 2.5.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): the models, layout, writers and add-in validation these editors run on.
+- [`ooxml-mcp` 2.0.1](https://github.com/ChristopherVR/ooxml/blob/main/mcp/CHANGELOG.md): the combined MCP server, with its rewritten README.
+- [Word packages](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/CHANGELOG.md): the six `docx-*-viewer` bindings 2.1.0, which mount `<docx-editor>`, `docx-core` 2.0.1 and `docx-viewer-mcp` 2.0.1.
+- [Excel packages](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/CHANGELOG.md): the six Excel bindings 2.1.0, which mount `<xlsx-editor>`, `@christophervr/xlsx-core` 2.0.1 and `xlsx-viewer-mcp` 2.0.1.
+- [PowerPoint packages](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/CHANGELOG.md): the React, Vue, Angular and Svelte viewers 5.2.0, `pptx-vanilla-viewer` 4.2.0, `pptx-viewer-core` 5.0.1, `pptx-viewer-mcp` 3.0.1 and `@christophervr/pptx-viewer` 3.0.1, all on `ooxml-ui/pptx`.
+- [Visio packages 2.0.1](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/CHANGELOG.md): `visio-core`, the six `visio-*-viewer` bindings on `ooxml-ui/visio`, and `visio-viewer-mcp`.
+- [OpenTeams packages 2.0.1](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/CHANGELOG.md): the six `openteams-*-viewer` bindings, which mount `<teams-app>` from `ooxml-ui/teams`, and `openteams-server`.
 
 ## [2.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.1.2) - 2026-11-25
 

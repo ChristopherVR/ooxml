@@ -4,6 +4,27 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
+## Unreleased
+
+<!-- release-notes: 2.5 -->
+
+_Releases: openteams-react-viewer@2.0.1, openteams-vue-viewer@2.0.1, openteams-angular-viewer@2.0.1, openteams-svelte-viewer@2.0.1, openteams-solid-viewer@2.0.1, openteams-vanilla-viewer@2.0.1, openteams-server@2.0.1_
+
+Every OpenTeams package moves to 2.0.1, released with `ooxml-core` 2.5.0 and `ooxml-ui` 2.5.0. Workspace ids may now be as long as the 128-character room limit, the reference server's `/health` body no longer lists its maintenance hooks, and the READMEs of the bindings and the server were rewritten to say what each package does, what it does not do and what it sends over the network. The bindings keep their component and hook APIs, the protocol is unchanged, and OpenTeams stays in beta. There is nothing to migrate.
+
+**[Introducing OOXML 2.5](https://christophervr.github.io/ooxml/releases/2.5/)** tells the story of this release. Every change to OpenTeams is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.5/#changes-openteams) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.5.md#changes-openteams)).
+
+### Packages
+
+- [`openteams-react-viewer` 2.0.1](packages/react/CHANGELOG.md)
+- [`openteams-vue-viewer` 2.0.1](packages/vue/CHANGELOG.md)
+- [`openteams-angular-viewer` 2.0.1](packages/angular/CHANGELOG.md)
+- [`openteams-svelte-viewer` 2.0.1](packages/svelte/CHANGELOG.md)
+- [`openteams-solid-viewer` 2.0.1](packages/solid/CHANGELOG.md)
+- [`openteams-vanilla-viewer` 2.0.1](packages/vanilla/CHANGELOG.md)
+- [`openteams-server` 2.0.1](server/CHANGELOG.md)
+- Released with them: [`ooxml-core` 2.5.0](../../src/core/CHANGELOG.md) and [`ooxml-ui` 2.5.0](../../src/ui/CHANGELOG.md)
+
 ## 2026-11-21
 
 <!-- release-notes: 2.0 -->

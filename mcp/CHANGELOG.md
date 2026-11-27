@@ -3,6 +3,23 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@2.0.1) - Unreleased
+
+<!-- release-notes: 2.5 -->
+
+The combined server's tools, schemas and bounds are unchanged in this release; this version ships its rewritten README, which says what the server does, what it does not do and what it sends over the network. It is published against `ooxml-core` 2.5.0, whose `ooxml-core/automation` definitions it runs, so the documents its tools save gain that release's writer fixes. Install it with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md) has nothing to change for MCP servers.
+
+**[Introducing OOXML 2.5](https://christophervr.github.io/ooxml/releases/2.5/)** tells the story of this release. Every change to the shared UI and MCP packages is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.5/#changes-ui-mcp) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.5.md#changes-ui-mcp)).
+
+### Released together
+
+- [`ooxml-core` 2.5.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): defines every tool, its schema and its bounds in `ooxml-core/automation`.
+- [`docx-viewer-mcp` 2.0.1](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/mcp/CHANGELOG.md): the Word tools.
+- [`xlsx-viewer-mcp` 2.0.1](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/mcp/CHANGELOG.md): the Excel tools.
+- [`visio-viewer-mcp` 2.0.1](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/mcp/CHANGELOG.md): the Visio tools.
+- [`pptx-viewer-mcp` 3.0.1](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/tools/CHANGELOG.md): the PowerPoint tools, which now report their own package version.
+- [`ooxml-ui` 2.5.0](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/CHANGELOG.md): the editors whose assistants run the same tool definitions on an open document.
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->

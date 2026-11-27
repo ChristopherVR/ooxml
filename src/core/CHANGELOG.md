@@ -3,67 +3,51 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [2.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.2.0) - 2026-11-26
+## [2.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.5.0) - Unreleased
 
-### Features
+<!-- release-notes: 2.5 -->
 
-- **xlsx:** Localize insert function descriptions in every locale ([2386e13](https://github.com/ChristopherVR/ooxml/commit/2386e1367395e88899b318c827780edf680a6ae7))
-- **xlsx:** Translate the newer insert function descriptions ([38d2141](https://github.com/ChristopherVR/ooxml/commit/38d2141b9ad58a418d08a8a36bc4378b55b04327))
-- **xlsx:** Add insert and page layout ribbon authoring ([ceb43a2](https://github.com/ChristopherVR/ooxml/commit/ceb43a28739e7bf82d2146c796e2cdd90e5dc33c))
-- **visio:** Insert svg, bmp, tiff and bounded emf pictures ([5a9f3c5](https://github.com/ChristopherVR/ooxml/commit/5a9f3c5e2394a974b5391578c422bccc42e6145f))
-- **docx:** Create and edit Word styles ([af13684](https://github.com/ChristopherVR/ooxml/commit/af13684eadae7ca4d67174dba468986e73afdd7e))
-- **docx:** Add a headless word mail merge engine ([8856a14](https://github.com/ChristopherVR/ooxml/commit/8856a14b36924e1e760b4661f4fdecb162089b73))
-- **docx:** Enable document design galleries and defaults ([efeb0d6](https://github.com/ChristopherVR/ooxml/commit/efeb0d6b4384bd5ca9cdc6cec8accac3a2742657))
-- **docx:** Enable the mailings ribbon workflow ([d471275](https://github.com/ChristopherVR/ooxml/commit/d471275f03cdb4c76101d9757efc75bfc1e1dda6))
-- **math:** Add excel equations and visio equation previews ([39a38b6](https://github.com/ChristopherVR/ooxml/commit/39a38b64a207fffd9d751d066a0ded87028df929))
-- **xlsx:** Add pivot charts and recommended pivot tables ([927d085](https://github.com/ChristopherVR/ooxml/commit/927d085027d31fc9e7caa43330a7e84f395c1ee2))
-- **visio:** Support connector copies, drops and obstacle reroutes ([10508da](https://github.com/ChristopherVR/ooxml/commit/10508dac84b251dfea75e4080339dcd29d92809b))
-- **pptx:** Add shared picture format editing commands ([7acd30a](https://github.com/ChristopherVR/ooxml/commit/7acd30a9ea9d1bcb95a33c41b78140ed6142d5b0))
+This release fills in the Office models behind the new Word, Excel, PowerPoint and Visio ribbons. Word gains a headless mail merge (`ooxml-core/docx/mail-merge`, which also fills one template from values with `listMergeFields` and `mergeFields`), Save as PDF in Node without the editor (`ooxml-core/docx/pdf-export`, on the vector writer `ooxml-core/pdf/write` that PowerPoint and Visio share), document design, styles, reference fields, equations, ink and package signing. Excel gains PivotCharts, recommended PivotTables, rich values, in-cell pictures and ink; PowerPoint native animation timing, picture edits and progressive slide previews; Visio stencil authoring, new picture formats and embedded objects; and `ooxml-core/automation/add-ins` validates local Office add-in manifests. Saves can be made reproducible byte for byte, new files name their fonts through the theme, and the writer bugs that generating the twelve sample files found are fixed. Version 2.2.0 was prepared on 2026-11-26 but never published; its changes are part of this release. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md) gives the before and after for the one breaking change and each behaviour change.
 
-### Bug Fixes
+**[Introducing OOXML 2.5](https://christophervr.github.io/ooxml/releases/2.5/)** tells the story of this release. Every change to ooxml-core is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.5/#changes-core) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.5.md#changes-core)).
 
-- **docx:** Match Word line wrapping in the reported documents ([b2b0501](https://github.com/ChristopherVR/ooxml/commit/b2b050193e6b0c98ca54b56d6d4a244129d40bb2))
-- **docx:** Move paragraph to next page when float crosses bottom margin ([02d9710](https://github.com/ChristopherVR/ooxml/commit/02d971019f87b8f03e323d8fc380241b3240381f))
-- **chart:** Shift cells and shrink table on row and series removal ([6d581bd](https://github.com/ChristopherVR/ooxml/commit/6d581bd4d1df8bdceb43092c93edda94898232a0))
-- **xlsx:** Keep the reviewed FILTERXML description translations ([9382059](https://github.com/ChristopherVR/ooxml/commit/938205949c20b6750dc665487a734bae4465d117))
-- **pptx:** Sync picture source and removal state with peers ([ba919ac](https://github.com/ChristopherVR/ooxml/commit/ba919ac34e76987ba91f8d20b4898d9df0bb020a))
-- **docx:** Register mailings recipient navigation actions ([6b0ad1b](https://github.com/ChristopherVR/ooxml/commit/6b0ad1b8ec396ff277f3c4a712ef8ed816280d8e))
-- **xlsx:** Drop a removed pivot source when writing an edited chart ([2ebb883](https://github.com/ChristopherVR/ooxml/commit/2ebb88363e8aa4114343a6939c0cf28725809f57))
+### Breaking changes
 
-### Performance
+- **`ooxml-core/xlsx/ui` string tables:** `COMMAND_TABLES`, `commandStrings` and the ten `*_STRINGS` command tables are no longer exported. The French, German, Spanish and Simplified Chinese dictionaries load on demand: await `loadEditorStrings(locale)`, then use `translate` or `STRINGS`, which read English until the language has loaded ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#excel-command-string-tables-moved-behind-loadeditorstrings)).
 
-- **xlsx:** Defer locale and chart tools at startup ([f23356c](https://github.com/ChristopherVR/ooxml/commit/f23356c61fbee8b0fa9003bfef3661506f965aa0))
-- **xlsx:** Reuse paste setup and chart save validation ([a983f7d](https://github.com/ChristopherVR/ooxml/commit/a983f7d24ba60a7dfa6f236433422ae120410738))
-- **visio:** Reuse stencil bytes and streamline xml checks ([56f4072](https://github.com/ChristopherVR/ooxml/commit/56f4072c1a34495d7f5f1004c3040a639f80b892))
-- **docx:** Copy plain paragraph layouts directly ([01bfeea](https://github.com/ChristopherVR/ooxml/commit/01bfeea0aa973d7d01c2abba59d268b3f7b9b2de))
-- **pptx:** Reuse parsed chart style definitions ([8c1feca](https://github.com/ChristopherVR/ooxml/commit/8c1fecadd661e66c97b5a2cd7e4ebf6f205f3bb7))
-- **pptx:** Reuse relationships during save part binding ([ca3d21c](https://github.com/ChristopherVR/ooxml/commit/ca3d21cb9165ec462a45e3f8de33a9ba10d561c2))
-- **pptx:** Scan smartart text order in one pass ([15444c2](https://github.com/ChristopherVR/ooxml/commit/15444c2d3e6be3adcf9d9d53ec65ce54ee9fbf0c))
-- **xml:** Avoid allocating arrays for first child lookup ([d95c79a](https://github.com/ChristopherVR/ooxml/commit/d95c79af01f944fea9f0ef11241d0e2a9d49ab64))
-- **opc:** Retain compressed media and unchanged zip entries ([c20a088](https://github.com/ChristopherVR/ooxml/commit/c20a0889aebf0bcf9e1062a8acac517dbe1798cd))
-- **pptx:** Reuse parsed template, theme and chart xml ([bcedde8](https://github.com/ChristopherVR/ooxml/commit/bcedde8266cfa1690b73194dce927b7c04a43eec))
-- **pptx:** Hash sampled slide payloads directly ([3b5eb6d](https://github.com/ChristopherVR/ooxml/commit/3b5eb6d439f7bd5f3cc3b2006b870264f712e24d))
-- **pptx:** Keep deflate level 6 for new and edited parts ([0173788](https://github.com/ChristopherVR/ooxml/commit/0173788bef28a24918dd99869307b51ca904996d))
+### Behaviour changes
 
-### Refactor
+- **New files:** a new Word document saves a whole settings part with compatibility mode 15, the default theme and styles that refer to the theme fonts instead of naming Calibri; new workbooks, Visio drawings and chart workbooks take their fonts from `OFFICE_THEME_FONTS`, and every ZIP entry is dated 1980-01-01 ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#new-files-name-their-fonts-through-the-theme)).
+- **Ink:** saved ink states its brush width and height in centimetres; ink saved by 2.1 still reads back at its old width ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#ink-brush-widths-are-written-in-centimetres)).
+- **Visio recordsets:** an imported data recordset is numbered from 1 and writes its `_Visio_RowID_` column first, as Visio does ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#visio-recordsets-are-numbered-from-1)).
+- **Collaboration:** Excel's mapping shares PivotTables, in-cell pictures and ink, and Word shares Outline edits; a 2.1 client in the same room does not see them, so upgrade every client of a room together ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#more-is-shared-in-collaboration)).
+- **On-demand code:** Excel's non-English dictionaries, the mail merge fill functions, the InkML reader and writer and PowerPoint's legacy `.ppt` code and slide previews load on first use, so deploy every file of `dist` ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.5.md#more-code-loads-on-first-use)).
+- **Dependencies:** `xml-crypto` is no longer an optional peer; signature verification canonicalises XML itself.
 
-- **drawingml:** Share the insert shapes palette across products ([bc83e4f](https://github.com/ChristopherVR/ooxml/commit/bc83e4fec93f54174702433ae08314946ab2d503))
-- **docx:** Ship the mail merge engine as its own subpath ([726891e](https://github.com/ChristopherVR/ooxml/commit/726891e223b386bc9cd32a64517dd098ca2b2523))
+### Added
 
-### Testing
+- **Subpaths:** `ooxml-core/docx/mail-merge`, `ooxml-core/docx/pdf-export`, `ooxml-core/pdf/write` and `ooxml-core/automation/add-ins`.
+- **Word:** mail merge with CSV, TSV, `.xlsx` and host recipients read in slices (up to 100,000 records), Word's merge fields, envelopes, labels and email; Save as PDF in Node with text measured from the font files (`createFontFileMeasurer`), kerning and Windows line heights; style creation and editing, document design and `.thmx` themes, index, citation, bibliography and table of authorities fields, drawing arrangement, Word ink, Document Property controls, building blocks shared between documents, signature lines, web video, tracked Outline moves, Draw Table and Eraser grid edits, and legacy VML ink drawn read only.
+- **Signing and saving:** `signature.signPackage` writes an Office XML signature (XAdES-BES) through a host `PackageSigner`, and `signature.webCryptoPackageSigner` wraps a Web Crypto key; `ReproducibleSaveOptions` and `seededIdSource` make saves reproducible.
+- **Excel:** PivotCharts, recommended PivotTables, PivotTable styles and layouts, rich values, in-cell pictures, linked data cards, `IMAGE()` through `createFetchImageProvider`, shapes, text boxes, notes, headers and footers, page setup, drawing arrangement, chart shape and WordArt formats, and Excel ink.
+- **PowerPoint:** native animation timing edits and the Animation Painter's template, picture edits, pictures into a picture SmartArt layout, SmartArt formatting reset, progressive slide previews and a formattable second value axis on a new chart.
+- **Visio:** stencil authoring and `.vssx` saving, Edit Master formatting, Visio's handles on built-in masters, SVG, BMP, TIFF and EMF pictures, embedded OLE objects drawn from their previews, connector copies, drops, reroutes and parallel spacing.
+- **Shared:** one InkML model, reader and writer for Word, Excel and PowerPoint, the picture and shape style catalogues and theme gallery, linear equation build-up and galleries in `ooxml-core/math`, and TrueType kerning and vertical metrics in `ooxml-core/text`.
 
-- **xlsx:** Render equations in the fixture integration sweep ([094a5ec](https://github.com/ChristopherVR/ooxml/commit/094a5ec87b0447626c780b65e9beff77606a006b))
-- **xlsx:** Record the pivot chart public exports ([9bca349](https://github.com/ChristopherVR/ooxml/commit/9bca3497be5df0af77f003228c4ca2fa523aa178))
-- **xlsx:** Reuse chart and integration fixture setup ([6be13d9](https://github.com/ChristopherVR/ooxml/commit/6be13d987dbb98810b082383641c13aa68b1a9d6))
-- **teams:** Wait for observable client activity ([5ba000f](https://github.com/ChristopherVR/ooxml/commit/5ba000fd82f92e8ba11809bdf9d4b2a976fc7f8b))
-- **pptx:** Reuse fixture work and split integration sweeps ([c23c720](https://github.com/ChristopherVR/ooxml/commit/c23c72070f97636539c9d20015a1f0c8c9efe186))
-- **pptx:** Benchmark load and save on committed decks ([8c0918b](https://github.com/ChristopherVR/ooxml/commit/8c0918bf7139ce003cbbc93d54f58b82e6511bbe))
-- **ci:** Share vitest worker limits and balance unit shards ([1d6667b](https://github.com/ChristopherVR/ooxml/commit/1d6667b903f3387e16a641359c4d773b7991346e))
-- **ci:** Refresh unit test timings after the suite split ([d3672fb](https://github.com/ChristopherVR/ooxml/commit/d3672fbe7b110fd7d96ef3cd0f29339d70795a4d))
+### Fixed
 
-### Styling
+- **Word layout:** line wrapping matches Word 16 on the reported documents, contextual spacing drops only the flagged paragraph's space (#359) and multiple line spacing puts its extra space below the text (#360), and floats, table style formatting and paragraph borders follow Word's rules.
+- **Writers:** a new Word document's numbering part, text boxes, repeating section controls and section break borders; a combination chart's groups, legend-free and lineless charts and the embedded workbook after a row or series is removed; note boxes and slicer fallback ids in Excel; SmartArt arrows; and Visio master names, theme extensions and text field formats.
 
-- **xlsx:** Format the insert equation translations ([6b8d314](https://github.com/ChristopherVR/ooxml/commit/6b8d3149234336d4e99fe8a181eaf1c0828e140f))
+### Released together
+
+- [`ooxml-ui` 2.5.0](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/CHANGELOG.md): the ribbons, dialogs, panes and Draw tabs built on these models.
+- [`ooxml-mcp` 2.0.1](https://github.com/ChristopherVR/ooxml/blob/main/mcp/CHANGELOG.md): the combined MCP server, with its rewritten README.
+- [Word packages](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/CHANGELOG.md): the six `docx-*-viewer` bindings 2.1.0, `docx-core` 2.0.1 (a re-export of `ooxml-core/docx`) and `docx-viewer-mcp` 2.0.1.
+- [Excel packages](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/CHANGELOG.md): the six Excel bindings 2.1.0, `@christophervr/xlsx-core` 2.0.1 (a re-export of `ooxml-core/xlsx`) and `xlsx-viewer-mcp` 2.0.1.
+- [PowerPoint packages](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/CHANGELOG.md): the React, Vue, Angular and Svelte viewers 5.2.0, `pptx-vanilla-viewer` 4.2.0, `pptx-viewer-core` 5.0.1, `pptx-viewer-mcp` 3.0.1 and `@christophervr/pptx-viewer` 3.0.1, all built on `ooxml-core/pptx`.
+- [Visio packages 2.0.1](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/CHANGELOG.md): `visio-core`, the six `visio-*-viewer` bindings and `visio-viewer-mcp`, built on `ooxml-core/visio`.
+- [OpenTeams packages 2.0.1](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/CHANGELOG.md): the six `openteams-*-viewer` bindings and `openteams-server`.
 
 ## [2.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.1.2) - 2026-11-25
 
