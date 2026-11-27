@@ -11,6 +11,7 @@
 		"fast-xml-parser": "^5.12.1",
 		"jszip": "^3.10.2",
 		"pptx-viewer-core": "workspace:*",
+		"pptx-viewer-shared": "workspace:*",
 		"three": "^0.187.0"
 	},
 	"devDependencies": {

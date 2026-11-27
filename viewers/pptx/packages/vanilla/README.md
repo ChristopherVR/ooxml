@@ -18,11 +18,11 @@ npm install pptx-vanilla-viewer
 
 There are no required peers; the engine comes with it (`ooxml-core` and `ooxml-ui` are dependencies). Optional extras:
 
-| For                                  | Add                                                            |
-| ------------------------------------ | -------------------------------------------------------------- |
-| Real-time collaboration              | `yjs` (`y-websocket` and `y-webrtc` are optional dependencies) |
-| 3D models, 3D SmartArt and 3D charts | `three` 0.187 (an optional peer of `ooxml-ui`)                 |
-| The AI assistant panel               | `ai` (6 or 7)                                                  |
+| For                                  | Add                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------ |
+| Real-time collaboration              | `yjs` (`y-websocket` and `y-webrtc` are optional dependencies)           |
+| 3D models, 3D SmartArt and 3D charts | nothing: `three` is an optional dependency that npm installs when it can |
+| The AI assistant panel               | `ai` (6 or 7)                                                            |
 
 Without them those features stay off and everything else works.
 

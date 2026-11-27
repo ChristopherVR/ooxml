@@ -16,7 +16,7 @@ It is a thin entry point over `ooxml-core/pptx` and the engine behind the [React
 npm install pptx-viewer-core
 ```
 
-Reading, editing, saving and password protection need nothing else (`ooxml-core` is its one dependency; encryption runs on the Web Crypto API). Node signature signing and verification through `pptx-viewer-core/signature-node` need the optional peers `node-forge` 1, `xml-crypto` 6 and `@xmldom/xmldom` 0.8 or 0.9.
+Reading, editing, saving and password protection need nothing else (`ooxml-core` is its one dependency; encryption runs on the Web Crypto API). Node signature signing and verification through `pptx-viewer-core/signature-node` need the optional peer `node-forge` 1.
 
 ## Quick start
 
