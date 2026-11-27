@@ -5,12 +5,13 @@ Design galleries. The elements are DOM only and hold no document logic. A produc
 events onto its own chart model, and the neutral chart operations live in `src/core/chart`
 (`chart/edit` for the typed intents and the style, palette and quick-layout presets).
 
-| Element or export                                     | What it does                                                                                                                       |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `<office-ui-chart-format-pane>`                       | The Format task pane (Chart Options and Text Options, element picker, collapsible sections). Accepts a `source` or a `chartSpace`. |
-| `<office-ui-chart-data-sheet>`                        | The Edit Data table: categories down the first column, series across the header, paste from spreadsheets.                          |
-| `<office-ui-chart-picker>` (`dialog/chart-picker.ts`) | The body of Insert Chart and Change Chart Type. It is the picker the product's dialog wraps; the dialog owns OK and Cancel.        |
-| Chart Design galleries (`design-galleries.ts`)        | Chart Styles, Change Colors and Quick Layout as `office-ui-gallery` sections.                                                      |
+| Element or export                                     | What it does                                                                                                                                                              |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<office-ui-chart-format-pane>`                       | The Format task pane (Chart Options and Text Options, element picker, collapsible sections). Accepts a `source` or a `chartSpace`.                                        |
+| `<office-ui-chart-data-sheet>`                        | The Edit Data table: categories down the first column, series across the header, paste from spreadsheets.                                                                 |
+| `<office-ui-chart-picker>` (`dialog/chart-picker.ts`) | The body of Insert Chart and Change Chart Type. It is the picker the product's dialog wraps; the dialog owns OK and Cancel.                                               |
+| `<office-ui-chart-ex-options>`                        | Series and axis options for the newer chart families (ChartEx: waterfall, funnel, treemap and the rest). Takes a `space`, fires `office-chart-ex-edit` with `{ action }`. |
+| Chart Design galleries (`design-galleries.ts`)        | Chart Styles, Change Colors and Quick Layout as `office-ui-gallery` sections.                                                                                             |
 
 ## Format pane
 
@@ -29,7 +30,7 @@ The `source.slots.fill` entry leaves the fill section to the host: the host's li
 that `slot` name is shown in its place. `source.picker` and `source.textOptions` change the element
 picker's caption and whether Text Options is offered.
 
-Captions are the `chartFormat.*` keys. `locale` (`en`, `fr`, `de`, `es`, `zh-CN`, or any BCP 47 tag
+Captions are the `chartFormat.*` keys. `locale` (`en`, `fr`, `de`, `es`, `zh-CN`, `ja`, `ko`, or any BCP 47 tag
 that maps onto one of them) selects the pane's own dictionary, and `translateLabel(key, params,
 fallback)` overrides the captions a product words differently; it wins wherever it knows a key. The
 dictionary is also exported on its own, so a product can build its dictionary on it, from
@@ -51,7 +52,7 @@ is not a number is refused and the cell restored.
 `chartStyleGallerySection`, `chartColorGallerySections` and `chartQuickLayoutGallerySection` return
 DOM-free section data with English labels and SVG tiles (from `gallery-tiles.ts`). A product maps
 them onto its gallery control, translates the label templates, and applies a pick through
-`applyChartStylePreset`, `applyChartColorPalette` or `applyChartQuickLayout` (in `src/core/chart`), or
+`applyChartStylePreset`, `applyChartColorPalette` or `applyChartQuickLayout` (in `src/core/chart/edit`), or
 its own mapping of those operations. The tile size constants (`CHART_STYLE_TILE`, `CHART_COLOR_TILE`,
 `CHART_LAYOUT_TILE`) are what the galleries use.
 
@@ -61,8 +62,9 @@ its own mapping of those operations. The tile size constants (`CHART_STYLE_TILE`
   (`format-pane-fields.ts`, `-fill-line.ts`, `-axis.ts`, `-effects.ts`, `-text.ts`, `-3d.ts`,
   `-space.ts`), the typed intents (`format-pane-intent.ts`) and the translations.
 - `data-sheet*.ts`: the element, its keyboard model (`data-sheet-keys.ts`) and labels.
+- `chartex-options*.ts`: the ChartEx options element, its sections and translations.
 - `design-galleries.ts`, `gallery-tiles.ts`: the Chart Design gallery sections and tiles.
 
 Each element is a Lit class on `OfficeElement` with its CSS next to it, as described in
-`src/ui/README.md` ("How the elements are built"). The PowerPoint wrappers (`pptx-ui-chart-format-pane`,
+[the ooxml-ui README](../../README.md#how-the-elements-are-built). The PowerPoint wrappers (`pptx-ui-chart-format-pane`,
 `pptx-ui-chart-data-sheet`, `pptx-ui-insert-chart-dialog`) are in `src/ui/src/pptx/web-components`.

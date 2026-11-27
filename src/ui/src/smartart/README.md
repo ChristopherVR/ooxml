@@ -42,13 +42,12 @@ are approximated and 3D is flattened; the render event lists each one.
 
 ## Files
 
-- `smartart.ts`, `smartart-svg.ts`: the drawing element and its SVG renderer.
+- `smartart.ts`, `smartart-svg.ts`: the drawing element and its SVG renderer, with its painting helpers (`smartart-geometry.ts`, `-paint.ts`, `-effects.ts`, `-3d.ts`, `-picture.ts`, `-text.ts`).
 - `smartart-picker.ts`, `smartart-picker.css`: the Insert SmartArt picker.
 - `smartart-text-pane.ts`, `smartart-text-pane-tools.ts`, `text-pane-controller.ts`: the text pane and
   its controller.
-- `galleries.ts`, `tiles.ts`, `excel-appearance.json`: the Design galleries, their tiles and the Excel
-  appearance table.
+- `galleries.ts`, `tiles.ts`, `definition-tiles.ts`, `excel-appearance.json`: the Design galleries,
+  their tiles and the Excel appearance table.
 
-Each element is a Lit class on `OfficeElement`, as described in `src/ui/README.md` ("How the elements
-are built"). The PowerPoint wrappers (`pptx-ui-smartart-text-pane`, `pptx-ui-insert-smartart-dialog`)
+Each element is a Lit class on `OfficeElement`, as described in [the ooxml-ui README](../../README.md#how-the-elements-are-built). The PowerPoint wrappers (`pptx-ui-smartart-text-pane`, `pptx-ui-insert-smartart-dialog`)
 are in `src/ui/src/pptx/web-components`.

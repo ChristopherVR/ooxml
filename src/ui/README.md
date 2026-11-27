@@ -17,18 +17,18 @@
 
 </div>
 
-`ooxml-ui` is the DOM layer of [OOXML](https://github.com/ChristopherVR/ooxml#readme). It holds the shared Office controls (Lit custom elements with shadow roots, typed events and one `--office-*` token theme) and the product editors themselves as `ooxml-ui/<product>` subpaths. All document logic lives in [`ooxml-core`](https://www.npmjs.com/package/ooxml-core); this package only draws and reports what the user does.
+`ooxml-ui` is the DOM layer of [ooxml](https://github.com/ChristopherVR/ooxml#readme): the shared Office controls (Lit custom elements with shadow roots, typed events and one `--office-*` token theme) and the product editors as `ooxml-ui/<product>` subpaths. All document logic lives in [`ooxml-core`](https://www.npmjs.com/package/ooxml-core); this package only draws and reports what the user does.
 
-> **Using an editor? You do not need to install this package.** It is a regular dependency of every
-> published editor package (`docx-*-viewer`, `xlsx-*-viewer`, `pptx-*-viewer`, `visio-*-viewer` and
-> `openteams-*-viewer`), which register the elements for you. Install `ooxml-ui` directly only to
-> build your own Office-style UI from its controls, or to write a binding of your own.
+> **Using an editor? You do not need to install this package.** Every editor package
+> (`docx-*-viewer`, `xlsx-*-viewer`, `pptx-*-viewer`, `visio-*-viewer` and `openteams-*-viewer`)
+> depends on it and registers the elements for you. Install `ooxml-ui` directly to build your own
+> Office-style UI from its controls, to mount an editor element without a framework package, or
+> to write a binding of your own.
 
 - **Office behaviour built in.** Ribbon tabs and groups with KeyTips, Tell me, backstage, menus with submenus, galleries, colour pickers, dialogs that keep focus, and F6 between the regions of every editor.
-- **One theme for everything.** Every colour, length and duration is an `--office-*` token with a default, so the elements render with or without the installed theme, follow a container's `data-office-theme="light" | "dark" | "auto"`, and handle forced colours and touch targets.
-- **Accessible by contract.** Accessible names contain the visible text, form boundaries reach 3:1 contrast, split button arrows meet the 24 pixel target size, and every change is checked with axe and keyboard tests in a real browser.
-- **Framework neutral.** Plain custom elements that are SSR-safe to import, plus `ooxml-ui/bindings`, the kit the React, Vue and Solid bindings of every product are generated from.
-- **Signed, linked and shared content handled honestly.** `<office-ui-signature-status>` shows whether a signature verifies, PowerPoint waits for Enable Content before it fetches linked media, and refusals from collaboration peers are explained in the user's language.
+- **One theme for everything.** Every colour, length and duration is an `--office-*` token with a default, so the elements render with or without the installed theme and follow a container's `data-office-theme="light" | "dark" | "auto"`, forced colours and touch targets.
+- **Accessible by contract.** Accessible names contain the visible text, form boundaries reach 3:1 contrast, and every change is checked with axe and keyboard tests in a real browser.
+- **Framework neutral.** Plain custom elements that are safe to import during server rendering, plus `ooxml-ui/bindings`, the kit the React, Vue and Solid bindings of every product are built from.
 
 ## Install
 
@@ -36,7 +36,7 @@
 npm install ooxml-ui
 ```
 
-`lit` and `ooxml-core` come with it. `react`, `vue` and `solid-js` are optional peers for `ooxml-ui/bindings/react`, `/vue` and `/solid`; `three` for PowerPoint's 3D charts and models and `ai` for the PowerPoint assistant (`ooxml-ui/pptx/ai`) are optional too.
+`lit` and `ooxml-core` come with it. Optional peers: `react` (18 or newer), `vue` (3.5) and `solid-js` (1.9) for `ooxml-ui/bindings/react`, `/vue` and `/solid`; `three` for PowerPoint's 3D charts and models; `ai` for the PowerPoint assistant (`ooxml-ui/pptx/ai`).
 
 ## Quick start
 
@@ -65,51 +65,99 @@ For an application, prefer the editor package of your framework ([Word](https://
 
 ## Entries
 
-| Entry                           | Contents                                                                                                               |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `ooxml-ui`                      | everything below plus `registerOfficeUi()` and `OFFICE_UI_TAGS`                                                        |
-| `ooxml-ui/theme`                | `THEME_CSS`, `installOfficeUiTheme()` (tokens, dark mode, forced-colors, touch targets)                                |
-| `ooxml-ui/icons`                | icon registry (`registerIcon`, `getIcon`, `listIcons`) and `<office-ui-icon>`                                          |
-| `ooxml-ui/controls`             | button, checkbox, switch, select, ribbon group, toolbar, dialog, status bar and item, zoom slider, tab strip           |
-| `ooxml-ui/presence`             | `<office-ui-presence>` avatar stack for collaboration awareness                                                        |
-| `ooxml-ui/smartart`             | `<office-ui-smartart>` (draws a core `DiagramDrawing`), the SmartArt picker, text pane and Design galleries            |
-| `ooxml-ui/chart-format-locales` | the Chart Format pane's own translations (`CHART_FORMAT_STRINGS`), for a product dictionary to extend                  |
-| `ooxml-ui/teams`                | the Teams elements and `<teams-app>`                                                                                   |
-| `ooxml-ui/bindings`             | the framework binding kit; `/bindings/react`, `/vue` and `/solid` are its component factories                          |
-| `ooxml-ui/suite`                | browser document persistence the Office suite uses                                                                     |
-| `ooxml-ui/docx`                 | the Word editor and viewer elements (`<docx-editor>`)                                                                  |
-| `ooxml-ui/xlsx`                 | the Excel editor and viewer elements (`<xlsx-editor>`)                                                                 |
-| `ooxml-ui/visio`                | the Visio editor and viewer elements (`<visio-viewer>`)                                                                |
-| `ooxml-ui/pptx`                 | the PowerPoint renderer, editor and web components; also `/pptx/theme`, `/loader`, `/i18n`, `/ai`, `/dom`, `/onedrive` |
+| Entry                           | Contents                                                                                                                |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `ooxml-ui`                      | Everything below except the product editors, plus `registerOfficeUi()` and `OFFICE_UI_TAGS`.                            |
+| `ooxml-ui/theme`                | `THEME_CSS`, `OFFICE_TOKENS`, `installOfficeUiTheme()`, `applyOfficeLook()`, `shadcnBridge()` and `themeBridge()`.      |
+| `ooxml-ui/icons`                | The icon registry (`registerIcon`, `getIcon`, `listIcons`) and `<office-ui-icon>`.                                      |
+| `ooxml-ui/controls`             | Buttons, form controls, ribbon, menus, dialogs, status bar, backstage and the host services below.                      |
+| `ooxml-ui/presence`             | `<office-ui-presence>`, the avatar stack for collaboration awareness.                                                   |
+| `ooxml-ui/smartart`             | `<office-ui-smartart>`, the SmartArt picker, text pane and Design galleries.                                            |
+| `ooxml-ui/chart-format-locales` | The Chart Format pane's own translations (`CHART_FORMAT_STRINGS`), for a product dictionary to extend.                  |
+| `ooxml-ui/teams`                | The Teams elements and `<teams-app>`.                                                                                   |
+| `ooxml-ui/bindings`             | The framework binding kit; `/bindings/react`, `/vue` and `/solid` are its component factories.                          |
+| `ooxml-ui/suite`                | The browser document persistence the Office suite uses.                                                                 |
+| `ooxml-ui/docx`                 | The Word editor and viewer elements (`<docx-editor>`).                                                                  |
+| `ooxml-ui/xlsx`                 | The Excel editor and viewer elements (`<xlsx-editor>`).                                                                 |
+| `ooxml-ui/visio`                | The Visio editor and viewer elements (`<visio-viewer>`).                                                                |
+| `ooxml-ui/pptx`                 | The PowerPoint renderer, editor and web components; also `/pptx/theme`, `/loader`, `/i18n`, `/ai`, `/dom`, `/onedrive`. |
 
-Most entries declare an `import` and a `default` export condition, so CommonJS consumers on Node 20.19+ or 22.12+ load them through `require(esm)`; the `ooxml-ui/pptx` entries also declare a `require` condition for the CJS build.
+Most entries declare an `import` and a `default` condition, so CommonJS consumers on Node 20.19+ or 22.12+ load them through `require(esm)`; the `ooxml-ui/pptx` entries also ship a CommonJS build. `custom-elements.json` (the package's `customElements` field, also exported as `ooxml-ui/custom-elements.json`) lists every element with its attributes, properties and events for editor tooling.
 
-`installOfficeUiTheme()` installs one theme stylesheet in the document by default. Pass a
-`ShadowRoot` to install scoped mode and control rules inside an embedding app's shadow tree.
-`installOfficeUiThemeFor(element)` installs document defaults plus rules in every enclosing shadow
-root. Product canvases and `prepareOfficeUiBlock()` use this host-aware installation automatically;
-the latter checks again after native framework insertion. Theme attributes inside Angular shadow
-views and other shadow containers therefore work alongside inherited custom properties.
+## Theming
 
-Use semantic `--office-*` palette tokens on a shared ancestor to theme all controls. Derived
-tokens, such as `--office-select-background` or `--office-accent-ink`, are never declared by the
-theme: each control resolves them where it reads them, so overriding `--office-background` or
-`--office-accent` on any container also changes the selects and the accent text inside it. A host
-may still set a derived token itself, on `:root` or on any container.
+Put the shared `--office-*` tokens and `data-office-theme="light" | "dark" | "auto"` on a common ancestor of the editor and any standalone controls. Two editors on one page can use different modes, `auto` follows the system, and changing a token or the attribute never remounts an editor or touches document content (paper, cell fills and slide artwork stay as the file says).
 
-Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
-`register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
-with an incompatible build of this package. Hosts can set properties and define in either order. A
-property assigned to an element before its definition loads counts as written just after the
-element upgrades: it wins over the attributes the element had then, any later property or attribute
-write wins over it, and it is applied before the element first connects (so mount-time options
-such as `surfaceOnly` hold for the first build). For an element upgraded while detached with
-`customElements.upgrade()`, the rule holds for the shared elements once the current script ends,
-but the editors (`docx-editor`, `xlsx-editor`, `visio-viewer`) and other elements not built on
-`OfficeElement` apply the early value only when they first connect, so connect them before
-writing the same property or attribute again. Properties Lit declares on the shared elements
-follow Lit there: on an element upgraded while detached, the early value waits for its first
-render, which overrides a write made to the same property in the meantime.
+```html
+<section class="office-scope" data-office-theme="dark">
+	<!-- the editor and its standalone controls -->
+</section>
+```
+
+```css
+.office-scope {
+	--office-accent: #0d9488;
+	--office-accent-foreground: #ffffff;
+	--office-ring: #0f766e;
+	--office-font: 'Inter', system-ui, sans-serif;
+	--office-radius: 6px;
+}
+```
+
+- **Tokens.** `OFFICE_TOKENS` (from `ooxml-ui/theme`) is the single table of tokens and defaults: semantic colours (`--office-foreground`, `-background`, `-surface`, `-selected`, `-border`, `-accent`, `-ring`, `-danger`, ...), contrast roles (`--office-accent-ink`, `--office-control-border`), `--office-color-scheme`, and scales (`--office-space-*`, `--office-radius-*`, `--office-font-size-*`, `--office-control-height-*`, `--office-shadow-*`, `--office-duration-*`, `--office-z-*`). Derived tokens such as `--office-select-background` resolve where they are read, so overriding `--office-background` or `--office-accent` on a container also changes the controls inside it.
+- **Colour scheme.** The Word, Excel and Visio editors take their `color-scheme` from `--office-color-scheme`. A container that sets only CSS `color-scheme: dark` gets light editors; use `data-office-theme="dark"`, which sets both.
+- **Looks.** `data-office-look="cards"` (or `applyOfficeLook(element, 'cards')`) changes the chrome's shape, elevation and density, never a colour; PowerPoint uses it today. Put it on the document root when a product attaches floating menus to `body`.
+- **Shadow roots.** `installOfficeUiTheme()` installs one stylesheet in the document; pass a `ShadowRoot` to scope it, or use `installOfficeUiThemeFor(element)` for every enclosing shadow root. Product canvases and `prepareOfficeUiBlock()` do this for you.
+- **Product variables.** The products' own `--dve-*`, `--xve-*`, `--vv-*` and `--pptx-*` overrides still work and win for that product. `shadcnBridge(':host', '--dve-')` or `themeBridge(selector, map)` feed every `--office-*` colour from an existing variable set.
+
+The theme is separate from an Office document's embedded theme. The token map and style rules are recorded in [shared UI decisions](https://github.com/ChristopherVR/ooxml/blob/main/docs/ooxml-ui-plan.md).
+
+## Ribbon add-in tabs
+
+A host can add its own ribbon tabs after a product's tabs, as an Office add-in does. The tab is plain data, and the same descriptor works in every editor: `ribbonAddIns` is a property of `<docx-editor>`, `<xlsx-editor>` and `<visio-viewer>`, and a prop of every framework binding, PowerPoint's included.
+
+```ts
+import type { RibbonAddInTab } from 'ooxml-ui';
+
+const tab: RibbonAddInTab = {
+	id: 'reports',
+	label: 'Reports',
+	groups: [
+		{
+			label: 'Export',
+			commands: [
+				{ id: 'export', label: 'Export', icon: 'save', run: () => exportReport() },
+				{ id: 'options', label: 'Options', icon: 'settings', size: 'small' },
+				{ id: 'send', label: 'Send', items: [{ id: 'send-mail', label: 'By mail' }] },
+			],
+		},
+	],
+};
+editor.ribbonAddIns = [tab];
+editor.addEventListener('office-ribbon-add-in', (event) => {
+	const { tab, command } = event.detail; // 'reports', 'export'
+});
+```
+
+A command runs its `run` callback, then dispatches the bubbling, composed `office-ribbon-add-in` event; it never reaches the product's own command router. `size: 'small'` commands fill columns of three and `items` makes a drop-down. A tab whose id is empty, repeated or equal to a built-in tab is skipped, so an add-in cannot replace a product tab. Assigning a new array each render is cheap and never closes an open drop-down. The descriptor types are DOM-free and live in `ooxml-core/ribbon`. Products render the list with `syncRibbonAddIns(ribbon, tabs, options)`.
+
+`setOfficeAddInCatalog(editor, entries)` exposes trusted host commands in the shared Office Add-ins dialog (Get Add-ins, My Add-ins), and `setOfficeAddInStorefront(editor, ...)` turns on its Store pivot, which is off by default.
+
+## Framework binding kit
+
+`ooxml-ui/bindings` is the machinery every product's framework adapters share (Word, Excel, Visio and Teams), so a product binding only declares what is its own. A `BindingContract` lists each forwarded prop with its forwarding policy, each element event with its handler name and arguments, and the imperative handle; `bindElement(element, contract, handlers)` listens and forwards. `createReactBinding` (`/bindings/react`), `defineVueBinding` (`/vue`) and `createSolidBinding` (`/solid`) turn a contract into a component; Angular and Svelte components stay in each product because they need their compilers. The kit has no framework imports and touches no DOM at import. See the [binding kit guide](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/src/bindings/README.md).
+
+## PowerPoint renderer (`ooxml-ui/pptx`)
+
+- **DOM renderer.** `ooxml-ui/pptx/dom` renders a parsed slide without a framework: `loadPresentation()` resolves pictures and media through the core handler, and `renderSlideStage()` with `createDefaultRegistry()` draws a slide into a `Document` at the scale you ask for. The host owns navigation, media and playback; the renderer does not edit or collaborate on its own.
+- **Lifetimes.** Call `disposePptxRenderStage(stage)` before removing a stage (thumbnails and export stages too) and `revokeBlobUrls()` on the URLs `loadPresentation()` returned. `releasePptxRenderCaches()` empties the bounded render caches once every viewer sharing the module has closed.
+- **Fonts.** `buildFontCatalog` (also at `ooxml-ui/pptx/render/font-catalog`) builds the font picker rows; `includeWeightVariants: true` adds weight faces. See [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md#font-picker-weights).
+- **Symbol fonts.** When Wingdings or Symbol is missing, known characters map to Unicode with a bundled Noto Sans Symbols 2 subset (inline WOFF2, no request). It is an approximation; host CSP must allow `font-src data:`.
+- **Headless controllers.** Undo history, autosave and recovery, and the collaboration session are framework-free controllers (`getSnapshot()`, `subscribe()`, typed actions) that each binding adapts with one store adapter.
+
+## Host services
+
+`ooxml-ui/controls` (and the package root) export helpers product hosts reuse: `createLiveColorInput` for preview and commit colour transactions, `createDialogSession` for asynchronous submit and dismissal, the font services `buildFontCatalog`, `scanAvailableFontFamilies` and `createFontFaceScope`, and `createRecoveryScheduler`. Dispose font scopes and sessions when the host unmounts. For your own storage, use [`DocumentStorage` and `createStorageSession`](https://github.com/ChristopherVR/ooxml/blob/main/docs/storage-integrations.md); for OneDrive, [`ooxml-core/embedding/onedrive`](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md), with Microsoft sign-in supplied by the host.
 
 ## Elements
 
@@ -179,8 +227,8 @@ the close button; focus returns to the previous element on close.
 Chart and SmartArt editing elements (`office-ui-chart-format-pane`, `office-ui-chart-data-sheet`,
 `office-ui-chart-picker`, `office-ui-smartart-picker`, `office-ui-smartart-text-pane`) take the document
 data as properties and report each change as an event; they never write a model. Their events, the
-Chart Design galleries and the translations are described in `src/ui/src/chart/README.md` and
-`src/ui/src/smartart/README.md`.
+Chart Design galleries and the translations are described in the [chart elements README](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/src/chart/README.md) and the
+[SmartArt elements README](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/src/smartart/README.md).
 
 Setting a property never emits an event; only user activation does. Controls honour
 `prefers-color-scheme`, `forced-colors: active` (system colours and a visible focus ring) and
@@ -215,311 +263,6 @@ alongside `schemeColors`. Cached shape font references provide inherited text
 color and font; explicit run formatting takes precedence. Color transforms and
 alpha reuse the core DrawingML resolver, with unsupported transforms reported in
 `unappliedColorTransforms` on the render report.
-
-## Theming
-
-Use the shared `--office-*` CSS tokens on a common ancestor of the canvas and its standalone
-controls. `data-office-theme="light"`, `"dark"`, or `"auto"` works on the document root or a
-scoped container, so two editors on the same page can use different modes. `auto` follows the
-system colour scheme. Nested mode scopes retain inherited typography, spacing and radii.
-
-```html
-<section class="office-scope" data-office-theme="dark">
-	<!-- Mount the framework's standalone toolbar, canvas and other controls here. -->
-</section>
-```
-
-```css
-.office-scope {
-	--office-accent: #0d9488;
-	--office-accent-foreground: #ffffff;
-	--office-ring: #0f766e;
-	--office-font: 'Inter', system-ui, sans-serif;
-	--office-radius: 6px;
-}
-```
-
-Change the attribute or CSS tokens through your framework's normal bindings. Theme changes do
-not require remounting the editor. The semantic palette includes `--office-background` (fields
-and application background), `--office-surface` (toolbar and panel surfaces), `--office-foreground`,
-`--office-muted-foreground`, `--office-border`, `--office-selected`, and the accent and focus tokens
-above. Document paper, cell fills and slide artwork remain document content.
-
-### Looks
-
-`data-office-look` on the same scope as `data-office-theme` picks the chrome's shape, elevation
-and density; it never changes a colour. Without it the chrome keeps its flat default look.
-`data-office-look="cards"` (opt-in; the PowerPoint editor today) floats the ribbon, thumbnail rail,
-canvas, notes and side pane as rounded, shadowed cards 12px apart on a workspace background, turns
-the status bar's view switcher and zoom into pills, rounds menus, and gives the Format pane 36px
-section headings, 32px fields and a segmented tab strip. `applyOfficeLook(element, 'cards')` from
-`ooxml-ui/theme` sets it; switching keeps mounted editors as they are. The look's tokens
-(`--office-shadow-card`, `--office-shadow-card-strong`, `--office-card-border`,
-`--office-radius-surface`, `--office-radius-toolbar`, `--office-radius-control`,
-`--office-workspace-gap`, `--office-side-pane-width`, `--office-pane-heading-height`,
-`--office-pane-field-height`) have light and dark values; a host may also set
-`--office-workspace` for the background behind the cards. Put the attribute on the document root
-when a product attaches floating menus to `body`.
-
-Library-supplied native building blocks opt into `BUILDING_BLOCKS_CSS` through
-`prepareOfficeUiBlock(element, kind, product)`, exported by `ooxml-ui/theme`. It installs the shared
-theme in the element's owner document and marks only that control root with `data-office-block`
-and `data-office-product`. Hosts' own unmarked controls are unaffected. Shadow-root controls
-inherit the same tokens. The installed stylesheet is idempotent and supports forced colours and
-touch targets.
-
-Existing product overrides (`--dve-*`, `--xve-*`, `--vv-*`, `--pptx-*`, and legacy theme options)
-remain compatibility inputs. An explicit product override wins for that product. For a uniform
-composition, put the shared tokens and mode on the common ancestor instead of configuring only
-the canvas: a canvas's local theme cannot change the CSS inherited by a sibling toolbar. This UI
-theme contract is separate from an Office document's embedded theme.
-
-## Design tokens
-
-Every control is token based: no colour, length, radius, font size, shadow, duration or layer
-is written literally. `OFFICE_TOKENS` (from `ooxml-ui/theme`) is the single table of
-`--office-*` tokens and their defaults; controls read them through `tok(name)`, which expands to
-`var(--office-…, <default>)`, so they render correctly with or without the installed theme.
-`THEME_CSS` declares every literal default on `:root`, plus dark-mode and forced-colours values;
-a token whose default reads another token (`isDerivedToken`) resolves where it is read instead.
-Override any token on `:root` or on any container to retheme or resize the suite:
-
-- semantic colours: `--office-foreground`, `-background`, `-surface`, `-selected`, `-border`,
-  `-accent`, `-accent-foreground`, `-ring`, `-danger`, `-warning`, `-info`, `-popover`, `-overlay`,
-  `-notice-*`, `-paper`;
-- contrast roles: `--office-accent-ink` (the accent as text, at least 4.5:1 on the background and
-  selected fills; by default the accent itself under `color-scheme: light` and a lighter tint of
-  it under `color-scheme: dark`), `--office-teams-brand-ink` (the same for the Teams brand)
-  and `--office-control-border` (form control boundaries, at least 3:1; decorative dividers keep
-  `--office-border`). `contrastRatio` and `readableTextColor` in `ooxml-core/color` check a pair;
-- colour scheme: `--office-color-scheme` (`light` by default, `dark` in the theme's dark scopes)
-  is the scheme as a value. The Word, Excel and Visio editors set their own `color-scheme` from
-  it, so the accent ink inside them is read with the scheme of the theme rather than of the page.
-  A page that sets only CSS `color-scheme: dark` on a container therefore gets light editors in
-  it; set `--office-color-scheme: dark` there as well, or use `data-office-theme="dark"`, which
-  sets both;
-- document canvas: `--office-canvas-gridline` (Excel gridlines, `#e1e1e1`) and
-  `--office-canvas-link` (hyperlinks on paper, `#0563c1`). Themes never remap these, so a theme
-  cannot change how a document looks. In forced-colours mode Word's paper and Excel's sheet
-  follow the system colours (`Canvas`, `CanvasText`, gridlines `GrayText`) while Visio's drawing
-  keeps its own; this has not yet been compared with Office's own contrast-theme rendering;
-- scales: `--office-space-*`, `--office-radius-*`, `--office-font-size-*`, `--office-icon-size-*`,
-  `--office-control-height-*`, `--office-shadow-*`, `--office-duration-*`, `--office-z-*`;
-- component tokens that default to the scales, for example `--office-checkbox-size`,
-  `--office-switch-width`, `--office-ribbon-tab-height`, `--office-backstage-nav-width` and
-  `--office-dialog-max-width`.
-
-Only the two layout breakpoints (`COMPACT`, `TOUCH`) are literal, because CSS does not allow
-custom properties in media queries. A test fails when any control's stylesheet contains a raw
-colour or length outside a token, or references an undeclared token.
-
-### Theming a product
-
-A product whose theme variables follow the shadcn names (`--<prefix>foreground`,
-`-muted-foreground`, `-card`, `-primary`, `-destructive`, ...) bridges it in one line:
-`shadcnBridge(':host', '--dve-')` (from `ooxml-ui/theme`) returns the CSS that feeds every
-`--office-*` colour from it. `themeBridge(selector, map)` takes any mapping. Declare the result on
-the product's root (or `:host` inside its shadow root) rather than `:root`, so a nested theme or
-a dark scheme keeps working.
-
-## Ribbon add-in tabs
-
-A host application can add its own ribbon tabs after a product's tabs, as an
-Office add-in does (the ACROBAT tab in Visio and Excel). The tab is plain data,
-and the same descriptor works in every editor: `ribbonAddIns` is a property of
-`<visio-viewer>`, `<xlsx-editor>` and `<docx-editor>` and a prop of each of their
-framework bindings, and a prop of the five PowerPoint viewers (which draw their
-own ribbon; see `pptx-ui-ribbon-add-in` and `viewers/pptx/docs/guide/customization.md`).
-
-```ts
-import type { RibbonAddInTab } from 'ooxml-ui';
-
-const tab: RibbonAddInTab = {
-	id: 'reports',
-	label: 'Reports',
-	groups: [
-		{
-			label: 'Export',
-			commands: [
-				{ id: 'export', label: 'Export', icon: 'save', run: () => exportReport() },
-				{ id: 'options', label: 'Options', icon: 'settings', size: 'small' },
-				{ id: 'send', label: 'Send', items: [{ id: 'send-mail', label: 'By mail' }] },
-			],
-		},
-	],
-};
-editor.ribbonAddIns = [tab];
-editor.addEventListener('office-ribbon-add-in', (event) => {
-	const { tab, command } = event.detail; // 'reports', 'export'
-});
-```
-
-- A command runs its `run` callback and then dispatches the bubbling, composed
-  `office-ribbon-add-in` event (`{ tab, command }`) from the editor. It never
-  reaches the product's own command router, Tell me or key tips.
-- The elements a panel is built from are defined on demand, and a panel whose
-  look did not change is kept across assignments, so passing a new array with
-  new callbacks on every render is cheap and never closes an open drop-down.
-- In the PowerPoint ribbon a drop-down (`items`) is drawn as its items, and the
-  phone toolbar does not list host tabs.
-- `size: 'small'` commands fill columns of three; `items` makes a drop-down.
-  `icon` is a name from the shared icon set; `registerIcon` adds your own.
-- Assign a new array to change the tabs; an empty array removes them. A tab
-  whose id is empty, repeated or equal to a built-in tab id is skipped, so an
-  add-in cannot replace a product tab.
-- The descriptor types and the event name are DOM-free and live in
-  `ooxml-core/ribbon`; `ooxml-ui` re-exports them.
-- Products render the list with `syncRibbonAddIns(ribbon, tabs, options)`
-  (`src/ribbon/add-in-tabs.ts`); a new product editor calls it rather than
-  building panels itself.
-
-## Framework binding kit (`ooxml-ui/bindings`)
-
-The machinery every product's framework adapters share (Word, Excel, Visio and Teams), so a product
-binding only declares what is its own. It has no framework imports and touches no DOM at import.
-
-- **A contract per product** (`BindingContract`): `props` lists each forwarded prop in forwarding
-  order with its policy (`always`, `changed`, `defined`: written only when set and changed, or
-  `manual`: left to the product's mount function), an optional `fallback`, equality (`same`),
-  `initial` value and `apply`; `events` maps each element event to its handler option
-  (`onDocumentChange`) and arguments (`eventArgs.detail`, `.event` for cancelable events such as
-  `file-command`, `.readOnly`, `.detailAndEvent`, `.field(name)`), and `readOnlyChange` adds the
-  `v-model:readOnly` / `[(readOnly)]` model that mirrors the host's own switch; `handle` lists the
-  imperative handle's members.
-- **`bindElement(element, contract, handlers)`** listens to the events (reading the current
-  handlers at event time) and forwards changed props; the product's mount function keeps what is
-  its own around it (Word's document model after collaboration, Excel's workbook, bytes and `src`
-  supersession, Visio's revision-aware patches, the Teams host class with `syncClassName`).
-- **Helpers**: `createPropTracker`, `shallowEqual`, `sameList`, `createSrcLoader`, `nameFromUrl`,
-  `deferredHandle` (a handle that throws a clear error before mount), `installHandle` (the same
-  members on an Angular component's prototype), `pickProps`, `eventOptions`, `contractOptions`,
-  `angularOutputs` and the framework naming rules (`svelteHandlerName`, `angularOutputName`).
-- **Component factories** for frameworks that need no compiler: `createReactBinding`
-  (`ooxml-ui/bindings/react`, a `forwardRef` component whose ref is the handle), `defineVueBinding`
-  (`/vue`: props, kebab-case emits, `v-model` and `expose` from the contract) and
-  `createSolidBinding` (`/solid`: a host element, reactive options and an `editorRef` callback).
-  React, Vue and Solid are optional peer dependencies. Angular components and `.svelte` files need
-  their compilers, so they stay in each product, as small as the helpers above make them.
-
-Each product checks every adapter against its contract (`contract-parity.test.ts` in the Word,
-Excel and Visio bindings, `bindings-contract.test.ts` in Teams). How a product defines a contract,
-how `bindElement` and the handle work, and how each framework adapter consumes them is in
-`src/ui/src/bindings/README.md`.
-
-## Team workspace elements (`ooxml-ui/teams`)
-
-The chat and meeting pieces of the open-source Teams-style workspace (logic in `ooxml-core/teams`,
-the `<teams-app>` application in `ooxml-ui/teams`, framework bindings in `viewers/teams`): `office-ui-avatar`, `-app-rail`, `-channel-list`, `-chat-list`,
-`-chat-composer`, `-prejoin`, `-call-grid` and `-call-controls`. Properties in, bubbling `office-*`
-events out, no data fetching; message text is always rendered as text.
-
-`teams-app` opens Settings as a workspace page beside the app rail, retaining
-the underlying chat, selected tab and edited workbook. Its `teams-settings`
-element also supports standalone modal use; pass `embedded` to render a
-modeless page sized to the containing workspace. Escape and Close settings
-emit `teams-settings-close`; the host controls the `open` attribute. Personal
-preferences apply immediately, while connection changes require Apply and
-reconnect. `registerOfficeUi()` defines the team elements with the rest.
-
-## PowerPoint (`ooxml-ui/pptx`)
-
-### DOM renderer
-
-`ooxml-ui/pptx/dom` exposes the framework-independent PowerPoint DOM renderer.
-Use `createDefaultRegistry()` with `renderSlideStage()` to render a parsed
-`PptxSlide` into a supplied `Document`. Pass the deck's canvas size, theme,
-table styles, media URL map and translator (`createTranslator()` from
-`ooxml-ui/pptx/i18n`). The stage lays out at authored dimensions and applies
-the requested scale; its host must reserve the scaled width and height.
-Embedded hosts own navigation, media cleanup, asset lifetimes and presentation
-playback. The renderer does not provide Office editing or collaboration on its own.
-
-`loadPresentation()` resolves slide pictures, table fills and media using the
-existing core handler and returns the archive handler, media URLs and deck
-metadata. Dispose the handler and call `revokeBlobUrls()` on its returned URL
-list when replacing or closing the document. Its options accept the core archive
-expansion budget. Set `reading: true` on a slide stage for accessible reading
-content and native media controls without editing overlays.
-
-### Render stage lifecycle
-
-Custom hosts using `ooxml-ui/pptx/dom` own the returned stage. Before replacing
-or removing a stage (including thumbnails and offscreen export stages), call
-`disposePptxRenderStage(stage)`, then remove its DOM. Disposal is idempotent and
-releases that subtree's chart-sampler subscriptions immediately, even if no
-later image-sample event occurs. It does not clear another stage's subscriptions,
-remove nodes or revoke URLs owned by the host.
-
-After closing all viewers/documents sharing the module instance, a host may call
-`releasePptxRenderCaches()` to discard intrinsic-size, chart-picture-sample,
-colour-change and duotone memoisation. This global operation invalidates pending
-library-managed cache writes and chart notifications; pending decodes can still return results
-to their original caller. Do not call it to close one viewer while another needs
-pending samples. It cannot purge browser-internal decoded-image caches.
-
-Intrinsic-size memoisation keeps at most 128 entries; colour-change and duotone
-keep at most 64 each. These FIFO caches each have an 8 MiB conservative UTF-16
-key/value budget. Oversized effect results still render without memoisation.
-
-Bar-face picture sampling uses admission rather than eviction: completed samples
-and pending requests together reserve at most 128 entries and 8 MiB (URL keys and
-sample colours) for one cache epoch. Keeping admitted samples prevents a sample
-notification/repaint from endlessly re-decoding a just-evicted image. If full or
-a source key exceeds the budget, additional async sampling uses the existing
-point/series-colour fallback until `releasePptxRenderCaches()` starts a new epoch.
-Synchronously decoded colours still render even when they cannot be memoised.
-
-### Offline symbol fallback
-
-When Wingdings or Symbol is unavailable, the PowerPoint renderer translates known
-characters to Unicode and tries the paragraph font, then a bundled Noto Sans
-Symbols 2 subset (U+2000-2BFF). The subset is inline WOFF2 data, enabled without
-font downloads. It makes no outbound request, sends no document or font names,
-and creates no persistent storage. Image/print exports collect the same font
-rule. Host CSP must permit `font-src data:` and the viewer's inline styles; the
-site and desktop policies already do. The font-download setting does not disable
-this local fallback. This is approximate symbol substitution, not exact Wingdings
-outlines; unmapped symbol bullets use a plain bullet.
-
-### Font catalogue
-
-PowerPoint hosts can import `buildFontCatalog` from the DOM-free
-`ooxml-ui/pptx/render/font-catalog` runtime entry. Set `includeWeightVariants: true`
-to add `entry.variants` with supported `{ family, weight }` faces, for example
-`DM Sans Medium` at 500; the 400 face keeps the plain family name. Omit the option
-for the existing output. Embedded/custom and unknown families do not inherit Google
-Fonts weights. All five PowerPoint dropdowns use the shared variant rows.
-See [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md#font-picker-weights) for the input/output table.
-
-### Headless controllers
-
-PowerPoint's framework-free state (undo history, autosave, autosave recovery and the collaboration
-session) lives in `src/ui/src/pptx/render/controller/` as headless
-controllers: plain objects with `getSnapshot()`, `subscribe()` and typed actions, which each binding
-adapts with one generic store adapter. The convention is documented in the header of
-`src/ui/src/pptx/render/controller/controller.ts`; the rule for when logic belongs there or in core is
-Rule 2 of `viewers/pptx/AGENTS.md`.
-
-## Host services
-
-Shared behavior helpers are also available to product hosts. `ooxml-ui/controls`
-exports `createLiveColorInput` and its leaf helpers for target-aware preview/commit
-transactions, plus `createDialogSession` for asynchronous submit and dismissal.
-The package root exports font catalogue, availability and custom-font services
-(`buildFontCatalog`, `scanAvailableFontFamilies`, `createFontFaceScope`) and
-`createRecoveryScheduler`. Hosts retain their document model, undo, storage,
-translation and focus-restoration policies. Dispose owned font scopes and sessions
-when the host unmounts. Font selection and script segmentation are DOM-free APIs
-in `ooxml-core/text`.
-
-For host-owned storage or custom merge/sharing policies, use the provider-neutral
-[`DocumentStorage` and `createStorageSession` integration](https://github.com/ChristopherVR/ooxml/blob/main/docs/storage-integrations.md),
-shared across all editor elements and framework bindings.
-
-For the built-in OneDrive transport, use
-[`ooxml-core/embedding/onedrive`](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md). The reference covers
-`ooxml-ui/docx`, `/xlsx`, `/pptx`, `/visio`, every framework binding, OpenTeams sharing and
-conflict recovery. Microsoft authentication belongs to the host. No simulation service is shipped.
 
 ## How the elements are built
 
@@ -564,6 +307,22 @@ property a host set before its definition loaded, styles its shadow root from `?
 resources when removed. `src/conformance/known-gaps.ts` lists the elements that fail a check today;
 the suite fails when a new element fails or a listed one passes, so the list only shrinks.
 
+### Registration and early properties
+
+Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
+`register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
+with an incompatible build of this package. Hosts can set properties and define in either order. A
+property assigned to an element before its definition loads counts as written just after the
+element upgrades: it wins over the attributes the element had then, any later property or attribute
+write wins over it, and it is applied before the element first connects (so mount-time options
+such as `surfaceOnly` hold for the first build). For an element upgraded while detached with
+`customElements.upgrade()`, the rule holds for the shared elements once the current script ends,
+but the editors (`docx-editor`, `xlsx-editor`, `visio-viewer`) and other elements not built on
+`OfficeElement` apply the early value only when they first connect, so connect them before
+writing the same property or attribute again. Properties Lit declares on the shared elements
+follow Lit there: on an element upgraded while detached, the early value waits for its first
+render, which overrides a write made to the same property in the meantime.
+
 ## Custom Elements Manifest
 
 `custom-elements.json` (the package's `customElements` field, also exported as
@@ -575,128 +334,50 @@ built at run time would be missing. A test fails while the file is out of date: 
 
 ## Scope
 
-Only what every Office product needs lives here. Product-specific ribbon content (PowerPoint
-slides, transitions, animations; Word styles and review) lives in the product's own subpath
-(`src/ui/src/<product>/`), not in the shared entries. Most `pptx-ui-*` tags are thin subclasses of the
-`office-ui-*` elements; the chart and SmartArt dialogs (`pptx-ui-insert-chart-dialog`,
-`pptx-ui-insert-smartart-dialog`) are PowerPoint's own elements built from the shared pickers, and
-`pptx-ui-chart-format-pane` is the one subclass of a shared chart element. The aliases are listed in
-`src/ui/src/pptx/web-components/README.md`. `docs/ooxml-ui-plan.md` in the repository keeps the
-decisions that still apply (layout, style rules, the tag aliases and the token map).
-
-## Supported environments
-
-- The last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least; see [browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md).
-- Node.js 22.3 or newer for server rendering and tests (`"engines": { "node": ">=22.3" }`). Importing an entry never touches the DOM.
-- ESM, with a `default` condition for `require(esm)`; the `ooxml-ui/pptx` entries also ship CommonJS.
+Only what every Office product needs lives in the shared entries. Product ribbon content (PowerPoint slides, transitions and animations; Word styles and review) lives in the product's own subpath. Most `pptx-ui-*` tags are thin subclasses of the `office-ui-*` elements, listed in the [PowerPoint web components README](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/src/pptx/web-components/README.md).
 
 ## Privacy and network use
 
-Word loads bundled Arrange commands on demand from the app's origin. Wrap Text > Set as Default Layout keeps the chosen wrap mode for new pictures or shapes in this browser. Clear the site's data to reset the defaults. The preference contains only the wrap mode.
+The elements render and edit locally and collect no analytics or telemetry. Code the editors load on demand (dialogs, galleries, workers, equation and theme codecs, Visio's TIFF and metafile decoders, Excel's non-English dictionaries and `FILTERXML` support) comes from the app's own origin and carries no document data. Beyond that, a request leaves the device only in these cases:
 
-Word's optional `wordDesignPreferences` store keeps the default design for blank documents.
-Hosts can provide `wordDesignPreferences.schemes` to keep named colour palettes and font pairs.
-Clear the property to disable persistence. Browsing for or saving a theme uses local files and
-loads the bundled theme codec from the app's origin. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
-Excel shows embedded in-cell pictures and cached linked data locally. The default editor blocks
-external `IMAGE` sources. A host can set `imageProvider` on `<xlsx-editor>` or pass it as an Excel binding prop. Supply an
-`ImageProvider` such as `createFetchImageProvider({ fetch, allowedOrigins, onUpdate })`. Call
-`editor.calculateNow()` from `onUpdate` to show the settled result. Remove the provider to block
-subsequent image fetches. With a provider installed, calculation requested by a file on open runs
-on the page within the normal page calculation budget, so it can call host code.
+- **Fonts that are neither installed nor embedded.** PowerPoint (`ooxml-ui/pptx`) downloads them from Google Fonts by default; turn it off with `googleFonts: false` or point it at your mirror with `googleFonts: { baseUrl }`. `<docx-editor>`, `<xlsx-editor>` and `<visio-viewer>` take the same `googleFonts` value but download nothing unless the host sets it or the reader turns on File > Options > Trust Center > "Download fonts that are not installed or embedded" (off by default; a host value locks it). Only public catalogue family names are sent, never the file or its text. See [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md).
+- **PowerPoint linked pictures and media** are fetched only after the reader chooses Enable Content (`allowExternalContent` changes that). Word, Excel and Visio never fetch linked content.
+- **PowerPoint Share and Broadcast**, only when started: to the server you configure, or with none to a public signaling server and public STUN servers (configure your own `signaling`).
+- **Collaboration and Teams** talk only to the servers you configure; Teams calls also use Google's public STUN server unless `iceServers` is set. An active Word collaboration room shares inserted pictures, 3D models, Office objects and the bibliography with its peers.
+- **Excel `IMAGE` formulas** fetch only through an `imageProvider` the host supplies (`createFetchImageProvider({ fetch, allowedOrigins, onUpdate })` from `ooxml-core/xlsx`); without one they are blocked.
+- **Host callbacks** you supply and control: Word's `mailMergeDataSource` and `emailProvider` (`false` turns email merge off), `wordDesignPreferences`, PowerPoint's Ink to Math recognizer and `configurePptxDraw` preference storage, and Office Add-in catalogue and storefront entries. The Add-ins Store is off by default; a Microsoft Marketplace link opens only on a click.
+- **Links** (hyperlinks, help, Microsoft Forms in PowerPoint and Excel) open only when the reader follows them.
 
-PowerPoint Draw stores pen preset types, colours and thicknesses in the local viewer preferences.
-Hosts can redirect persistence with `configurePptxDraw`. Ink to Math passes selected slide-local
-stroke coordinates to a host recognizer only when the host configures one and the user requests
-recognition. See the [PowerPoint privacy details](../../PRIVACY.md#ink-to-math).
+Screenshots and screen recordings use the browser's own picker and stay in memory until inserted. Small preferences (such as the Trust Center font choice and Word's default wrap mode) are kept in localStorage. Every request and stored item is listed in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
-Word's Design > Set as Default uses the host's optional `wordDesignPreferences` store. It writes theme colours, font names, an effect preset and paragraph spacing when the user confirms, then reads them for new blank documents. Clear the property to disable the store.
+## Browser support
 
-Set `mailMergeDataSource` and `emailProvider` as properties on the `<docx-editor>` element.
-`mailMergeDataSource.read()` supplies data when the user chooses **Use host recipients**.
-After confirmation, the optional `emailProvider` receives recipients, subjects, message bodies
-and selected attachments for delivery. By default, selecting a draft opens it in the user's
-local email app. Set `emailProvider` to `false` to disable email merge.
-See [the Word mail merge API](../../docs/docx-mail-merge.md).
-
-Word, Excel and Visio can load bundled equation code from the app's origin when needed. Those
-asset requests carry no equation or document data. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
-
-PowerPoint can load its preview renderer from the app's JavaScript host when opening a
-multi-slide presentation. This asset request carries no document data or filename. See
-[PRIVACY.md](../../PRIVACY.md#powerpoint-ooxml-uipptx-and-the-pptx--viewer-packages).
-
-Visio includes Shapes pane menus in the app bundle. Opening a local stencil file or running a
-stencil authoring command can load bundled translations, editing code and a worker from the app's
-origin. Those requests carry only application asset URLs.
-
-Excel loads the selected non-English language, chart insertion and formatting tools, and PivotTable creation and settings dialogs from the app's own origin on demand. English is bundled, and the editor uses it if the selected language cannot load.
-
-Excel loads its bundled XPath code when a workbook contains FILTERXML or the formula is entered. Visio's parse worker loads its metafile decoder when a picture passes the worker's format and size checks. These are same-origin application assets.
-
-Excel's Picture Format and Shape Format load their editing code and galleries on demand from the
-same origin. Compress Pictures uses a bundled worker and processes image bytes on the device.
-
-Screenshot and Screen Clipping use the browser’s surface picker and embed the result locally. PowerPoint Screen Recording uses the same picker and can include shared audio. See the [capture privacy details](../../PRIVACY.md#screenshots-and-screen-recordings).
-
-Word shares bibliography sources and citation style over the configured connection during an
-active collaboration session. Leave the room to keep future edits local.
-
-Word's 3D Models and Object commands embed the local file you select. When you use them in an active Word collaboration session, that session's existing connection shares the file and its preview with peers.
-
-Get Add-ins and My Add-ins open the shared Office Add-ins dialog in Word, Excel,
-PowerPoint and Visio. Hosts can call `setOfficeAddInCatalog(editor, entries)` to expose
-trusted commands in Admin Managed. Each entry uses the same `id` as its ribbon tab,
-supplies an `install` callback and may supply a `remove` callback. The host updates its
-ribbon tabs when either callback runs. My Add-ins lists the installed tabs.
-
-The Store pivot is off by default, so Get Add-ins opens on My Add-ins. A host can call
-`setOfficeAddInStorefront(editor, { kind: 'microsoft' })` to open Get Add-ins on Store
-with a **Browse Microsoft Marketplace** link. The host can supply its own HTTPS URL
-and label. The link opens only on a user click, without an opener or referrer. A host
-can also enable Store with `{ kind: 'catalog', entries }`. Each offer has an `id`, `label`
-and a `read(signal)` function that supplies a manifest or package as a File. The dialog
-calls the reader on selection, validates the file and asks for consent. Pass `'off'`
-to hide Store again.
-
-Word, Excel and PowerPoint accept local task-pane XML manifests and unified JSON or
-ZIP files through Upload My Add-in. Visio supports trusted host entries and displays
-why manifest installation is unavailable. Confirmed manifest installs stay in editor
-memory until removal or editor close. The app loads the dialog on open and the validator
-when the user selects a package. It makes no requests to manifest origins. My Add-ins reports manifest execution as
-unavailable. Forms in PowerPoint and Excel saves Microsoft Forms response links. The
-PowerPoint presenter can load the linked form in a frame or open it in the browser.
-Cameo requests video access on preview activation and keeps the feed on the device.
-
-The elements render and edit locally. Visio can load its bundled TIFF decoder from the app's origin on demand. The PowerPoint elements (`ooxml-ui/pptx`) download fonts that are neither installed nor embedded from Google Fonts by default, fetch a deck's linked pictures and media only after the reader chooses Enable Content on its security bar (as Microsoft PowerPoint does), and use public signaling and STUN servers for serverless Share; each has a host option (`googleFonts`, `allowExternalContent`, `signaling`), described in [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md). The Word, Excel and Visio elements request fonts externally if the host sets their `googleFonts` property or the reader enables File > Options > Trust Center > "Download fonts that are not installed or embedded" (off by default). Teams talks only to the servers you configure (plus Google's public STUN server for calls unless `iceServers` is set). Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+- The last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+- Node.js 22.3 or newer for server rendering and tests; importing an entry never touches the DOM.
 
 ## Development
 
-```
+From the repository root:
+
+```bash
 bun install
-bun run build                              # build core declarations first
+bun run build                     # the core declarations the UI typechecks against
 bun run --cwd src/ui typecheck
-bun run --cwd src/ui test
+bun run --cwd src/ui test         # includes check:elements
 bun run --cwd src/ui build
 bun run --cwd src/ui test:package
+bun run --cwd src/ui gen:manifest # after changing an element
 ```
 
-The Teams PowerPoint preview consumes `src/core/dist/pptx` declarations during
-UI typechecking. The core PPTX area still uses relaxed compiler settings;
-importing its source into the strict UI project would bypass that boundary.
-The UI build first stages PowerPoint declarations in the ignored `.types-pptx`
-directory, so the strict Teams build can consume the DOM adapter's declarations
-without importing legacy source or overwriting its declaration inputs.
-`bun run typecheck` stages the same declarations first, so it needs no prior
-build; the vitest config resolves `ooxml-ui/pptx/dom` to source for the same reason.
+The UI build stages the PowerPoint declarations from `src/core/dist/pptx` in the ignored `.types-pptx` folder, because the core's pptx area still compiles with relaxed settings and must not be pulled into this strict project as source.
 
-## Related packages
+## Documentation
 
-- [`ooxml-core`](https://www.npmjs.com/package/ooxml-core): the document models, parsers, writers and editing commands these elements draw.
-- The editor packages of every framework: [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme), [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme), [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme), [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) and [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme).
-- [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp): the MCP server whose tool definitions the PowerPoint assistant also runs.
+- [Documentation hub](https://christophervr.github.io/ooxml/docs/) and the editor packages of every framework: [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme), [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme), [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme), [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) and [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme).
+- [Chart elements](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/src/chart/README.md), [SmartArt elements](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/src/smartart/README.md) and the [binding kit](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/src/bindings/README.md).
+- [`ooxml-core`](https://www.npmjs.com/package/ooxml-core): the models, parsers, writers and editing commands these elements draw.
 - [Shared UI decisions](https://github.com/ChristopherVR/ooxml/blob/main/docs/ooxml-ui-plan.md): the layout, style rules, tag aliases and token map behind this package.
 
 ## License
 
-[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/LICENSE). Several controls are derived from `pptx-viewer`; see [PROVENANCE.md](https://github.com/ChristopherVR/ooxml/blob/main/PROVENANCE.md).
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/LICENSE). Several controls come from the earlier `pptx-viewer` repository; see [PROVENANCE.md](https://github.com/ChristopherVR/ooxml/blob/main/PROVENANCE.md).

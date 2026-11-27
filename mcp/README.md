@@ -15,12 +15,7 @@
 
 </div>
 
-`ooxml-mcp` gives Claude, Cursor and any other [Model Context Protocol](https://modelcontextprotocol.io) client the document tools of [OOXML](https://github.com/ChristopherVR/ooxml#readme) through one stdio server. It composes the four format servers (`docx-viewer-mcp`, `xlsx-viewer-mcp`, `visio-viewer-mcp` and `pptx-viewer-mcp`) and adds no logic of its own: every tool, schema and bound is defined once in [`ooxml-core/automation`](https://www.npmjs.com/package/ooxml-core), the same code the OOXML editors' assistants run.
-
-- **Confined to one folder.** Every tool takes a path inside `--root`. Paths that leave it, UNC and device paths, and names Windows would reinterpret are refused on their text, before the disk is touched.
-- **Bounded reads, careful writes.** Reads never return file bytes and cap what they return; creates never overwrite; edits replace the file atomically or write to `outputPath`.
-- **Safe for untrusted prompts.** Excel writes refuse formulas that could send workbook data out of the file (web, RTD, cube, macro and AI functions, external references).
-- **Versioned schemas.** Each tool carries an integer schema version, sent to clients as `_meta.schemaVersion`, so a breaking schema change is always visible.
+`ooxml-mcp` gives any [Model Context Protocol](https://modelcontextprotocol.io) client the document tools of [ooxml](https://github.com/ChristopherVR/ooxml#readme) through one stdio server. It composes the four format servers (`docx-viewer-mcp`, `xlsx-viewer-mcp`, `visio-viewer-mcp` and `pptx-viewer-mcp`) and adds no logic of its own: every tool, schema and bound is defined once in [`ooxml-core/automation`](https://www.npmjs.com/package/ooxml-core), the same code the editors' assistants run.
 
 ## Install
 
@@ -30,9 +25,9 @@ npm install ooxml-mcp docx-viewer-mcp xlsx-viewer-mcp visio-viewer-mcp pptx-view
 
 The format packages are optional peers: install the ones you want to expose. `ooxml-core` comes with this package, so every format server shares one copy of it.
 
-## Quick start
+## Client configuration
 
-Point your MCP client at the `ooxml-tools` command and a folder of documents. For Claude Desktop, Cursor and most other clients:
+Point your MCP client at the `ooxml-tools` command and a folder of documents. Most desktop clients take this shape:
 
 ```json
 {
@@ -80,6 +75,14 @@ ooxml-tools --root /path/to/documents --formats docx,xlsx      # only these
 
 Excel reads are bounded (at most 10,000 cells per read and 1,000 matches per find), and `xlsx_set_cells` recalculates the workbook with the core's formula engine. The full list, bounds and result shapes are in [MCP tools](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md), and the review flow behind `xlsx_propose_edits` is in [agent edit review](https://github.com/ChristopherVR/ooxml/blob/main/docs/agent-edit-review.md).
 
+## Safety and limits
+
+- **Confined to one folder.** Every tool takes a path inside `--root`. Paths that leave it, UNC and device paths, and names Windows would reinterpret are refused on their text, before the disk is touched.
+- **Bounded reads, careful writes.** Reads never return file bytes and cap what they return; creates never overwrite; edits replace the file atomically or write to `outputPath`.
+- **Safe for untrusted prompts.** Excel writes refuse formulas that could send workbook data out of the file (web, RTD, cube, macro and AI functions, external references), and no tool parameter turns that check off.
+- **Versioned schemas.** Each tool carries an integer schema version, sent to clients as `_meta.schemaVersion`, so a breaking schema change is always visible.
+- **Honest results.** An unsupported edit returns an error or the core's diagnostics instead of a damaged file. These tools are not Office and claim neither Office parity nor lossless export; open gaps are in the [parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md).
+
 ## Use it from code
 
 ```js
@@ -90,22 +93,19 @@ const server = await createServer({ rootDir: '/path/to/documents', formats: ['do
 await server.connect(new StdioServerTransport());
 ```
 
-`createServer` returns an MCP SDK `McpServer` with the selected registrations and never opens a transport itself. To change a policy, such as letting trusted callers write any formula with `createXlsxTools({ formulas: 'unrestricted' })`, register tools on your own server with `registerAutomationTools` from `ooxml-core/automation/node`; no tool parameter turns the formula check off.
-
-## Limitations
-
-Each tool does what its description says and rejects the rest: an unsupported edit returns an error or the core's diagnostics instead of a damaged file. These tools are not Word, Excel, PowerPoint or Visio, and nothing here claims Office parity or lossless export; the open gaps are in the [parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md).
-
-## Supported environments
-
-Node.js 22.3 or newer (`"engines": { "node": ">=22.3" }`) on Windows, macOS and Linux. The package ships JavaScript source and declarations and needs no build step.
+`createServer` returns an MCP SDK `McpServer` with the selected registrations and never opens a transport itself. To change a policy, such as letting trusted callers write any formula with `createXlsxTools({ formulas: 'unrestricted' })` from `ooxml-core/automation`, register the tools on your own server with `registerAutomationTools` from `ooxml-core/automation/node`.
 
 ## Privacy and network use
 
-The MCP server talks to its client over stdio only and makes no network request of its own. It reads and writes files under its root directory, and linked pictures in a deck are not fetched. Nothing collects analytics or telemetry. It never acquires Microsoft credentials or synchronises OneDrive; an application that holds them can fetch and save Office bytes with [`ooxml-core/embedding/onedrive`](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md) and hand them to its own tool workflow. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+The server talks to its client over stdio only and makes no network request of its own. It reads and writes files under its root directory, and linked pictures in a deck are not fetched. On Windows, a path naming a network share can make the system contact that host while the path is checked, before it is refused. Nothing collects analytics or telemetry. It never acquires Microsoft credentials or synchronises OneDrive; an application that holds them can fetch and save Office bytes with [`ooxml-core/embedding/onedrive`](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md) and hand them to its own tool workflow. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#mcp-servers-mcp-and-the-viewers-mcp-packages).
 
-## Related packages
+## Environments
 
+Node.js 22.3 or newer on Windows, macOS and Linux. The package ships JavaScript source and declarations and needs no build step.
+
+## Documentation
+
+- [MCP tools](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md): every tool, its bounds and result shape, and how the servers are composed.
 - [`docx-viewer-mcp`](https://www.npmjs.com/package/docx-viewer-mcp), [`xlsx-viewer-mcp`](https://www.npmjs.com/package/xlsx-viewer-mcp), [`visio-viewer-mcp`](https://www.npmjs.com/package/visio-viewer-mcp) and [`pptx-viewer-mcp`](https://www.npmjs.com/package/pptx-viewer-mcp): one format each, with their own `docx-tools`, `xlsx-tools`, `visio-tools` and `pptx-tools` commands.
 - [`ooxml-core`](https://www.npmjs.com/package/ooxml-core): the library that defines every tool and owns parsing, editing, recalculation and saving.
 - The editors your users open the results in: [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme), [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme), [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) and [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme).

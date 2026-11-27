@@ -3,7 +3,7 @@
 The code every product's framework adapters share: a product declares its element as a
 contract, and the kit wires the element (events, forwarded props, the imperative handle) once for
 every framework. Nothing here imports a framework or touches the DOM at import time. The summary
-for users of the package is in `src/ui/README.md` ("Framework binding kit"); this page is for
+for users of the package is in [the ooxml-ui README](../../README.md#framework-binding-kit); this page is for
 the product that defines a contract and the adapter that consumes it.
 
 | Module                           | Exports                                                                                                                                                                                                                                |
