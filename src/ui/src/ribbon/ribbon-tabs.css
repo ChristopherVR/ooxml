@@ -211,14 +211,20 @@ slot[name='actions'] {
 		min-width: var(--office-ribbon-file-min-width);
 	}
 }
-/* A phone portrait row cannot hold the tabs and the actions: the tabs keep the first row (File and a
-   scrolling tab strip) and the actions wrap under them. */
+/* A phone portrait row cannot hold the tabs and the actions: the tabs keep the first row (File, a
+   scrolling tab strip and its chevron) and the actions wrap under them. The strip has no basis, so
+   the chevron never wraps onto a row of its own; the zero-height break ends the first row. */
 @media (max-width: 520px) {
 	.head {
 		flex-wrap: wrap;
 	}
+	.head::after {
+		content: '';
+		order: 1;
+		flex-basis: 100%;
+	}
 	[role='tablist'] {
-		flex: 1 1 12rem;
+		flex: 1 1 0;
 	}
 	slot[name='actions'] {
 		order: 2;
