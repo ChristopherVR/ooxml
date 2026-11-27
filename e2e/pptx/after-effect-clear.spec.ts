@@ -63,12 +63,24 @@ for (const [text, action, clicks] of [
 				.first()
 				.click();
 		await expect(page.locator('pptx-ui-present-toolbar:visible')).toHaveCount(1);
-		const rendered = page.locator(`[data-element-id][aria-label="${text}"]`).last();
+		const showStage = page.locator('[data-pptx-presenting]');
+		const showElement = (label: string) =>
+			showStage.locator(`[data-element-id][aria-label="${label}"]`);
+		const rendered = showElement(text);
+		await expect(rendered).toBeAttached();
+		await expect(showElement('RectDimRGB')).toBeHidden();
 		const order = ['RectDimRGB', 'TextDimScheme', 'RectHide', 'RectHideClick', 'Next trigger'];
 		for (let i = 0; i < clicks; i++) {
 			await page.keyboard.press('PageDown');
-			const current = page.locator(`[data-element-id][aria-label="${order[i]!}"]`).last();
+			const label = order[i]!;
+			const current = showElement(label);
+			// RectHide in the other cases hides in its own click. Every other entrance
+			// provides an observable boundary before the next keypress.
+			if (label !== 'RectHide' || label === text) await expect(current).toBeVisible();
 			await current.evaluate(async (node) => {
+				await new Promise<void>((done) =>
+					requestAnimationFrame(() => requestAnimationFrame(() => done())),
+				);
 				await Promise.all(
 					node
 						.getAnimations({ subtree: true })
