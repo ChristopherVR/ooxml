@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { DocumentModel, Paragraph, ParagraphStyleCatalog } from './model';
 import { documentParagraphs } from './cell-blocks';
+import { isEmptyParagraph } from './paragraph-content';
 import type { NumberingCatalog, ParagraphListLabel } from './numbering-model';
 import { definedProps } from './defined-props';
 import { resolveNumberingLevel } from './numbering-parse';
@@ -91,7 +92,12 @@ export function computeListNumbering(model: DocumentModel): ListNumbering {
 	const labels = new Map<string, ParagraphListLabel>();
 	const counters = new NumberingCounters();
 	const listNumbers = new ListNumberFields(counters, catalog);
+	// The last section describes the body itself. Its last paragraph is an ordinary list item.
+	const sectionBreaks = new Set(
+		model.sections?.slice(0, -1).map((section) => section.endsAtBlockId),
+	);
 	for (const paragraph of documentParagraphs(model.blocks)) {
+		if (sectionBreaks.has(paragraph.id) && isEmptyParagraph(paragraph)) continue;
 		const label = catalog && paragraphLabel(paragraph, model, catalog, counters);
 		if (label) labels.set(paragraph.id, label);
 		listNumbers.paragraph(

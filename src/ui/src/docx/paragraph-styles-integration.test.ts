@@ -42,6 +42,25 @@ function model(): DocumentModel {
 }
 
 describe('paragraph style editor integration', () => {
+	it('updates the section break marker and list count when the break gains text (#355)', async () => {
+		const path =
+			'../core/docx/layout/fixtures/word-layout-reports/issue-355-numbered-section-break-nextpage.docx';
+		const { model } = await loadDocx(await readFile(path));
+		const doc = modelToDoc(model);
+		const view = new EditorView(document.createElement('div'), {
+			state: EditorState.create({ doc, plugins: [paragraphStylesPlugin(() => model)] }),
+		});
+		try {
+			const markers = () =>
+				Array.from(view.dom.querySelectorAll('p'), (p) => p.getAttribute('data-list-marker'));
+			expect(markers()).toEqual(['', '', '1.', '2.', '3.']);
+			view.dispatch(view.state.tr.insertText('Text', must(doc.firstChild).nodeSize + 1));
+			expect(markers()).toEqual(['', '1.', '2.', '3.', '4.']);
+		} finally {
+			view.destroy();
+		}
+	});
+
 	it('renders inherited table spacing like the direct formatting control (#353)', async () => {
 		const spacing = async (name: string) => {
 			const path = `../core/docx/layout/fixtures/word-layout-reports/issue-353-${name}.docx`;

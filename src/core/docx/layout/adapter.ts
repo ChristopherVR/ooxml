@@ -39,6 +39,7 @@ import { formFieldDisplayText } from '../form-fields';
 import { wordHighlightColors } from '../highlight';
 import { first, parseXml } from '../xml';
 import { parseDirectRunProperties } from '../run-properties';
+import { isEmptyParagraph } from '../paragraph-content';
 import { fontOf } from './paragraph-tokens';
 import { adaptTable } from './adapt-table';
 import {
@@ -600,11 +601,21 @@ export function adaptDocumentModel(
 	const indexById = new Map(model.blocks.map((block, index) => [block.id, index]));
 	let start = 0;
 	const result: LayoutSection[] = sections.map((section, index) => {
-		const last = index === sections.length - 1;
-		const endIndex = last ? blocks.length : (indexById.get(section.endsAtBlockId) ?? start - 1) + 1;
+		const nextSection = sections[index + 1];
+		const endIndex = nextSection
+			? (indexById.get(section.endsAtBlockId) ?? start - 1) + 1
+			: blocks.length;
 		const end = Math.max(start, endIndex);
 		const slice = blocks.slice(start, end);
 		start = end;
+		const lastBlock = model.blocks[end - 1];
+		const markerId =
+			nextSection &&
+			lastBlock?.id === section.endsAtBlockId &&
+			lastBlock.type === 'paragraph' &&
+			isEmptyParagraph(lastBlock)
+				? lastBlock.id
+				: undefined;
 		if (legacyFootnoteColumns && section.footnoteColumns)
 			reportOnce(
 				'Independent footnote column counts are preserved but ignored in measured compatibility modes 12 and 14; Print Layout attaches notes to body columns.',
@@ -689,19 +700,11 @@ export function adaptDocumentModel(
 			// paragraph after a table has its own line, after balancing the table.
 			blocks: slice.flatMap((block, offset) => {
 				if (folded.has(block)) return [];
-				const marker =
-					model.sections?.[index + 1]?.type === 'continuous' &&
-					block.id === section.endsAtBlockId &&
-					block.kind === 'paragraph' &&
-					!block.footnotes?.length &&
-					!block.floats?.length &&
-					block.runs.every(
-						(run) => !run.text && !run.object && !run.breakAfter && !run.contentControlTag,
-					);
-				if (!marker) return [block];
-				return slice[offset - 1]?.kind === 'table'
+				if (block.kind !== 'paragraph' || block.id !== markerId) return [block];
+				if (slice[offset - 1]?.kind !== 'table') return [];
+				return nextSection?.type === 'continuous'
 					? [{ ...block, afterTableSectionBreak: true }]
-					: [];
+					: [block];
 			}),
 		};
 	});

@@ -6,6 +6,7 @@ import {
 	displayListLabel,
 	type DocumentModel,
 	type Paragraph,
+	type TextRun,
 } from 'ooxml-core/docx';
 import { paragraphStyle } from './schema';
 import { listMarkerDisplay } from './list-marker-display';
@@ -14,6 +15,7 @@ import type { ReviewDisplayMode } from './review-display';
 import { displayParagraph, ORIGINAL_PARAGRAPH_RESET } from './review-paragraph-display';
 import { AttributeCache, DecorationCache } from './decoration-cache';
 import { visitStyledParagraphs } from './styled-paragraphs';
+import { appendInlineNode } from './run-adapter';
 
 /** Derived display formatting stays out of document attributes and collaboration steps. */
 export function paragraphStylesPlugin(
@@ -61,8 +63,17 @@ export function paragraphStylesPlugin(
 				if (cached) return cached;
 				const catalog = model.paragraphStyles;
 				const paragraphs: Paragraph[] = [];
+				const sectionBreaks = new Set(
+					model.sections?.slice(0, -1).map((section) => section.endsAtBlockId),
+				);
 				state.doc.descendants((node) => {
-					if (node.type.name === 'paragraph') paragraphs.push(project(node, mode).value);
+					if (node.type.name !== 'paragraph') return;
+					const paragraph = project(node, mode).value;
+					if (sectionBreaks.has(paragraph.id) && node.childCount) {
+						const runs: TextRun[] = [];
+						node.forEach((child) => appendInlineNode(runs, child));
+						paragraphs.push({ ...paragraph, runs });
+					} else paragraphs.push(paragraph);
 				});
 				const labels = computeListLabels({ ...model, blocks: paragraphs });
 				const decorations: Decoration[] = [];

@@ -3,6 +3,7 @@ import type { Block, DocumentModel, Paragraph, Revision } from './model';
 import { restoreRunFormatting } from './restore-run-format';
 import { restoreParagraphFormatting } from './restore-paragraph-format';
 import { documentBlockLists } from './document-paragraphs';
+import { isEmptyParagraph } from './paragraph-content';
 
 export interface RevisionEntry {
 	id: string;
@@ -71,20 +72,6 @@ export function listRevisions(model: DocumentModel): RevisionEntry[] {
 export function findRevision(model: DocumentModel, id: string): RevisionEntry | undefined {
 	return listRevisions(model).find((entry) => entry.id === id);
 }
-
-/** No text and nothing else a run can hold: what is left of a wholly deleted paragraph. */
-const isEmptyParagraph = (paragraph: Paragraph): boolean =>
-	paragraph.runs.every(
-		(run) =>
-			!run.text &&
-			!run.image &&
-			!run.equation &&
-			!run.fieldChar &&
-			run.fieldCode === undefined &&
-			!run.break &&
-			!run.noteReference &&
-			!run.noteMark,
-	);
 
 function mergeIntoNext(blocks: Block[], paragraphId: string): Block[] {
 	const index = blocks.findIndex((b) => b.type === 'paragraph' && b.id === paragraphId);

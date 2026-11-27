@@ -4,6 +4,7 @@ import type { NumberingCatalog } from './numbering-model';
 import { computeListLabels, formatListNumber, resolveParagraphNumbering } from './numbering-format';
 import { cardinalWords, letterLabel, ordinalWords, romanNumeral } from './numbering-text';
 import { at, must } from './test-support/access';
+import { twips } from './units';
 
 function page() {
 	return {
@@ -73,6 +74,46 @@ describe('numbering-text formatters', () => {
 });
 
 describe('computeListLabels', () => {
+	it('only skips empty paragraphs that carry a section break', () => {
+		const section = {
+			type: 'nextPage' as const,
+			pageWidthTwips: twips(12240),
+			pageHeightTwips: twips(15840),
+			orientation: 'portrait' as const,
+			marginTopTwips: twips(1440),
+			marginRightTwips: twips(1440),
+			marginBottomTwips: twips(1440),
+			marginLeftTwips: twips(1440),
+			columns: { count: 1, equalWidth: true },
+		};
+		const empty = (id: string): Paragraph => ({ ...paragraph(id, 1), runs: [{ text: '' }] });
+		const model: DocumentModel = {
+			blocks: [
+				empty('empty-break'),
+				{
+					...empty('field-break'),
+					runs: [{ text: '', field: { instr: 'MERGEFIELD example', simple: true } }],
+				},
+				paragraph('text-break', 1),
+				empty('empty-list-item'),
+				empty('last-item'),
+			],
+			sections: ['empty-break', 'field-break', 'text-break', 'last-item'].map((endsAtBlockId) => ({
+				...section,
+				endsAtBlockId,
+			})),
+			page: page(),
+			warnings: [],
+			numberingCatalog: catalogWith(),
+		};
+		expect([...computeListLabels(model)].map(([id, label]) => [id, label.text])).toEqual([
+			['field-break', '1.'],
+			['text-break', '2.'],
+			['empty-list-item', '3.'],
+			['last-item', '4.'],
+		]);
+	});
+
 	it('numbers a simple list in document order and restarts a new numId at 1', () => {
 		const model: DocumentModel = {
 			blocks: [paragraph('a', 1, 0), paragraph('b', 1, 0), paragraph('c', 1, 0)],

@@ -526,3 +526,49 @@ it.each([
 	expect(pages).toHaveLength(pageCount);
 	expect(at(at(pages, pageCount - 1).floats, 0).blockId).toBe('p24');
 });
+
+it('lays out numbered continuous section breaks like the unnumbered markers (#355)', async () => {
+	const control = await layout('issue-355-unnumbered-section-break-paragraph');
+	const numbered = await layout('issue-355-numbered-section-break-paragraph');
+	const paragraphLayout = (sample: typeof control) =>
+		sample.pages.map((page) =>
+			page.columns.flatMap((column) =>
+				column.blocks.flatMap((block) =>
+					block.kind === 'paragraph'
+						? [
+								{
+									id: block.blockId,
+									y: block.yPx,
+									lines: block.lines.map((line) =>
+										line.fragments.map((fragment) => fragment.text).join(''),
+									),
+								},
+							]
+						: [],
+				),
+			),
+		);
+	const expected = paragraphLayout(control);
+	expect(expected).toHaveLength(1);
+	const firstPage = at(expected, 0);
+	expect(firstPage.map(({ id }) => id)).not.toContain('p1');
+	expect(firstPage.map(({ id }) => id)).not.toContain('p3');
+	expect(firstPage.find(({ id }) => id === 'p2')?.lines[0]).toMatch(/^1\.\s*First heading$/);
+	expect(firstPage.find(({ id }) => id === 'p4')?.lines[0]).toMatch(/^1\.1\s*First subheading$/);
+	expect(firstPage.find(({ id }) => id === 'p8')?.lines[0]).toMatch(/^1\.2\s*Second subheading$/);
+	expect(paragraphLayout(numbered)).toEqual(expected);
+});
+
+it('leaves no line for a numbered next-page section break and restarts text on page two (#355)', async () => {
+	const { pages, paragraphs } = await layout('issue-355-numbered-section-break-nextpage');
+	expect(pages).toHaveLength(2);
+	expect(paragraphs.map(({ blockId }) => blockId)).toEqual(['p0']);
+	const firstItem = at(at(at(pages, 1).columns, 0).blocks, 0);
+	if (firstItem.kind !== 'paragraph') throw new Error('Expected the first numbered item');
+	expect(firstItem.blockId).toBe('p2');
+	expect(
+		at(firstItem.lines, 0)
+			.fragments.map(({ text }) => text)
+			.join(''),
+	).toMatch(/^1\.\s*Item 1/);
+});
