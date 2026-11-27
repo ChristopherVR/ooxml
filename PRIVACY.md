@@ -17,28 +17,29 @@ network request must update this file in the same commit.
 
 ## Summary
 
-| What                                               | Goes to                                                                | On by default                                                 | Turn it off or redirect it                                                                                                             |
-| -------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| PowerPoint: fonts not installed or embedded        | `fonts.googleapis.com`, `fonts.gstatic.com`                            | Yes                                                           | `googleFonts` option; File > Options > Trust Center; suite setting                                                                     |
-| Word, Excel, Visio: fonts not installed            | `fonts.googleapis.com`, `fonts.gstatic.com`                            | No (yes in the suite)                                         | `googleFonts` property; Trust Center (off by default); suite                                                                           |
-| PowerPoint: linked pictures, media, sounds, embeds | Any URL the deck links to                                              | No: only after Enable Content                                 | `allowExternalContent` option; Trust Center; suite setting                                                                             |
-| PowerPoint: Share / Broadcast without a server     | `wss://y-webrtc-eu.fly.dev`, public STUN                               | Only when the user starts it                                  | Configure a signaling server or `serverUrl`                                                                                            |
-| PowerPoint: Share / Broadcast with a server        | The host's or user's server                                            | Only when the user starts it                                  | Do not start a session                                                                                                                 |
-| PowerPoint (Node): signature inspection            | The OCSP responder named in the certificate                            | When a signature value verifies                               | `checkRevocation: false` (see below)                                                                                                   |
-| PowerPoint: AI assistant                           | The connection the host configures                                     | No (host must enable it)                                      | Do not pass `ai`                                                                                                                       |
-| Teams: sync and signaling                          | The configured `syncUrl` and `signalingUrl`                            | Only when a server is configured                              | Local mode                                                                                                                             |
-| Teams: calls                                       | `stun:stun.l.google.com:19302`, then peers                             | Yes, when a call starts                                       | `iceServers` (your own STUN/TURN, or `[]`)                                                                                             |
-| Teams: website tabs                                | The URL a member added                                                 | When the tab is opened                                        | Do not add or open website tabs                                                                                                        |
-| Suite: AI assistant                                | The provider the user or policy selects                                | No (offline by default)                                       | `ai-config.json`                                                                                                                       |
-| Suite: shared AI chat credentials                  | The policy's `collaboration.credentialsUrl`                            | No (host must configure it)                                   | Leave `collaboration.credentialsUrl` empty                                                                                             |
-| Suite: OneDrive                                    | `graph.microsoft.com`, Microsoft sign-in                               | No (host must enable it)                                      | Do not configure it                                                                                                                    |
-| Suite: app updates                                 | The suite's own origin (`sw.js`)                                       | Yes                                                           | Not applicable (same origin)                                                                                                           |
-| Any product: hyperlinks, help links                | The link target, in a new tab                                          | Only when clicked                                             | Not applicable                                                                                                                         |
-| Office Add-ins: Microsoft handoff                  | `marketplace.microsoft.com` or the host's configured HTTPS destination | No. Requires host opt-in and a click on the Marketplace link. | Set the storefront to `'off'`                                                                                                          |
-| Excel, PowerPoint: Forms                           | `forms.office.com`, `forms.cloud.microsoft`                            | Only when the user opens or loads a form                      | Leave the form unopened or close the response dialog                                                                                   |
-| Excel: `WEBSERVICE` fetch provider                 | Any `http:`/`https:` URL in the formula                                | No (host must opt in via `providers`)                         | Omit `providers.webservice` or restrict `allowedOrigins`                                                                               |
-| Excel: `IMAGE` formula image fetcher               | The formula's `https:` source URL                                      | No (host supplies the fetcher)                                | Omit `imageProvider` on the editor or binding, `providers.image` in core, or the fetcher. Restrict destinations with `allowedOrigins`. |
-| Host-supplied document URLs                        | The URL the host passes                                                | Only when the host passes one                                 | Pass bytes instead                                                                                                                     |
+| What                                               | Goes to                                                                 | On by default                                                                         | Turn it off or redirect it                                                                                                             |
+| -------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| PowerPoint: fonts not installed or embedded        | `fonts.googleapis.com`, `fonts.gstatic.com`                             | Yes                                                                                   | `googleFonts` option; File > Options > Trust Center; suite setting                                                                     |
+| Word, Excel, Visio: fonts not installed            | `fonts.googleapis.com`, `fonts.gstatic.com`                             | No (yes in the suite)                                                                 | `googleFonts` property; Trust Center (off by default); suite                                                                           |
+| PowerPoint: linked pictures, media, sounds, embeds | Any URL the deck links to                                               | No: only after Enable Content                                                         | `allowExternalContent` option; Trust Center; suite setting                                                                             |
+| PowerPoint: Share / Broadcast without a server     | `wss://y-webrtc-eu.fly.dev`, public STUN                                | Only when the user starts it                                                          | Configure a signaling server or `serverUrl`                                                                                            |
+| PowerPoint: Share / Broadcast with a server        | The host's or user's server                                             | Only when the user starts it                                                          | Do not start a session                                                                                                                 |
+| PowerPoint (Node): signature inspection            | The OCSP responder named in the certificate                             | When a signature value verifies                                                       | `checkRevocation: false` (see below)                                                                                                   |
+| PowerPoint: AI assistant                           | The connection the host configures                                      | No (host must enable it)                                                              | Do not pass `ai`                                                                                                                       |
+| Teams: sync and signaling                          | The configured `syncUrl` and `signalingUrl`                             | Only when a server is configured                                                      | Local mode                                                                                                                             |
+| Teams: calls                                       | `stun:stun.l.google.com:19302`, then peers                              | Yes, when a call starts                                                               | `iceServers` (your own STUN/TURN, or `[]`)                                                                                             |
+| Teams: website tabs                                | The URL a member added                                                  | When the tab is opened                                                                | Do not add or open website tabs                                                                                                        |
+| Suite: AI assistant                                | The provider the user or policy selects                                 | No (offline by default)                                                               | `ai-config.json`                                                                                                                       |
+| Suite: shared AI chat credentials                  | The policy's `collaboration.credentialsUrl`                             | No (host must configure it)                                                           | Leave `collaboration.credentialsUrl` empty                                                                                             |
+| Suite: OneDrive                                    | `graph.microsoft.com`, Microsoft sign-in                                | No (host must enable it)                                                              | Do not configure it                                                                                                                    |
+| Suite: app updates                                 | The suite's own origin (`sw.js`)                                        | Yes                                                                                   | Not applicable (same origin)                                                                                                           |
+| Any product: hyperlinks, help links                | The link target, in a new tab                                           | Only when clicked                                                                     | Not applicable                                                                                                                         |
+| Office Add-ins: Microsoft handoff                  | `marketplace.microsoft.com` or the host's configured HTTPS destination  | No. Requires host opt-in and a click on the Marketplace link.                         | Set the storefront to `'off'`                                                                                                          |
+| Excel, PowerPoint: Forms                           | `forms.office.com`, `forms.cloud.microsoft`                             | Only when the user opens or loads a form                                              | Leave the form unopened or close the response dialog                                                                                   |
+| Excel (core engine only): `WEBSERVICE`             | Any `http:`/`https:` URL in the formula                                 | No: the Excel editor never evaluates it; a core host must pass `providers.webservice` | Omit `providers.webservice` or restrict `allowedOrigins`                                                                               |
+| Excel: `IMAGE` formula image fetcher               | The formula's `https:` source URL                                       | No (host supplies the fetcher)                                                        | Omit `imageProvider` on the editor or binding, `providers.image` in core, or the fetcher. Restrict destinations with `allowedOrigins`. |
+| Word, Excel, Visio: Share                          | The server the user or host names; else other tabs of this browser only | Only when the user or host starts a session                                           | Do not share, Stop sharing, or set `collaboration` to `null`                                                                           |
+| Host-supplied document URLs                        | The URL the host passes                                                 | Only when the host passes one                                                         | Pass bytes instead                                                                                                                     |
 
 Every request also sends what any browser request sends: the reader's IP address, the browser's
 user agent and, for some requests, a `Referer`. That is the main privacy cost of each third-party
@@ -207,7 +208,11 @@ embed frame.
   records PowerPoint's own default and how it was established.
 - **Hyperlinks:** a link opens only when clicked, always in a new tab with `noopener` and
   `noreferrer`, whatever frame the deck names. `file:` and `ftp:` links are kept in the deck but
-  never opened.
+  never opened. Relative links (no scheme, such as `notes.html`, `/docs/` or `#part`) are kept
+  but do not open either, unless the host calls `setOpenRelativeHyperlinks(true)` from
+  `ooxml-ui/pptx`: they then open, when clicked, resolved against the host page's address (so
+  they request a page from the host's own site), for every viewer on the page. Off by default;
+  `setOpenRelativeHyperlinks(false)` turns it off again.
 - **On without asking:** the host option `allowExternalContent: true` (PowerPoint's "Unblock
   automatic download of linked images" policy), or File > Options > Trust Center > "Allow
   external content", which is off by default.
@@ -271,7 +276,8 @@ state. Omit the collaboration configuration or leave the room to keep future edi
   stricter than those applications; see
   [docs/powerpoint-external-content.md](docs/powerpoint-external-content.md));
 - external workbook links, Visio data record sets and linked chart data are kept but never
-  refreshed; Excel web queries and `WEBSERVICE` are not evaluated;
+  refreshed; Excel web queries and `WEBSERVICE` are not evaluated (the editor passes no
+  `WEBSERVICE` provider, so the formula keeps a value saved with the file or shows `#NAME?`);
 - fonts come from the device and the file only, unless the host sets `googleFonts` (below);
 - workers and application code are loaded from the page's own origin. Selecting Word's Design
   tab loads the gallery code and built-in presets. Creating a Word document can also load those
@@ -348,6 +354,29 @@ and writes the iframe markup into the file (`wp15:webVideoPr`). The editor never
 address; a program that later plays the video (Word does) contacts that site. An online video already
 in a document is kept as it is: its iframe is not checked against the allow-list, and the editor
 never loads it.
+
+**Sharing a workbook or drawing (Excel and Visio).** Nothing is shared until the user starts or
+joins a session (Share, or File > Share) or the host sets the editor's `collaboration` property;
+Word's Share works the same way, with the Word-specific content described above.
+
+- **Without a server** (the Share dialog's default) the session runs over `BroadcastChannel`
+  between tabs and windows of the same browser and origin; nothing leaves the device.
+- **With a server** (typed in the Share dialog or passed as `serverUrl`) the room name, the
+  `authToken` (as the `token` query parameter), every change and each participant's presence go
+  to that y-websocket compatible server, which can keep the room. Presence is the display name
+  and colour, plus the selected sheet and range in Excel, or the page, pointer position and
+  selected shape ids in Visio. A host can pass its own `provider` or `session` instead, which
+  decides the destination, or `webrtc` with its own `y-webrtc` install: without a `signaling`
+  list that uses y-webrtc's default public signaling servers, so pass `signaling` to keep it on
+  your own.
+- **What the room carries:** Excel shares cell values, formulas and formats, sheets, defined
+  names, comments and replies, conditional formats, data validation, hyperlinks, tables and
+  charts; pictures and other parts it does not map stay on each participant's device. Visio
+  shares the drawing's pages, shapes, connectors and masters, and the bytes of its media parts
+  (pictures), so a participant without the file sees the same drawing. In Visio the room's owner
+  can also hand the drawing to the host's `onWriteBack` callback, which decides where it goes.
+- **Off:** Stop sharing in the Share dialog, or set `collaboration` to `null`; the open copy stays
+  on the device.
 
 Hyperlinks and in-product help links open only when the reader follows them.
 
@@ -455,6 +484,13 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
   shapes, Excel's Error Checking rules in `ooxml.xlsx.errorCheckingRules`), including the Trust
   Center font-download choice (`ooxml.docx.allowFontDownloads`, `ooxml.xlsx.allowFontDownloads`,
   and `allowFontDownloads` in Visio's `ooxml-visio-options`).
+- **Visio AutoRecover:** off by default. When the reader turns on File > Options > Save >
+  AutoRecover, a drawing with unsaved changes is copied, as the bytes of the `.vsdx` it would
+  save, with its file name and the time, to IndexedDB (`ooxml-visio-recovery`, store `drawings`)
+  every few minutes and when the page is hidden. Opening a file of the same name offers the copy
+  back; saving the drawing or discarding the offer deletes it. A host `storage` with recovery
+  methods (`readRecovery`, `writeRecovery`, `clearRecovery`) receives the copies instead, and
+  nothing is written to IndexedDB.
 - **Teams:** chat snapshots, read state, drafts, presence and follows in the storage the host
   provides; the server configuration in localStorage. Session tokens are kept in memory only.
 - **Word document design:** Set as Default writes the document theme palette and names, font

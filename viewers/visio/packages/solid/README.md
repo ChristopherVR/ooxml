@@ -149,7 +149,7 @@ Drawings open, render, edit and save on the device; nothing is uploaded and noth
 - **Fonts:** off by default. Set the element's `googleFonts` to `{ baseUrl: 'https://fonts.googleapis.com/css2' }` (or your own mirror) to download missing public catalogue fonts, or to `false` to keep them off; left unset, the reader's File > Options > Trust Center toggle "Download fonts that are not installed or embedded" decides. Only family names and font files are requested, never the file or its text.
 - **Bundled code:** the TIFF decoder, equation renderer, embedded chart and metafile readers and stencil tools load from your own origin when a drawing or command needs them, carrying only the asset URL.
 - **Sharing:** nothing leaves the browser unless the host sets `collaboration` with a server, provider or session, or the reader types a server URL in File > Share; without one, File > Share connects windows of the same browser only.
-- **Storage:** OneDrive and other cloud places are used only when your app passes `fileProviders` or `storage`. On the device the viewer keeps preferences in localStorage (`ooxml-visio-options`, saved shapes) and, once the reader turns AutoRecover on, recovery copies in IndexedDB unless `storage` provides its own.
+- **Storage:** OneDrive and other cloud places are used only when your app passes `fileProviders` or `storage`. On the device the viewer keeps preferences in localStorage (`ooxml-visio-options`, saved shapes) and, once the reader turns AutoRecover on, recovery copies in IndexedDB (`ooxml-visio-recovery`) unless `storage` provides its own.
 - **Links:** hyperlinks open only when the reader follows them.
 
 See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#word-excel-and-visio).

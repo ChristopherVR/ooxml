@@ -118,7 +118,7 @@ The viewer renders and saves decks in the browser and never uploads them. Nothin
 - **Linked pictures and media (off by default).** Fetched only after the reader chooses Enable Content on the security bar, or always with `allowExternalContent: true`; `false` blocks them without the bar.
 - **Share and Broadcast (only when started).** Updates go to the server you configure; without one, peers meet through y-webrtc's public signalling server and public STUN servers. Pass your own `collaboration.signaling` list to avoid them.
 - **AI assistant (off unless you pass `ai`).** Requests go to the connection you configure, with the conversation and deck context (`contextStrategy: 'none'` sends no deck context).
-- **Links** (hyperlinks, Microsoft Forms responses) open only when clicked, in a new tab without opener or referrer.
+- **Links** (hyperlinks, Microsoft Forms responses) open only when clicked, in a new tab without opener or referrer. `file:` and `ftp:` links never open, and relative links (`notes.html`, `#part`) open, against your page's address, only after you call `setOpenRelativeHyperlinks(true)` from `ooxml-ui/pptx`.
 
 Autosave, recovery and preferences stay on the device (IndexedDB and localStorage). The full list, including Ink to Math and the camera, is in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#powerpoint-ooxml-uipptx-and-the-pptx--viewer-packages).
 

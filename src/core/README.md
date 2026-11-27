@@ -154,7 +154,7 @@ Legacy `.doc`, `.xls` and `.ppt` and the compound-file container come from the s
 
 - a source URL you pass instead of bytes;
 - collaboration or Teams servers you configure, and OneDrive when you set it up (an active Word collaboration session also shares inserted pictures, 3D models and Office objects with the room);
-- Excel `IMAGE` and `WEBSERVICE` formulas, only through a provider you supply (for example `createFetchImageProvider({ fetch, allowedOrigins })` as `providers.image`); without one they return `#BLOCKED!`;
+- Excel `IMAGE` and `WEBSERVICE` formulas, only through a provider you supply (for example `createFetchImageProvider({ fetch, allowedOrigins })` as `providers.image`, or `createFetchWebserviceProvider` as `providers.webservice`); without one `IMAGE` returns `#BLOCKED!` and `WEBSERVICE` `#NAME?`, and the Excel editor passes no `WEBSERVICE` provider;
 - in Node, the OCSP responder a signing certificate names, during `inspectPptxDigitalSignatures`; pass `{ checkRevocation: false }` to make no request.
 
 In a web build, a few lazy pieces (Excel's non-English dictionaries, the XPath code for `FILTERXML`, Visio's TIFF decoder and embedded chart reader) load from the app's own origin and carry no document data. Linked pictures and media are not fetched unless the load allows linked content. Every request is listed in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).

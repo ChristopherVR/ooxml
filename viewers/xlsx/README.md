@@ -62,7 +62,7 @@ Excel is **Stable** under the [stability policy](../../docs/stability.md): a fro
 
 ## Privacy and network use
 
-Workbooks open, calculate, edit and save on the device, and nothing collects analytics or telemetry. The editor loads workers and on-demand code (languages, chart, PivotTable, picture and shape tools) from the page's own origin, downloads fonts only when the reader or the host (`googleFonts`) turns that on, and otherwise contacts only destinations the host configures (`src`, `collaboration`, `fileProviders`, `imageProvider`). See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
+Workbooks open, calculate, edit and save on the device, and nothing collects analytics or telemetry. The editor loads workers and on-demand code (languages, chart, PivotTable, picture and shape tools) from the page's own origin, downloads fonts only when the reader or the host (`googleFonts`) turns that on, and otherwise contacts only destinations the host configures (`src`, `collaboration`, `fileProviders`, `imageProvider`) or a sharing server the reader types in File > Share. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
 
 ## Samples
 
