@@ -85,11 +85,11 @@ test('the Animation Pane selects which imported effect receives a Timing edit', 
 		.locator('[data-ribbon-control="animations.timing.start"]')
 		.getByRole('combobox');
 	await expectSelectValue(start, 'withPrevious');
-	await expect(start).toHaveAccessibleDescription(
-		'This effect uses imported triggers or shared timing that limit Start changes.',
-	);
+	// An imported With Previous effect can now leave its click group (it is split off), so no
+	// Start value is refused and the field carries no refusal reason.
+	await expect(start).toHaveAccessibleDescription('');
 	await start.click();
-	await expect(page.getByRole('option', { name: 'On Click', exact: true })).toBeDisabled();
+	await expect(page.getByRole('option', { name: 'On Click', exact: true })).toBeEnabled();
 	await start.press('Escape');
 	const duration = page.locator('[data-ribbon-control="animations.timing.duration"]');
 	await expect(duration).toHaveValue('1');
