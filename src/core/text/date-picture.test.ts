@@ -43,6 +43,12 @@ describe('formatDatePicture', () => {
 		expect(formatDatePicture(utc, 'dddd', { utc: true })).toBe('Saturday');
 	});
 
+	it('keeps the standalone month when the contextual one is only a number', () => {
+		const options = { locale: 'ja-JP', monthAfterDay: true };
+		expect(formatDatePicture(date, 'd MMMM', options)).toBe('6 11月');
+		expect(formatDatePicture(date, 'd MMMM', { ...options, locale: 'ru-RU' })).toBe('6 ноября');
+	});
+
 	it('falls back to English names for an unusable locale', () => {
 		expect(formatDatePicture(date, 'MMMM', { locale: 'not a locale!' })).toBe('November');
 	});

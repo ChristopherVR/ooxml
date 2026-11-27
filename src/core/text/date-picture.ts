@@ -39,10 +39,8 @@ function name(
 	} catch {
 		formatter = new Intl.DateTimeFormat('en-US', formatOptions);
 	}
-	return (
-		(part && formatter.formatToParts(date).find((item) => item.type === part)?.value) ||
-		formatter.format(date)
-	);
+	if (!part) return formatter.format(date);
+	return formatter.formatToParts(date).find((item) => item.type === part)?.value ?? '';
 }
 
 /** Formats `date` with a date/time picture; see the module comment for the tokens. */
@@ -62,10 +60,13 @@ export function formatDatePicture(
 	const hours12 = hours % 12 || 12;
 	const label = (options: Intl.DateTimeFormatOptions) => name(date, locale, utc, options);
 	let dayBeforeMonth = false;
-	const monthLabel = (width: 'long' | 'short') =>
-		dayBeforeMonth
+	const monthLabel = (width: 'long' | 'short') => {
+		const contextual = dayBeforeMonth
 			? name(date, locale, utc, { month: width, day: 'numeric' }, 'month')
-			: label({ month: width });
+			: '';
+		// Japanese and Chinese give the bare number there, with the month sign as a literal.
+		return /\p{L}/u.test(contextual) ? contextual : label({ month: width });
+	};
 	return picture.replace(TOKENS, (token) => {
 		switch (token) {
 			case 'yyyy':
