@@ -106,8 +106,9 @@ function buildIndex() {
 		if (!entries.has(key)) entries.set(key, { href, title, where });
 	};
 	let group = '';
-	for (const node of nav.querySelectorAll('h2, a')) {
-		if (node.tagName === 'H2') group = clean(node.textContent);
+	// A group label is a heading here; a page whose sidebar precedes its h1 uses a plain caption.
+	for (const node of nav.querySelectorAll('h2, .docs-nav-caption, a')) {
+		if (node.tagName !== 'A') group = clean(node.textContent);
 		else add(node.getAttribute('href'), clean(node.textContent), group || 'Shortcuts');
 	}
 	for (const card of document.querySelectorAll('.hub-card')) {

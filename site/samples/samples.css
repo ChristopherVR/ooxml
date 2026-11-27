@@ -1,5 +1,15 @@
 /* The samples gallery: the documentation hub's page (../docs/docs.css) with one card per file.
    A card is a hub card with a framed preview above it; see docs/pages-design.md. */
+/* The sidebar comes before the page's h1, so its group labels are captions, not headings: the
+   first heading a reader meets is the page title. They look as the hub's labels do. */
+.docs-nav-caption {
+	margin: 18px 0 4px;
+	padding: 0 10px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.55;
+	color: var(--muted);
+}
 .sample-grid {
 	align-items: stretch;
 }
@@ -127,6 +137,15 @@
 	.sample-card .hub-links a:active {
 		transform: scale(0.985);
 		transition: transform var(--press) var(--ease);
+	}
+}
+/* Fingers need a bigger target than a pointer does: 44 px, the size WCAG 2.5.5 asks for. */
+@media (pointer: coarse) {
+	.sample-card .hub-links a {
+		height: auto;
+		min-height: 44px;
+		padding: 0 16px;
+		font-size: 13px;
 	}
 }
 @media (forced-colors: active) {
