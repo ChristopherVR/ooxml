@@ -175,6 +175,14 @@ export const ADD_IN_MARKETPLACE_STRINGS = {
 		'アドインの詳細',
 		'추가 기능 세부 정보',
 	],
+	'Open the task pane from its ribbon command.': [
+		'Ouvrez le volet Office à partir de sa commande dans le ruban.',
+		'Öffnen Sie den Aufgabenbereich über den zugehörigen Menübandbefehl.',
+		'Abra el panel de tareas con su comando en la cinta.',
+		'请通过功能区中的命令打开任务窗格。',
+		'リボンのコマンドから作業ウィンドウを開いてください。',
+		'리본 명령을 사용하여 작업창을 여세요.',
+	],
 	'This add-in has no compatible task pane.': [
 		'Ce complément ne fournit aucun volet compatible.',
 		'Dieses Add-In hat keinen kompatiblen Aufgabenbereich.',

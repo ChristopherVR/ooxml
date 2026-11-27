@@ -209,6 +209,11 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 		}
 		await pane.getByRole('button', { name: 'Close', exact: true }).click();
 		await openDialog();
+		if (file.name === 'manifest.json') {
+			const open = dialog.getByRole('button', { name: 'Open Notes', exact: true });
+			await expect(open).toBeDisabled();
+			await expect(open).toHaveAccessibleDescription('Open the task pane from its ribbon command.');
+		}
 		await dialog.getByRole('button', { name: 'Remove Notes', exact: true }).click();
 		await expect(dialog).toBeHidden();
 		await expect(editor.getByRole('tab', { name: addInName, exact: true })).toHaveCount(0);

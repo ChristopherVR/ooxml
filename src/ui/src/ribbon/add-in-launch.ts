@@ -20,7 +20,18 @@ export function addInLauncher(
 			return { reason: t('Installed for this editor. Running add-ins is unavailable.') };
 		if (runtime.frameSrcEnforced !== true)
 			return { reason: t('The host must enforce a frame policy to run add-ins.') };
-		if (!source) return { reason: t('This add-in has no compatible task pane.') };
+		if (!source) {
+			const hasPaneCommand = addIn.manifest.tabs.some(({ groups }) =>
+				groups.some(({ commands }) => commands.some(({ kind }) => kind === 'taskPane')),
+			);
+			return {
+				reason: t(
+					hasPaneCommand
+						? 'Open the task pane from its ribbon command.'
+						: 'This add-in has no compatible task pane.',
+				),
+			};
+		}
 		const url = allowedPaneUrl(source, runtime);
 		if (!url || url.origin === host.ownerDocument.location?.origin)
 			return { reason: t('The host has not approved this task pane origin.') };
