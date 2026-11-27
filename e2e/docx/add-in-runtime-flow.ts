@@ -56,7 +56,7 @@ interface Flow {
 }
 
 export async function checkTabClipping(editor: Locator, edge: 'left' | 'right') {
-	const strip = editor.getByRole('tablist').first();
+	const strip = editor.locator('office-ui-ribbon').getByRole('tablist');
 	await expect
 		.poll(() =>
 			strip.evaluate((list, side) => {
@@ -157,7 +157,7 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 				const more = editor.getByRole('button', { name: 'More tabs', exact: true });
 				await expect(more).toBeVisible();
 				await checkTabClipping(editor, 'right');
-				const strip = await editor.getByRole('tablist').first().boundingBox();
+				const strip = await editor.locator('office-ui-ribbon').getByRole('tablist').boundingBox();
 				const cue = await more.boundingBox();
 				expect((strip?.x ?? 0) + (strip?.width ?? 0)).toBeLessThanOrEqual(cue?.x ?? 0);
 				await more.focus();
