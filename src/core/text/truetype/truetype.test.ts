@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseTrueType } from './parse';
 import { subsetTrueType } from './subset';
+import { syntheticTrueType } from './test-support/synthetic-truetype';
 
 function table(name: string, bytes: number[]) {
 	return { name, bytes };
@@ -106,6 +107,17 @@ describe('TrueType parsing', () => {
 		expect(font.advance(2)).toBe(700);
 		expect(font.outline(0).length).toBe(0);
 		expect(font.outline(1).length).toBeGreaterThan(0);
+	});
+
+	it('reads a symbol font that has only the Windows symbol character map', () => {
+		// Symbol and Wingdings map U+F020..U+F0FF; 0x20..0xFF select the same glyphs.
+		const font = parseTrueType(syntheticTrueType([[0xf0fc, 2]], 0))!;
+		expect(font).toBeDefined();
+		expect(font.symbolEncoded).toBe(true);
+		expect(font.glyphFor(0xf0fc)).toBe(2);
+		expect(font.glyphFor(0xfc)).toBe(2);
+		expect(font.glyphFor(0x2713)).toBe(0);
+		expect(parseTrueType(syntheticTrueType())!.symbolEncoded).toBe(false);
 	});
 
 	it('refuses data that is not TrueType', () => {

@@ -5,7 +5,7 @@
  * Raster-only documents can use `pdf-pages.ts`.
  */
 import { zlibCompress } from '../../opc/index';
-import { pdfLiteral } from './pdf-fonts';
+import { pdfLiteral, usesBuiltInEncoding } from './pdf-fonts';
 import type { PdfCidFont } from './pdf-cid-font';
 import {
 	fileIdentifier,
@@ -400,7 +400,7 @@ export function buildVectorPdf(
 				fontIds.set(base, id);
 				object(
 					id,
-					`<< /Type /Font /Subtype /Type1 /BaseFont /${base} /Encoding /WinAnsiEncoding >>`,
+					`<< /Type /Font /Subtype /Type1 /BaseFont /${base}${usesBuiltInEncoding(base) ? '' : ' /Encoding /WinAnsiEncoding'} >>`,
 				);
 			}
 			fontEntries.push(`/${name} ${id} 0 R`);

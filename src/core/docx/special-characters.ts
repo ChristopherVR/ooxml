@@ -7,24 +7,28 @@ import {
 	isStPTabRelativeTo,
 } from './generated/wml-simple-types';
 import type { TextRun } from './model';
+import { isLikelySymbolFont } from '../text/symbol-fonts';
 import { getW, makeW, named, textContent, type XmlDocument, type XmlElement } from './xml';
 
 export const SOFT_HYPHEN = '\u00AD';
 export const NON_BREAKING_HYPHEN = '\u2011';
 
 /**
- * The character a symbol shows: Word codes symbol-font characters from U+F000 (`F0FE`). Empty
- * for a code that is not a character (beyond U+10FFFF, or half of a surrogate pair).
+ * The character a symbol shows: Word codes symbol-font characters from U+F000 (`F0FE`), and a
+ * code below U+0100 in a symbol font means the same glyph. In any other font (`font` named and not
+ * a symbol font, such as Calibri) the code is the Unicode character: `00A7` is `§`. Empty for a
+ * code that is not a character (beyond U+10FFFF, or half of a surrogate pair).
  */
-export function symbolCharacter(char: string): string {
+export function symbolCharacter(char: string, font?: string): string {
 	const code = /^[0-9a-f]{1,6}$/i.test(char) ? Number.parseInt(char, 16) : Number.NaN;
 	if (!Number.isInteger(code) || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return '';
-	return String.fromCodePoint(code < 0x100 ? 0xf000 + code : code);
+	const symbolFont = !font || isLikelySymbolFont(font);
+	return String.fromCodePoint(code < 0x100 && symbolFont ? 0xf000 + code : code);
 }
 
 /** Whether a run's text is only its symbol, so the whole run is drawn in the symbol's font. */
 export function symbolOnly(run: TextRun): boolean {
-	const symbol = run.symbol && symbolCharacter(run.symbol.char);
+	const symbol = run.symbol && symbolCharacter(run.symbol.char, run.symbol.font);
 	return Boolean(symbol && run.text && [...run.text].every((character) => character === symbol));
 }
 
@@ -33,7 +37,7 @@ export function symbolOnly(run: TextRun): boolean {
  * symbols can be drawn in the symbol's font and the text in the run's own.
  */
 export function symbolSegments(run: TextRun): TextRun[] {
-	const symbol = run.symbol && symbolCharacter(run.symbol.char);
+	const symbol = run.symbol && symbolCharacter(run.symbol.char, run.symbol.font);
 	if (!symbol || symbolOnly(run) || !run.text.includes(symbol)) return [run];
 	const segments: TextRun[] = [];
 	let piece = '';
@@ -69,11 +73,11 @@ export function runSymbol(content: readonly XmlElement[]): TextRun['symbol'] | n
 	for (const child of content) {
 		if (!named(child, 'sym')) continue;
 		const symbol = { font: getW(child, 'font') ?? '', char: getW(child, 'char') ?? '' };
-		if (!isSymbolFontCharacter(symbolCharacter(symbol.char))) return null;
+		if (!isSymbolFontCharacter(symbolCharacter(symbol.char, symbol.font))) return null;
 		if (found && (found.font !== symbol.font || found.char !== symbol.char)) return null;
 		found = symbol;
 	}
-	const character = found && symbolCharacter(found.char);
+	const character = found && symbolCharacter(found.char, found.font);
 	if (
 		character &&
 		content.some(
@@ -112,7 +116,7 @@ export function runPositionalTab(
 
 /** The text a run's special-character element stands for, or undefined for other content. */
 export function specialCharacterText(child: XmlElement): string | undefined {
-	if (named(child, 'sym')) return symbolCharacter(getW(child, 'char') ?? '');
+	if (named(child, 'sym')) return symbolCharacter(getW(child, 'char') ?? '', getW(child, 'font'));
 	if (named(child, 'ptab')) return '\t';
 	if (named(child, 'softHyphen')) return SOFT_HYPHEN;
 	if (named(child, 'noBreakHyphen')) return NON_BREAKING_HYPHEN;
@@ -149,7 +153,7 @@ export function specialCharacterElement(
 	}
 	if (character === SOFT_HYPHEN) return makeW(doc, 'softHyphen');
 	if (character === NON_BREAKING_HYPHEN) return makeW(doc, 'noBreakHyphen');
-	if (run.symbol && character === symbolCharacter(run.symbol.char))
+	if (run.symbol && character === symbolCharacter(run.symbol.char, run.symbol.font))
 		return element(doc, 'sym', { font: run.symbol.font, char: run.symbol.char });
 	return undefined;
 }

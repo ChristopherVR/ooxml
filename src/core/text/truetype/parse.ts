@@ -33,7 +33,15 @@ export interface TrueTypeFont {
 	readonly embeddingFlags: number;
 	/** 0 short, 1 long `loca` offsets. */
 	readonly locaFormat: number;
-	/** The glyph for a code point, or 0 when the font has none. */
+	/**
+	 * Whether the font maps characters only through a Windows symbol cmap (platform 3, encoding 0),
+	 * as Symbol, Wingdings and Webdings do: its codes are U+F020..U+F0FF.
+	 */
+	readonly symbolEncoded: boolean;
+	/**
+	 * The glyph for a code point, or 0 when the font has none. In a symbol-encoded font a code
+	 * from 0x20 to 0xFF selects the glyph of U+F020..U+F0FF, as the OpenType `cmap` notes advise.
+	 */
 	glyphFor(codePoint: number): number;
 	/** Advance width of a glyph in font units. */
 	advance(glyph: number): number;
@@ -93,27 +101,45 @@ function format12(view: DataView, at: number): Lookup {
 	};
 }
 
-function characterMap(view: DataView, table: number): Lookup | undefined {
+function characterMap(
+	view: DataView,
+	table: number,
+): { lookup: Lookup; symbol: boolean } | undefined {
 	const count = u16(view, table + 2);
-	let best: { rank: number; at: number } | undefined;
+	let best: { rank: number; at: number; symbol: boolean } | undefined;
 	for (let index = 0; index < count; index++) {
 		const platform = u16(view, table + 4 + index * 8);
 		const encoding = u16(view, table + 6 + index * 8);
 		const at = table + u32(view, table + 8 + index * 8);
 		const format = u16(view, at);
 		if (format !== 4 && format !== 12) continue;
+		const symbol = platform === 3 && encoding === 0;
+		// A Unicode map wins; a symbol font (Symbol, Wingdings) has only the Windows symbol map.
 		const rank =
 			(platform === 3 && encoding === 10) || (platform === 0 && format === 12)
-				? 3
+				? 4
 				: platform === 3 && encoding === 1
-					? 2
+					? 3
 					: platform === 0
-						? 1
-						: 0;
-		if (rank > 0 && (!best || rank > best.rank)) best = { rank, at };
+						? 2
+						: symbol
+							? 1
+							: 0;
+		if (rank > 0 && (!best || rank > best.rank)) best = { rank, at, symbol };
 	}
 	if (!best) return undefined;
-	return u16(view, best.at) === 12 ? format12(view, best.at) : format4(view, best.at);
+	const lookup = u16(view, best.at) === 12 ? format12(view, best.at) : format4(view, best.at);
+	if (!best.symbol) return { lookup, symbol: false };
+	return {
+		symbol: true,
+		lookup: (code) =>
+			lookup(code) ||
+			(code >= 0x20 && code <= 0xff
+				? lookup(0xf000 + code)
+				: code >= 0xf020 && code <= 0xf0ff
+					? lookup(code - 0xf000)
+					: 0),
+	};
 }
 
 /** Parse a TrueType font; `undefined` when it is not TrueType outlines or is malformed. */
@@ -146,8 +172,9 @@ export function parseTrueType(data: Uint8Array): TrueTypeFont | undefined {
 	const glyphCount = u16(view, maxp.offset + 4);
 	if (!unitsPerEm || !glyphCount) return undefined;
 	const locaFormat = i16(view, head.offset + 50);
-	const lookup = characterMap(view, cmap.offset);
-	if (!lookup) return undefined;
+	const map = characterMap(view, cmap.offset);
+	if (!map) return undefined;
+	const { lookup } = map;
 	const metrics = u16(view, hhea.offset + 34);
 	const os2 = tables.get('OS/2');
 	const post = tables.get('post');
@@ -179,6 +206,7 @@ export function parseTrueType(data: Uint8Array): TrueTypeFont | undefined {
 		capHeight: os2 && os2.length >= 90 ? i16(view, os2.offset + 88) || undefined : undefined,
 		embeddingFlags: os2 ? u16(view, os2.offset + 8) : 0,
 		locaFormat,
+		symbolEncoded: map.symbol,
 		glyphFor: (code) => {
 			const glyph = lookup(code);
 			return glyph < glyphCount ? glyph : 0;

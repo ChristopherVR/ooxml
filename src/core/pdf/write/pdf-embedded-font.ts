@@ -160,7 +160,11 @@ export class PdfFontSet {
 			(names.includes(font.family.toLowerCase()) ? 4 : 0) +
 			(font.bold === bold ? 2 : 0) +
 			(font.italic === italic ? 1 : 0);
-		return [...this.fonts].sort((a, b) => score(b) - score(a)).find((font) => font.covers(text));
+		// A symbol font "covers" Latin text with its pictures: it writes only text asked of it.
+		return [...this.fonts]
+			.filter((font) => !font.font.symbolEncoded || names.includes(font.family.toLowerCase()))
+			.sort((a, b) => score(b) - score(a))
+			.find((font) => font.covers(text));
 	}
 	/** Whether text in `family` should be written with a supplied font when one covers it. */
 	prefers(family: string): boolean {

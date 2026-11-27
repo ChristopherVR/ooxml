@@ -18,7 +18,7 @@ const symbolOf = (node: Node): TextRun['symbol'] =>
 /** The decorations for the symbol characters of the text node at `pos`. */
 function nodeDecorations(node: Node, pos: number): Decoration[] {
 	const symbol = symbolOf(node);
-	const character = symbol && symbolCharacter(symbol.char);
+	const character = symbol && symbolCharacter(symbol.char, symbol.font);
 	if (!symbol || !character) return [];
 	const style = `font-family:"${symbol.font.replace(/["';{}\\]/g, '')}"`;
 	const decorations: Decoration[] = [];

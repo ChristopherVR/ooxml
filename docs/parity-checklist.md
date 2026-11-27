@@ -874,6 +874,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (`w:tblPrChange`, `w:trPrChange`, `w:tcPrChange`, `w:sectPrChange`) get formatting balloons;
       and `pdfALevel: 'A'` (PDF/A-2a) and `pdfUa: true` (PDF/UA-1) validate and declare conformance
       honestly (#318).
+- [ ] **P2** Save as PDF draws symbol-font text (`w:sym`, Symbol, Wingdings and Webdings runs)
+      from the host's font file when one is supplied (its Windows symbol character map is read and
+      the subset embedded with a ToUnicode map), and Symbol without one in the standard PDF Symbol
+      font. Wingdings and Webdings pictures without the font file are written as their Unicode
+      equivalents, which only show when a supplied font or WinAnsi has them; otherwise they are
+      reported missing (#365).
 - [x] **P1** Opening a PDF converts it into an editable document, as Word's PDF Reflow does
       (`ooxml-core/docx/pdf-import`, `ooxml-core/pdf`; File > Open accepts `.pdf`, #319): flowing
       paragraphs with rejoined hyphenation, character formatting (font, size, bold, italic,

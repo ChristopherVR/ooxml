@@ -46,7 +46,9 @@ function topLevel(node: XmlElement, paragraph: XmlElement): XmlElement {
 /** The characters a run element's content stands for, one entry per content element. */
 function contentLength(child: XmlElement): number {
 	if (named(child, 't') || named(child, 'delText')) return (child.textContent ?? '').length;
-	return named(child, 'sym') ? symbolCharacter(getW(child, 'char') ?? '').length || 1 : 1;
+	return named(child, 'sym')
+		? symbolCharacter(getW(child, 'char') ?? '', getW(child, 'font')).length || 1
+		: 1;
 }
 
 /**

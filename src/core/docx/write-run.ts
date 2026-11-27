@@ -259,7 +259,7 @@ export function setRunProperties(
 
 /** A run's text as ordinary stretches and the single characters Word stores as elements. */
 function textPieces(run: TextRun): string[] {
-	const symbol = run.symbol && symbolCharacter(run.symbol.char);
+	const symbol = run.symbol && symbolCharacter(run.symbol.char, run.symbol.font);
 	const special = new Set([
 		'\n',
 		'\t',

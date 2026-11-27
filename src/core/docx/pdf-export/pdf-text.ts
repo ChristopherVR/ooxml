@@ -17,7 +17,14 @@ import {
 	type TextMeasurer,
 } from '../layout/index';
 import type { PdfFontSet } from '../../pdf/write/pdf-embedded-font';
-import { encodeWinAnsi, pdfBaseFont, pdfTextWidth } from '../../pdf/write/pdf-fonts';
+import {
+	PDF_SYMBOL_FONT,
+	encodeWinAnsi,
+	pdfBaseFont,
+	pdfTextWidth,
+	standardSymbolBytes,
+} from '../../pdf/write/pdf-fonts';
+import { isSymbolEncodedFont, symbolTextToUnicode } from '../../text/symbol-fonts';
 import { parseColor, type Rgba } from '../../pdf/write/pdf-svg-style';
 import type { PdfVectorPage } from '../../pdf/write/pdf-vector';
 import { paintContentControlTag } from './pdf-content-control-tag';
@@ -205,6 +212,18 @@ export class DocxPdfText {
 		const space = gapPx > 0 && !/\s$/.test(text);
 		const wordSpacing = (scale: number, spaceNatural: number) =>
 			(gapPx * 100) / scale - spaceNatural - spacing;
+		if (isSymbolEncodedFont(family) && !this.fonts.pick(family, bold, italic, text)) {
+			// Without the symbol font's file: Symbol's codes are the standard Symbol font's, and other
+			// symbol fonts' pictures are written as their Unicode equivalents where they have one.
+			const bytes = standardSymbolBytes(family, text);
+			if (bytes !== undefined) {
+				this.report.substituted(family, PDF_SYMBOL_FONT);
+				const scale = fit(pdfTextWidth(bytes, PDF_SYMBOL_FONT) * sizePx);
+				page.text(PDF_SYMBOL_FONT, sizePx, x, y, bytes, { character: spacing, scale });
+				return;
+			}
+			text = symbolTextToUnicode(family, text) ?? text;
+		}
 		const ascii = encodeWinAnsi(text);
 		const embedded =
 			this.fonts.prefers(family) || ascii === undefined

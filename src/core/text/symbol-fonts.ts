@@ -222,6 +222,22 @@ export function isSymbolEncodedFont(family: string | undefined): boolean {
 }
 
 /**
+ * Whether `family` is probably symbol-encoded: one of Office's symbol fonts, or a font named like
+ * the other common ones (Marlett, MT Extra, Monotype Sorts, MS Outlook, Bookshelf Symbol...).
+ * Without the font file this is the best guess of how a code below U+0100 is meant.
+ */
+export function isLikelySymbolFont(family: string | undefined): boolean {
+	const name = normaliseFamily(family);
+	return (
+		SYMBOL_ENCODED.has(name) ||
+		// Not Segoe UI Symbol or Noto Sans Symbols, which are Unicode fonts.
+		/dings|^symbol|bookshelf symbol|sorts|^marlett$|^mt extra$|^ms outlook$|^ms reference specialty$/.test(
+			name,
+		)
+	);
+}
+
+/**
  * The Unicode equivalent of one character painted in a symbol-encoded font, or
  * `undefined` when the font is not symbol-encoded or the glyph has no listed
  * equivalent. Private-use code points (U+F020..U+F0FF) are read as their byte.

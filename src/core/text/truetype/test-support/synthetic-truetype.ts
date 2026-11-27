@@ -5,8 +5,14 @@
 const be16 = (v: number) => [(v >> 8) & 255, v & 255];
 const be32 = (v: number) => [(v >>> 24) & 255, (v >> 16) & 255, (v >> 8) & 255, v & 255];
 
-/** `extra` maps more characters (code point, glyph 1 to 3; in the BMP) to the glyphs. */
-export function syntheticTrueType(extra: readonly (readonly [number, number])[] = []): Uint8Array {
+/**
+ * `extra` maps more characters (code point, glyph 1 to 3; in the BMP) to the glyphs. `encoding` is
+ * the Windows cmap encoding: 1 (Unicode BMP), or 0 for a symbol font's cmap.
+ */
+export function syntheticTrueType(
+	extra: readonly (readonly [number, number])[] = [],
+	encoding: 0 | 1 = 1,
+): Uint8Array {
 	const simple = [...be16(1), ...be16(0), ...be16(0), ...be16(100), ...be16(100), 0, 0, 0, 0, 0, 0];
 	const pad = (b: number[]) => (b.length % 4 ? [...b, ...Array(4 - (b.length % 4)).fill(0)] : b);
 	const glyphs = [[], pad(simple), pad(simple), []] as number[][];
@@ -54,7 +60,7 @@ export function syntheticTrueType(extra: readonly (readonly [number, number])[] 
 		...segments.flatMap((s) => be16(s[2] & 0xffff)),
 		...segments.flatMap(() => be16(0)),
 	];
-	const cmap = [...be16(0), ...be16(1), ...be16(3), ...be16(1), ...be32(12), ...sub];
+	const cmap = [...be16(0), ...be16(1), ...be16(3), ...be16(encoding), ...be32(12), ...sub];
 	const tables = [
 		{ name: 'cmap', bytes: cmap },
 		{ name: 'glyf', bytes: glyphs.flat() },
