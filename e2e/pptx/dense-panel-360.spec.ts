@@ -57,6 +57,7 @@ import {
 	slideElements,
 	thumbnail,
 } from './support/deck';
+import { openOptionsDialog, optionsCategory } from './support/settings-dialog';
 
 const deck = resolve(
 	fileURLToPath(new URL('../../viewers/pptx/.github/assets/sample-deck.pptx', import.meta.url)),
@@ -220,19 +221,6 @@ function missingFrom(expected: Set<string>, actual: Set<string>): string[] {
 
 // ── Options / Print / Share / AI panel: resize in place ─────────────────────
 
-async function openOptionsDialogAny(page: Page): Promise<Locator> {
-	await page.getByRole('tab', { name: 'File', exact: true }).click();
-	const backstage = page.locator('[role="dialog"][aria-label="File"]');
-	await backstage.waitFor();
-	await backstage.locator('aside nav button').last().click();
-	const dialog = page
-		.getByRole('dialog')
-		.filter({ hasText: /options/iu })
-		.first();
-	await dialog.waitFor();
-	return dialog;
-}
-
 /**
  * Open a File-backstage entry (e.g. "Print", "Share") that is a two-step
  * flow: the nav rail switches the backstage to that entry's own page, which
@@ -311,7 +299,8 @@ test.describe('dense panels at 360x640: resize in place', () => {
 
 	test('Options dialog', async ({ page }) => {
 		await load(page);
-		const dialog = await openOptionsDialogAny(page);
+		const dialog = await openOptionsDialog(page, ['Options']);
+		await expect(optionsCategory(dialog, 'General')).toBeVisible();
 		await resizeAndReverify(page, dialog, 'Options dialog');
 	});
 
