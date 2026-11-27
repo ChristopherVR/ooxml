@@ -67,7 +67,7 @@ test.describe('Word-style ribbon', () => {
 		await surface.click();
 		await page.keyboard.type('A heading');
 		const tile = editor.locator('.style-tile[data-style-id="Heading1"]');
-		await expect(tile).toBeVisible();
+		await reveal(editor, tile);
 		await tile.click();
 		await expect(tile).toHaveAttribute('aria-pressed', 'true');
 	});
@@ -286,7 +286,9 @@ test.describe('Word-style ribbon', () => {
 		const surface = editor.locator('.ProseMirror').first();
 		await surface.click();
 		await page.keyboard.type('Styled heading');
-		await editor.getByRole('button', { name: 'More styles' }).click();
+		const more = editor.getByRole('button', { name: 'More styles' });
+		await reveal(editor, more);
+		await more.click();
 		const popover = editor.locator('.styles-popover');
 		await expect(popover).toBeVisible();
 		await expect(popover.locator('.style-tile[data-style-id="TOC1"]')).toHaveCount(0);
@@ -296,7 +298,9 @@ test.describe('Word-style ribbon', () => {
 			'aria-pressed',
 			'true',
 		);
-		await editor.getByRole('button', { name: 'Styles pane', exact: true }).click();
+		const stylesPane = editor.getByRole('button', { name: 'Styles pane', exact: true });
+		await reveal(editor, stylesPane);
+		await stylesPane.click();
 		const pane = editor.locator('.dve-styles-pane');
 		await expect(pane).toBeVisible();
 		await pane.locator('.style-tile[data-style-id="TOC1"]').click();
@@ -304,7 +308,8 @@ test.describe('Word-style ribbon', () => {
 			'aria-pressed',
 			'true',
 		);
-		await editor.getByRole('button', { name: 'Styles pane', exact: true }).click();
+		await reveal(editor, stylesPane);
+		await stylesPane.click();
 		await expect(pane).toBeHidden();
 	});
 
@@ -313,10 +318,14 @@ test.describe('Word-style ribbon', () => {
 		const surface = editor.locator('.ProseMirror').first();
 		await surface.click();
 		await page.keyboard.type('Chapter one');
-		await editor.locator('.style-tile[data-style-id="Heading1"]').first().click();
+		const tile = editor.locator('.style-tile[data-style-id="Heading1"]').first();
+		await reveal(editor, tile);
+		await tile.click();
 		await page.keyboard.press('Enter');
 		await page.keyboard.type('Some later text');
-		await editor.getByRole('combobox', { name: 'Find options' }).selectOption('goto');
+		const find = editor.getByRole('combobox', { name: 'Find options' });
+		await reveal(editor, find);
+		await find.selectOption('goto');
 		const panel = editor.locator('.go-to-panel');
 		const items = panel.locator('.go-to-list [role="option"]');
 		await expect(items).toHaveText(['Chapter one']);
