@@ -138,7 +138,8 @@ export const GRID_CSS = `
 .xg-ink-lasso{position:absolute;box-sizing:border-box;border:1px dashed var(--office-accent, #217346);pointer-events:none}
 .xg-ink-replay{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;z-index:7}
 .xg-pivot-chart-buttons{position:absolute;inset:3px 3px auto;display:flex;gap:3px;flex-wrap:wrap;max-height:35%;overflow:auto;pointer-events:auto}
-.xg-pivot-chart-buttons button{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--office-surface,#f4f4f4);color:var(--office-text,#222);border:1px solid var(--office-border,#888);border-radius:2px;font:inherit;cursor:pointer}
+/* Field buttons are UI chrome over the chart: they follow the --office-* theme, not the chart's colours. */
+.xg-pivot-chart-buttons button{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--office-surface,#f3f4f6);color:var(--office-foreground,#1f2937);border:1px solid var(--office-control-border,#8a8886);border-radius:2px;font:inherit;cursor:pointer;color-scheme:var(--office-color-scheme,light)}
 .xg-pivot-chart-buttons button::after{content:' ▾'}
 .xg-pivot-chart-buttons button[aria-disabled=true]{cursor:default;opacity:.65}
 .xg-pivot-chart-buttons button:focus-visible{outline:2px solid var(--office-accent,#217346);outline-offset:-2px}
@@ -206,5 +207,6 @@ export const GRID_CSS = `
 /* Forced colours: the sheet follows the system canvas, so gridlines take the system's muted text colour. */
 @media (forced-colors:active){.xg-gl{background:GrayText}
 .xg-fb-active{border-color:Highlight}.xg-fb-active::before{background:Highlight}
-.xg-sl-selected,.xg-sl-selected:hover{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}}
+.xg-sl-selected,.xg-sl-selected:hover{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}
+.xg-pivot-chart-buttons button{background:ButtonFace;color:ButtonText;border-color:ButtonText}.xg-pivot-chart-buttons button[aria-disabled=true]{color:GrayText;opacity:1}}
 `;
