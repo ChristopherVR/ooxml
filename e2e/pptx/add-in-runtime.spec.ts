@@ -37,7 +37,11 @@ for (const scenario of addInReviewScenarios) {
 				const upload = page.locator('#file-input');
 				const stage = slideStage(page);
 				await expect(stage.or(upload).first()).toBeAttached();
-				if (await upload.count()) await upload.setInputFiles(SAMPLE_DECK);
+				if (!(await stage.isVisible())) {
+					await upload.setInputFiles(SAMPLE_DECK, { timeout: 2_000 }).catch(async (error) => {
+						if (!(await stage.isVisible())) throw error;
+					});
+				}
 				await expect(stage).toBeVisible();
 			},
 			async openDialog() {
@@ -58,7 +62,9 @@ for (const scenario of addInReviewScenarios) {
 	});
 }
 
-test('a picture selection takes precedence over the active add-in ribbon tab', async ({ page }) => {
+test('an app-driven contextual tab change clears the active add-in ribbon tab', async ({
+	page,
+}) => {
 	await loadDeck(page, fixture('ribbon-galleries.pptx'));
 	await ribbonTab(page, 'Insert').click();
 	const group = page.locator('[data-ribbon-group="insert.addIns"]');
@@ -70,10 +76,15 @@ test('a picture selection takes precedence over the active add-in ribbon tab', a
 		buffer: Buffer.from(jsonManifest),
 	});
 	await dialog.getByRole('button', { name: 'Install Notes' }).click();
+	await expect(dialog).toBeHidden();
+	await selectElement(page, elementsOfType(page, 'image').first());
+	const pictureFormat = ribbonTab(page, 'Picture Format');
+	await pictureFormat.click();
+	await expect(pictureFormat).toHaveAttribute('aria-selected', 'true');
 	const notes = ribbonTab(page, 'Notes');
 	await notes.click();
 	await expect(notes).toHaveAttribute('aria-selected', 'true');
-	await selectElement(page, elementsOfType(page, 'image').first());
-	await expect(ribbonTab(page, 'Picture Format')).toHaveAttribute('aria-selected', 'true');
+	await slideStage(page).click({ position: { x: 3, y: 3 } });
+	await expect(pictureFormat).toHaveCount(0);
 	await expect(notes).toHaveAttribute('aria-selected', 'false');
 });
