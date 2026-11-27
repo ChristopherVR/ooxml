@@ -54,25 +54,30 @@ for (const width of [1000, 1280]) {
 				const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 				await toolbar.getByRole('tab', { name: tab, exact: true }).click();
 				for (const name of commands) {
-					// Near 1000px a group can become a popup (font metrics decide), as in Office: open it.
 					const group = INSERT_GROUP_OF[name] ?? DESIGN_GROUP_OF[name];
-					const collapsed = toolbar.locator(`[data-ribbon-group="${group}"][data-collapsed]`);
-					const popup = group !== undefined && (await collapsed.count()) > 0;
-					if (popup) {
-						await collapsed.locator('[data-pptx-chrome="ribbon-collapse"]').click();
-					}
 					const command = toolbar.getByRole('button', { name, exact: true });
-					await expect(command).toBeVisible();
-					const { height, scaled } = await command.evaluate(controlSize);
-					if (popup) {
+					const face = group
+						? toolbar.locator(
+								`[data-ribbon-group="${group}"][data-collapsed] [data-pptx-chrome="ribbon-collapse"]`,
+							)
+						: null;
+					// Fonts and mounting can trigger another refit after the tab opens.
+					await expect(async () => {
+						if (!(await command.isVisible()) && (await face?.isVisible())) {
+							await face.click({ timeout: 1_000 });
+						}
+						await expect(command).toBeVisible({ timeout: 1_000 });
+						const { height, scaled } = await command.evaluate(controlSize);
+						// Large commands use 66px tiles. Smaller commands use 24-36px rows.
+						const tile = large && !scaled;
+						expect(height, `${name} must not stretch to the ribbon height`).toBeLessThanOrEqual(
+							tile ? 66 : 36,
+						);
+						expect(height, `${name} height`).toBeGreaterThanOrEqual(tile ? 66 : 24);
+					}).toPass({ timeout: 10_000 });
+					if (await face?.isVisible()) {
 						await page.keyboard.press('Escape');
 					}
-					// Large commands are Office's 66px glyph-over-caption tiles; the rest stay 24-36px rows.
-					const tile = large && !scaled;
-					expect(height, `${name} must not stretch to the ribbon height`).toBeLessThanOrEqual(
-						tile ? 66 : 36,
-					);
-					expect(height, `${name} height`).toBeGreaterThanOrEqual(tile ? 66 : 24);
 				}
 				if (tab === 'Transitions') {
 					// Preview is a large (icon above label) command, as in PowerPoint.
