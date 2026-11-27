@@ -88,12 +88,14 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		content.dataset.caption = group.dataset.caption ?? '';
 		content.setAttribute('role', 'group');
 		content.setAttribute('aria-label', group.getAttribute('aria-label') ?? '');
-		// A floor, not a width: the pop-out may style its controls wider than the ribbon did.
-		if (options.naturalWidth) content.style.minWidth = `${group.dataset.natural ?? 200}px`;
+		if (options.naturalWidth) content.style.width = `${group.dataset.natural ?? 200}px`;
 		const moved = [...group.children].filter((child) => child !== button);
 		content.append(...moved);
 		pop.append(content);
 		ribbon.append(pop);
+		// The dropdown may style its controls wider than the ribbon did: widen to fit what cannot wrap.
+		if (options.naturalWidth && content.scrollWidth > content.clientWidth)
+			content.style.width = `${content.scrollWidth}px`;
 		const box = button.getBoundingClientRect();
 		pop.style.top = `${box.bottom + 2}px`;
 		const width = doc.defaultView?.innerWidth ?? 1024;

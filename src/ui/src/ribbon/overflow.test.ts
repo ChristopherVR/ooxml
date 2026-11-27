@@ -75,14 +75,30 @@ describe('ribbon overflow', () => {
 		expect(document.querySelector('.ribbon-overflow-panel')).toBeNull();
 	});
 
-	it('gives a dropdown its natural width as a floor, so wider dropdown controls still fit', () => {
+	it('gives a dropdown its natural width and widens it when its controls overflow', () => {
 		const natural = createRibbonOverflow({ ...options, naturalWidth: true });
 		const { el, groups } = panel(150);
 		natural.fitPanel(el);
-		groups[1]!.querySelector<HTMLButtonElement>('.ribbon-overflow-button')!.click();
-		const content = document.querySelector<HTMLElement>('.ribbon-overflow-content')!;
-		expect(content.style.minWidth).toBe('100px');
-		expect(content.style.width).toBe('');
+		const toggle = groups[1]!.querySelector<HTMLButtonElement>('.ribbon-overflow-button')!;
+		toggle.click();
+		expect(document.querySelector<HTMLElement>('.ribbon-overflow-content')!.style.width).toBe(
+			'100px',
+		);
+		natural.close();
+		const scroll = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollWidth')!;
+		Object.defineProperty(HTMLElement.prototype, 'scrollWidth', {
+			configurable: true,
+			get: () => 130,
+		});
+		try {
+			toggle.click();
+			expect(document.querySelector<HTMLElement>('.ribbon-overflow-content')!.style.width).toBe(
+				'130px',
+			);
+		} finally {
+			delete (HTMLElement.prototype as { scrollWidth?: number }).scrollWidth;
+			Object.defineProperty(Element.prototype, 'scrollWidth', scroll);
+		}
 		natural.close();
 	});
 
