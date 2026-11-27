@@ -472,9 +472,17 @@ test.describe('Home font extras and paragraph menus', () => {
 		await expect(change).toHaveAttribute('aria-expanded', 'true');
 		await page.getByRole('menuitem', { name: 'UPPERCASE', exact: true }).click();
 		await expect(change).toHaveAttribute('aria-expanded', 'false');
-		await expect(page.getByText('PRODUCT OVERVIEW').first()).toBeVisible();
+		await expect(
+			slideElements(page)
+				.filter({ hasText: /PRODUCT OVERVIEW/u })
+				.first(),
+		).toBeVisible();
 		await page.keyboard.press('Control+z');
-		await expect(elementWithText(page, 'Product Overview')).toBeVisible();
+		await expect(
+			slideElements(page)
+				.filter({ hasText: /Product Overview/u })
+				.first(),
+		).toBeVisible();
 		await selectSubtitle(page);
 		await control(page, 'home.font.fontSize').getByRole('combobox').click();
 		await page.getByRole('option', { name: '36', exact: true }).click();
