@@ -415,9 +415,12 @@ test('the 2.5 post wears the letter edition: contents, chapters and features as 
 	assert.equal(levels.filter((level) => level === 1).length, 1);
 	for (const [i, level] of levels.entries())
 		assert.ok(i === 0 || level - levels[i - 1] <= 1, `h${levels[i - 1]} is followed by h${level}`);
-	// Notes to the author stay in the Markdown.
-	assert.match(source, /<!-- TODO\(add-ins\)/);
+	// Nothing is left to fill in, and a note to the author would not reach the page anyway.
+	assert.doesNotMatch(source, /TODO/);
 	assert.doesNotMatch(html, /TODO/);
+	// Running add-ins is described with its gate, never as something that is simply on.
+	assert.match(html, /<code>setOfficeAddInRuntime<\/code>/);
+	assert.match(html, /frameSrcEnforced/);
 });
 
 test('still images offer controlled playback and the release guide links back to the post', () => {
