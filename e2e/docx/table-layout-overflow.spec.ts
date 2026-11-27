@@ -15,7 +15,15 @@ test('Table Layout folds lower-priority groups at 1280 pixels', async ({ page })
 	await expect(data).toBeVisible();
 	await expect(panel.getByRole('button', { name: 'Split cells', exact: true })).toBeVisible();
 	await expect(panel.getByRole('combobox', { name: 'Select Table Parts' })).toBeVisible();
-	await expect(panel.getByRole('spinbutton', { name: 'Row Height (inches)' })).toBeVisible();
+	const height = panel.getByRole('spinbutton', { name: 'Row Height (inches)' });
+	await expect(height).toBeVisible();
+	await expect(height).toHaveAttribute('title', 'Row Height (inches)');
+	// The size boxes end before the Distribute commands instead of covering their icons.
+	const distribute = (await panel.getByRole('button', { name: 'Distribute Rows' }).boundingBox())!;
+	for (const name of ['Row Height (inches)', 'Column Width (inches)']) {
+		const box = (await panel.getByRole('spinbutton', { name }).boundingBox())!;
+		expect(box.x + box.width, name).toBeLessThanOrEqual(distribute.x);
+	}
 	await expect
 		.poll(() => panel.evaluate((element) => element.scrollWidth - element.clientWidth))
 		.toBe(0);

@@ -60,12 +60,13 @@ const overflow = createRibbonOverflow({
 	preferExpanded: (group, panel) =>
 		(group.dataset.label === 'Add-ins' && panel.dataset.panel === 'Insert') ||
 		(panel.clientWidth >= 1600 && group.dataset.label === 'Arrange'),
+	// Table Layout folds as Word's does: Data and Alignment first, then Cell Size and the row and
+	// column commands, and the Select group last.
 	groupPriority: (group) => {
 		if (group.parentElement?.dataset.ribbonTab !== 'table-layout') return 0;
 		if (group.dataset.label === 'Cell Size') return 1;
-		if (group.dataset.label === 'Table' && !group.querySelector('[data-table-command="select"]'))
-			return 2;
-		return 0;
+		if (group.dataset.label !== 'Table') return 0;
+		return group.querySelector('[data-table-command="select"]') ? 3 : 2;
 	},
 });
 

@@ -82,7 +82,10 @@
 	max-width: none;
 	flex-wrap: nowrap;
 }
-.ribbon-panel[data-panel='Home'] .ribbon-group[data-label='Clipboard'] button.ribbon-large {
+/* Paste's width; the folded group's button sizes to its caption, which is longer in some locales. */
+.ribbon-panel[data-panel='Home']
+	.ribbon-group[data-label='Clipboard']
+	button.ribbon-large:not(.ribbon-overflow-button) {
 	width: 56px;
 }
 .ribbon-panel[data-panel='Home'] .ribbon-group[data-label='Font'] {

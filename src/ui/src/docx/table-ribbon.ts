@@ -180,11 +180,12 @@ const ALIGNMENTS = {
 } as const;
 
 function layout(panel: HTMLElement) {
-	const size = (dimension: 'width' | 'height', label: string) => {
+	// Word names the boxes by their screen tips; the visible caption is the short Height and Width.
+	const size = (dimension: 'width' | 'height', label: string, caption: string) => {
 		const control = spinner(
 			label,
 			(value) => ({ type: 'tableTab', key: 'size', dimension, value }),
-			{ min: 0.01, max: 22, step: 0.01 },
+			{ min: 0.01, max: 22, step: 0.01, caption },
 		);
 		const input = control.querySelector('input')!;
 		input.dataset.tableCommand = 'size';
@@ -228,7 +229,10 @@ function layout(panel: HTMLElement) {
 				(value) => ({ type: 'tableTab', key: 'autoFit', value }),
 				'autoFit',
 			),
-			stack(size('height', 'Row Height (inches)'), size('width', 'Column Width (inches)')),
+			stack(
+				size('height', 'Row Height (inches)', 'Height'),
+				size('width', 'Column Width (inches)', 'Width'),
+			),
 			stack(
 				command('Distribute Rows', 'rowAbove', 'distributeRows'),
 				command('Distribute Columns', 'columnLeft', 'distributeColumns'),

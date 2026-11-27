@@ -118,22 +118,26 @@ export const menuAround = (
 	}
 	return wrap;
 };
-/** A labelled number field (Word's indent spinners). `label` is both the visible text and the name. */
+/**
+ * A labelled number field (Word's indent spinners). `label` is the name and, unless a shorter
+ * `options.caption` is given (the name is then the tooltip), also the visible text.
+ */
 export const spinner = (
 	label: string,
 	action: (value: number) => RibbonAction,
-	options: { min: number; max: number; step: number },
+	options: { min: number; max: number; step: number; caption?: string },
 ) => {
 	const wrap = document.createElement('label');
 	wrap.className = 'ribbon-spinner';
 	const text = document.createElement('span');
-	text.textContent = label;
+	text.textContent = options.caption ?? label;
 	const input = document.createElement('input');
 	input.type = 'number';
 	input.min = String(options.min);
 	input.max = String(options.max);
 	input.step = String(options.step);
 	input.setAttribute('aria-label', label);
+	if (options.caption) input.title = label;
 	input.addEventListener('change', () => {
 		if (input.value !== '' && input.checkValidity())
 			emit(input, 'ribbon-action', action(Number(input.value)));

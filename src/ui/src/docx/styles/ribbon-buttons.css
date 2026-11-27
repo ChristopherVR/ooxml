@@ -128,8 +128,11 @@
 .ribbon-group button.ribbon-large {
 	width: 70px;
 }
+/* Insert's large buttons are narrow, but never narrower than their longest caption word: a fixed
+   width clips "Bookmark" and "Comment" in wider fonts (Linux's DejaVu Sans), and in longer locales. */
 .ribbon-panel[data-panel='Insert'] .ribbon-group button.ribbon-large:not(.ribbon-overflow-button) {
-	width: 56px;
+	width: min-content;
+	min-width: 56px;
 }
 .ribbon-panel[data-panel='Insert'] .ribbon-group[data-label='Comments']:not([data-collapsed]) {
 	min-width: 80px;
@@ -186,6 +189,13 @@
 }
 .dve-table-ribbon-group .ribbon-stack button.ribbon-inline {
 	height: 22px;
+}
+/* Cell Size's boxes take their caption's width, so the box never covers the next commands. */
+.dve-table-ribbon-group .ribbon-spinner {
+	width: auto;
+}
+.dve-table-ribbon-group .ribbon-spinner input {
+	flex: none;
 }
 .dve-table-ribbon-group button[data-vertical='top'] {
 	align-items: flex-start;
