@@ -81,9 +81,9 @@ export interface LayoutObject {
 	 * A chart drawn at this size: the painted SVG markup, or only its frame label.
 	 * `shape` marks a drawing shape painted the same way, whose outline may reach
 	 * past its box and which has no chart background; `textColor` is the colour of its text box
-	 * paragraphs where their runs set none.
+	 * paragraphs where their runs set none; `ink` marks ink, which the Draw tab's tools work on.
 	 */
-	chart?: { svg?: string; label: string; shape?: true; textColor?: string };
+	chart?: { svg?: string; label: string; shape?: true; textColor?: string; ink?: true };
 	/** A shape's text box content, drawn over its shape by the views that have no `textBoxLayout`. */
 	textBox?: import('../inline-model').TextBoxContent;
 	/** That content laid out by this engine inside the shape (`text-box-layout.ts`), for Print Layout. */

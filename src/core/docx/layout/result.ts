@@ -270,7 +270,7 @@ export interface LayoutFloatBox {
 	partName: string;
 	contentType: string;
 	/** A drawing shape painted as SVG (it has no media part); the print view draws it like a chart. */
-	chart?: { svg?: string; label: string; shape?: true; textColor?: string };
+	chart?: { svg?: string; label: string; shape?: true; textColor?: string; ink?: true };
 	/** The shape's text box content, drawn over its shape. */
 	textBox?: import('../inline-model').TextBoxContent;
 	textBoxLayout?: import('./text-box-layout').TextBoxLayout;

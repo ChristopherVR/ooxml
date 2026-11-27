@@ -1,4 +1,5 @@
 import type { TextRun } from '../model';
+import type { DocxInk } from '../ink';
 import type { Node as ProseMirrorNode, Schema } from 'prosemirror-model';
 
 import { extraRunProperties } from './run-extra-mark';
@@ -231,7 +232,7 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 					? { payload: JSON.parse(child.attrs.payload) }
 					: {}),
 				...(typeof child.attrs.shape === 'string' ? { shape: JSON.parse(child.attrs.shape) } : {}),
-				...(typeof child.attrs.ink === 'string' ? { ink: JSON.parse(child.attrs.ink) } : {}),
+				...(typeof child.attrs.ink === 'string' ? { ink: inkAttr(child.attrs.ink) } : {}),
 				...(typeof child.attrs.watermark === 'string'
 					? { watermark: JSON.parse(child.attrs.watermark) }
 					: {}),
@@ -310,4 +311,18 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 	)
 		previous.text += run.text;
 	else runs.push(run);
+}
+
+/**
+ * Parsed ink attributes by text: the same object for unchanged ink, so the painters' caches keyed
+ * by it hold across the edits of a session (a stroke drawn elsewhere re-reads every drawing).
+ */
+const inks = new Map<string, DocxInk>();
+function inkAttr(text: string): DocxInk {
+	const cached = inks.get(text);
+	if (cached) return cached;
+	if (inks.size >= 64) inks.delete(inks.keys().next().value as string);
+	const ink = JSON.parse(text) as DocxInk;
+	inks.set(text, ink);
+	return ink;
 }
