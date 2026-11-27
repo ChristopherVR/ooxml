@@ -252,9 +252,11 @@ export function createImageRun(
 		clearNonProperties(node, oldContainer);
 		return node;
 	}
-	if (!base && image.ink && !image.ink.relId) {
+	// Ink with no drawing of its own here (new, pasted, moved to another paragraph or copied)
+	// gets a drawing and a part of its own, so no two drawings share one part.
+	if (!base && image.ink) {
 		if (!allocator) throw new Error('Cannot insert ink without a relationship allocator.');
-		const relId = allocator.addInk(image.ink, image.widthPx, image.heightPx);
+		const relId = allocator.addInk(image.ink);
 		clearNonProperties(node);
 		node.appendChild(buildInkDrawing(doc, image, relId, allocator.docPrIds.next(image.drawingId)));
 		return node;

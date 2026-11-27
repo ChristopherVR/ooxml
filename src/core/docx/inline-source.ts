@@ -10,6 +10,8 @@ export function inlineSourceLookup(
 	base: TextRun[] | undefined,
 ): (index: number) => number | undefined {
 	const usedPictures = new Set<number>();
+	/** A copy of ink is matched once: the second drawing gets a part of its own. */
+	const usedInk = new Set<number>();
 	return (index) => {
 		const run = runs[index]!;
 		if (run.equation)
@@ -23,11 +25,16 @@ export function inlineSourceLookup(
 		const ink = run.image?.ink;
 		if (ink) {
 			const at = ink.relId
-				? (base ?? []).findIndex((source) => source.image?.ink?.relId === ink.relId)
+				? (base ?? []).findIndex(
+						(source, at) => source.image?.ink?.relId === ink.relId && !usedInk.has(at),
+					)
 				: -1;
-			return at < 0 ? undefined : at;
+			if (at < 0) return undefined;
+			usedInk.add(at);
+			return at;
 		}
-		if (base?.[index]?.image?.ink) return undefined;
+		// Another drawing where ink was takes none of its markup; text keeps its own match.
+		if (run.image && base?.[index]?.image?.ink) return undefined;
 		if (!run.image?.partName) return index;
 		const candidates = (base ?? []).flatMap((source, at) =>
 			samePictureSource(source.image, run.image) ? [at] : [],

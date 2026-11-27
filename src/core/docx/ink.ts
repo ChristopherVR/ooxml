@@ -27,6 +27,11 @@ export interface DocxInk {
 	strokes: InkStroke[];
 	width: number;
 	height: number;
+	/**
+	 * Part of the ink could not be read (the part is over the reader's limits): it is shown as read,
+	 * kept as it is on save, and the Draw tab leaves its strokes alone.
+	 */
+	truncated?: true;
 }
 
 function contentPartOf(graphicData: XmlElement): XmlElement | undefined {
@@ -83,6 +88,8 @@ export async function resolveDocumentInk(
 	const { readInkPart } = await import('#inkml-runtime');
 	for (const ink of inks) {
 		const xml = await readText(ink.partName!);
-		ink.strokes = readInkPart(xml, { width: ink.width, height: ink.height }).strokes;
+		const part = readInkPart(xml, { width: ink.width, height: ink.height });
+		ink.strokes = part.strokes;
+		if (part.truncated) ink.truncated = true;
 	}
 }

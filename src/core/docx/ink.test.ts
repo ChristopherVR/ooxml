@@ -157,4 +157,141 @@ describe('Word ink', () => {
 			inkImage(loaded.model).ink!.strokes.length,
 		]);
 	});
+
+	describe('ink moved, copied or deleted', () => {
+		const inkParagraph = (model: DocumentModel) =>
+			model.blocks.findIndex(
+				(block) => block.type === 'paragraph' && block.runs.some((run) => run.image?.ink),
+			);
+		const inkRun = (model: DocumentModel) => {
+			const paragraph = model.blocks[inkParagraph(model)] as Paragraph;
+			return paragraph.runs.find((run) => run.image?.ink)!;
+		};
+		const parts = async (bytes: Uint8Array) =>
+			Object.keys((await JSZip.loadAsync(bytes)).files).filter(
+				(name) => name.startsWith('word/ink/') && !name.endsWith('/'),
+			);
+		const sourcePart = async () =>
+			(await JSZip.loadAsync(fixture('word-ink-inline.docx')))
+				.file('word/ink/ink1.xml')!
+				.async('string');
+
+		it('saves ink moved to another paragraph with its strokes and part', async () => {
+			const loaded = await loadDocx(fixture('word-ink-inline.docx'));
+			const edited = structuredClone(loaded.model);
+			const run = inkRun(edited);
+			const from = edited.blocks[inkParagraph(edited)] as Paragraph;
+			from.runs.splice(from.runs.indexOf(run), 1);
+			edited.blocks.push({ type: 'paragraph', runs: [{ text: 'moved ' }, run] } as Paragraph);
+			const bytes = await loaded.save(edited);
+			const reloaded = await loadDocx(bytes);
+			const inks = inksIn(reloaded.model.blocks);
+			expect(inks).toHaveLength(1);
+			expect(inks[0]!.strokes).toHaveLength(4);
+			expect(await parts(bytes)).toHaveLength(1);
+			// Unchanged ink keeps Word's own bytes in its new part.
+			const zip = await JSZip.loadAsync(bytes);
+			expect(await zip.file(inks[0]!.partName!)!.async('string')).toBe(await sourcePart());
+		});
+
+		it('gives a copy of ink a part of its own', async () => {
+			const loaded = await loadDocx(fixture('word-ink-inline.docx'));
+			const edited = structuredClone(loaded.model);
+			edited.blocks.push({
+				type: 'paragraph',
+				runs: [structuredClone(inkRun(edited))],
+			} as Paragraph);
+			const bytes = await loaded.save(edited);
+			const inks = inksIn((await loadDocx(bytes)).model.blocks);
+			expect(inks.map((ink) => ink.strokes.length)).toEqual([4, 4]);
+			expect(new Set(inks.map((ink) => ink.partName)).size).toBe(2);
+			expect(await parts(bytes)).toHaveLength(2);
+			// Erasing in one copy leaves the other whole.
+			const again = await loadDocx(bytes);
+			const copy = structuredClone(again.model);
+			inksIn(copy.blocks)[1]!.strokes.splice(0, 2);
+			const after = inksIn((await loadDocx(await again.save(copy))).model.blocks);
+			expect(after.map((ink) => ink.strokes.length)).toEqual([4, 2]);
+		});
+
+		it('keeps ink through a paragraph split and join', async () => {
+			const loaded = await loadDocx(fixture('word-ink-inline.docx'));
+			const split = structuredClone(loaded.model);
+			const at = inkParagraph(split);
+			const paragraph = split.blocks[at] as Paragraph;
+			const index = paragraph.runs.findIndex((run) => run.image?.ink);
+			split.blocks.splice(at + 1, 0, {
+				...paragraph,
+				id: 'split-tail',
+				runs: paragraph.runs.splice(index),
+			} as Paragraph);
+			const splitBytes = await loaded.save(split);
+			const splitBack = await loadDocx(splitBytes);
+			expect(inksIn(splitBack.model.blocks).map((ink) => ink.strokes.length)).toEqual([4]);
+			const joined = structuredClone(splitBack.model);
+			const next = joined.blocks.splice(at + 1, 1)[0] as Paragraph;
+			(joined.blocks[at] as Paragraph).runs.push(...next.runs);
+			const joinedBytes = await splitBack.save(joined);
+			expect(inksIn((await loadDocx(joinedBytes)).model.blocks)).toHaveLength(1);
+			expect(await parts(joinedBytes)).toHaveLength(1);
+		});
+
+		it('keeps ink when text is typed before it in its paragraph', async () => {
+			const loaded = await loadDocx(fixture('word-ink-inline.docx'));
+			const edited = structuredClone(loaded.model);
+			(edited.blocks[inkParagraph(edited)] as Paragraph).runs.unshift({ text: 'New ' });
+			const bytes = await loaded.save(edited);
+			const zip = await JSZip.loadAsync(bytes);
+			expect(await zip.file('word/ink/ink1.xml')!.async('string')).toBe(await sourcePart());
+			expect(await zip.file('word/document.xml')!.async('string')).toContain('New ');
+		});
+
+		it('removes the part and relationship of deleted ink', async () => {
+			const loaded = await loadDocx(fixture('word-ink-inline.docx'));
+			const edited = structuredClone(loaded.model);
+			const paragraph = edited.blocks[inkParagraph(edited)] as Paragraph;
+			paragraph.runs = paragraph.runs.filter((run) => !run.image?.ink);
+			const zip = await JSZip.loadAsync(await loaded.save(edited));
+			expect(zip.file('word/ink/ink1.xml')).toBeNull();
+			expect(await zip.file('word/_rels/document.xml.rels')!.async('string')).not.toContain(
+				'ink/ink1.xml',
+			);
+			expect(await zip.file('[Content_Types].xml')!.async('string')).not.toContain('ink1.xml');
+		});
+
+		it('patches the box of resized ink and keeps its part', async () => {
+			const loaded = await loadDocx(fixture('word-ink-inline.docx'));
+			const edited = structuredClone(loaded.model);
+			const image = inkRun(edited).image!;
+			image.widthPx *= 2;
+			const zip = await JSZip.loadAsync(await loaded.save(edited));
+			const emu = Math.round(image.widthPx * 9525);
+			expect(await zip.file('word/ink/ink1.xml')!.async('string')).toBe(await sourcePart());
+			expect(await zip.file('word/document.xml')!.async('string')).toContain(`cx="${emu}"`);
+		});
+
+		it('never rewrites a part read only in part', async () => {
+			const source = await JSZip.loadAsync(fixture('word-ink-inline.docx'));
+			const big = Array.from({ length: 5000 }, (_, i) => `${i} ${i}`).join(',');
+			const xml = (await sourcePart()).replace(
+				'</inkml:ink>',
+				`<inkml:trace>${big}</inkml:trace></inkml:ink>`,
+			);
+			expect(xml).toContain(big.slice(0, 20));
+			source.file('word/ink/ink1.xml', xml);
+			const loaded = await loadDocx(await source.generateAsync({ type: 'uint8array' }));
+			const edited = structuredClone(loaded.model);
+			const ink = inkRun(edited).image!.ink!;
+			expect(ink.truncated).toBe(true);
+			ink.strokes.splice(0, 1);
+			edited.blocks.push({
+				type: 'paragraph',
+				runs: [structuredClone(inkRun(edited))],
+			} as Paragraph);
+			const zip = await JSZip.loadAsync(await loaded.save(edited));
+			const names = await parts(await zip.generateAsync({ type: 'uint8array' }));
+			expect(names).toHaveLength(2);
+			for (const name of names) expect(await zip.file(name)!.async('string')).toBe(xml);
+		});
+	});
 });
