@@ -30,16 +30,17 @@ describe('adjustForWidowOrphan', () => {
 });
 
 describe('suppressesSpacing', () => {
-	it('requires a shared style id and at least one contextualSpacing flag', () => {
-		expect(suppressesSpacing(undefined, { styleId: 'Body', contextualSpacing: true })).toBe(false);
-		expect(
-			suppressesSpacing({ styleId: 'Body' }, { styleId: 'Body', contextualSpacing: true }),
-		).toBe(true);
+	it("drops only the flagged paragraph's own space beside the same style (#359)", () => {
+		expect(suppressesSpacing({ styleId: 'Body', contextualSpacing: true }, undefined)).toBe(false);
 		expect(
 			suppressesSpacing({ styleId: 'Body', contextualSpacing: true }, { styleId: 'Body' }),
 		).toBe(true);
+		// The neighbour's flag does not remove this paragraph's space.
 		expect(
-			suppressesSpacing({ styleId: 'Body' }, { styleId: 'Heading', contextualSpacing: true }),
+			suppressesSpacing({ styleId: 'Body' }, { styleId: 'Body', contextualSpacing: true }),
+		).toBe(false);
+		expect(
+			suppressesSpacing({ styleId: 'Body', contextualSpacing: true }, { styleId: 'Heading' }),
 		).toBe(false);
 		expect(suppressesSpacing({ styleId: 'Body' }, { styleId: 'Body' })).toBe(false);
 	});

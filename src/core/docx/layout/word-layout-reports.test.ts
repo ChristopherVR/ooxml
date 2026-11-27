@@ -338,6 +338,52 @@ it('suppresses contextual spacing between implicit Normal paragraphs (#347)', as
 	);
 });
 
+it('drops contextual spacing only from the flagged paragraph (#359)', async () => {
+	const rows = await layout('issue-359-contextual-spacing-rows');
+	const word = JSON.parse(
+		await readFile(
+			new URL(
+				'./fixtures/word-layout-reports/issue-359-contextual-spacing-rows.json',
+				import.meta.url,
+			),
+			'utf8',
+		),
+	) as { gapsPt: Record<string, number> };
+	const wordContextualGapsPt = word.gapsPt;
+	const byText = new Map(
+		rows.paragraphs.map((paragraph) => [
+			paragraph.lines.flatMap((line) => line.fragments.map((part) => part.text ?? '')).join(''),
+			paragraph,
+		]),
+	);
+	const gaps = Object.fromEntries(
+		Object.keys(wordContextualGapsPt).map((id) => {
+			const upper = byText.get(`${id}U`);
+			const lower = byText.get(`${id}L`);
+			if (!upper || !lower) throw new Error(`missing pair ${id}`);
+			return [id, Math.round((lower.yPx - upper.yPx - upper.heightPx) * 0.75 * 100) / 100];
+		}),
+	);
+	expect(gaps).toEqual(wordContextualGapsPt);
+
+	const oneSided = await layout('issue-359-contextual-spacing-one-sided');
+	const control = await layout('issue-359-contextual-spacing-both-control');
+	expect(oneSided.pages).toHaveLength(2);
+	expect(oneSided.paragraphs).toHaveLength(33);
+	expect(control.pages).toHaveLength(1);
+	expect(control.paragraphs).toHaveLength(40);
+	for (const [index, paragraph] of control.paragraphs.slice(1).entries()) {
+		const previous = at(control.paragraphs, index);
+		expect(paragraph.yPx).toBeCloseTo(previous.yPx + previous.heightPx);
+	}
+	// Each flag-free "Lorem ipsum" paragraph keeps its 10 pt after; the flagged one drops its own.
+	const lorem = at(oneSided.paragraphs, 0);
+	const consectetur = at(oneSided.paragraphs, 1);
+	const next = at(oneSided.paragraphs, 2);
+	expect((consectetur.yPx - lorem.yPx - lorem.heightPx) * 0.75).toBeCloseTo(10);
+	expect(next.yPx).toBeCloseTo(consectetur.yPx + consectetur.heightPx);
+});
+
 it('lays out zero character scale at natural width and preserves the source value (#348)', async () => {
 	const loaded = await load('issue-348-character-scale-zero');
 	const control = await load('issue-348-character-scale-zero-control');

@@ -1,0 +1,29 @@
+{
+	"source": "Word 16.0.20625 Print Layout, Range.Information(6) of each paragraph start in issue-359-contextual-spacing-rows.docx. Gap in points between the upper paragraph's last line and the lower paragraph's first line. Normal sets 200 twips after and 1.15 lines; U is the upper and L the lower paragraph of each pair.",
+	"gapsPt": {
+		"row1": 10,
+		"row2": 0,
+		"row3": 0,
+		"row4": 0,
+		"r2a0": 10,
+		"r2a100b300": 10,
+		"r2a300b100": 0,
+		"r3a300b200": 15,
+		"r3a100b300": 5,
+		"none": 10,
+		"noneb300": 15
+	},
+	"cases": {
+		"row1": "upper no flag; lower contextualSpacing",
+		"row2": "upper contextualSpacing; lower before 200",
+		"row3": "upper after 0; lower contextualSpacing, before 200",
+		"row4": "both contextualSpacing",
+		"r2a0": "upper contextualSpacing, after 0; lower before 200",
+		"r2a100b300": "upper contextualSpacing, after 100; lower before 300",
+		"r2a300b100": "upper contextualSpacing, after 300; lower before 100",
+		"r3a300b200": "upper after 300; lower contextualSpacing, before 200",
+		"r3a100b300": "upper after 100; lower contextualSpacing, before 300",
+		"none": "neither flagged",
+		"noneb300": "neither flagged; lower before 300"
+	}
+}

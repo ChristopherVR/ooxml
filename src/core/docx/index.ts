@@ -15,6 +15,13 @@ export {
 	resolveParagraphFormatting,
 	resolveStyleNumbering,
 } from './paragraph-styles';
+export {
+	contextualSpacingTwips,
+	contextualStyleId,
+	suppressesContextualSpacing,
+	type ContextualSpacingParagraph,
+	type SpacedParagraph,
+} from './contextual-spacing';
 export * from './underline';
 export { parseRunStyleCatalog } from './character-styles';
 export { parseTableStyleCatalog } from './table-styles';

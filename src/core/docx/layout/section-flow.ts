@@ -251,15 +251,16 @@ export class SectionFlow {
 		if (index === 0 && !this.section.addParagraphSpacing)
 			return Math.max(0, layout.spacingBeforePx - (this.section.leadingSpacingAfterPx ?? 0));
 		if (previous?.kind !== 'paragraph' || previous.textFrame) return layout.spacingBeforePx;
-		if (suppressesSpacing(previous, block)) return 0;
+		if (suppressesSpacing(block, previous)) return 0;
 		// Unless the document sets doNotUseHTMLParagraphAutoSpacing, Word leaves the larger of the space
 		// after the first paragraph and the space before the second (measured, spacing-probe.json), not
-		// their sum: the first already took its own. Tables and sections are handled by their callers.
+		// their sum: the first already took its own. It subtracts that space after even when contextual
+		// spacing drops it from the first paragraph (#359). Tables and sections are handled by callers.
 		if (this.section.addParagraphSpacing) return layout.spacingBeforePx;
 		return Math.max(0, layout.spacingBeforePx - this.paragraphLayout(index - 1).spacingAfterPx);
 	}
 
-	/** Contextual spacing: no space after a paragraph that is followed by one of its own style. */
+	/** Contextual spacing: no space after a flagged paragraph followed by one of its own style. */
 	private spacingAfterSuppressed(index: number): boolean {
 		const block = this.blocks[index];
 		const next = this.blocks[index + 1];

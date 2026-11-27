@@ -1,11 +1,15 @@
+import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { Plugin } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import {
+	contextualSpacingTwips,
+	contextualStyleId,
 	resolveParagraphFormatting,
 	computeListLabels,
 	displayListLabel,
 	type DocumentModel,
 	type Paragraph,
+	type ParagraphFormatting,
 	type TextRun,
 } from 'ooxml-core/docx';
 import { paragraphStyle } from './schema';
@@ -27,6 +31,7 @@ export function paragraphStylesPlugin(
 	const cache = new DecorationCache();
 	const projections = new AttributeCache<ReturnType<typeof displayParagraph>>();
 	const attributes = new AttributeCache<Parameters<typeof Decoration.node>[2]>();
+	const formatting = new AttributeCache<ReturnType<typeof resolveParagraphFormatting>>();
 	const project = (node: Parameters<typeof displayParagraph>[0], mode: ReviewDisplayMode) =>
 		projections.resolve(node.attrs, [mode], () => displayParagraph(node, mode));
 	return new Plugin({
@@ -77,9 +82,52 @@ export function paragraphStylesPlugin(
 				});
 				const labels = computeListLabels({ ...model, blocks: paragraphs });
 				const decorations: Decoration[] = [];
+				const styled: {
+					node: ProseMirrorNode;
+					pos: number;
+					tableParagraph: ParagraphFormatting | undefined;
+					effective: ParagraphFormatting;
+					styleId: string | undefined;
+				}[] = [];
 				visitStyledParagraphs(state.doc, model, (node, pos, tableStyle) => {
-					const label = labels.get(String(node.attrs.id));
 					const tableParagraph = tableStyle?.paragraph;
+					const effective = formatting.resolve(
+						node.attrs,
+						[
+							catalog,
+							JSON.stringify(tableParagraph),
+							model.overrideTableStyleFontSizeAndJustification,
+							mode,
+						],
+						() => {
+							const paragraph = project(node, mode).value;
+							return catalog || tableParagraph
+								? resolveParagraphFormatting(
+										paragraph,
+										catalog,
+										tableParagraph,
+										model.overrideTableStyleFontSizeAndJustification,
+									)
+								: paragraph;
+						},
+					);
+					const styleId = contextualStyleId(project(node, mode).value, catalog);
+					styled.push({ node, pos, tableParagraph, effective, styleId });
+				});
+				// Contextual spacing compares a paragraph with its siblings: adjacent positions.
+				const spaced = (index: number) => {
+					const entry = styled[index];
+					return entry && { ...entry.effective, styleId: entry.styleId };
+				};
+				styled.forEach(({ node, pos, tableParagraph, effective }, index) => {
+					const before = styled[index - 1];
+					const after = styled[index + 1];
+					const contextual = contextualSpacingTwips(
+						before && before.pos + before.node.nodeSize === pos ? spaced(index - 1) : undefined,
+						{ ...effective, styleId: styled[index]?.styleId },
+						after && pos + node.nodeSize === after.pos ? spaced(index + 1) : undefined,
+					);
+					const label = labels.get(String(node.attrs.id));
 					const dependencies = [
 						catalog,
 						JSON.stringify(tableParagraph),
@@ -91,6 +139,8 @@ export function paragraphStylesPlugin(
 						JSON.stringify(label),
 						pictureUrl,
 						label ? node.firstChild : undefined,
+						contextual.beforeTwips,
+						contextual.afterTwips,
 					];
 					const rendered = attributes.resolve(node.attrs, dependencies, () => {
 						const projected = project(node, mode);
@@ -99,15 +149,6 @@ export function paragraphStylesPlugin(
 							mode === 'original' && node.attrs.formatRevision && !projected.error
 								? `${ORIGINAL_PARAGRAPH_RESET};`
 								: '';
-						const effective =
-							catalog || tableParagraph
-								? resolveParagraphFormatting(
-										paragraph,
-										catalog,
-										tableParagraph,
-										model.overrideTableStyleFontSizeAndJustification,
-									)
-								: paragraph;
 						const marker = listMarkerDisplay(
 							node,
 							{ ...paragraph, ...effective },
@@ -123,8 +164,16 @@ export function paragraphStylesPlugin(
 									listFirstLineTwips: label.firstLineTwips ?? null,
 								}
 							: { listIndentLeftTwips: null, listHangingTwips: null, listFirstLineTwips: null };
+						const spacing = {
+							...(contextual.beforeTwips !== undefined
+								? { spacingBeforeTwips: contextual.beforeTwips }
+								: {}),
+							...(contextual.afterTwips !== undefined
+								? { spacingAfterTwips: contextual.afterTwips }
+								: {}),
+						};
 						return {
-							style: `${reset}${paragraphStyle({ ...effective, ...list })};${marker.css}`,
+							style: `${reset}${paragraphStyle({ ...effective, ...spacing, ...list })};${marker.css}`,
 							...(projected.error ? { 'data-review-format-error': projected.error } : {}),
 							...marker.attributes,
 							...(label || node.attrs.listLabelText != null

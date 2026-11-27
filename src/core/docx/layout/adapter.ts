@@ -32,7 +32,7 @@ import { inkPaint } from './ink-paint';
 import { drawingOuterShadow } from '../shape-svg';
 import { pictureBulletSizePt } from '../numbering-picture';
 import { definedProps } from '../defined-props';
-import { defaultStyleId } from '../style-inheritance';
+import { contextualStyleId } from '../contextual-spacing';
 import { effectiveTextScalePercent } from '../simple-types';
 import { kinsokuLanguage } from '../../text/kinsoku';
 import { resolveEastAsiaLanguage } from '../run-language';
@@ -478,7 +478,7 @@ export function adaptDocumentModel(
 				indentEndTwips: resolved.indentEndTwips,
 				firstLineTwips: ownFirstLine ? indents.firstLineTwips : label?.firstLineTwips,
 				hangingTwips: ownFirstLine ? indents.hangingTwips : label?.hangingTwips,
-				styleId: paragraph.style || (catalog ? defaultStyleId(catalog.styles) : undefined),
+				styleId: contextualStyleId(paragraph, catalog),
 			}),
 			...(resolved.pageBreakBefore ? { pageBreakBefore: true } : {}),
 			...(resolved.keepNext ? { keepNext: true } : {}),

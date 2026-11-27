@@ -61,6 +61,40 @@ describe('paragraph style editor integration', () => {
 		}
 	});
 
+	it('collapses contextual spacing like Word in the editing view (#359)', async () => {
+		const fixtures = '../core/docx/layout/fixtures/word-layout-reports';
+		const { model } = await loadDocx(
+			await readFile(`${fixtures}/issue-359-contextual-spacing-rows.docx`),
+		);
+		const word = JSON.parse(
+			await readFile(`${fixtures}/issue-359-contextual-spacing-rows.json`, 'utf8'),
+		) as { gapsPt: Record<string, number> };
+		const view = new EditorView(document.createElement('div'), {
+			state: EditorState.create({
+				doc: modelToDoc(model),
+				plugins: [paragraphStylesPlugin(() => model)],
+			}),
+		});
+		try {
+			const paragraphs = new Map(
+				Array.from(view.dom.querySelectorAll('p'), (p) => [p.textContent ?? '', p]),
+			);
+			const px = (value: string) => Number.parseFloat(value || '0');
+			const gaps = Object.fromEntries(
+				Object.keys(word.gapsPt).map((id) => {
+					const upper = must(paragraphs.get(`${id}U`));
+					const lower = must(paragraphs.get(`${id}L`));
+					// Adjacent block margins collapse to the larger one, as Word's auto spacing does.
+					const gap = Math.max(px(upper.style.marginBottom), px(lower.style.marginTop));
+					return [id, Math.round(gap * 0.75 * 100) / 100];
+				}),
+			);
+			expect(gaps).toEqual(word.gapsPt);
+		} finally {
+			view.destroy();
+		}
+	});
+
 	it.each([
 		['empty-numbered-paragraphs', 10],
 		['control-no-mark-size', 18],

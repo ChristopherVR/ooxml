@@ -27,14 +27,8 @@ export function adjustForWidowOrphan(
 	return fittingLines;
 }
 
-/** `w:contextualSpacing`: suppress spacing between adjacent same-style paragraphs. */
-export function suppressesSpacing(
-	previous: { styleId?: string; contextualSpacing?: boolean } | undefined,
-	current: { styleId?: string; contextualSpacing?: boolean },
-): boolean {
-	if (!previous || !previous.styleId || previous.styleId !== current.styleId) return false;
-	return Boolean(previous.contextualSpacing) || Boolean(current.contextualSpacing);
-}
+/** `w:contextualSpacing`: whether a paragraph drops its own space toward a neighbour. */
+export { suppressesContextualSpacing as suppressesSpacing } from '../contextual-spacing';
 
 /** Word's document default for widow/orphan control is on unless explicitly turned off. */
 export function widowControlEnabled(value: boolean | undefined): boolean {

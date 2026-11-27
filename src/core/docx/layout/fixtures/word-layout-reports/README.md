@@ -21,6 +21,14 @@ Word 16.0.20625 exported each fixture through `Document.ExportAsFixedFormat`. Th
 | [#348](https://github.com/ChristopherVR/ooxml/issues/348)                                                            | Zero character scale uses the same text widths and two pages as the unscaled control.                                                                                                                                                                                                                                                                       |
 | [#349](https://github.com/ChristopherVR/ooxml/issues/349)                                                            | Inline title and closing tags occupy space in both dimensions. The tagged file occupies three pages and the default-appearance control occupies two.                                                                                                                                                                                                        |
 | [#353](https://github.com/ChristopherVR/ooxml/issues/353)                                                            | TableGrid supplies single spacing with zero after-spacing inside its cell. The table matches the height of the direct-formatting control and fits on one page.                                                                                                                                                                                              |
+| [#359](https://github.com/ChristopherVR/ooxml/issues/359)                                                            | Contextual spacing drops only the flagged paragraph's own space beside a paragraph of the same style. The one-sided sample has two pages (33 paragraphs on page one) and the control one.                                                                                                                                                                   |
+
+`issue-359-contextual-spacing-rows.docx` is a synthetic file with eleven pairs of Normal
+paragraphs that set contextual spacing, space before and space after on either side. Word's gaps
+for each pair, from `Range.Information(6)`, are in `issue-359-contextual-spacing-rows.json`. When the
+upper paragraph drops its space after, Word still subtracts that space after from the lower
+paragraph's space before. Regenerate it with
+`python src/core/docx/layout/fixtures/word-layout-reports/generate-contextual-spacing-rows.py`.
 
 `issue-353-table-style-precedence.docx` is a synthetic Lorem ipsum document without personal
 metadata. Normal sets 12 pt after and left justification, while the table style sets zero after
