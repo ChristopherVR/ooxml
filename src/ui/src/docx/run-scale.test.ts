@@ -17,11 +17,15 @@ const css = (text: string, scale: number, spacing = 0) => {
 	return span.style;
 };
 describe('continuous text scaling', () => {
-	it('reserves glyph scale plus spacing after scale, including zero scale', () => {
+	it('reserves glyph scale plus spacing after scale', () => {
 		expect(css('MMMM', 200, 30).marginRight).toBe('36px');
 		expect(css('MMMM', 50, 30).marginRight).toBe('-24px');
-		expect(css('MMMM', 0, 30).marginRight).toBe('-24px');
 		expect(css('MMMM', 200, 30).letterSpacing).toBe('1px');
+	});
+	it('draws zero scale at natural width, as Word does (#348)', () => {
+		expect(
+			scaledSegments('MMMM', { textScalePercent: 0, fontSize: 12 }, 'Courier New', measurer),
+		).toEqual([]);
 	});
 	it('clamps severely condensed advances without creating positive layout space', () => {
 		expect(css('MMMM', 50, -600).marginRight).toBe('0px');

@@ -59,13 +59,15 @@ test('scaled glyphs reserve their advances, add spacing after scaling, and wrap 
 			});
 		}),
 	);
-	for (const [index, scale] of [50, 125, 200, 600, 0].entries()) {
+	for (const [index, scale] of [50, 125, 200, 600].entries()) {
 		const [first, space, second] = metrics[index]!;
 		const expected = (first!.glyphWidth * scale) / 100 + (4 * 40) / 15;
-		if (scale !== 0) expect(first!.width).toBeCloseTo(expected, 0);
+		expect(first!.width).toBeCloseTo(expected, 0);
 		expect(space!.left - first!.left).toBeCloseTo(expected, 0);
 		expect(second!.left - space!.left).toBeCloseTo((space!.glyphWidth * scale) / 100 + 40 / 15, 0);
 	}
+	// Word draws w:w="0" at 100% (#348), so the zero-scale paragraph has no scaled spans.
+	expect(metrics[4]).toEqual([]);
 	await editor.locator('.dve-paper > .ProseMirror').evaluate((body) => {
 		(body as HTMLElement).style.width = '180px';
 	});
