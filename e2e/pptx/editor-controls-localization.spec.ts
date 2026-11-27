@@ -8,7 +8,7 @@ import {
 	translationsFr,
 	translationsZhCN,
 } from '../../viewers/pptx/packages/locales/src';
-import { loadDeck } from './support/deck';
+import { elementWithText, loadDeck, selectElement } from './support/deck';
 import {
 	openOptionsDialog,
 	optionsAction,
@@ -16,7 +16,7 @@ import {
 	pickOptionsEntry,
 } from './support/settings-dialog';
 
-// Wide enough that the Home Arrange extras (alignment) have not collapsed into a popup.
+// Keep the Drawing group expanded while switching the locale.
 test.use({ viewport: { width: 3200, height: 1080 } });
 
 for (const { dictionary, nativeLabel } of [
@@ -50,26 +50,30 @@ for (const { dictionary, nativeLabel } of [
 					.first(),
 			).toBeVisible();
 		}
-		for (const direction of ['Left', 'Center', 'Right', 'Top', 'Middle', 'Bottom']) {
+		await page.locator('[data-ribbon-control="home.drawing.arrange"] button').click();
+		for (const key of [
+			'pptx.ribbon.alignLeft',
+			'pptx.ribbon.alignCenter',
+			'pptx.ribbon.alignRight',
+			'pptx.ribbon.alignTop',
+			'pptx.ribbon.alignMiddle',
+			'pptx.ribbon.alignBottom',
+			'pptx.arrange.flipHorizontally',
+			'pptx.ribbon.group',
+		]) {
 			await expect(
-				page
-					.getByRole('button', { name: dictionary[`pptx.ribbon.align${direction}`], exact: true })
-					.first(),
+				page.getByRole('menuitem', { name: dictionary[key], exact: true }),
 			).toBeVisible();
 		}
+		await page.keyboard.press('Escape');
 		// The shared Home strips re-translate when the language changes at runtime.
 		for (const key of [
 			'pptx.arrange.copy',
-			'pptx.ribbon.alignLeft',
 			'pptx.home.newSlide',
 			'pptx.drawing.shapes',
-			'pptx.arrange.flipH',
-			'pptx.arrange.duplicate',
 			'pptx.text.changeCase',
 			'pptx.text.fontColor',
 			'pptx.editing.find',
-			'pptx.shape.mergeShapes',
-			'pptx.contextMenu.group',
 		]) {
 			const name = dictionary[key] ?? translationsEn[key];
 			await expect(page.getByRole('button', { name, exact: true }).first()).toBeVisible();
@@ -83,6 +87,22 @@ for (const { dictionary, nativeLabel } of [
 			const name = dictionary[key] ?? translationsEn[key];
 			await expect(page.getByRole('combobox', { name, exact: true }).first()).toBeVisible();
 		}
+		const shape = elementWithText(page, 'Product Overview');
+		await shape.click({ button: 'right' });
+		await expect(
+			page.locator('[data-item-id="duplicate"]').and(
+				page.getByRole('menuitem', {
+					name: dictionary['pptx.contextMenu.duplicate'],
+					exact: true,
+				}),
+			),
+		).toBeVisible();
+		await page.keyboard.press('Escape');
+		await selectElement(page, shape);
+		await page.locator('[data-ribbon-contextual-tab="shapeFormat"]').click();
+		await expect(
+			page.getByRole('button', { name: dictionary['pptx.shape.mergeShapes'], exact: true }),
+		).toBeVisible();
 		await page
 			.getByRole('tab', { name: dictionary['pptx.ribbon.tab.record'], exact: true })
 			.click();
