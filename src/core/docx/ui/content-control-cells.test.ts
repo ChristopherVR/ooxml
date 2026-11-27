@@ -5,6 +5,7 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import { ReplaceAroundStep } from 'prosemirror-transform';
 import type { EditorView } from 'prosemirror-view';
 import type { ContentControl } from '../model';
+import { randomIdSource } from '../../opc/reproducible';
 import { markSpecs } from './schema-marks';
 import {
 	chooseListItem,
@@ -899,8 +900,9 @@ describe('content controls around table cells in the editor', () => {
 			]),
 		]);
 		// The first id drawn is the row control's, the second one is free.
-		const draw = (id: number) => (id - 0.5) / (2 ** 31 - 1);
-		const random = vi.spyOn(Math, 'random');
+		// Ids come from `randomIdSource`; drawing n gives the id n + 1.
+		const draw = (id: number) => id - 1;
+		const random = vi.spyOn(randomIdSource, 'next');
 		try {
 			random.mockReturnValueOnce(draw(1000)).mockReturnValueOnce(draw(1001));
 			expect(newControlId(doc)).toBe('1001');
@@ -918,8 +920,9 @@ describe('content controls around table cells in the editor', () => {
 			paragraph('After'),
 		]);
 		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
-		const draw = (id: number) => (id - 0.5) / (2 ** 31 - 1);
-		const random = vi.spyOn(Math, 'random');
+		// Ids come from `randomIdSource`; drawing n gives the id n + 1.
+		const draw = (id: number) => id - 1;
+		const random = vi.spyOn(randomIdSource, 'next');
 		try {
 			random.mockReturnValueOnce(draw(1000)).mockReturnValueOnce(draw(1001));
 			expect(newControlId(doc)).toBe('1001');

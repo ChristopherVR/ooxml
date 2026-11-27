@@ -6,6 +6,7 @@ import type { ContentControl } from '../model';
 import { markSpecs } from './schema-marks';
 import { contentControlPlugin } from './content-control-guard';
 import { freshControlId } from '../content-control-model';
+import { randomIdSource } from '../../opc/reproducible';
 import { controlFromData, controlFromValue, controlSpans } from './content-control-spans';
 
 const schema = new Schema({
@@ -408,12 +409,17 @@ describe('content controls pasted in the editor', () => {
 
 describe('freshControlId', () => {
 	it('stays within the signed 32-bit integers Word uses for control ids', () => {
-		const random = vi.spyOn(Math, 'random');
+		const source = (value: number) => ({ next: () => value });
+		expect(freshControlId(new Set(), source(2 ** 31 - 2))).toBe(String(2 ** 31 - 1));
+		expect(freshControlId(new Set(), source(0))).toBe('1');
+		expect(Number(freshControlId(new Set(), source(2 ** 32 - 1)))).toBeLessThan(2 ** 31);
+		// Taken ids are skipped by drawing again.
+		const values = [4, 4, 7];
+		expect(freshControlId(new Set(['5']), { next: () => values.shift()! })).toBe('8');
+		// The default source is the platform's random one.
+		const random = vi.spyOn(randomIdSource, 'next').mockReturnValue(41);
 		try {
-			random.mockReturnValue(1 - 2 ** -53);
-			expect(Number(freshControlId(new Set()))).toBe(2 ** 31 - 1);
-			random.mockReturnValue(0);
-			expect(freshControlId(new Set())).toBe('1');
+			expect(freshControlId(new Set())).toBe('42');
 		} finally {
 			random.mockRestore();
 		}
