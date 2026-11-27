@@ -62,12 +62,12 @@ test('Quick Parts, Signature Line and the header and footer galleries write what
 	await organizer.getByRole('button', { name: 'Insert', exact: true }).click();
 	await expect(surface).toContainText('Quarterly review');
 
-	// Signature Setup inserts the signature line and says signing is not available.
+	// Signature Setup inserts the signature line; Sign stays disabled without the host's signer.
 	const signature = editor.getByRole('combobox', { name: 'Signature line', exact: true });
 	await reveal(editor, signature);
+	await expect(signature.locator('option[value="sign"]')).toBeDisabled();
 	await signature.selectOption('setup');
 	const setup = dialogByHeading(editor, 'Signature Setup');
-	await expect(setup).toContainText('Signing it is not available here');
 	await setup.getByRole('textbox', { name: 'Suggested signer', exact: true }).fill('Ada Lovelace');
 	await setup.getByRole('button', { name: 'OK', exact: true }).click();
 	await expect(surface.locator('img:not(.ProseMirror-separator)')).toBeVisible();

@@ -220,9 +220,14 @@ export type InsertPartsKind =
 	| 'saveQuickPart'
 	| 'buildingBlocks'
 	| 'fieldDialog'
-	| 'onlineVideo';
+	| 'onlineVideo'
+	| 'sign';
 
 /** Insert > Quick Parts: a document property or a gallery entry (the dialogs are `formatDialog`s). */
 export type QuickPartCommand =
 	| { kind: 'property'; id: import('ooxml-core/docx').DocumentPropertyId }
-	| { kind: 'entry'; key: string };
+	| {
+			kind: 'entry';
+			key: string;
+			/** From the shared building blocks, not the document. */ shared?: true;
+	  };

@@ -11,6 +11,8 @@ import {
 } from '@angular/core';
 import type { DocumentModel } from 'docx-core';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
+import type { signature } from 'ooxml-core/opc';
+type PackageSigner = signature.PackageSigner;
 import type {
 	DocxCollaborationOptions,
 	DocxCollaborationState,
@@ -25,6 +27,8 @@ import type {
 	RibbonAddInTab,
 	WordCustomization,
 	ReadAloudOptions,
+	OnlineVideoSearchProvider,
+	WordBuildingBlocksStore,
 } from 'docx-web-component';
 import { angularOutputs, installHandle } from 'ooxml-ui/bindings';
 import {
@@ -61,6 +65,9 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 	@Input() storage?: DocumentStorage | null;
 	@Input() fileProviders?: readonly CloudFileProvider[] | null;
 	@Input() onlineVideoHosts?: readonly string[] | null;
+	@Input() onlineVideoSearch?: OnlineVideoSearchProvider | null;
+	@Input() buildingBlocksStore?: WordBuildingBlocksStore | null;
+	@Input() documentSigner?: PackageSigner | null;
 	@Input() customization?: WordCustomization | null;
 	@Output() documentChange = new EventEmitter<DocumentModel>();
 	@Output() documentError = new EventEmitter<Error>();

@@ -58,15 +58,19 @@ export function quickPartsMenuAction(value: string): RibbonAction {
 	return {
 		type: 'quickPart',
 		command:
-			kind === 'entry'
-				? { kind, key: decodeURIComponent(rest) }
+			kind === 'entry' || kind === 'shared'
+				? {
+						kind: 'entry',
+						key: decodeURIComponent(rest),
+						...(kind === 'shared' ? { shared: true } : {}),
+					}
 				: { kind: 'property', id: rest as DocumentPropertyId },
 	};
 }
 
 /**
- * Insert > Signature Line: Signature Setup inserts the line. Signing is not offered: it needs a
- * certificate and a signing service, so that item is listed but disabled, with its reason.
+ * Insert > Signature Line: Signature Setup inserts the line; Sign signs the first unsigned line
+ * (or the document) with the host's `documentSigner`, and is disabled without one.
  */
 function signatureLineMenu(): HTMLElement {
 	const wrap = menuSelect(
@@ -74,13 +78,16 @@ function signatureLineMenu(): HTMLElement {
 		'bookmark',
 		[
 			['setup', 'Signature Line…'],
-			['sign', 'Sign (not available: signing needs a certificate)'],
+			['sign', 'Sign…'],
 		],
-		() => ({ type: 'insertParts', kind: 'signatureSetup' }),
+		(value) => ({ type: 'insertParts', kind: value === 'sign' ? 'sign' : 'signatureSetup' }),
 		{ inline: true, momentary: true },
 	);
 	const sign = wrap.querySelector<HTMLOptionElement>('option[value="sign"]');
-	if (sign) sign.disabled = true;
+	if (sign) {
+		sign.disabled = true;
+		sign.dataset.signLine = '';
+	}
 	outline(wrap, 'M5 4h14v16H5z M8 10l5 5 M13 10l-5 5 M8 18h8');
 	return wrap;
 }
@@ -209,7 +216,11 @@ export function syncInsertParts(
 	toolbar: HTMLElement,
 	glossary: readonly GlossaryEntry[] | undefined,
 	videoHosts: readonly string[],
+	shared: readonly GlossaryEntry[] = [],
+	canSign = false,
 ): void {
+	for (const option of toolbar.querySelectorAll<HTMLOptionElement>('option[data-sign-line]'))
+		option.disabled = !canSign;
 	// `hidden` alone loses to the group's own display rule.
 	let changed = false;
 	for (const el of toolbar.querySelectorAll<HTMLElement>('[data-online-video]')) {
@@ -222,18 +233,25 @@ export function syncInsertParts(
 	if (changed) refitRibbon(toolbar);
 	const select = findLocalizedControl<HTMLSelectElement>(toolbar, 'Quick Parts');
 	if (!select) return;
-	const entries = (glossary ?? [])
-		.filter((entry) => entry.gallery === 'docParts')
+	// The document's entries first, then the shared ones (Word lists both in one gallery).
+	const entries = [
+		...(glossary ?? []).map((entry) => ({ entry, source: 'entry' })),
+		...shared.map((entry) => ({ entry, source: 'shared' })),
+	]
+		.filter(({ entry }) => entry.gallery === 'docParts')
 		.slice(0, MENU_ENTRIES);
 	const signature = JSON.stringify(
-		entries.map((entry) => [glossaryEntryKey(entry), entry.description]),
+		entries.map(({ entry, source }) => [source, glossaryEntryKey(entry), entry.description]),
 	);
 	if ((select.dataset.entries ?? '[]') === signature) return;
 	select.dataset.entries = signature;
 	for (const old of select.querySelectorAll('option[data-entry]')) old.remove();
 	const first = select.options[0] ?? null;
-	for (const entry of entries) {
-		const option = new Option(entry.name, `entry:${encodeURIComponent(glossaryEntryKey(entry))}`);
+	for (const { entry, source } of entries) {
+		const option = new Option(
+			entry.name,
+			`${source}:${encodeURIComponent(glossaryEntryKey(entry))}`,
+		);
 		option.dataset.entry = '';
 		if (entry.description) option.title = entry.description;
 		select.insertBefore(option, first);

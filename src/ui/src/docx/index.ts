@@ -1,5 +1,8 @@
 export { DocxEditorElement, registerDocxEditor } from './component';
 export type { MailMergeEmailMessage, MailMergeEmailProvider } from './mailings/email-provider';
+export type { OnlineVideoSearchProvider, OnlineVideoSearchResult } from './online-video-search';
+export type { WordBuildingBlocksStore } from './building-blocks-shared';
+export { createYouTubeVideoSearch, type YouTubeVideoSearchOptions } from './online-video-youtube';
 export type {
 	WordAlignment,
 	WordListChoice,

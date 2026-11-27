@@ -5,6 +5,10 @@ import { applyShellLabels } from './shell-labels';
 import { EditorState } from 'prosemirror-state';
 import { refreshWordYjsPresence } from 'ooxml-core/docx/ui';
 import type { DocumentModel } from 'ooxml-core/docx';
+import type { OnlineVideoSearchProvider } from './online-video-search';
+import type { WordBuildingBlocksStore } from './building-blocks-shared';
+import type { signature } from 'ooxml-core/opc';
+type PackageSigner = signature.PackageSigner;
 import { createDocument } from 'ooxml-core/docx';
 import {
 	restoreWordDesignEffect,
@@ -107,6 +111,41 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 	set onlineVideoHosts(value: readonly string[]) {
 		this.core.onlineVideoHosts = [...(value ?? [])];
+		this.core.refreshControls();
+	}
+
+	/**
+	 * The host's video search for Insert > Online Video (bring your own, none by default). Only the
+	 * words the user searches for are sent to it; `onlineVideoHosts` still decides what may embed.
+	 */
+	get onlineVideoSearch(): OnlineVideoSearchProvider | undefined {
+		return this.core.onlineVideoSearch;
+	}
+	set onlineVideoSearch(value: OnlineVideoSearchProvider | null | undefined) {
+		this.core.onlineVideoSearch = value ?? undefined;
+	}
+
+	/**
+	 * The host's store for building blocks shared by every document (Word's Building Blocks.dotx).
+	 * Without one, Quick Parts are saved only in the document's glossary.
+	 */
+	get buildingBlocksStore(): WordBuildingBlocksStore | undefined {
+		return this.core.buildingBlocks.store;
+	}
+	set buildingBlocksStore(value: WordBuildingBlocksStore | null | undefined) {
+		this.core.buildingBlocks.store = value ?? undefined;
+	}
+
+	/**
+	 * The host's signing key for Insert > Signature Line > Sign and double-clicking a signature
+	 * line: the signer's certificate and a function that signs bytes (Web Crypto, a token, a
+	 * server). The editor never reads a certificate store. Without one, signing is unavailable.
+	 */
+	get documentSigner(): PackageSigner | undefined {
+		return this.core.documentSigner;
+	}
+	set documentSigner(value: PackageSigner | null | undefined) {
+		this.core.documentSigner = value ?? undefined;
 		this.core.refreshControls();
 	}
 
@@ -404,6 +443,8 @@ export class DocxEditorElement extends DocxEditorApi {
 		core.pendingWordDesign = undefined;
 		core.loaded = session;
 		core.model = model;
+		const signed = model.signatures?.state;
+		core.signatureLocked = signed === 'verified' || signed === 'verified-untrusted';
 		core.endCloudFile();
 		core.inserts.reset();
 		drawTab()?.resetDraw(core);

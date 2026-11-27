@@ -964,8 +964,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Organizer over the glossary part), Signature Line (VML signature line) and Online Video
       (a wp15 web video picture, on when the host sets `onlineVideoHosts`). Header and Footer
       offer designs built from content controls, plus Edit and Remove.
-- [ ] **P2** Insert: Online Video has no search and plays only hosts the application allows;
-      Signature Line cannot be signed (no digital signature UI).
+- [x] **P2** Insert: Online Video search through a host `onlineVideoSearch` provider (a
+      YouTube Data API adapter ships, off by default; `onlineVideoHosts` stays the embed
+      allow-list); Sign on signature lines through a host `documentSigner` writes an Office XML
+      signature (XAdES-BES, relationship transforms, `SignatureInfoV1` with the line's SetupID),
+      which Word 16 reports as content-valid; signed documents open read-only with Edit Anyway;
+      the Building Blocks Organizer lists shared building blocks from a host
+      `buildingBlocksStore` (IndexedDB per profile in the suite) next to the document's
+      (`opc/signature/sign/`, 2026-11-27).
+- [ ] **P2** Signing: no `ValidSigLnImg`/`InvalidSigLnImg` pictures (unverified how Word draws the signed
+      line), no XAdES-T timestamps or ECDSA keys, signature lines in headers and footers are not
+      offered by Sign, and the suite has no certificate import of its own.
 - [x] **P1** Insert group order, command placement and label fit at 1600px and 1280px match Word
       in all six bindings (`e2e/docx/ribbon-insert-order.spec.ts`, 2026-11-27).
 - [x] **P1** Insert > 3D Models embeds a self-contained GLB 2.0 with a PNG fallback at the caret.

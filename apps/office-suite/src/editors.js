@@ -17,6 +17,7 @@ import {
 } from './settings.js';
 import { currentProfile, onProfile } from './profile-state.js';
 import { wordDesignPreferences } from './word-design-preferences.js';
+import { wordBuildingBlocks } from './word-building-blocks.js';
 import { setOfficeAddInPreferences } from 'ooxml-ui/suite';
 
 /** PowerPoint's dictionary for `locale` (English is built in). */
@@ -272,6 +273,7 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 		(await import('ooxml-ui/docx')).registerDocxEditor();
 		element = document.createElement('docx-editor');
 		element.wordDesignPreferences = wordDesignPreferences();
+		element.buildingBlocksStore = wordBuildingBlocks(currentProfile().id);
 	} else if (doc.kind === 'xlsx') {
 		(await import('ooxml-ui/xlsx')).defineXlsxEditor();
 		element = document.createElement('xlsx-editor');

@@ -4,8 +4,7 @@ export const enInsertParts = {
 	'Quick Parts': 'Quick Parts',
 	'Signature line': 'Signature line',
 	'Signature Line…': 'Signature Line…',
-	'Sign (not available: signing needs a certificate)':
-		'Sign (not available: signing needs a certificate)',
+	'Sign…': 'Sign…',
 	'Online Video': 'Online Video',
 	Media: 'Media',
 	'Document Property: Author': 'Document Property: Author',
@@ -40,8 +39,6 @@ export const enInsertParts = {
 	'Allow the signer to add comments in the Sign dialog':
 		'Allow the signer to add comments in the Sign dialog',
 	'Show sign date in signature line': 'Show sign date in signature line',
-	'This editor inserts the signature line. Signing it is not available here: it needs a certificate and a signing service.':
-		'This editor inserts the signature line. Signing it is not available here: it needs a certificate and a signing service.',
 	'Create New Building Block': 'Create New Building Block',
 	'Building block': 'Building block',
 	Name: 'Name',
@@ -69,4 +66,40 @@ export const enInsertParts = {
 		'Paste an embed code or an https address of the video player.',
 	'Document properties can only be inserted in the body of the document.':
 		'Document properties can only be inserted in the body of the document.',
+	Search: 'Search',
+	'Searching…': 'Searching…',
+	'Some results are hidden because their site is not allowed.':
+		'Some results are hidden because their site is not allowed.',
+	'No results come from an allowed site.': 'No results come from an allowed site.',
+	'No videos were found.': 'No videos were found.',
+	'The video search is not available right now.': 'The video search is not available right now.',
+	'The shared building blocks could not be saved.':
+		'The shared building blocks could not be saved.',
+	'Building Blocks': 'Building Blocks',
+	'This document': 'This document',
+	'Save in': 'Save in',
+	'There are no building blocks.': 'There are no building blocks.',
+	'Digitally signed by': 'Digitally signed by',
+	'This signature line has been signed.': 'This signature line has been signed.',
+	'Signing needs a certificate, which the host of this editor has not provided.':
+		'Signing needs a certificate, which the host of this editor has not provided.',
+	'Stop sharing the document before signing it.': 'Stop sharing the document before signing it.',
+	'Select Image…': 'Select Image…',
+	Sign: 'Sign',
+	'Type your name below, or select an image to use as a graphical signature:':
+		'Type your name below, or select an image to use as a graphical signature:',
+	'Signer name': 'Signer name',
+	'Sign this document with a digital signature.': 'Sign this document with a digital signature.',
+	'Purpose for signing this document': 'Purpose for signing this document',
+	'Signing as': 'Signing as',
+	'the certificate the host provides': 'the certificate the host provides',
+	'The document is signed as it is now. Editing it afterwards removes the signature.':
+		'The document is signed as it is now. Editing it afterwards removes the signature.',
+	'Signing…': 'Signing…',
+	'The document could not be signed.': 'The document could not be signed.',
+	'This document has been signed and is read-only so that the signatures stay valid.':
+		'This document has been signed and is read-only so that the signatures stay valid.',
+	'Edit Anyway': 'Edit Anyway',
+	'Editing will remove the signatures from this document. Do you want to edit it?':
+		'Editing will remove the signatures from this document. Do you want to edit it?',
 } as const;

@@ -15,12 +15,12 @@ const create = async (kind: InsertPartsKind, host: InsertPartsHost): Promise<For
 			? more.createFieldDialog(host)
 			: more.createOnlineVideoDialog(host);
 	}
+	if (kind === 'buildingBlocks')
+		return (await import('./building-blocks-organizer')).createBuildingBlocksDialog(host);
 	const main = await import('./insert-parts-dialogs');
 	return kind === 'signatureSetup'
 		? main.createSignatureSetupDialog(host)
-		: kind === 'saveQuickPart'
-			? main.createSaveQuickPartDialog(host)
-			: main.createBuildingBlocksDialog(host);
+		: main.createSaveQuickPartDialog(host);
 };
 
 const dialogs = new WeakMap<EditorCore, Map<InsertPartsKind, FormatDialog>>();
@@ -59,7 +59,13 @@ export async function insertPartsAction(
 			return;
 		}
 		const { runQuickPart } = await import('./quick-parts-commands');
-		return runQuickPart(view, core.model, action.command, core.locale);
+		return runQuickPart(
+			view,
+			core.model,
+			action.command,
+			core.locale,
+			core.buildingBlocks.entries(),
+		);
 	}
 	if (action.type === 'headerFooterEdit') return editHeaderFooter(core, action.kind);
 	return changeHeaderFooterDesign(core, action);
@@ -86,6 +92,7 @@ export async function openInsertParts(
 	opener?: HTMLElement,
 ): Promise<void> {
 	await import('./locales/insert-parts-translations');
+	if (kind === 'sign') return (await import('./signature-signing')).openSignDialog(core);
 	const known = dialogs.get(core) ?? new Map<InsertPartsKind, FormatDialog>();
 	dialogs.set(core, known);
 	let dialog = known.get(kind);

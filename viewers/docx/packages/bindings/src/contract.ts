@@ -19,7 +19,11 @@ import {
 	type RibbonAddInCommandDetail,
 	type RibbonAddInTab,
 	type WordCustomization,
+	type OnlineVideoSearchProvider,
+	type WordBuildingBlocksStore,
 } from 'docx-web-component';
+import type { signature } from 'ooxml-core/opc';
+type PackageSigner = signature.PackageSigner;
 import type { DocumentModel } from 'docx-core';
 import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
 import {
@@ -85,6 +89,12 @@ export interface EditorProps {
 	fileProviders?: readonly CloudFileProvider[] | null | undefined;
 	/** Host names of the video sites Insert > Online Video may embed; the command is hidden without any. */
 	onlineVideoHosts?: readonly string[] | null | undefined;
+	/** The host's video search for Insert > Online Video (bring your own); `null` or omitted removes it. */
+	onlineVideoSearch?: OnlineVideoSearchProvider | null | undefined;
+	/** The host's store for building blocks shared by every document; `null` or omitted keeps them per document. */
+	buildingBlocksStore?: WordBuildingBlocksStore | null | undefined;
+	/** The host's signing key for Sign (a certificate and a sign function); `null` or omitted disables signing. */
+	documentSigner?: PackageSigner | null | undefined;
 	/**
 	 * Host customisation (`WordCustomization`): `capabilities`, `backstage.extraPages` and
 	 * `contextMenu.extraCommands`. Forwarded when the object changes, so keep it stable (memoise
@@ -162,6 +172,9 @@ export const EDITOR_PROP_KEYS = [
 	'storage',
 	'fileProviders',
 	'onlineVideoHosts',
+	'onlineVideoSearch',
+	'buildingBlocksStore',
+	'documentSigner',
 	'customization',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
@@ -246,6 +259,21 @@ export const EDITOR_CONTRACT: BindingContract<
 			forward: 'changed',
 			fallback: null,
 			apply: (element, value) => (element.onlineVideoHosts = value ?? []),
+		},
+		onlineVideoSearch: {
+			forward: 'changed',
+			fallback: null,
+			apply: (element, value) => (element.onlineVideoSearch = value ?? undefined),
+		},
+		buildingBlocksStore: {
+			forward: 'changed',
+			fallback: null,
+			apply: (element, value) => (element.buildingBlocksStore = value ?? undefined),
+		},
+		documentSigner: {
+			forward: 'changed',
+			fallback: null,
+			apply: (element, value) => (element.documentSigner = value ?? undefined),
 		},
 		collaboration: { forward: 'changed', fallback: null, initial: null },
 		documentModel: { forward: 'manual' },

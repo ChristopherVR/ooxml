@@ -75,6 +75,10 @@ export interface ImageNodeViewOptions {
 	model?(): DocumentModel | undefined;
 	/** The editor's locale, for the notes beside a SmartArt. */
 	locale?(): EditorLocale;
+	/** What a verified signature put on the signature line `spec` (JSON), drawn over its picture. */
+	signedLine?(spec: string): HTMLElement | undefined;
+	/** Opens the Sign dialog for the signature line `spec` (double-click, as in Word). */
+	signLine?(spec: string): void;
 }
 
 const MIN_SIZE = 16;
@@ -211,6 +215,10 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 			);
 		dom.append(content);
 		if (painted) dom.append(painted);
+		const line =
+			typeof node.attrs.signatureLine === 'string' ? node.attrs.signatureLine : undefined;
+		const signed = line ? options.signedLine?.(line) : undefined;
+		if (signed) dom.append(signed);
 		dom.addEventListener('click', (event) => {
 			if (
 				event.target === handle ||
@@ -225,6 +233,10 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 			view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)));
 		});
 		dom.addEventListener('dblclick', () => {
+			if (line && options.signLine) {
+				options.signLine(line);
+				return;
+			}
 			const pos = getPos();
 			if (pos !== undefined && view.editable && !node.attrs.payload) options.editPicture?.(pos);
 		});

@@ -33,6 +33,12 @@ export function createInsertPartsHost(core: EditorCore): InsertPartsHost {
 		core.notifyChange();
 		core.refreshControls();
 	};
+	const reportStoreError = () =>
+		emit(
+			core.element,
+			'document-warning',
+			translate(core.locale, 'The shared building blocks could not be saved.' as LocalizationKey),
+		);
 	return {
 		editable,
 		focus: () => focusView(view()),
@@ -69,12 +75,22 @@ export function createInsertPartsHost(core: EditorCore): InsertPartsHost {
 				);
 		},
 		glossaryLocked: () => core.collab.active,
+		sharedGlossaryAvailable: () => Boolean(core.buildingBlocks.store),
+		sharedGlossary: () => core.buildingBlocks.entries(),
+		loadSharedGlossary: () => core.buildingBlocks.load(true),
+		saveSharedEntry(entry) {
+			core.buildingBlocks.save(entry).catch(() => reportStoreError());
+		},
+		removeSharedEntry(key) {
+			core.buildingBlocks.remove(key).catch(() => reportStoreError());
+		},
 		report: (message) => emit(core.element, 'document-warning', message),
 		insertWebVideo(spec) {
 			const target = view();
 			if (target) insertWebVideo(target, spec, stage, translate(core.locale, 'Online Video'));
 		},
 		onlineVideoHosts: () => core.onlineVideoHosts,
+		onlineVideoSearch: () => core.onlineVideoSearch,
 		properties: () => fieldProperties(core.model),
 		insertField(instr, result) {
 			const target = view();

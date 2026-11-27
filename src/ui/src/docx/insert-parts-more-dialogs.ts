@@ -7,6 +7,7 @@ import {
 import { dialogButton, labelled, selectOf } from './dialog-fields';
 import type { FormatDialog } from './font-dialog';
 import { formDialog, note, type InsertPartsHost } from './insert-parts-form';
+import { createVideoSearchPanel } from './online-video-search-panel';
 import {
 	localizeElement,
 	translate,
@@ -107,10 +108,15 @@ export function createOnlineVideoDialog(host: InsertPartsHost): FormatDialog {
 	const cancel = dialogButton('Cancel');
 	let locale: EditorLocale = 'en';
 	const check = () => resolveWebVideo(embed.value, host.onlineVideoHosts());
+	const search = createVideoSearchPanel(host.onlineVideoHosts, (result) => {
+		embed.value = result.url;
+		embed.dispatchEvent(new Event('input'));
+		embed.focus();
+	});
 	const dialog = formDialog(host, {
 		title: 'Insert Video',
 		className: 'dve-online-video-dialog',
-		content: [labelled('Video embed code or address', embed), allowed, message],
+		content: [search.element, labelled('Video embed code or address', embed), allowed, message],
 		ok,
 		cancel,
 		first: embed,
@@ -119,6 +125,7 @@ export function createOnlineVideoDialog(host: InsertPartsHost): FormatDialog {
 			embed.value = '';
 			allowed.textContent = `${translate(locale, 'Allowed sites' as LocalizationKey)}: ${host.onlineVideoHosts().join(', ')}`;
 			message.textContent = '';
+			search.reset(host.onlineVideoSearch(), locale);
 			return host.onlineVideoHosts().length > 0;
 		},
 		valid() {
@@ -135,6 +142,7 @@ export function createOnlineVideoDialog(host: InsertPartsHost): FormatDialog {
 		apply() {
 			const result = check();
 			if (!result.ok) return false;
+			search.cancel();
 			host.insertWebVideo(result.spec);
 			return true;
 		},

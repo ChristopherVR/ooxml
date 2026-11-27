@@ -1,6 +1,7 @@
 import type { Block, GlossaryEntry, SignatureLineSpec, WebVideoSpec } from 'ooxml-core/docx';
 import type { DocumentPropertySet } from 'ooxml-core/opc';
 import type { FormatDialog } from './font-dialog';
+import type { OnlineVideoSearchProvider } from './online-video-search';
 import type { EditorLocale } from './localization';
 import {
 	createDialogShell,
@@ -23,11 +24,21 @@ export interface InsertPartsHost {
 	selectionBlocks(): Block[] | undefined;
 	/** Building blocks are written to the glossary part, which a shared document does not take. */
 	glossaryLocked(): boolean;
+	/** Whether the host keeps building blocks shared by every document. */
+	sharedGlossaryAvailable(): boolean;
+	/** The shared building blocks, as last read from the host's store. */
+	sharedGlossary(): readonly GlossaryEntry[];
+	/** Re-reads the shared building blocks. */
+	loadSharedGlossary(): Promise<void>;
+	saveSharedEntry(entry: GlossaryEntry): void;
+	removeSharedEntry(key: string): void;
 	/** Tells the user why a command did nothing. */
 	report(message: string): void;
 	insertSignatureLine(spec: SignatureLineSpec): void;
 	insertWebVideo(spec: WebVideoSpec): void;
 	onlineVideoHosts(): readonly string[];
+	/** The host's video search for Insert > Online Video; none by default. */
+	onlineVideoSearch(): OnlineVideoSearchProvider | undefined;
 	properties(): DocumentPropertySet;
 	insertField(instr: string, result: string): void;
 }

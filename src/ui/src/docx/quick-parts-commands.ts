@@ -62,7 +62,13 @@ export function insertGlossaryEntry(
 ): boolean {
 	if (!view.editable || !entry.blocks.length) return false;
 	const blocks = glossaryBlocksCopy(entry.blocks, `qp${Date.now().toString(36)}-${counter++}-`);
-	const content = modelToDoc({ ...model, blocks }).content;
+	let content: Fragment;
+	try {
+		content = modelToDoc({ ...model, blocks }).content;
+	} catch {
+		// A shared entry another editor version wrote may not fit this schema; nothing is inserted.
+		return false;
+	}
 	const single = content.childCount === 1 && content.firstChild?.type.name === 'paragraph';
 	const slice = single ? new Slice(content, 1, 1) : new Slice(content, 0, 0);
 	view.dispatch(closeHistory(view.state.tr.replaceSelection(slice)).scrollIntoView());
@@ -89,10 +95,12 @@ export async function runQuickPart(
 	model: DocumentModel,
 	command: QuickPartCommand,
 	locale: EditorLocale,
+	shared: readonly GlossaryEntry[] = [],
 ): Promise<void> {
 	if (command.kind === 'property') insertDocumentProperty(view, model, command.id, locale);
 	else {
-		const entry = model.glossary?.find((item) => glossaryEntryKey(item) === command.key);
+		const source = command.shared ? shared : (model.glossary ?? []);
+		const entry = source.find((item) => glossaryEntryKey(item) === command.key);
 		if (entry) insertGlossaryEntry(view, model, entry);
 	}
 	view.focus();

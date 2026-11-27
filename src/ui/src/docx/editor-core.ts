@@ -1,4 +1,8 @@
 import { syncDesignControls } from './design-ribbon-controls';
+import type { OnlineVideoSearchProvider } from './online-video-search';
+import { SharedBuildingBlocks } from './building-blocks-shared';
+import type { signature } from 'ooxml-core/opc';
+type PackageSigner = signature.PackageSigner;
 import { bodyImageNodeViews } from './body-image-node-views';
 import { WORD_DESIGN_DEFAULT, type WordDesignPreferences } from './design-preferences';
 import { withStyleCatalogs } from './style-catalog-state';
@@ -116,7 +120,8 @@ export class EditorCore {
 			this.hostReadOnly ||
 			this.roleLocked ||
 			!this.viewOptions.customization.canEdit ||
-			this.cloudFile?.canEdit === false
+			this.cloudFile?.canEdit === false ||
+			this.signatureLocked
 		);
 	}
 	set readOnly(value: boolean) {
@@ -167,6 +172,17 @@ export class EditorCore {
 	storage: DocumentStorage | undefined = undefined;
 	wordDesignPreferences: WordDesignPreferences | undefined;
 	onlineVideoHosts: readonly string[] = [];
+	/** The host's video search for Insert > Online Video (bring your own; none by default). */
+	onlineVideoSearch: OnlineVideoSearchProvider | undefined = undefined;
+	/** Building blocks shared by every document, kept in the host's `buildingBlocksStore`. */
+	readonly buildingBlocks = new SharedBuildingBlocks(() => this.refreshControls());
+	/** The host's signing key for Sign (bring your own: a certificate and a sign function). */
+	documentSigner: PackageSigner | undefined = undefined;
+	/**
+	 * A document whose signatures verify opens read-only, as Word opens a signed document; Edit
+	 * Anyway lifts it after warning that editing removes the signatures.
+	 */
+	signatureLocked = false;
 	pendingWordDesign: Promise<void> | undefined;
 	/** Cloud places File > Open offers next to this device (`fileProviders`). */
 	fileProviders: readonly CloudFileProvider[] = [];
@@ -505,6 +521,8 @@ export class EditorCore {
 			);
 		const { searchPanel, printLayout, review, chrome, toolbar } = this.shell;
 		searchPanel?.refresh();
+		if (this.signatureLocked || this.model.signatures)
+			void import('./signed-document').then((m) => m.syncSignedDocumentBar(this));
 		this.shell.chartFormat?.refresh();
 		// The open pane follows the caret's thread and whether a selection can take a comment.
 		if (review?.commentsOpen) review.commentsPanel.refresh();
@@ -534,11 +552,18 @@ export class EditorCore {
 		if (
 			toolbar &&
 			(this.model.glossary?.length ||
+				this.buildingBlocks.entries().length ||
 				this.onlineVideoHosts.length ||
 				toolbar.querySelector('[data-insert-parts]'))
 		)
 			void import('./insert-parts-ribbon').then((m) =>
-				m.syncInsertParts(toolbar, this.model.glossary, this.onlineVideoHosts),
+				m.syncInsertParts(
+					toolbar,
+					this.model.glossary,
+					this.onlineVideoHosts,
+					this.buildingBlocks.entries(),
+					Boolean(this.documentSigner) && !this.collab.active,
+				),
 			);
 		drawTab()?.syncDraw(this);
 		syncMailingsRibbon(this);

@@ -1,6 +1,8 @@
 import type { PropType } from 'vue';
 import type { DocumentModel } from 'docx-core';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
+import type { signature } from 'ooxml-core/opc';
+type PackageSigner = signature.PackageSigner;
 import type {
 	DocxCollaborationOptions,
 	ReadAloudOptions,
@@ -9,6 +11,8 @@ import type {
 	RibbonActionInput,
 	RibbonAddInTab,
 	WordCustomization,
+	OnlineVideoSearchProvider,
+	WordBuildingBlocksStore,
 } from 'docx-web-component';
 import { defineVueBinding } from 'ooxml-ui/bindings/vue';
 import { EDITOR_CONTRACT, mountEditor, type EditorPropKey } from './index';
@@ -35,6 +39,9 @@ export const WordEditor = defineVueBinding({
 		storage: Object as PropType<DocumentStorage | null>,
 		fileProviders: Array as unknown as PropType<readonly CloudFileProvider[] | null>,
 		onlineVideoHosts: Array as unknown as PropType<readonly string[] | null>,
+		onlineVideoSearch: Object as PropType<OnlineVideoSearchProvider | null>,
+		buildingBlocksStore: Object as PropType<WordBuildingBlocksStore | null>,
+		documentSigner: Object as PropType<PackageSigner | null>,
 		customization: Object as PropType<WordCustomization | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	contract: EDITOR_CONTRACT,

@@ -1,5 +1,6 @@
 import type { EditorCore } from './editor-core';
 import { imageNodeView } from './image-media';
+import { openSignDialog, signedLineOverlay } from './signature-signing';
 
 export function bodyImageNodeViews(core: EditorCore) {
 	return {
@@ -10,6 +11,8 @@ export function bodyImageNodeViews(core: EditorCore) {
 			theme: () => core.model.theme,
 			model: () => core.model,
 			locale: () => core.locale,
+			signedLine: (spec) => signedLineOverlay(core, spec),
+			signLine: (spec) => void openSignDialog(core, spec),
 		}),
 	};
 }
