@@ -28,6 +28,8 @@ test.describe('undo of New Slide', () => {
 		await loadDeck(page, SAMPLE_DECK);
 		const before = await slideCount(page);
 		await thumbnail(page, before).click();
+		// Count the last slide's elements only once the stage shows it, not the first slide's.
+		await expect.poll(() => slidePosition(page)).toBe(`Slide ${before} of ${before}`);
 		await expect(slideElements(page).first()).toBeVisible();
 		const lastSlideElements = await slideElements(page).count();
 		expect(lastSlideElements, 'the fixture deck has content on its last slide').toBeGreaterThan(0);
