@@ -114,8 +114,9 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 	element.addEventListener('office-command', (event) => {
 		const id = (event as CustomEvent<{ command: string }>).detail.command;
 		if (id === 'save') handlers.save();
-		else if (id === 'undo') void ctx.commands.run('edit.undo');
-		else if (id === 'redo') void ctx.commands.run('edit.redo');
+		// Undo and Redo give focus back to the sheet, as Excel does, so Ctrl+Z and Ctrl+Y go on working.
+		else if (id === 'undo' || id === 'redo')
+			void ctx.commands.run(`edit.${id}`).then(() => ctx.grid()?.focus());
 	});
 	element.addEventListener('office-command-search', (event) => {
 		const { command: id } = (event as CustomEvent<{ query: string; command?: string }>).detail;

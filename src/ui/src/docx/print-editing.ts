@@ -114,10 +114,13 @@ export function createPrintEditingBridge(
 			}
 			const settle = skipScroll;
 			skipScroll = false;
+			// While a Draw tool is on, ink edits change the document without moving the view (the
+			// editor keeps focus, so Ctrl+Z still undoes them).
 			if (
 				!dragging &&
 				!settle &&
 				!view.composing &&
+				!scrollContainer.classList.contains('dve-inking') &&
 				(previousDoc !== view.state.doc || previousHead !== head)
 			)
 				marker.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });

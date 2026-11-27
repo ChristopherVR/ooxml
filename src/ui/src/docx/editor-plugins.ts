@@ -29,6 +29,7 @@ import { autoCorrectPlugin } from './autocorrect-plugin';
 import { PasteController, pasteOptionsPlugin } from './paste-options';
 import { pasteOptionsButtonPlugin, type PasteOptionsButtonHost } from './paste-options-button';
 import { tableCellSelectionPlugin } from './table-cell-selection';
+import { inkPastePlugin } from './ink-paste';
 
 /** Word's paste: its HTML read as Word means it, Paste Options after it, Paste Special. */
 function pastePlugins(host: BodyPluginHost): Plugin[] {
@@ -39,6 +40,7 @@ function pastePlugins(host: BodyPluginHost): Plugin[] {
 			() => (controller.option === 'merge' ? 'merge' : 'source'),
 		),
 		pasteOptionsPlugin(controller),
+		inkPastePlugin(),
 		...(host.pasteOptions ? [pasteOptionsButtonPlugin(host.pasteOptions)] : []),
 		keymap({ 'Mod-Alt-v': () => (host.pasteSpecial?.(), Boolean(host.pasteSpecial)) }),
 	];

@@ -73,7 +73,9 @@ function toPages(core: EditorCore): void {
 }
 
 export function handleDrawAction(core: EditorCore, action: DrawAction): void {
-	void defineDrawElements();
+	defineDrawElements().catch((cause: unknown) =>
+		report(core, cause instanceof Error ? cause : new Error(String(cause))),
+	);
 	const { state } = session(core);
 	switch (action.key) {
 		case 'tool':

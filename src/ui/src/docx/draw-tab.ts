@@ -6,6 +6,7 @@ import { buildDrawPanel, defineDrawElements } from './draw-ribbon';
 import type { EditorCore } from './editor-core';
 import { localizeElement } from './localization';
 import { refitRibbon } from './ribbon-overflow';
+import { emit } from './events';
 import { injectDrawStyles } from './draw-replay-run';
 import { registerDrawIcons } from './draw-icons';
 
@@ -29,7 +30,15 @@ export function mountDrawPanel(core: EditorCore): void {
 	localizeElement(panel, core.locale);
 	refitRibbon(toolbar);
 	// The pen strip takes its width once its element is defined: fold the groups again then.
-	void defineDrawElements().then(() => refitRibbon(toolbar));
+	defineDrawElements().then(
+		() => refitRibbon(toolbar),
+		(cause: unknown) =>
+			emit(
+				core.element,
+				'document-error',
+				cause instanceof Error ? cause : new Error(String(cause)),
+			),
+	);
 }
 
 export { destroyDraw, handleDrawAction, resetDraw, syncDraw } from './draw-actions';

@@ -100,9 +100,6 @@ export class DocxDrawController {
 			return;
 		}
 		injectDrawStyles(scroller);
-		// While drawing there is no caret, as in Word: the pages must not scroll to it as ink is added.
-		const view = this.#host.view();
-		if (view?.hasFocus()) (view.dom as HTMLElement).blur();
 		scroller.classList.add('dve-inking');
 		if (this.#canvas.parentElement !== scroller) scroller.append(this.#canvas);
 		Object.assign(this.#canvas.style, {
