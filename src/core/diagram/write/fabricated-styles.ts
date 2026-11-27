@@ -28,8 +28,22 @@ export function fabricatedColorsCategory(scheme: SmartArtColorScheme | undefined
 
 const STYLE_LABEL_NAMES = ['node0', 'node1', 'parChTrans1D2', 'sibTrans2D1'] as const;
 
+/** A background shape's label (`bgShp`, `dkBgShp`, `trBgShp`, ...): drawn behind the nodes. */
+const isBackgroundLabel = (name: string): boolean => /^(?:bg|dkBg|trBg)/u.test(name);
+
+/** The standard labels plus `extra` (the labels a built-in layout definition names), once each. */
+const labelNames = (extra: readonly string[] = []): string[] => [
+	...new Set([...STYLE_LABEL_NAMES, ...extra]),
+];
+
+/** Every `styleLbl` a layout definition's shapes name, in document order. */
+export function layoutStyleLabels(layoutXml: string): string[] {
+	return [...new Set([...layoutXml.matchAll(/\bstyleLbl="([^"]+)"/gu)].map((match) => match[1]!))];
+}
+
 function quickStyleLabelXml(name: string, style: SmartArtStyle = 'flat'): string {
 	const isConnector = name === 'parChTrans1D2';
+	const background = isBackgroundLabel(name);
 	const effectIndex = name.startsWith('node')
 		? style === 'intense'
 			? 2
@@ -43,7 +57,7 @@ function quickStyleLabelXml(name: string, style: SmartArtStyle = 'flat'): string
 		'<dgm:sp3d/>' +
 		'<dgm:txPr/>' +
 		'<dgm:style>' +
-		`<a:lnRef idx="${isConnector ? '1' : '2'}"><a:scrgbClr r="0" g="0" b="0"/></a:lnRef>` +
+		`<a:lnRef idx="${background ? '0' : isConnector ? '1' : '2'}"><a:scrgbClr r="0" g="0" b="0"/></a:lnRef>` +
 		`<a:fillRef idx="${effectIndex + 1}"><a:scrgbClr r="0" g="0" b="0"/></a:fillRef>` +
 		`<a:effectRef idx="${effectIndex}"><a:scrgbClr r="0" g="0" b="0"/></a:effectRef>` +
 		'<a:fontRef idx="minor"/>' +
@@ -52,15 +66,23 @@ function quickStyleLabelXml(name: string, style: SmartArtStyle = 'flat'): string
 	);
 }
 
-/** Build the complete `quickStyleN.xml` payload. */
-export function buildFabricatedQuickStyleXml(style?: SmartArtStyle): string {
+/**
+ * Build the complete `quickStyleN.xml` payload. `labels` adds the style labels a built-in layout
+ * definition names beyond the standard ones, so none of its shapes falls back to no style.
+ */
+export function buildFabricatedQuickStyleXml(
+	style?: SmartArtStyle,
+	labels: readonly string[] = [],
+): string {
 	return (
 		`${XML_PROLOG}\r\n<dgm:styleDef ${DGM_XMLNS} uniqueId="${FABRICATED_QUICKSTYLE_UNIQUE_ID}">` +
 		`<dgm:title val="Simple"/><dgm:desc val=""/>` +
 		`<dgm:catLst><dgm:cat type="simple" pri="10100"/></dgm:catLst>` +
-		`<dgm:scene3d><a:camera prst="orthographicFront"/><a:lightRig rig="threePt" dir="t"/></dgm:scene3d>${STYLE_LABEL_NAMES.map(
-			(name) => quickStyleLabelXml(name, style),
-		).join('')}</dgm:styleDef>`
+		`<dgm:scene3d><a:camera prst="orthographicFront"/><a:lightRig rig="threePt" dir="t"/></dgm:scene3d>${labelNames(
+			labels,
+		)
+			.map((name) => quickStyleLabelXml(name, style))
+			.join('')}</dgm:styleDef>`
 	);
 }
 
@@ -79,6 +101,20 @@ function schemeClrListXml(accents: string[]): string {
 
 function colorsLabelXml(name: string, accents: string[]): string {
 	const isConnector = name === 'parChTrans1D2' || name === 'sibTrans2D1';
+	// A background shape (the arrow behind Continuous Block Process) is a light tint of the
+	// scheme's first colour with dark text, as Office's own colour definitions draw it.
+	if (isBackgroundLabel(name)) {
+		const tint = `<a:schemeClr val="${accents[0] ?? 'accent1'}"><a:tint val="40000"/></a:schemeClr>`;
+		return (
+			`<dgm:styleLbl name="${xmlEscape(name)}">` +
+			`<dgm:fillClrLst meth="repeat">${tint}</dgm:fillClrLst>` +
+			`<dgm:linClrLst meth="repeat">${tint}</dgm:linClrLst><dgm:effectClrLst/>` +
+			`<dgm:txLinClrLst/>` +
+			`<dgm:txFillClrLst meth="repeat"><a:schemeClr val="dk1"/></dgm:txFillClrLst>` +
+			`<dgm:txEffectClrLst/>` +
+			`</dgm:styleLbl>`
+		);
+	}
 	const fill = isConnector
 		? '<dgm:fillClrLst meth="repeat"><a:schemeClr val="accent1"><a:shade val="60000"/></a:schemeClr></dgm:fillClrLst>'
 		: `<dgm:fillClrLst meth="cycle">${schemeClrListXml(accents)}</dgm:fillClrLst>`;
@@ -94,14 +130,22 @@ function colorsLabelXml(name: string, accents: string[]): string {
 	);
 }
 
-/** Build the complete `colorsN.xml` payload for a colour scheme. */
-export function buildFabricatedColorsXml(scheme: SmartArtColorScheme | undefined): string {
+/**
+ * Build the complete `colorsN.xml` payload for a colour scheme. `labels` adds the style labels a
+ * built-in layout definition names beyond the standard ones (see {@link layoutStyleLabels}).
+ */
+export function buildFabricatedColorsXml(
+	scheme: SmartArtColorScheme | undefined,
+	labels: readonly string[] = [],
+): string {
 	const accents = SCHEME_FILL_ACCENTS[scheme ?? 'colorful1'] ?? SCHEME_FILL_ACCENTS.colorful1;
 	return (
 		`${XML_PROLOG}\r\n<dgm:colorsDef ${DGM_XMLNS} uniqueId="${xmlEscape(fabricatedColorsUniqueId(scheme))}">` +
 		`<dgm:title val=""/><dgm:desc val=""/>` +
-		`<dgm:catLst><dgm:cat type="${xmlEscape(fabricatedColorsCategory(scheme))}" pri="10200"/></dgm:catLst>${STYLE_LABEL_NAMES.map(
-			(name) => colorsLabelXml(name, accents),
-		).join('')}</dgm:colorsDef>`
+		`<dgm:catLst><dgm:cat type="${xmlEscape(fabricatedColorsCategory(scheme))}" pri="10200"/></dgm:catLst>${labelNames(
+			labels,
+		)
+			.map((name) => colorsLabelXml(name, accents))
+			.join('')}</dgm:colorsDef>`
 	);
 }

@@ -32,6 +32,7 @@ import {
 	FABRICATED_QUICKSTYLE_UNIQUE_ID,
 	buildFabricatedColorsXml,
 	buildFabricatedQuickStyleXml,
+	layoutStyleLabels,
 	fabricatedColorsCategory,
 	fabricatedColorsUniqueId,
 } from './smartart-fabrication-styles';
@@ -150,6 +151,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			data.builtinLayoutId && data.layoutDefinition?.rawXmlText
 				? resolveSmartArtSaveLayout(data)
 				: undefined;
+		// Its shapes may name style labels the fabricated parts do not define (a background arrow).
+		const builtinLabels = builtinLayout ? layoutStyleLabels(builtinLayout.xml) : [];
 		const payloads: Record<(typeof DIAGRAM_PART_KINDS)[number]['prefix'], string> = {
 			data: buildFabricatedDiagramDataXml(
 				data,
@@ -170,8 +173,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				},
 			),
 			layout: builtinLayout?.xml ?? buildFabricatedLayoutDefXml(family, layoutIdentity),
-			quickStyle: buildFabricatedQuickStyleXml(data.style),
-			colors: buildFabricatedColorsXml(data.colorScheme),
+			quickStyle: buildFabricatedQuickStyleXml(data.style, builtinLabels),
+			colors: buildFabricatedColorsXml(data.colorScheme, builtinLabels),
 		};
 		const EMU = PptxHandlerRuntime.EMU_PER_PX;
 		const pictureParts = builtinLayout

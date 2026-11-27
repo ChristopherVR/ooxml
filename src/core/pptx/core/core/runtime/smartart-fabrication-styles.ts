@@ -5,4 +5,5 @@ export {
 	fabricatedColorsCategory,
 	buildFabricatedQuickStyleXml,
 	buildFabricatedColorsXml,
+	layoutStyleLabels,
 } from '../../../../diagram/write/fabricated-styles';
