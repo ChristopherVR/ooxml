@@ -8,10 +8,13 @@ import { drawingEffectsXml, parseDrawingEffects } from './drawing-effects';
 import type { DrawingEffectList } from './effect-model';
 import type { DrawingColor, DrawingFill, DrawingLine } from './types';
 import { patchDrawingColorIn } from './patch-color';
+import type { ThemeFillMedia } from './theme-fill-media';
 
 export interface ThemeFillStyle {
 	fill: DrawingFill;
 	sourceXml?: string;
+	/** The picture of a picture fill (`a:blipFill`), which its XML names by relationship id. */
+	media?: ThemeFillMedia;
 }
 export interface ThemeEffectStyle {
 	effects?: DrawingEffectList;

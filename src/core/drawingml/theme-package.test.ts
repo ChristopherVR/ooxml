@@ -4,6 +4,7 @@ import { NS } from '../xml/index';
 import { themeMatrix } from './theme-matrix';
 import { THEME_COLOR_SLOTS, type DrawingTheme } from './theme-model';
 import { MAX_THEME_PACKAGE_BYTES, readThemePackage, writeThemePackage } from './theme-package';
+import { themeFillMediaOf, themeSchemeMedia } from './theme-fill-media';
 import { drawingThemeXml } from './write-theme';
 
 const theme: DrawingTheme = {
@@ -191,5 +192,56 @@ describe('standalone Office themes', () => {
 				await replacePart(part, (xml) => xml + '<!--' + '界'.repeat(175_000) + '-->'),
 			),
 		).rejects.toThrow(/invalid XML part size/);
+	});
+});
+
+describe('standalone Office theme picture fills', () => {
+	const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3]);
+	const media = new Map([['rId2', themeFillMediaOf(png, 'image/png')]]);
+
+	it('keeps a picture fill with its picture through export and import', async () => {
+		const warnings: string[] = [];
+		const output = await writeThemePackage(withPictureFills(drawingThemeXml(theme)), {
+			media,
+			onWarning: (warning) => warnings.push(warning),
+		});
+		const zip = await JSZip.loadAsync(output);
+		expect(await zip.file('theme/media/image1.png')?.async('uint8array')).toEqual(png);
+		expect(await zip.file('theme/theme/_rels/theme1.xml.rels')?.async('string')).toContain(
+			'../media/image1.png',
+		);
+		const loaded = await readThemePackage(output, {
+			onWarning: (warning) => warnings.push(warning),
+		});
+		expect(warnings).toEqual([]);
+		expect(loaded.formatScheme?.fillStyles[0]?.fill.kind).toBe('picture');
+		expect(loaded.formatScheme?.backgroundFillStyles[0]?.fill.kind).toBe('picture');
+		expect(themeSchemeMedia(loaded.formatScheme).get('rId2')).toEqual(media.get('rId2'));
+	});
+
+	it('falls back to a solid fill for a picture of an unsupported type', async () => {
+		const warnings: string[] = [];
+		const output = await writeThemePackage(withPictureFills(drawingThemeXml(theme)), {
+			media: new Map([['rId2', themeFillMediaOf(png, 'image/svg+xml')]]),
+			onWarning: (warning) => warnings.push(warning),
+		});
+		expect(warnings).toEqual(['pictureFillsReplaced']);
+		const zip = await JSZip.loadAsync(output);
+		expect(await zip.file(part)?.async('string')).not.toContain('blipFill');
+	});
+
+	it('ignores picture relationships that leave the package', async () => {
+		const output = await writeThemePackage(withPictureFills(drawingThemeXml(theme)), { media });
+		const zip = await JSZip.loadAsync(output);
+		zip.file(
+			'theme/theme/_rels/theme1.xml.rels',
+			`<Relationships xmlns="${NS.rels}"><Relationship Id="rId2" Type="${NS.r}/image" Target="https://example.invalid/a.png" TargetMode="External"/></Relationships>`,
+		);
+		const warnings: string[] = [];
+		const loaded = await readThemePackage(await zip.generateAsync({ type: 'uint8array' }), {
+			onWarning: (warning) => warnings.push(warning),
+		});
+		expect(warnings).toEqual(['pictureFillsReplaced']);
+		expect(loaded.formatScheme?.fillStyles[0]?.fill.kind).toBe('solid');
 	});
 });

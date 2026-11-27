@@ -906,9 +906,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Design: the Word theme gallery with each theme's measured palette, fonts and format
       scheme, custom colour and font schemes, `.thmx` import and export, and the Effects gallery
       applying whole format schemes (`drawingml/theme-gallery.ts`, 2026-11-26).
-- [ ] **P1** Design: nine legacy Word themes are omitted until their values are verified, and
-      theme picture fills (Grunge Texture, Wood Type) are replaced with solid fills on import and
-      not rendered, with 3-D styles.
+- [x] **P1** Design: Atlas, Celestial, Depth and Madison measured through Word 16 COM
+      (`src/core/scripts/docx-word-theme-capture.ps1`); theme picture fills keep their pictures
+      through `.thmx` import and export and DOCX load and save (`drawingml/theme-fill-media.ts`,
+      `docx/theme-media.ts`, 2026-11-27).
+- [ ] **P1** Design: six legacy Word themes (Badge, Crop, Feathered, Headlines, Quotable, Tete)
+      are omitted until measured; the built-in gallery's picture fills (Wood Type, Celestial,
+      Madison, the Grunge Texture effect) use solid placeholders since the artwork is not
+      shipped; theme picture fills and 3-D styles are not rendered on shapes.
 - [x] **P1** Table Design and Layout tabs: table styles and style options, Cell Size and AutoFit,
       cell alignment and margins, Repeat Header Rows, Formula, Convert to Text, Select and Draw
       Borders (2026-11-27).

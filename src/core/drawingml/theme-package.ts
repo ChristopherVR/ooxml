@@ -21,6 +21,16 @@ import { resolveDrawingColor } from './drawing-color';
 import { isDrawingFillElement } from './drawing-fill';
 import { parseTheme } from './theme';
 import { THEME_COLOR_SLOTS } from './theme-model';
+import {
+	MAX_THEME_PICTURE_BYTES,
+	MAX_THEME_PICTURES_BYTES,
+	THEME_PICTURE_TYPES,
+	themeFillMediaBytes,
+	themeFillMediaOf,
+	themePictureEmbedId,
+	withThemeSchemeMedia,
+	type ThemeFillMedia,
+} from './theme-fill-media';
 
 export const MAX_THEME_PACKAGE_BYTES = 8 * 1024 * 1024;
 const MAX_THEME_XML_BYTES = 512 * 1024;
@@ -40,6 +50,12 @@ type ThemePackageWarning = 'pictureFillsReplaced';
 interface ThemePackageOptions {
 	onWarning?: (warning: ThemePackageWarning) => void;
 }
+interface ThemePackageWriteOptions extends ThemePackageOptions {
+	/** The pictures of the theme's picture fills, by the relationship id the theme XML names. */
+	media?: ReadonlyMap<string, ThemeFillMedia>;
+}
+const IMAGE_REL = `${NS.r}/image`;
+const MAX_THEME_PICTURES = 16;
 
 function expectChildren(parent: XmlElement, names: readonly string[]) {
 	const items = elements(parent);
@@ -49,18 +65,39 @@ function expectChildren(parent: XmlElement, names: readonly string[]) {
 	return items;
 }
 
-function hasReferences(root: XmlElement): boolean {
+function hasReferences(root: XmlElement, kept?: ReadonlySet<XmlElement>): boolean {
+	if (kept?.has(root)) return false;
 	return (
 		Array.from(root.attributes).some((attribute) => attribute.namespaceURI === NS.r) ||
-		elements(root).some(hasReferences)
+		elements(root).some((child) => hasReferences(child, kept))
 	);
 }
 
-function replacePictureFills(lists: readonly XmlElement[]): boolean {
+function countReferences(root: XmlElement): number {
+	return (
+		Array.from(root.attributes).filter((attribute) => attribute.namespaceURI === NS.r).length +
+		elements(root).reduce((total, child) => total + countReferences(child), 0)
+	);
+}
+
+/**
+ * Replaces each picture fill whose picture is not in `media` with a solid placeholder, and returns
+ * the picture fills kept: their one reference is an embedded picture `media` holds.
+ */
+function replacePictureFills(
+	lists: readonly XmlElement[],
+	media: ReadonlyMap<string, ThemeFillMedia>,
+): { replaced: boolean; kept: Set<XmlElement> } {
 	let replaced = false;
+	const kept = new Set<XmlElement>();
 	for (const list of lists) {
 		for (const fill of elements(list)) {
 			if (!named(fill, 'blipFill', NS.a, false) || !hasReferences(fill)) continue;
+			const id = themePictureEmbedId(fill);
+			if (id && media.has(id) && countReferences(fill) === 1) {
+				kept.add(fill);
+				continue;
+			}
 			const doc = list.ownerDocument;
 			const solid = doc.createElementNS(NS.a, 'a:solidFill');
 			const color = doc.createElementNS(NS.a, 'a:schemeClr');
@@ -70,10 +107,10 @@ function replacePictureFills(lists: readonly XmlElement[]): boolean {
 			replaced = true;
 		}
 	}
-	return replaced;
+	return { replaced, kept };
 }
 
-function validateTheme(xml: string) {
+function validateTheme(xml: string, media: ReadonlyMap<string, ThemeFillMedia> = new Map()) {
 	const doc = parseXml(xml, XML);
 	const root = doc.documentElement;
 	if (!named(root, 'theme', NS.a, false)) throw new Error('Office theme: expected theme.');
@@ -117,9 +154,22 @@ function validateTheme(xml: string) {
 		if (!named(entry, 'effectLst', NS.a, false) && !named(entry, 'effectDag', NS.a, false))
 			throw new Error('Office theme: invalid effect style.');
 	}
-	const replaced = replacePictureFills(lists.filter((_, index) => index === 0 || index === 3));
-	if (hasReferences(root)) throw new Error('Office theme: related resources are unsupported.');
-	const theme = parseTheme(root);
+	const { replaced, kept } = replacePictureFills(
+		lists.filter((_, index) => index === 0 || index === 3),
+		media,
+	);
+	if (hasReferences(root, kept))
+		throw new Error('Office theme: related resources are unsupported.');
+	const used = new Set([...kept].map((fill) => themePictureEmbedId(fill)!));
+	const parsed = parseTheme(root);
+	const theme = parsed.formatScheme
+		? {
+				...parsed,
+				formatScheme: withThemeSchemeMedia(parsed.formatScheme, (id) =>
+					used.has(id) ? media.get(id) : undefined,
+				),
+			}
+		: parsed;
 	if (
 		THEME_COLOR_SLOTS.some((slot) => {
 			const color = theme.colorScheme.colors[slot];
@@ -130,7 +180,7 @@ function validateTheme(xml: string) {
 		theme.formatScheme.effectStyles.length < 3
 	)
 		throw new Error('Office theme: incomplete schemes.');
-	return { theme, xml: replaced ? buildXml(doc) : xml, replaced };
+	return { theme, xml: replaced ? buildXml(doc) : xml, replaced, used };
 }
 
 function relationshipTarget(xml: string, source: string, type: string): string {
@@ -144,6 +194,56 @@ function relationshipTarget(xml: string, source: string, type: string): string {
 	if (!isPartName(target) || target.includes(':'))
 		throw new Error('Office theme: invalid part target.');
 	return resolvePartPath(source, target);
+}
+
+/**
+ * The pictures the theme part relates to, by relationship id: internal image relationships to a
+ * picture part of a supported type, within the per-picture, total and count limits. Anything else
+ * is left out, so a fill that uses it falls back to the solid placeholder.
+ */
+async function readThemePictures(
+	zip: Awaited<ReturnType<typeof openZip>>,
+	entries: ReadonlyMap<string, string>,
+	types: ReturnType<typeof parseContentTypes>,
+	part: string,
+): Promise<Map<string, ThemeFillMedia>> {
+	const media = new Map<string, ThemeFillMedia>();
+	const relsName = entries.get(partNameKey(relationshipsPartFor(part)));
+	const relsEntry = relsName === undefined ? null : zip.file(relsName);
+	if (!relsEntry) return media;
+	const relsSize = declaredEntrySize(relsEntry);
+	if (relsSize === 0 || relsSize > MAX_THEME_XML_BYTES)
+		throw new Error('Office theme: invalid XML part size.');
+	const relsXml = decodeXmlBytes(
+		await inflateEntryGuarded(relsEntry, 0, {
+			label: XML.label,
+			maxEntryBytes: MAX_THEME_XML_BYTES,
+		}),
+	);
+	parseXml(relsXml, XML);
+	let total = 0;
+	for (const relationship of parseRelationshipsPart(relsXml)) {
+		if (media.size >= MAX_THEME_PICTURES) break;
+		if (relationship.type !== IMAGE_REL || relationship.mode !== 'Internal') continue;
+		if (relationship.target.includes(':')) continue;
+		const target = resolvePartPath(part, relationship.target);
+		if (!isPartName(target)) continue;
+		const contentType = contentTypeForPart(types, target);
+		const name = entries.get(partNameKey(target));
+		const entry = name === undefined ? null : zip.file(name);
+		if (!entry || !contentType || !(contentType in THEME_PICTURE_TYPES)) continue;
+		const size = declaredEntrySize(entry);
+		if (size === 0 || size > MAX_THEME_PICTURE_BYTES || total + size > MAX_THEME_PICTURES_BYTES)
+			continue;
+		const bytes = await inflateEntryGuarded(entry, 0, {
+			label: XML.label,
+			maxEntryBytes: MAX_THEME_PICTURE_BYTES,
+		});
+		total += bytes.byteLength;
+		if (total > MAX_THEME_PICTURES_BYTES) break;
+		media.set(relationship.id, themeFillMediaOf(bytes, contentType));
+	}
+	return media;
 }
 
 /** Reads the default DrawingML theme from a .thmx package, without loading its ancillary parts. */
@@ -201,7 +301,8 @@ export async function readThemePackage(
 	const part = relationshipTarget(await read(relationshipsPartFor(manager)), manager, THEME_REL);
 	if (contentTypeForPart(types, part) !== THEME_CT)
 		throw new Error('Office theme: invalid theme type.');
-	const { theme, replaced } = validateTheme(await read(part));
+	const media = await readThemePictures(zip, entries, types, part);
+	const { theme, replaced } = validateTheme(await read(part), media);
 	if (replaced) options?.onWarning?.('pictureFillsReplaced');
 	return theme;
 }
@@ -209,7 +310,7 @@ export async function readThemePackage(
 /** Packages a self-contained DrawingML theme part in the standalone Office theme envelope. */
 export async function writeThemePackage(
 	themeXml: string,
-	options?: ThemePackageOptions,
+	options?: ThemePackageWriteOptions,
 ): Promise<Uint8Array> {
 	if (themeXml.length > MAX_THEME_XML_BYTES) throw new Error('Office theme XML is too large.');
 	// The byte encoding is ours to choose, regardless of the source XML declaration.
@@ -220,7 +321,10 @@ export async function writeThemePackage(
 	const encoder = new TextEncoder();
 	if (encoder.encode(xml).length > MAX_THEME_XML_BYTES)
 		throw new Error('Office theme XML is too large.');
-	const validated = validateTheme(xml);
+	const media = new Map(
+		[...(options?.media ?? [])].filter(([, picture]) => themeFillMediaBytes(picture)),
+	);
+	const validated = validateTheme(xml, media);
 	const bytes = encoder.encode(validated.xml);
 	if (bytes.length > MAX_THEME_XML_BYTES) throw new Error('Office theme XML is too large.');
 	const zip = new JSZip();
@@ -240,7 +344,42 @@ export async function writeThemePackage(
 	zip.file(MANAGER, `<a:themeManager xmlns:a="${NS.a}"/>`);
 	zip.file(relationshipsPartFor(MANAGER), rels(THEME_REL, 'theme1.xml'));
 	zip.file(THEME, bytes);
+	const pictures = [...validated.used].map((id, index) => {
+		const picture = media.get(id)!;
+		const extension = THEME_PICTURE_TYPES[picture.contentType]!;
+		return { id, picture, extension, target: `../media/image${index + 1}.${extension}` };
+	});
+	if (pictures.length) {
+		zip.file(
+			'[Content_Types].xml',
+			buildContentTypesXml({
+				defaults: new Map([
+					['rels', 'application/vnd.openxmlformats-package.relationships+xml'],
+					...pictures.map(({ extension, picture }) => [extension, picture.contentType] as const),
+				]),
+				overrides: new Map([
+					[`/${MANAGER}`, MANAGER_CT],
+					[`/${THEME}`, THEME_CT],
+				]),
+			}),
+		);
+		zip.file(
+			relationshipsPartFor(THEME),
+			buildRelationshipsXml(
+				new Map(
+					pictures.map(({ id, target }) => [
+						id,
+						{ type: IMAGE_REL, target, mode: 'Internal' as const },
+					]),
+				),
+			),
+		);
+		for (const { picture, target } of pictures)
+			zip.file(resolvePartPath(THEME, target), themeFillMediaBytes(picture)!);
+	}
 	const packageBytes = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 	if (validated.replaced) options?.onWarning?.('pictureFillsReplaced');
 	return packageBytes;
 }
+
+export { themeSchemeMedia, type ThemeFillMedia } from './theme-fill-media';

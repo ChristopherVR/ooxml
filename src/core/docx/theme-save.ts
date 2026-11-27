@@ -11,6 +11,7 @@ import { documentPartPath, parseRelationships } from './package-parts';
 import { applyColorSchemeMapping } from './settings';
 import type { ThemeCatalog } from './theme-model';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
+import { writeWordThemeMedia } from './theme-media';
 
 const THEME_PATH = 'word/theme/theme1.xml';
 const FONT_ROLES = ['major', 'minor'] as const;
@@ -184,6 +185,7 @@ export async function applyWordTheme(
 	) {
 		zip.file(path, patchTheme(await file.async('string'), next, base));
 	}
+	await writeWordThemeMedia(zip, path, next);
 	await applyColorSchemeMapping(
 		zip,
 		next.colorMapping,

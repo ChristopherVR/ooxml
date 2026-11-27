@@ -1,5 +1,5 @@
 // Captured from DOCX files saved by Word 16.0.20625. See PROVENANCE.md.
-// Picture fills with package relationships are replaced with solid phClr.
+// Picture fills with package relationships are replaced with solid phClr: the artwork is not shipped.
 export const LEGACY_THEME_FORMATS = {
 	atlas: `<a:fmtScheme name="Atlas">
 <a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:gradFill rotWithShape="1"><a:gsLst><a:gs pos="0"><a:schemeClr val="phClr"><a:tint val="62000"/><a:alpha val="60000"/><a:satMod val="109000"/><a:lumMod val="110000"/></a:schemeClr></a:gs><a:gs pos="100000"><a:schemeClr val="phClr"><a:tint val="78000"/><a:alpha val="92000"/><a:satMod val="109000"/><a:lumMod val="100000"/></a:schemeClr></a:gs></a:gsLst><a:lin ang="5400000" scaled="0"/></a:gradFill><a:gradFill rotWithShape="1"><a:gsLst><a:gs pos="0"><a:schemeClr val="phClr"><a:tint val="98000"/><a:satMod val="110000"/><a:lumMod val="104000"/></a:schemeClr></a:gs><a:gs pos="69000"><a:schemeClr val="phClr"><a:shade val="84000"/><a:satMod val="130000"/><a:lumMod val="92000"/></a:schemeClr></a:gs><a:gs pos="100000"><a:schemeClr val="phClr"><a:shade val="76000"/><a:satMod val="130000"/><a:lumMod val="88000"/></a:schemeClr></a:gs></a:gsLst><a:lin ang="5400000" scaled="0"/></a:gradFill></a:fillStyleLst>

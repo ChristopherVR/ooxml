@@ -1,5 +1,9 @@
 import JSZip from 'jszip';
-import { readThemePackage } from '../../../drawingml/theme-package';
+import { readThemePackage, writeThemePackage } from '../../../drawingml/theme-package';
+import { themeFillMediaOf } from '../../../drawingml/theme-fill-media';
+import { themeMatrix } from '../../../drawingml/theme-matrix';
+import { THEME_COLOR_SLOTS } from '../../../drawingml/theme-model';
+import { drawingThemeXml } from '../../../drawingml/write-theme';
 import { ZipLimitError } from '../../../opc/zip-limits';
 import { NS } from '../../../xml/index';
 import type { SecurityCase } from '../case';
@@ -56,5 +60,44 @@ export const cases: readonly SecurityCase[] = [
 			}
 		},
 		expected: { kind: 'declaredSize', limit: 512 * 1024 },
+	},
+	{
+		name: 'theme picture fills never inflate a picture past the per-picture limit',
+		limits: { ms: 3_000, heapMb: 96 },
+		async run() {
+			const xml = drawingThemeXml({
+				name: 'Pictures',
+				colorScheme: {
+					colors: Object.fromEntries(
+						THEME_COLOR_SLOTS.map((slot) => [
+							slot,
+							{ kind: 'srgb', value: '000000', transforms: [] },
+						]),
+					),
+				},
+				fontScheme: { major: { latin: 'A', scripts: {} }, minor: { latin: 'B', scripts: {} } },
+				formatScheme: themeMatrix(),
+			}).replace(
+				/<a:fillStyleLst><a:solidFill>.*?<\/a:solidFill>/u,
+				`<a:fillStyleLst><a:blipFill><a:blip xmlns:r="${NS.r}" r:embed="rId1"/></a:blipFill>`,
+			);
+			const media = new Map([
+				['rId1', themeFillMediaOf(new Uint8Array([137, 80, 78, 71]), 'image/png')],
+			]);
+			const zip = await JSZip.loadAsync(await writeThemePackage(xml, { media }));
+			zip.file(
+				'theme/theme/_rels/theme1.xml.rels',
+				`<Relationships xmlns="${NS.rels}"><Relationship Id="rId1" Type="${NS.r}/image" Target="../media/big.png"/></Relationships>`,
+			);
+			// Highly compressible: 6 MB of zeros deflate to a few kilobytes.
+			zip.file('theme/media/big.png', new Uint8Array(6 * 1024 * 1024));
+			const warnings: string[] = [];
+			const theme = await readThemePackage(
+				await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }),
+				{ onWarning: (warning) => warnings.push(warning) },
+			);
+			return { warnings, fill: theme.formatScheme?.fillStyles[0]?.fill.kind };
+		},
+		expected: { warnings: ['pictureFillsReplaced'], fill: 'solid' },
 	},
 ];

@@ -99,10 +99,11 @@ export function saveTheme(core: EditorCore, anchor: HTMLButtonElement): void {
 		if (!themeName || !canEditDesign(core) || generation !== core.loadGeneration) return;
 		close();
 		try {
-			const { writeThemePackage } = await loadThemePackage();
+			const { themeSchemeMedia, writeThemePackage } = await loadThemePackage();
 			let fallback = false;
 			downloadBytes(
 				await writeThemePackage(wordThemeXml({ ...theme, name: themeName }), {
+					media: themeSchemeMedia(theme.formatScheme),
 					onWarning: () => {
 						fallback = true;
 					},

@@ -24,6 +24,7 @@ import { parseRunStyleCatalog } from './character-styles';
 import { readLatentStyles } from './latent-styles';
 import { parseTableStyleCatalog } from './table-styles';
 import { parseTheme, parseColorSchemeMapping } from './theme';
+import { readWordThemeMedia } from './theme-media';
 
 const px = (twips: string | undefined, fallback: number): number =>
 	twips === undefined ? fallback : (Number(twips) * 96) / 1440;
@@ -166,7 +167,11 @@ export async function readPackage(
 	const themeFile = zip.file(documentPartPath(drawings.rels, 'theme', 'word/theme/theme1.xml'));
 	const settingsXml = await zip.file('word/settings.xml')?.async('string');
 	if (themeFile) {
-		model.theme = parseTheme(await themeFile.async('string'));
+		model.theme = await readWordThemeMedia(
+			zip,
+			themeFile.name,
+			parseTheme(await themeFile.async('string')),
+		);
 		const themeSettingsXml = await zip
 			.file(documentPartPath(drawings.rels, 'settings', 'word/settings.xml'))
 			?.async('string');
