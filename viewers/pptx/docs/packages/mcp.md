@@ -123,11 +123,13 @@ Run the bundled MCP server so an MCP client (Claude Desktop, Cursor, etc.) can c
 	"mcpServers": {
 		"pptx": {
 			"command": "npx",
-			"args": ["pptx-viewer-mcp"]
+			"args": ["pptx-viewer-mcp", "--root", "/path/to/decks"]
 		}
 	}
 }
 ```
+
+Every `filePath` is confined to the `--root` folder. Without `--root` the server uses the `PPTX_TOOLS_ROOT` environment variable, else its working directory, with a warning on stderr.
 
 The binary is also installed as **`pptx-tools`** after a global install (`npm i -g pptx-viewer-mcp`). All 74 tools are exposed over stdio under their **snake_case** names - e.g. `get_slide`, `add_slide`, `batch_update_elements`, `convert_to_markdown`. Each MCP tool accepts a `filePath` parameter; the server handles loading and saving internally.
 

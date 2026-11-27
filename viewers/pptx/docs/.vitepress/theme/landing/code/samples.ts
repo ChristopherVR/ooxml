@@ -149,7 +149,7 @@ export const MCP_CONFIG_SAMPLE = `{
   "mcpServers": {
     "pptx": {
       "command": "npx",
-      "args": ["pptx-viewer-mcp"]
+      "args": ["pptx-viewer-mcp", "--root", "/path/to/decks"]
     }
   }
 }`;

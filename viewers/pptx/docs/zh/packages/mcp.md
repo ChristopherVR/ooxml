@@ -123,11 +123,13 @@ console.log(result.elements);
 	"mcpServers": {
 		"pptx": {
 			"command": "npx",
-			"args": ["pptx-viewer-mcp"]
+			"args": ["pptx-viewer-mcp", "--root", "/path/to/decks"]
 		}
 	}
 }
 ```
+
+每个 `filePath` 都限定在 `--root` 文件夹内。未指定 `--root` 时，服务器使用 `PPTX_TOOLS_ROOT` 环境变量，否则使用其工作目录，并在 stderr 输出警告。
 
 全局安装（`npm i -g pptx-viewer-mcp`）后，也会安装名为 **`pptx-tools`** 的可执行命令。全部 74 个工具都以 **snake_case** 名称通过 stdio 暴露，例如 `get_slide`、`add_slide`、`batch_update_elements`、`convert_to_markdown`。每个 MCP 工具接受 `filePath` 参数，服务器在内部处理加载和保存。
 

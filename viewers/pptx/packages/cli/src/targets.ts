@@ -332,12 +332,16 @@ Docs: https://www.npmjs.com/package/pptx-viewer-core`,
   "mcpServers": {
     "pptx": {
       "command": "npx",
-      "args": ["pptx-viewer-mcp"]
+      "args": ["pptx-viewer-mcp", "--root", "/path/to/decks"]
     }
   }
 }
 
-npx downloads pptx-viewer-mcp (and its bundled pptx-viewer-core engine) the
+Replace /path/to/decks with the folder the tools may read and write: every
+filePath is confined to it. Without --root the server falls back to the
+PPTX_TOOLS_ROOT environment variable, then to its working directory.
+
+npx downloads pptx-viewer-mcp (and the ooxml-core engine it depends on) the
 first time your MCP client starts it, so there is nothing to install by hand.
 
 Docs: https://www.npmjs.com/package/pptx-viewer-mcp`,

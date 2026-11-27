@@ -27,6 +27,18 @@ describe('targets', () => {
 		expect(mcp?.mode).toBe('print-config');
 	});
 
+	it('the mcp config scopes the server to a root folder', () => {
+		const mcp = TARGETS.find((t) => t.id === 'mcp');
+		const config = JSON.parse(/\{[\s\S]*?\n\}/u.exec(mcp?.nextSteps ?? '')?.[0] ?? '{}') as {
+			mcpServers?: Record<string, { args?: string[] }>;
+		};
+		expect(config.mcpServers?.['pptx']?.args).toStrictEqual([
+			'pptx-viewer-mcp',
+			'--root',
+			'/path/to/decks',
+		]);
+	});
+
 	it('every UI framework target has a compat check and a scaffold recipe', () => {
 		for (const id of ['react', 'vue', 'angular', 'svelte']) {
 			const target = TARGETS.find((t) => t.id === id);
