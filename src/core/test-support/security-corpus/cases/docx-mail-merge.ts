@@ -69,4 +69,19 @@ export const cases: readonly SecurityCase[] = [
 			issues: ['image-refused', 'link-refused'],
 		},
 	},
+	{
+		name: 'HTML merge values trim the trailing spaces of preformatted text in linear time',
+		limits: { ms: 2_000, heapMb: 128 },
+		async run() {
+			const model = createDocument();
+			model.blocks = [{ type: 'paragraph', id: 'p1', runs: [mailMergeField('Body')] }];
+			const { model: merged } = await mergeFields(
+				model,
+				{ values: { Body: `<pre>c${' '.repeat(150_000)}d </pre>` }, html: ['Body'] },
+				{ unlink: true },
+			);
+			return { length: plainText(merged).length };
+		},
+		expected: { length: 150_002 },
+	},
 ];

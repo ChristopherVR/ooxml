@@ -91,7 +91,9 @@ export function readHtmlMergeValue(
 		if (inline) return;
 		while (runs.at(-1)?.text.endsWith(' ')) {
 			const last = runs.at(-1)!;
-			const text = last.text.replace(/ +$/, '');
+			let end = last.text.length;
+			while (end > 0 && last.text.charCodeAt(end - 1) === 32) end--;
+			const text = last.text.slice(0, end);
 			if (text) {
 				runs[runs.length - 1] = { ...last, text };
 				break;

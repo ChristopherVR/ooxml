@@ -275,6 +275,15 @@ describe('mergeFields with HTML values', () => {
 		expect(text(model.blocks)).toEqual(['<b>x</b>']);
 	});
 
+	it('trims only the trailing spaces of a block', async () => {
+		const loaded = await template(paragraph(field(' MERGEFIELD Body ')));
+		const html = `<p>one \t </p><pre>a${' '.repeat(5)}b\t   </pre><pre>c${' '.repeat(50_000)}d </pre>`;
+		const started = performance.now();
+		const { model } = await mergeFields(loaded.model, { values: { Body: html }, html: ['Body'] });
+		expect(performance.now() - started).toBeLessThan(1_000);
+		expect(text(model.blocks)).toEqual(['one', 'a     b\t', `c${' '.repeat(50_000)}d`]);
+	});
+
 	it('replaces the host paragraph with blocks, lists and a real table', async () => {
 		const loaded = await template(paragraph(field(' MERGEFIELD Body ')) + paragraph(run('end')));
 		const html =
