@@ -9,7 +9,7 @@ import { fieldResultSpans } from '../field-result-spans';
 import type { DocumentModel, Paragraph } from '../model';
 import type { LayoutBlock, LayoutDocumentInput, LayoutParagraph, LayoutRun } from './input';
 import { reviewSourceLength } from './review-display';
-import { allCapsText } from '../caps-display';
+import { allCapsText, smallCapsText } from '../caps-display';
 
 /** A stretch of a paragraph's source positions and what it draws. */
 interface Patch {
@@ -65,7 +65,13 @@ function patched(run: LayoutRun, patch: Patch, first: boolean): LayoutRun {
 					: undefined;
 	return {
 		...run,
-		text: capsLanguage === undefined ? text : allCapsText(text, capsLanguage),
+		text:
+			capsLanguage !== undefined
+				? allCapsText(text, capsLanguage)
+				: // A French (France) small caps run lost its accents the same way.
+					run.smallCaps && run.text !== patch.source
+					? smallCapsText(text, 'fr-FR')
+					: text,
 		sourceLength,
 		...(first && result?.fontFamily ? { fontFamily: result.fontFamily } : {}),
 		...(first && result?.fontSizePt ? { fontSizePt: result.fontSizePt } : {}),

@@ -367,25 +367,32 @@ function measureParagraph(
 		widths[index] = Infinity;
 	}
 
+	// Words split across runs (pieces glued to the one before): each piece's first piece, and the
+	// width of each whole word by its first piece, measured once.
+	const wordStart: number[] = [];
+	const wordWidth = new Map<number, number>();
+	tokens.forEach((token, index) => {
+		const previous = tokens[index - 1];
+		const start =
+			token.kind === 'word' && token.glue && previous?.kind === 'word'
+				? (wordStart[index - 1] ?? index)
+				: index;
+		wordStart[index] = start;
+		const width = widths[index] ?? 0;
+		wordWidth.set(start, (wordWidth.get(start) ?? 0) + (Number.isFinite(width) ? width : 0));
+	});
+	const pieceWidths = [...widths];
 	/**
 	 * Advance of the word `tokens[index]` belongs to, with the space before it: the squeeze budget of
 	 * a word split across runs is the whole word's, so a run boundary inside it never moves a break.
 	 */
 	function wholeWordPx(index: number, advance: number): number {
-		let total = advance;
-		let first = placed.length;
-		let piece = tokens[index];
-		while (piece?.glue && first > 0 && placed[first - 1]?.token.kind === 'word') {
-			first--;
-			const entry = expectDefined(placed[first], 'placed word piece');
-			total += entry.widthPx;
-			piece = entry.token;
-		}
-		for (let next = index + 1; tokens[next]?.kind === 'word' && tokens[next]?.glue; next++) {
-			const width = widths[next] ?? 0;
-			if (Number.isFinite(width)) total += width;
-		}
-		const before = placed[first - 1];
+		const start = wordStart[index] ?? index;
+		const own = pieceWidths[index] ?? 0;
+		const total = (wordWidth.get(start) ?? 0) - (Number.isFinite(own) ? own : 0) + advance;
+		// The pieces before this one are the last ones placed when the word started on this line.
+		const back = index - start;
+		const before = back < placed.length ? placed[placed.length - back - 1] : undefined;
 		return total + (before?.token.kind === 'space' ? before.widthPx : 0);
 	}
 
@@ -469,7 +476,8 @@ function measureParagraph(
 		const squeezePx =
 			effectiveAlign === 'justify' &&
 			paragraph.squeezeJustifiedSpaces !== false &&
-			token.kind === 'word'
+			token.kind === 'word' &&
+			lineSpacePx > 0
 				? Math.min(lineSpacePx * SPACE_SHRINK, wholeWordPx(tokenIndex, advance) * WORD_SHRINK)
 				: 0;
 		// A nearly fitting final line of a justified text box should not turn into
