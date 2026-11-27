@@ -545,6 +545,12 @@ export interface ChartInput extends ChartContentInput {
 	/** Axis edits by axis type, as `setChartAxis` takes them (e.g. `{ valAx: { visible: false } }`). */
 	axes?: Partial<Record<PptxChartAxisType, ChartAxisEdit>>;
 	/**
+	 * Edits of the value axis `axes.valAx` does not reach: the secondary value axis of a chart
+	 * with a series on it (`secondaryAxis`), or the vertical (Y) axis of a scatter or bubble chart,
+	 * where `axes.valAx` is the horizontal one. A chart with neither throws.
+	 */
+	secondaryValAx?: ChartAxisEdit;
+	/**
 	 * Writes the chart's data to an embedded workbook (`ppt/embeddings/*.xlsx`)
 	 * that the chart reads through cell references, so PowerPoint's Edit Data
 	 * opens it; blank (`null`) values are empty cells. Classic charts only: an

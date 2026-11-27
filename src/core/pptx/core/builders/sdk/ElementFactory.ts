@@ -34,6 +34,8 @@ import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartContentInput, chartSeriesValuesFromInput } from './chart-content-operations';
 import { applyChartInputLayout } from './chart-layout-operations';
+import { applyChartAxisEdit } from './chart-operations';
+import { chartSecondValueAxis } from './chart-series-axis-operations';
 import { mapPictureLayoutInput } from './picture-layout-input';
 import { mapLinkToAction, mapLinkToRunStyle } from './link-input';
 import { svgPictureSource } from './svg-picture-input';
@@ -651,6 +653,15 @@ export function createChartElement(
 	};
 	applyChartInputLayout(element, input);
 	applyChartContentInput(element, input);
+	if (input.secondaryValAx) {
+		const found = chartSecondValueAxis(element.chartData!);
+		if (!found)
+			throw new Error(
+				'secondaryValAx needs a series on a secondary axis, or a scatter or bubble chart.',
+			);
+		element.chartData = found.data;
+		applyChartAxisEdit(element, found.axis, input.secondaryValAx);
+	}
 	return element;
 }
 

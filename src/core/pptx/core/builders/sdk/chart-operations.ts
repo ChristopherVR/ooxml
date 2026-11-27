@@ -497,6 +497,22 @@ export function setChartAxis(
 		axis = { axisType };
 		axes.push(axis);
 	}
+	applyChartAxisEdit(element, axis, edit);
+}
+
+/**
+ * Applies `edit` to one axis entry of `element.chartData.axes` (which `axis` must be), as
+ * {@link setChartAxis} does to the first axis of a type: what a chart with two value axes uses
+ * for the one `setChartAxis` does not reach.
+ */
+export function applyChartAxisEdit(
+	element: ChartPptxElement,
+	axis: PptxChartAxisFormatting,
+	edit: ChartAxisEdit,
+): void {
+	ensureChartData(element);
+	const axes = (element.chartData.axes ??= []);
+	if (!axes.includes(axis)) throw new RangeError('The axis is not one of the chart axes.');
 	if (edit.min !== undefined) {
 		axis.min = edit.min ?? undefined;
 	}
@@ -544,7 +560,7 @@ export function setChartAxis(
 	}
 	if (edit.font) {
 		const font = chartFontInput(edit.font, 'Axis font');
-		setChartAxisTitleStyle(element, axisType, {
+		applyAxisTitleStyle(axis, {
 			...(font.fontFamily !== undefined ? { fontFamily: font.fontFamily } : {}),
 			...(font.fontSize !== undefined ? { fontSize: font.fontSize } : {}),
 			...(font.bold !== undefined ? { fontBold: font.bold } : {}),
@@ -752,7 +768,10 @@ export function setChartAxisTitleStyle(
 	axisType: PptxChartAxisType,
 	edit: ChartAxisTitleStyleEdit,
 ): void {
-	const axis = ensureAxis(element, axisType);
+	applyAxisTitleStyle(ensureAxis(element, axisType), edit);
+}
+
+function applyAxisTitleStyle(axis: PptxChartAxisFormatting, edit: ChartAxisTitleStyleEdit): void {
 	if (edit.fontFamily !== undefined) {
 		axis.fontFamily = edit.fontFamily ?? undefined;
 	}

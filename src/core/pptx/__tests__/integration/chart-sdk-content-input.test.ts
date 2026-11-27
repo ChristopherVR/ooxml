@@ -174,6 +174,49 @@ describe('declarative chart inputs', () => {
 		expect(bubble.chart.series[0]!.bubbleSizes).toStrictEqual([10, 20, 30]);
 	});
 
+	it('formats the secondary value axis and the vertical axis of a scatter chart', async () => {
+		const combo = await save('bar', {
+			categories: CATEGORIES,
+			series: [
+				{ name: 'Revenue', values: [10, 20, 30] },
+				{ name: 'Margin', values: [0.1, 0.2, 0.3], chartType: 'line', secondaryAxis: true },
+			],
+			axes: { valAx: { min: 0, max: 40 } },
+			secondaryValAx: { min: 0, max: 0.5, numberFormat: '0%', majorTickMark: 'none' },
+		});
+		const [primary, secondary] = [
+			...elements(combo.xml, 'valAx').filter((axis) => !axis.includes('<c:axPos val="r"/>')),
+			...elements(combo.xml, 'valAx').filter((axis) => axis.includes('<c:axPos val="r"/>')),
+		];
+		expect(primary).toMatch(/<c:max val="40"\s*\/>/u);
+		expect(secondary).toMatch(/<c:max val="0.5"\s*\/>/u);
+		expect(secondary).toContain('formatCode="0%"');
+		expect(secondary).toMatch(/<c:majorTickMark val="none"\s*\/>/u);
+		const scatter = await save('scatter', {
+			categories: CATEGORIES,
+			scatterStyle: 'marker',
+			series: [{ name: 'S', values: [5, 6, 7], xValues: [1, 2, 3] }],
+			axes: { valAx: { min: 1 } },
+			secondaryValAx: { min: 4, max: 8 },
+		});
+		const vertical = elements(scatter.xml, 'valAx').find((axis) =>
+			axis.includes('<c:axPos val="l"/>'),
+		)!;
+		const horizontal = elements(scatter.xml, 'valAx').find((axis) =>
+			axis.includes('<c:axPos val="b"/>'),
+		)!;
+		expect(vertical).toMatch(/<c:max val="8"\s*\/>/u);
+		expect(vertical).toMatch(/<c:min val="4"\s*\/>/u);
+		expect(horizontal).toMatch(/<c:min val="1"\s*\/>/u);
+		expect(() =>
+			createChartElement('pie', {
+				categories: CATEGORIES,
+				series: [{ name: 'P', values: [1, 2, 3] }],
+				secondaryValAx: { min: 0 },
+			}),
+		).toThrow(/secondaryValAx/u);
+	});
+
 	it('writes no line for a coloured scatter series that asks for none', async () => {
 		const { xml, chart } = await save('scatter', {
 			categories: CATEGORIES,

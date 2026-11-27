@@ -70,6 +70,23 @@ function valueAxisPair(data: PptxChartData): {
 	return { primary, secondary };
 }
 
+/**
+ * The value axis `setChartAxis(element, 'valAx')` does not reach: the secondary value axis of a
+ * chart with series on one, else the vertical (Y) axis of a scatter or bubble chart, whose first
+ * value axis is the horizontal one. A new chart's axes are given the ids its part will have, so
+ * the returned `data` is the chart to keep. Undefined when the chart has no such axis.
+ */
+export function chartSecondValueAxis(
+	chart: PptxChartData,
+): { data: PptxChartData; axis: PptxChartAxisFormatting } | undefined {
+	const data = chart.chartPartPath === undefined ? withGeneratedAxisIds(chart) : chart;
+	const { secondary } = valueAxisPair(data);
+	if (secondary) return { data, axis: secondary };
+	if (data.chartType !== 'scatter' && data.chartType !== 'bubble') return undefined;
+	const axis = valueAxes(data)[1];
+	return axis ? { data, axis } : undefined;
+}
+
 /** Whether series `seriesIndex` is plotted against the secondary value axis. */
 export function isChartSeriesOnSecondaryAxis(data: PptxChartData, seriesIndex: number): boolean {
 	const series = data.series[seriesIndex];
