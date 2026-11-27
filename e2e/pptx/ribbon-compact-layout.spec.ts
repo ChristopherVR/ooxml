@@ -57,9 +57,9 @@ for (const width of [1000, 1280]) {
 					const group = INSERT_GROUP_OF[name] ?? DESIGN_GROUP_OF[name];
 					const command = toolbar.getByRole('button', { name, exact: true });
 					const face = group
-						? toolbar.locator(
-								`[data-ribbon-group="${group}"][data-collapsed] [data-pptx-chrome="ribbon-collapse"]`,
-							)
+						? toolbar
+								.locator(`[data-ribbon-group="${group}"][data-collapsed]`)
+								.locator('button.face, button[data-pptx-chrome="ribbon-collapse"]')
 						: null;
 					// Fonts and mounting can trigger another refit after the tab opens.
 					await expect(async () => {
@@ -67,15 +67,17 @@ for (const width of [1000, 1280]) {
 							await face.click({ timeout: 1_000 });
 						}
 						await expect(command).toBeVisible({ timeout: 1_000 });
-						const { height, scaled } = await command.evaluate(controlSize);
+						const { height, scaled } = await command.evaluate(controlSize, undefined, {
+							timeout: 1_000,
+						});
 						// Large commands use 66px tiles. Smaller commands use 24-36px rows.
 						const tile = large && !scaled;
 						expect(height, `${name} must not stretch to the ribbon height`).toBeLessThanOrEqual(
 							tile ? 66 : 36,
 						);
 						expect(height, `${name} height`).toBeGreaterThanOrEqual(tile ? 66 : 24);
-					}).toPass({ timeout: 10_000 });
-					if (await face?.isVisible()) {
+					}, name).toPass({ timeout: 10_000 });
+					if (await face?.and(page.locator('[aria-expanded="true"]')).isVisible()) {
 						await page.keyboard.press('Escape');
 					}
 				}
