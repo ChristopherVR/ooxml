@@ -3173,6 +3173,14 @@ matrix Word saved after applying the installed Office 2007-2010 `.eftx`.
 Relationship-backed picture fills use a solid `phClr` placeholder in the
 built-in matrices, without copying the source artwork.
 
+Atlas, Celestial, Depth and Madison were added on 2026-11-27 with
+`src/core/scripts/docx-word-theme-capture.ps1` (Word 16.0.20625.20108, the
+`.thmx` files Word downloaded to its LiveContent Document Themes folder). The
+script records `word/theme/theme1.xml` from the saved document and the open
+document's `ThemeColorScheme` and `ThemeFontScheme`; both agreed for every
+theme. Badge, Crop, Feathered, Headlines, Quotable and Tete were not offered by
+Word on that machine and stay out until measured.
+
 `theme-effect-formats.ts` uses the same Word build and capture procedure with
 the installed `Theme Effects` packages. Grunge Texture is disabled because
 its characteristic shape fills are images. Pictures in the available

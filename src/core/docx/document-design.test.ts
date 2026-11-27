@@ -52,7 +52,17 @@ describe('Word document design', () => {
 			folHlink: '6C606A',
 		});
 		expect(woodType.majorFont).toBe('Rockwell Condensed');
-		expect(DOCUMENT_THEME_CATALOGUE.map((entry) => entry.id)).not.toContain('atlas');
+	});
+	it('adds the Word themes measured with docx-word-theme-capture.ps1', () => {
+		const ids = DOCUMENT_THEME_CATALOGUE.map((entry) => entry.id);
+		for (const id of ['atlas', 'celestial', 'depth', 'madison']) expect(ids).toContain(id);
+		const atlas = must(DOCUMENT_THEME_CATALOGUE.find((entry) => entry.id === 'atlas'));
+		expect(atlas).toMatchObject({ majorFont: 'Calibri Light', minorFont: 'Rockwell' });
+		expect(atlas.colors.slice(0, 5)).toEqual(['FFFFFF', '000000', 'E0E0E0', '454545', 'F81B02']);
+		expect(atlas.formatScheme.name).toBe('Atlas');
+		// Themes Word did not offer on the measuring machine stay out until they are measured.
+		for (const id of ['badge', 'crop', 'feathered', 'headlines', 'quotable', 'tete'])
+			expect(ids).not.toContain(id);
 	});
 	it.each(DOCUMENT_THEME_CATALOGUE)(
 		'round trips the $label catalogue entry',
