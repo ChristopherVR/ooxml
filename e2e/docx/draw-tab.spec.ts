@@ -302,8 +302,8 @@ test('Draw: Undo from the ribbon after Ink to Shape, and the eraser on ink in li
 	await toShape.click();
 	await expect(inkFloats(page)).toHaveCount(0);
 	expect(await shapes()).toBe(before + 1);
-	// Focus is still on the ribbon: Ctrl+Z undoes the conversion in one step.
-	await toShape.focus();
+	// Focus stays on the ribbon (Ink to Shape turns itself off): Ctrl+Z undoes it in one step.
+	await expect.poll(() => focused(page)).toBe('button Lasso Select');
 	await page.keyboard.press('Control+z');
 	await expect(inkFloats(page)).toHaveCount(1);
 	expect(await shapes()).toBe(before);

@@ -1,7 +1,8 @@
 // The Draw tab's ribbon icons (24 x 24 line art), registered when the tab loads. A function the tab
 // calls rather than an import for its side effect: the package's `sideEffects` list lets bundlers
 // drop a bare import, which left the built tab's icons blank.
-import { ribbonIconPaths } from './ribbon-icons';
+import { ribbonIconPaths, type RibbonIcon } from './ribbon-icons';
+import { GROUP_ICONS } from './ribbon-overflow';
 
 const DRAW_ICONS = {
 	lasso: 'M12 4c4.4 0 8 2.2 8 5s-3.6 5-8 5-8-2.2-8-5 3.6-5 8-5z M6 13c-1 2 0 4 2 4 1.5 0 2 1.5 1 3',
@@ -14,7 +15,16 @@ const DRAW_ICONS = {
 	inkReplay: 'M4 17c3-7 6 3 9-4 M15 7l6 4-6 4z',
 };
 
-/** Adds the Draw tab's icons to the ribbon's icon set. Idempotent. */
+/** The icon each Draw group shows when it folds. */
+const DRAW_GROUP_ICONS: Record<string, RibbonIcon> = {
+	'Drawing Tools': 'addPen',
+	Stencils: 'ruler',
+	Convert: 'inkToShape',
+	Replay: 'inkReplay',
+};
+
+/** Adds the Draw tab's icons to the ribbon's icon set and folded-group icons. Idempotent. */
 export function registerDrawIcons(): void {
 	Object.assign(ribbonIconPaths, DRAW_ICONS);
+	Object.assign(GROUP_ICONS as Record<string, RibbonIcon>, DRAW_GROUP_ICONS);
 }

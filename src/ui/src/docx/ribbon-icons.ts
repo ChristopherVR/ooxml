@@ -204,7 +204,7 @@ function frameOf(name: RibbonIcon): { viewBox: string; stroke: number } | null {
 		probe.setAttribute('viewBox', '0 0 24 24');
 		probe.style.cssText = 'position:absolute;visibility:hidden;width:24px;height:24px';
 		const path = document.createElementNS(NS, 'path');
-		path.setAttribute('d', ribbonIconPaths[name] ?? '');
+		path.setAttribute('d', ribbonIconPaths[name]!);
 		probe.append(path);
 		document.body.append(probe);
 		const box = path.getBBox();
@@ -237,7 +237,7 @@ export function ribbonIcon(name: RibbonIcon, size = 16): SVGSVGElement {
 	svg.classList.add('ribbon-icon');
 	svg.dataset.icon = name;
 	const path = document.createElementNS(NS, 'path');
-	path.setAttribute('d', ribbonIconPaths[name] ?? '');
+	path.setAttribute('d', ribbonIconPaths[name]!);
 	path.setAttribute('fill', 'none');
 	path.setAttribute('stroke', 'currentColor');
 	path.setAttribute('stroke-width', String(frame?.stroke ?? STROKE));

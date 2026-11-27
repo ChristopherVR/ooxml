@@ -21,7 +21,7 @@ import { InkStrokes } from './draw-stroke';
 import { injectDrawStyles, startInkReplay, type RunningReplay } from './draw-replay-run';
 import { inkTargets, pageMapping, scaleOf, type InkTarget } from './draw-targets';
 import { applyInkEdits, convertInkToShapes, type InkEdit } from './ink-commands';
-import { inkOf } from './ink-node-view';
+import { drawHelpers } from './draw-helpers';
 import { translate, type EditorLocale, type LocalizationKey } from './localization';
 import { editsOwnText } from './ribbon-history-keys';
 
@@ -34,8 +34,6 @@ export interface DocxDrawHost {
 	/** True while the pages can take ink (Print Layout, editable body). */
 	active(): boolean;
 	locale(): EditorLocale;
-	/** The document position of a source offset in a paragraph, from the pages' index. */
-	position(blockId: string, offset: number): number | undefined;
 	reportError(error: Error): void;
 	refresh(): void;
 }
@@ -57,6 +55,7 @@ export class DocxDrawController {
 			pages: () => host.pages(),
 			pen: () => host.state.pen,
 			client,
+			name: () => this.#t('Ink'),
 		});
 		this.#eraser = new InkEraser({
 			view: () => host.view(),
@@ -101,6 +100,9 @@ export class DocxDrawController {
 			return;
 		}
 		injectDrawStyles(scroller);
+		// While drawing there is no caret, as in Word: the pages must not scroll to it as ink is added.
+		const view = this.#host.view();
+		if (view?.hasFocus()) (view.dom as HTMLElement).blur();
 		scroller.classList.add('dve-inking');
 		if (this.#canvas.parentElement !== scroller) scroller.append(this.#canvas);
 		Object.assign(this.#canvas.style, {
@@ -134,8 +136,7 @@ export class DocxDrawController {
 		const view = this.#host.view();
 		const pages = this.#host.pages();
 		if (!view || !pages) return [];
-		const position = (blockId: string, offset: number) => this.#host.position(blockId, offset);
-		return inkTargets(view, pages, position, test, editable);
+		return inkTargets(view, pages, test, editable);
 	}
 
 	#client(detail: { x: number; y: number }): InkCoordinate {
@@ -208,7 +209,7 @@ export class DocxDrawController {
 		const view = this.#host.view();
 		const selection = view?.state.selection;
 		if (!view || !(selection instanceof NodeSelection)) return undefined;
-		const ink = inkOf(selection.node);
+		const ink = drawHelpers().inkOf(selection.node);
 		if (!ink || ink.truncated) return undefined;
 		const target = this.#targets(() => true).find((item) => item.pos === selection.from);
 		return target && { ...target, indexes: ink.strokes.map((_, index) => index) };

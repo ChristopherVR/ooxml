@@ -5,8 +5,7 @@ import type { InkCoordinate } from 'ooxml-core/drawingml';
 import type { DocxInk } from 'ooxml-core/docx';
 import type { EditorView } from 'prosemirror-view';
 import { paragraphStart } from './ink-commands';
-import { inkOf } from './ink-node-view';
-import { locateFloat } from './print-float-locate';
+import { drawHelpers } from './draw-helpers';
 
 /** One ink drawing on a page, with the strokes the lasso holds in it. */
 export interface InkTarget {
@@ -31,7 +30,6 @@ export const scaleOf = (element: HTMLElement): number =>
 export function inkTargets(
 	view: EditorView,
 	pages: HTMLElement | undefined,
-	position: (blockId: string, offset: number) => number | undefined,
 	test: (rect: DOMRect) => boolean,
 	editable: boolean,
 ): InkTarget[] {
@@ -43,14 +41,21 @@ export function inkTargets(
 			const blockId = element.dataset.blockId ?? line?.dataset.blockId;
 			if (!sheet || !blockId || !test(element.getBoundingClientRect())) return [];
 			const pos = element.classList.contains('dve-print-float')
-				? locateFloat(view.state.doc, blockId, Number(element.dataset.floatIndex))?.pos
-				: position(blockId, Number(element.dataset.sourceStart));
+				? drawHelpers().locateFloat(view.state.doc, blockId, Number(element.dataset.floatIndex))
+						?.pos
+				: inlineAt(view, blockId, Number(element.dataset.sourceStart));
 			const node = pos === undefined ? null : view.state.doc.nodeAt(pos);
-			const ink = node ? inkOf(node) : undefined;
+			const ink = node ? drawHelpers().inkOf(node) : undefined;
 			if (pos === undefined || !node || !ink || (editable && ink.truncated)) return [];
 			return [{ pos, ink, attr: String(node.attrs.ink), element, sheet, blockId, indexes: [] }];
 		},
 	);
+}
+
+/** The position of a picture on a line: its paragraph's start and its source offset there. */
+function inlineAt(view: EditorView, blockId: string, offset: number): number | undefined {
+	const start = paragraphStart(view.state.doc, blockId);
+	return start === undefined ? undefined : start + offset;
 }
 
 /** Whether the drawing a target was found on is still there, unchanged. */

@@ -264,8 +264,6 @@ export const deRibbon: RibbonStrings = {
 	'tab.home': 'Start',
 	'tab.insert': 'Einfügen',
 	'tab.draw': 'Zeichnen',
-	// An ink drawing's name for assistive technology when it has none of its own.
-	'draw.ink': 'Freihand',
 	'tab.references': 'Verweise',
 	'tab.layout': 'Layout',
 	'tab.review': 'Überprüfen',

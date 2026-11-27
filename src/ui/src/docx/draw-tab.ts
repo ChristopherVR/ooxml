@@ -38,3 +38,4 @@ export function mountDrawPanel(core: EditorCore): void {
 }
 
 export { destroyDraw, handleDrawAction, resetDraw, syncDraw } from './draw-actions';
+export { setDrawHelpers } from './draw-helpers';

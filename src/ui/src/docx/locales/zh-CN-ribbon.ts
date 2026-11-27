@@ -261,8 +261,6 @@ export const zhCNRibbon: RibbonStrings = {
 	'tab.home': '开始',
 	'tab.insert': '插入',
 	'tab.draw': '绘图',
-	// An ink drawing's name for assistive technology when it has none of its own.
-	'draw.ink': '墨迹',
 	'tab.references': '引用',
 	'tab.layout': '布局',
 	'tab.review': '审阅',

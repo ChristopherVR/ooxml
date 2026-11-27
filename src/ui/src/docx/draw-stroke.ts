@@ -7,7 +7,7 @@ import type { InkStrokeDetail } from '../ink/ink-canvas';
 import { inkTools } from '../ink/tools';
 import { bodyAnchor, scaleOf, sheetAt } from './draw-targets';
 import { appendInk, insertInk } from './ink-commands';
-import { inkOf } from './ink-node-view';
+import { drawHelpers } from './draw-helpers';
 
 /** Ink drawn this close in time and space joins the previous drawing. */
 const JOIN_MS = 2000;
@@ -18,6 +18,8 @@ export interface StrokeHost {
 	pages(): HTMLElement | undefined;
 	pen(): InkPen;
 	client(detail: { x: number; y: number }): InkCoordinate;
+	/** A new drawing's name, in the editor's language. */
+	name(): string;
 }
 
 export class InkStrokes {
@@ -60,7 +62,9 @@ export class InkStrokes {
 		const pos = this.#join(view, stroke, page, now);
 		if (pos !== undefined) return this.#remember(view, pos, page, now);
 		const blockId = bodyAnchor(view, sheet, this.#host.client(first).y);
-		const at = blockId ? insertInk(view, [stroke], { blockId }) : undefined;
+		const at = blockId
+			? insertInk(view, [stroke], { blockId, name: this.#host.name() })
+			: undefined;
 		return at === undefined ? false : this.#remember(view, at, page, now);
 	}
 
@@ -73,7 +77,7 @@ export class InkStrokes {
 	): number | undefined {
 		const last = this.#last;
 		const node = last && view.state.doc.nodeAt(last.pos);
-		const ink = node && node.attrs.ink === last?.ink ? inkOf(node) : undefined;
+		const ink = node && node.attrs.ink === last?.ink ? drawHelpers().inkOf(node) : undefined;
 		const bounds = inkTools().inkStrokesBounds([stroke]);
 		if (!last || !node || !ink || !bounds || now - last.at >= JOIN_MS || last.page !== page)
 			return undefined;

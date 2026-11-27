@@ -257,8 +257,6 @@ export const frRibbon: RibbonStrings = {
 	'tab.home': 'Accueil',
 	'tab.insert': 'Insertion',
 	'tab.draw': 'Dessin',
-	// An ink drawing's name for assistive technology when it has none of its own.
-	'draw.ink': 'Encre',
 	'tab.references': 'Références',
 	'tab.layout': 'Disposition',
 	'tab.review': 'Révision',

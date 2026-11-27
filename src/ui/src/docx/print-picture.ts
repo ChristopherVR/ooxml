@@ -47,9 +47,16 @@ export function sanitizeChartSvg(svg: Element): void {
 }
 
 /** A chart painted by the core (`LayoutObject.chart`), or its labelled frame. */
-function chartElement(chart: { svg?: string; label: string; shape?: true }): HTMLElement {
+function chartElement(chart: {
+	svg?: string;
+	label: string;
+	shape?: true;
+	ink?: true;
+}): HTMLElement {
 	const element = document.createElement('div');
 	element.dataset.docxChart = chart.svg ? '1' : 'frame';
+	// Ink, floating or in line with text, which the Draw tab's tools work on.
+	if (chart.ink) element.dataset.ink = '';
 	const svg = chart.svg
 		? new DOMParser().parseFromString(chart.svg, 'image/svg+xml').documentElement
 		: undefined;

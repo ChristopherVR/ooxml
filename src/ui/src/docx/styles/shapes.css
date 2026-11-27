@@ -121,7 +121,6 @@
 	border-color: var(--blue, #2b579a);
 	background: var(--accent-soft);
 }
-/* Ink (the Draw tab) draws past its box, as its strokes are as wide as the pen. */
 .dve-ink svg {
 	overflow: visible;
 }

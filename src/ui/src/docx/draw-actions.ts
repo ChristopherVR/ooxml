@@ -50,7 +50,6 @@ function controller(core: EditorCore): Promise<DocxDrawController | undefined> {
 				pages: () => core.shell.printLayout?.element,
 				active: () => core.canEditBody() && core.pages.viewMode === 'print',
 				locale: () => core.locale,
-				position: (blockId, offset) => core.shell.printEditing?.position(blockId, offset),
 				reportError: (error) => report(core, error),
 				refresh: () => core.refreshControls(),
 			});
@@ -104,7 +103,10 @@ export function handleDrawAction(core: EditorCore, action: DrawAction): void {
 			state.setTouch(!state.snapshot.touch);
 			break;
 		case 'inkToShape':
-			void controller(core).then((draw) => draw?.inkToShape());
+			void controller(core).then((draw) => {
+				draw?.inkToShape();
+				keepRibbonFocus(core);
+			});
 			return;
 		case 'inkToMath':
 			return;
@@ -114,6 +116,24 @@ export function handleDrawAction(core: EditorCore, action: DrawAction): void {
 			return;
 	}
 	if (state.canvasTool) void controller(core);
+}
+
+/**
+ * Ink to Shape turns itself off once the selection is converted, which drops the focus it had:
+ * the focus stays on the ribbon (on Lasso Select), where Ctrl+Z still undoes the conversion.
+ */
+function keepRibbonFocus(core: EditorCore): void {
+	requestAnimationFrame(() => {
+		const toolbar = core.shell.toolbar;
+		const root = toolbar?.getRootNode() as ShadowRoot | Document | undefined;
+		const active = root?.activeElement;
+		const kept =
+			active instanceof HTMLElement &&
+			toolbar?.contains(active) &&
+			!(active as HTMLButtonElement).disabled;
+		if (toolbar && !kept)
+			toolbar.querySelector<HTMLButtonElement>('button[data-draw="lasso"]')?.focus();
+	});
 }
 
 /** Why each Draw command is unavailable now. */

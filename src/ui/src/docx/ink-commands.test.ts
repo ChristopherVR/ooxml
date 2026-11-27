@@ -4,14 +4,17 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { loadTools } from '../ink/tools';
+import { setDrawHelpers } from './draw-helpers';
 import { InkLasso } from './draw-lasso';
 import { applyInkEdits, fitInk, insertInk } from './ink-commands';
 import { inkOf } from './ink-node-view';
+import { locateFloat, nextFloatHeight } from './print-float-locate';
 import { editsOwnText, historyKey } from './ribbon-history-keys';
 import { schema } from './schema';
 
 beforeAll(async () => {
 	await loadTools();
+	setDrawHelpers({ locateFloat, nextFloatHeight });
 });
 afterEach(() => document.body.replaceChildren());
 

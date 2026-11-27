@@ -264,8 +264,6 @@ export const esRibbon: RibbonStrings = {
 	'tab.home': 'Inicio',
 	'tab.insert': 'Insertar',
 	'tab.draw': 'Dibujar',
-	// An ink drawing's name for assistive technology when it has none of its own.
-	'draw.ink': 'Entrada de lápiz',
 	'tab.references': 'Referencias',
 	'tab.layout': 'Disposición',
 	'tab.review': 'Revisar',

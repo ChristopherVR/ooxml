@@ -132,8 +132,6 @@ function renderLine(
 		if (fragment.object) {
 			const picture = printPicture(fragment.object, media);
 			if (fragment.color) picture.style.color = fragment.color;
-			// Ink in line with text takes the Draw tab's tools too.
-			if (fragment.object.chart?.ink) picture.dataset.ink = '';
 			picture.style.left = `${fragment.xPx}px`;
 			picture.style.top = `${fragment.topPx ?? 0}px`;
 			picture.dataset.sourceStart = String(fragment.sourceStart ?? 0);
@@ -427,8 +425,6 @@ export function renderPrintLayout(
 				picture.dataset.originX = String(float.originXPx);
 				picture.dataset.originY = String(float.originYPx);
 				if (float.behindText) picture.classList.add('dve-print-float-behind');
-				// Ink, which the Draw tab's eraser, lasso and Ink Replay work on.
-				if (float.chart?.ink) picture.dataset.ink = '';
 				picture.style.left = `${float.xPx}px`;
 				picture.style.top = `${float.yPx}px`;
 				sheet.append(picture);

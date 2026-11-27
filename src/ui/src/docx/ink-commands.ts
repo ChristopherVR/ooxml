@@ -8,9 +8,10 @@ import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { closeHistory } from 'prosemirror-history';
 import type { Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { inkOf } from './ink-node-view';
-import { nextFloatHeight } from './print-float-locate';
+import { drawHelpers } from './draw-helpers';
 import { schema } from './schema';
+
+const inkOf = (node: ProseMirrorNode) => drawHelpers().inkOf(node);
 
 /** Where on a page a drawing goes: the page-relative box and the paragraph that anchors it. */
 export interface PagePlacement {
@@ -53,7 +54,7 @@ function pagePlacement(box: InkBox, doc: ProseMirrorNode): PicturePlacement {
 		relativeFromV: 'page',
 		offsetXPx: Math.floor(box.x),
 		offsetYPx: Math.floor(box.y),
-		relativeHeight: nextFloatHeight(doc),
+		relativeHeight: drawHelpers().nextFloatHeight(doc),
 	};
 }
 
@@ -64,7 +65,7 @@ function pagePlacement(box: InkBox, doc: ProseMirrorNode): PicturePlacement {
 export function insertInk(
 	view: EditorView,
 	strokes: readonly InkStroke[],
-	place: Omit<PagePlacement, 'box'>,
+	place: Omit<PagePlacement, 'box'> & { name?: string },
 ): number | undefined {
 	const bounds = inkTools().inkStrokesBounds(strokes);
 	const at = paragraphStart(view.state.doc, place.blockId);
@@ -81,7 +82,8 @@ export function insertInk(
 		widthPx: width,
 		heightPx: height,
 		anchored: true,
-		drawingName: 'Ink',
+		// Its name, saved as `wp:docPr/@name` and read by assistive technology, in the editor's language.
+		drawingName: place.name ?? 'Ink',
 		placement: JSON.stringify(pagePlacement(box, view.state.doc)),
 		ink: JSON.stringify(ink),
 	});

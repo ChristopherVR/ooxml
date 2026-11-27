@@ -9,7 +9,7 @@ import { schema } from './schema';
 import { chartNodeSpec, placementClass } from 'ooxml-core/docx/ui';
 import { parseDiagram, smartArtNodeView } from './smartart-node-view';
 import { shapeNodeView } from './shape-node-view';
-import { inkNodeView } from './ink-node-view';
+import { inkNodeView } from './ink-view';
 import { pictureTransformCss } from './picture-transform';
 import { paintPicture } from './picture-paint';
 import type { DocumentModel, ThemeCatalog } from 'ooxml-core/docx';
@@ -176,7 +176,7 @@ function renderSpec(node: ProseMirrorNode): HTMLElement {
  */
 export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOptions = {}) {
 	return (node: ProseMirrorNode, view: EditorView, getPos: () => number | undefined): NodeView => {
-		if (node.attrs.ink) return inkNodeView(node, options.locale?.());
+		if (node.attrs.ink) return inkNodeView(node);
 		if (node.attrs.shape)
 			return shapeNodeView(
 				node,
