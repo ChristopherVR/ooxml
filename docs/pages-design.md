@@ -326,13 +326,63 @@ edition. `scripts/release-edition.mjs` adds the markup an edition lays out, and 
 that names one:
 
 - each `sections` entry may name a `product` (`word`, `excel`, `powerpoint`, `visio`,
-  `teams` or `office`); the hero's index becomes one row per product chapter with the chapter's
-  `###` features as links, and a last row for the other chapters listed;
-- a chapter opens with a `chapter-head` holding its `##` heading and, for a product, the same
-  features as tabs. A feature's tab is its heading without the chapter's name in front, so
-  `### Word Draw` under `## Word` is the tab "Draw" and keeps a unique anchor;
-- each `###` feature is wrapped: its heading, the recording that follows it, then its text
-  beside its limits (a paragraph that starts with `**Not yet:**`) and its `Learn more` link.
+  `teams` or `office`); the hero's index (`edition-index`) becomes one row per product chapter
+  with the chapter's `###` features as links, and a last row for the other chapters listed;
+- a chapter opens with a `chapter-head` holding its `##` heading and, for a product, links to
+  the same features (`chapter-links`). A feature's link is its heading without the chapter's
+  name in front, so `### Word Draw` under `## Word` is the link "Draw" and keeps a unique anchor;
+- each `###` feature is wrapped: its heading, then its text and recordings in the order the
+  Markdown gives them, then its limits (a paragraph that starts with `**Not yet:**`) and its
+  `Learn more` link.
+
+OOXML 2.5 wears the `letter` edition: a stark page on black that reads like a letter, with
+motion as its character. It is the one page that leaves the suite's palette, on purpose, and it
+does so only inside `[data-edition='letter']`.
+
+- **Dark first.** The post sets `"appearance": "dark"`. Dark is black (`#000`), off-white text
+  (`#ededed`, 18:1) and one grey for everything secondary (`#8f8f94`, 6.6:1); hairlines are
+  `#1c1c1f` and `#2b2b2f`. Light is the same page on `#fcfcfb` with `#111113` and `#5c5c62`. The
+  appearance switch is the words "Dark mode on" or "Dark mode off" in small monospace in the
+  header, not an icon.
+- **One column.** 720 px, centred, text set left, 120 to 240 px between chapters. No cards,
+  tiles, badges, gradients or shadows, and no pictures but the recordings.
+- **Type.** One sans for everything read; monospace, small and in sentence case, for labels: the
+  date and author, "Not yet:", the recording controls, counts, file names and code. Inline code
+  has no background. Links keep a faint 1 px underline that turns solid on hover and focus, so
+  they never depend on colour.
+- **Hero.** The title ("OOXML 2.5", up to 112 px at weight 600), the date and author in
+  monospace, one sentence. Under a hairline, the contents: a line per product (an 8 px dot in
+  its colour, its name, its features) and one for the other chapters.
+- **Chapters and entries.** A chapter is white space, a hairline, then its name (up to 68 px)
+  with its product's dot and links to its features. An entry is its name, a few sentences, the
+  recording across the column in a 1 px frame with a 6 px radius, a caption in small grey
+  (`_Caption._` under the picture in the Markdown) beside the Pause recording and Full size
+  controls, then "Not yet" and Learn more in grey.
+- **A product's colour** is only ever its dot (lifted in dark so it reads on black): Word blue,
+  Excel green, PowerPoint orange, Visio, Teams violet, the suite's blue.
+- **Code and lists.** Code is a dark block with no border and no language badge; before and
+  after keep their colour on the label only and stack. A table has rules and no box. The change
+  lists are rows between hairlines with a monospace count and a plus that turns to a minus.
+
+**Motion in the letter edition.** `edition-letter.js` marks what moves and adds `motion` to the
+body last, so without the script, or with reduced motion, the page is simply all there. Only
+opacity, transform, translate and scale change; nothing is hidden from the accessibility tree
+or from find-in-page.
+
+- On load, from the stylesheet alone (so nothing shows first and then hides): the title rises,
+  its number after it, then the date, the sentence, the hairline drawing across and the
+  contents line by line, each dot popping in.
+- On scroll, once each, by IntersectionObserver: headings come up word by word from behind
+  their baseline (the heading keeps its full text as its accessible name), paragraphs, list
+  items and code rise 32 px, a recording grows into its frame from 0.92 while the picture
+  settles from 1.14, a chapter's hairline draws across and its dot pops with a spring.
+- Tied to the scroll position where the browser supports `animation-timeline`: the hero stays
+  put and recedes while the page slides over it (wide and tall windows only), each recording
+  drifts 36 px against the text, and a 2 px line across the top of the window draws with the
+  reader's progress. Other browsers get the reveals without these.
+- What is already on screen when the script runs (a link into the page, a reload half way
+  down) is left as it is; a part above the window, a part that takes focus and the part a link
+  lands on are shown at once.
 
 ## Do not
 

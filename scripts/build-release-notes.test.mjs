@@ -472,11 +472,11 @@ test('an edition is opt-in: its markup, assets and limits appear only when a pos
 		plain,
 		/<section class="post-section reveal" aria-labelledby="word">\n<h2 id="word">/,
 	);
-	assert.doesNotMatch(plain, /data-edition|chapter-head|class="feature|not-yet|ribbon-/);
+	assert.doesNotMatch(plain, /data-edition|chapter-head|class="feature|not-yet|index-row/);
 
 	const config = {
 		version: '3.1',
-		edition: 'ribbon',
+		edition: 'letter',
 		sections: [
 			{ id: 'word', label: 'Word', product: 'word' },
 			{ id: 'security', label: 'Security' },
@@ -485,14 +485,14 @@ test('an edition is opt-in: its markup, assets and limits appear only when a pos
 	const html = renderReleasePage(source, template, { showcase: config });
 	assert.match(
 		html,
-		/^<body data-edition="ribbon">\n\t\t<link rel="stylesheet" href="\.\.\/edition-ribbon\.css" \/><main class="post post-edition post-indexed">/,
+		/^<body data-edition="letter">\n\t\t<link rel="stylesheet" href="\.\.\/edition-letter\.css" \/><main class="post post-edition post-indexed">/,
 	);
 	assert.match(html, /<p class="release-intro">What the release does\.<\/p>/);
 	assert.match(
 		html,
-		/<ul class="ribbon-tabs"><li><a href="#word-draw">Draw<\/a><\/li><li><a href="#views">Views<\/a><\/li><\/ul>/,
+		/<ul class="index-links"><li><a href="#word-draw">Draw<\/a><\/li><li><a href="#views">Views<\/a><\/li><\/ul>/,
 	);
-	assert.match(html, /<ul class="ribbon-tabs"><li><a href="#security">Security<\/a><\/li><\/ul>/);
+	assert.match(html, /<ul class="index-links"><li><a href="#security">Security<\/a><\/li><\/ul>/);
 	assert.match(
 		html,
 		/<div class="feature"><h3 id="word-draw">Word Draw<\/h3><figure class="post-figure reveal"><img [^>]+><\/figure><div class="feature-body"><div class="feature-text"><p>Pens\.<\/p><\/div><div class="feature-aside"><p class="not-yet"><strong>Not yet:<\/strong> A ruler\.<\/p>\n<p class="learn-more">Learn more about <a href="ink\.md">ink<\/a>\.<\/p><\/div><\/div><\/div>/,
@@ -500,10 +500,21 @@ test('an edition is opt-in: its markup, assets and limits appear only when a pos
 	assert.match(html, /<div class="feature"><h3 id="views">Views<\/h3><div class="feature-body">/);
 	// A guide rendered for the post wears the edition without the post's index.
 	const guide = renderReleasePage('# Guide\n\n## Upgrade\n\nSteps.', template, {
-		edition: 'ribbon',
+		edition: 'letter',
 	});
 	assert.match(guide, /<main class="post post-edition">/);
-	assert.doesNotMatch(guide, /ribbon-index/);
+	assert.doesNotMatch(guide, /edition-index/);
+	// Limits straight after a captioned recording are still limits, not the picture's stat line.
+	const entry = renderReleasePage(
+		'# Demo\n\n## Word\n\n### Draw\n\nPens.\n\n![Draws](d.gif)\n\n_A line._\n\n**Not yet:** A ruler.',
+		template,
+		{ showcase: { edition: 'letter' } },
+	);
+	assert.match(
+		entry,
+		/<figcaption>A line\.<\/figcaption><\/figure><\/div><div class="feature-aside"><p class="not-yet">/,
+	);
+	assert.doesNotMatch(entry, /post-stats/);
 	// A name that is not a plain file stem is not an edition.
 	assert.doesNotMatch(
 		renderReleasePage(source, template, { showcase: { edition: '../x' } }),
@@ -513,7 +524,7 @@ test('an edition is opt-in: its markup, assets and limits appear only when a pos
 	assert.throws(
 		() =>
 			renderReleasePage(source, template, {
-				showcase: { edition: 'ribbon', sections: [{ id: 'excel', product: 'excel' }] },
+				showcase: { edition: 'letter', sections: [{ id: 'excel', product: 'excel' }] },
 			}),
 		/No chapter with the id excel/,
 	);

@@ -6,7 +6,7 @@
  *   one) `site/releases/edition-<name>.css|js` after the shared ones, so every rule of the
  *   edition is scoped to that attribute and no other post can pick it up;
  * - the hero's index drawn as one row per chapter with the chapter's features in it;
- * - each `##` chapter opened by a header that carries its product and its features as tabs;
+ * - each `##` chapter opened by a header that carries its product and its features as links;
  * - each `###` feature wrapped, with its limits (`**Not yet:**`) and `Learn more` link set aside.
  *
  * A post without an edition is rendered exactly as before.
@@ -45,31 +45,31 @@ export function chapterProduct(config, id) {
 export const chapterTile = (product, tile) =>
 	tile(product === 'office' ? 'core' : product === 'teams' ? 'openteams' : product);
 
-/** A feature's tab: its heading without its chapter's name in front ("Word Draw" is "Draw"). */
-export function tabLabel(text, chapter) {
+/** A feature's link: its heading without its chapter's name in front ("Word Draw" is "Draw"). */
+export function linkLabel(text, chapter) {
 	const plain = text.trim();
 	return chapter && plain.startsWith(`${chapter} `) && plain.length > chapter.length + 1
 		? plain.slice(chapter.length + 1)
 		: plain;
 }
 
-const tabs = (entry) =>
+const links = (entry) =>
 	entry.children
 		.map(
 			(child) =>
-				`<li><a href="#${escapeHtml(child.id)}">${escapeHtml(tabLabel(child.plain, entry.plain))}</a></li>`,
+				`<li><a href="#${escapeHtml(child.id)}">${escapeHtml(linkLabel(child.plain, entry.plain))}</a></li>`,
 		)
 		.join('');
 
-/** The tabs of one chapter, under its heading: its features, in order. */
-export function renderChapterTabs(entry) {
+/** The links of one chapter, under its heading: its features, in order. */
+export function renderChapterLinks(entry) {
 	if (!entry?.children.length) return '';
-	return `<nav class="chapter-tabs" aria-label="${escapeHtml(entry.plain)} features"><ul>${tabs(entry)}</ul></nav>`;
+	return `<nav class="chapter-links" aria-label="${escapeHtml(entry.plain)} features"><ul>${links(entry)}</ul></nav>`;
 }
 
 /**
  * The hero's index: one row per chapter that has a product (its tile, its name and its features
- * as tabs) and a last row with the other chapters the post's `sections` name.
+ * as links) and a last row with the other chapters the post's `sections` name.
  */
 export function renderEditionIndex(config, toc, tile) {
 	const sections = config?.sections ?? [];
@@ -87,16 +87,16 @@ export function renderEditionIndex(config, toc, tile) {
 			continue;
 		}
 		rows.push(
-			`<li class="ribbon-row" data-product="${product}"><a class="ribbon-name" href="#${escapeHtml(section.id)}">${chapterTile(product, tile)}<span>${escapeHtml(section.label ?? entry.plain)}</span></a><ul class="ribbon-tabs">${tabs(entry)}</ul></li>`,
+			`<li class="index-row" data-product="${product}"><a class="index-name" href="#${escapeHtml(section.id)}">${chapterTile(product, tile)}<span>${escapeHtml(section.label ?? entry.plain)}</span></a><ul class="index-links">${links(entry)}</ul></li>`,
 		);
 	}
 	if (rest.length)
 		rows.push(
-			`<li class="ribbon-row ribbon-rest"><span class="ribbon-name">More</span><ul class="ribbon-tabs">${rest.join('')}</ul></li>`,
+			`<li class="index-row index-rest"><span class="index-name">More</span><ul class="index-links">${rest.join('')}</ul></li>`,
 		);
 	if (!rows.length) return '';
 	const version = escapeHtml(config.version ?? '');
-	return `<nav class="ribbon-index" aria-label="${version ? `In OOXML ${version}` : 'In this release'}"><ul class="ribbon-rows">${rows.join('')}</ul></nav>`;
+	return `<nav class="edition-index" aria-label="${version ? `In OOXML ${version}` : 'In this release'}"><ul class="index-rows">${rows.join('')}</ul></nav>`;
 }
 
 /** One feature: its heading, its opening recording, then its text beside its limits and links. */

@@ -44,7 +44,7 @@ import {
 	chapterTile,
 	editionAssets,
 	editionOf,
-	renderChapterTabs,
+	renderChapterLinks,
 	renderEditionIndex,
 	renderFeature,
 } from './release-edition.mjs';
@@ -88,8 +88,11 @@ const ITALIC_LINE = /^_([^\n]+)_$|^\*([^*\n]+)\*$/;
 const IMAGE_LINE = /^!\[[^\]]*\]\([^)]*\)$/;
 const IMAGE_PARTS = /^!\[([^\]]*)\]\(\s*([^\s)]+)(?:\s+"[^"]*")?\s*\)$/;
 const STAT = /^\*\*([^*\n]+?):\*\*\s*(\S[^\n]*)$/;
+/** A feature's limits (release-edition.mjs): a paragraph, never the stat line of a picture. */
+const NOT_YET = /^\*\*Not yet:\*\*/;
 const isStats = (block) =>
 	block.type === 'paragraph' &&
+	!NOT_YET.test(block.text.trim()) &&
 	block.text
 		.trim()
 		.split(/\s+·\s+/)
@@ -167,7 +170,7 @@ export function renderReleasePage(
 		feature = null;
 		out = parts;
 	};
-	const CHAPTER_TABS = (index) => `<!--chapter-tabs:${index}-->`;
+	const CHAPTER_LINKS = (index) => `<!--chapter-links:${index}-->`;
 
 	const renderCode = (block) => {
 		const lang = LANGUAGE_NAMES[block.lang] ?? (block.lang ? block.lang.toUpperCase() : '');
@@ -303,7 +306,7 @@ export function renderReleasePage(
 				parts.push(
 					`<section class="post-section"${product ? ` data-product="${product}"` : ''} aria-labelledby="${escapeHtml(id)}">`,
 					product
-						? `<header class="chapter-head">${chapterTile(product, tile)}${title}${CHAPTER_TABS(toc.length - 1)}</header>`
+						? `<header class="chapter-head">${chapterTile(product, tile)}${title}${CHAPTER_LINKS(toc.length - 1)}</header>`
 						: `<header class="chapter-head">${title}</header>`,
 				);
 			} else
@@ -365,8 +368,8 @@ export function renderReleasePage(
 	closeFeature();
 	parts.push(inLede ? '</div>' : '</section>');
 	const body = countChanges(parts.join('\n')).replace(
-		/<!--chapter-tabs:(\d+)-->/g,
-		(match, index) => renderChapterTabs(toc[Number(index)]),
+		/<!--chapter-links:(\d+)-->/g,
+		(match, index) => renderChapterLinks(toc[Number(index)]),
 	);
 
 	const metaHtml = meta

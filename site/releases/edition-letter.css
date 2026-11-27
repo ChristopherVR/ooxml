@@ -1,0 +1,814 @@
+/* The "letter" edition of a release post (scripts/release-edition.mjs; OOXML 2.5 wears it).
+   A stark page on black, designed dark first (the post opens dark; light is a text switch away):
+   one narrow column, plain type, hairlines and white space, and the recordings as the only
+   pictures. No cards, tiles, badges, gradients or shadows. A product is a small dot in its
+   colour beside its name and nothing more. The character of the page is its motion, which
+   edition-letter.js turns on (the `motion` class on the body): without the script, or with
+   reduced motion, everything below is simply there. Every rule is scoped to the edition, so no
+   other post picks it up. */
+[data-edition='letter'] {
+	--column: 720px;
+	--wide: 720px;
+	--prose: none;
+	--gutter: 24px;
+	--out: cubic-bezier(0.16, 1, 0.3, 1);
+	--spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+	/* Light, for the reader who asks for it: the same page on paper white. */
+	--canvas: #fcfcfb;
+	--surface: #fcfcfb;
+	--sunken: #f1f1ef;
+	--hover: #f1f1ef;
+	--ink: #111113;
+	--ink-strong: #000;
+	--text: #111113;
+	--muted: #5c5c62;
+	--line: #e6e6e3;
+	--line-strong: #d2d2ce;
+	--accent-ink: #111113;
+	--blue: #111113;
+	--code-bg: #111113;
+	--code-line: #111113;
+	font-family: var(--font-ui);
+}
+:root[data-theme='dark'] [data-edition='letter'] {
+	--canvas: #000;
+	--surface: #000;
+	--sunken: #0d0d0e;
+	--hover: #141416;
+	--ink: #ededed;
+	--ink-strong: #fafafa;
+	--text: #ededed;
+	--muted: #8f8f94;
+	--line: #1c1c1f;
+	--line-strong: #2b2b2f;
+	--accent-ink: #ededed;
+	--blue: #ededed;
+	--code-bg: #0b0b0c;
+	--code-line: #0b0b0c;
+	/* The product colours, lifted so a dot of them reads on black. */
+	--word: #2b7cd3;
+	--excel: #21a366;
+	--powerpoint: #e0562e;
+	--visio: #5c7fe0;
+	--teams: #7b83eb;
+	--office: #3b93f0;
+}
+
+/* Small parts shared by the whole page. */
+[data-edition='letter'] a {
+	text-decoration-color: color-mix(in srgb, currentColor 34%, transparent);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 4px;
+}
+[data-edition='letter'] a:is(:hover, :focus-visible) {
+	text-decoration-color: currentColor;
+	text-decoration-thickness: 1px;
+}
+[data-edition='letter'] :not(pre) > code {
+	padding: 0;
+	background: none;
+	color: inherit;
+	font-size: 0.86em;
+}
+/* A product's tile is drawn as a dot in its colour: its name is beside it. */
+[data-edition='letter'] .tile {
+	width: 8px;
+	height: 8px;
+	padding: 0;
+	border-radius: 50%;
+	font-size: 0;
+}
+[data-edition='letter'] .tile i {
+	display: none;
+}
+
+/* Header bar: plain words. The appearance switch is a line of small type, not an icon. */
+[data-edition='letter'] .post-bar {
+	position: static;
+	height: 64px;
+	border: 0;
+	background: none;
+}
+[data-edition='letter'] .post-brand {
+	font-family: var(--font-ui);
+	font-size: 13.5px;
+	font-weight: 400;
+	color: var(--text);
+}
+[data-edition='letter'] .post-brand .tile {
+	display: none;
+}
+[data-edition='letter'] .post-brand strong {
+	font-weight: 400;
+}
+[data-edition='letter'] :is(.post-bar-links a, .post-icon) {
+	height: 28px;
+	padding: 0 8px;
+	background: none;
+	color: var(--muted);
+	font-size: 13px;
+}
+[data-edition='letter'] :is(.post-bar-links a, .post-icon):hover {
+	background: none;
+	color: var(--text);
+	text-decoration: underline;
+	text-underline-offset: 4px;
+}
+[data-edition='letter'] .post-icon {
+	width: auto;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	font-weight: 400;
+}
+/* Outranks the shared rule that shows the sun in dark. */
+[data-edition='letter'] .post-bar .post-icon svg[class] {
+	display: none;
+}
+[data-edition='letter'] .post-icon::before {
+	content: 'Dark mode';
+}
+[data-edition='letter'] .post-icon::after {
+	content: '\00a0off';
+}
+[data-edition='letter'] .post-icon[aria-pressed='true']::after {
+	content: '\00a0on';
+}
+
+/* Hero: the name of the release, the date in small monospace, one sentence. */
+[data-edition='letter'] .post-hero {
+	max-width: calc(var(--column) + 2 * var(--gutter));
+	margin: 0 auto;
+	padding: clamp(72px, 18vh, 200px) var(--gutter) clamp(56px, 12vh, 128px);
+	background: var(--canvas);
+	text-align: left;
+}
+[data-edition='letter'] .post-tiles {
+	display: none;
+}
+[data-edition='letter'] .post-hero h1 {
+	font-family: var(--font-display);
+	font-size: clamp(52px, 13vw, 112px);
+	font-weight: 600;
+	line-height: 0.94;
+	letter-spacing: -0.045em;
+	animation: none;
+}
+[data-edition='letter'] .post-version {
+	color: inherit;
+}
+[data-edition='letter'] .post-meta {
+	justify-content: flex-start;
+	gap: 4px 24px;
+	margin-top: 28px;
+	color: var(--muted);
+	font-family: var(--font-mono);
+	font-size: 12.5px;
+	animation: none;
+}
+[data-edition='letter'] .post-meta strong {
+	color: inherit;
+	font-weight: 400;
+}
+[data-edition='letter'] .post-meta a {
+	color: inherit;
+	text-decoration: none;
+}
+[data-edition='letter'] .post-meta a:is(:hover, :focus-visible) {
+	color: var(--text);
+	text-decoration: underline;
+}
+[data-edition='letter'] .release-intro {
+	max-width: 26em;
+	margin: clamp(28px, 5vh, 48px) 0 0;
+	color: var(--text);
+	font-size: clamp(19px, 2.4vw, 24px);
+	line-height: 1.45;
+	letter-spacing: -0.01em;
+}
+
+/* Contents: a line per product (its dot, its name, its features) and one for the rest. */
+[data-edition='letter'] .edition-index {
+	position: relative;
+	max-width: calc(var(--column) + 2 * var(--gutter));
+	margin: 0 auto;
+	padding: 0 var(--gutter);
+	background: var(--canvas);
+}
+[data-edition='letter'] .index-rows {
+	margin: 0;
+	padding: 28px 0 0;
+	list-style: none;
+	border-top: 1px solid var(--line-strong);
+}
+[data-edition='letter'] .index-row {
+	display: grid;
+	grid-template-columns: 124px minmax(0, 1fr);
+	align-items: start;
+	padding: 5px 0;
+}
+[data-edition='letter'] .index-name {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 3px 0;
+	color: var(--text);
+	font-size: 14.5px;
+	line-height: 1.5;
+	text-decoration: none;
+}
+[data-edition='letter'] .index-rest .index-name {
+	padding-left: 18px;
+	color: var(--muted);
+}
+[data-edition='letter'] .index-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 18px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+[data-edition='letter'] :is(.index-links, .chapter-links) a {
+	display: block;
+	padding: 3px 0;
+	color: var(--muted);
+	font-size: 14.5px;
+	line-height: 1.5;
+	text-decoration: none;
+	white-space: nowrap;
+}
+[data-edition='letter']
+	:is(.index-links a, .chapter-links a, a.index-name):is(:hover, :focus-visible) {
+	color: var(--text);
+	text-decoration: underline;
+	text-underline-offset: 5px;
+}
+
+/* One column for the post and for its guide; the contents above stand in for a sidebar. */
+[data-edition='letter'] .post-toc,
+[data-edition='letter'] .post-layout::after {
+	display: none;
+}
+[data-edition='letter'] .post-layout {
+	position: relative;
+	grid-template-columns: minmax(0, var(--column));
+	gap: 0;
+	padding: clamp(56px, 9vh, 96px) var(--gutter) clamp(120px, 22vh, 240px);
+	background: var(--canvas);
+}
+[data-edition='letter'] .post-article p {
+	margin: 0 0 20px;
+	font-size: 17px;
+	line-height: 1.72;
+}
+[data-edition='letter'] .post-article li {
+	font-size: 17px;
+	line-height: 1.72;
+}
+[data-edition='letter'] .post-article strong {
+	color: inherit;
+	font-weight: 600;
+}
+[data-edition='letter'] .post-article .post-lede > p:first-child {
+	color: var(--text);
+	font-size: 17px;
+	line-height: 1.72;
+}
+
+/* Chapters: white space, a hairline, the name. */
+[data-edition='letter'] .post-section {
+	margin-top: clamp(120px, 22vh, 240px);
+}
+[data-edition='letter'] .chapter-head {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0 18px;
+	margin: 0 0 clamp(24px, 4vh, 40px);
+	padding-top: clamp(40px, 7vh, 72px);
+}
+[data-edition='letter'] .chapter-head::before {
+	content: '';
+	position: absolute;
+	inset: 0 0 auto;
+	height: 1px;
+	background: var(--line-strong);
+	transform-origin: left;
+}
+[data-edition='letter'] .chapter-head h2 {
+	max-width: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: clamp(38px, 8vw, 68px);
+	font-weight: 600;
+	line-height: 1.02;
+	letter-spacing: -0.04em;
+	scroll-margin-top: 96px;
+}
+[data-edition='letter'] .post-section:not([data-product]) .chapter-head h2 {
+	font-size: clamp(30px, 5.6vw, 46px);
+	letter-spacing: -0.03em;
+}
+[data-edition='letter'] .chapter-head > .tile {
+	width: 10px;
+	height: 10px;
+}
+[data-edition='letter'] .chapter-links {
+	flex-basis: 100%;
+	margin-top: 22px;
+}
+[data-edition='letter'] .chapter-links ul {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 18px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+[data-edition='letter'] .chapter-links li {
+	margin: 0;
+}
+/* A chapter of the post opens with a line about it; a section of the guide just begins. */
+[data-edition='letter'] .post-indexed .post-article .chapter-head + p {
+	color: var(--muted);
+}
+
+/* A feature reads like an entry in a letter: its name, a few sentences, the recording across
+   the column with its caption, then what it does not do yet. */
+[data-edition='letter'] .feature {
+	margin-top: clamp(88px, 15vh, 160px);
+}
+[data-edition='letter'] :is(.chapter-head + .feature, .chapter-head + p + .feature) {
+	margin-top: clamp(56px, 9vh, 96px);
+}
+[data-edition='letter'] .feature > h3 {
+	margin: 0 0 16px;
+	font-size: clamp(22px, 3vw, 26px);
+	font-weight: 600;
+	line-height: 1.2;
+	letter-spacing: -0.02em;
+	scroll-margin-top: 48px;
+}
+[data-edition='letter'] .post-section:not([data-product]) .feature {
+	margin-top: 72px;
+}
+[data-edition='letter'] .post-figure {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 12px 20px;
+	margin: 36px 0;
+}
+[data-edition='letter'] .post-figure :is(img, .frame) {
+	grid-column: 1 / -1;
+}
+[data-edition='letter'] .post-figure .frame {
+	overflow: hidden;
+	border: 1px solid var(--line-strong);
+	border-radius: 6px;
+}
+[data-edition='letter'] .post-figure img {
+	border: 1px solid var(--line-strong);
+	border-radius: 6px;
+	background: var(--sunken);
+}
+[data-edition='letter'] .post-figure .frame img {
+	border: 0;
+	border-radius: 0;
+}
+[data-edition='letter'] .post-figure figcaption {
+	grid-column: 1;
+	grid-row: 2;
+	margin: 0;
+	color: var(--muted);
+	font-size: 13.5px;
+	line-height: 1.5;
+	text-align: left;
+}
+[data-edition='letter'] .recording-bar {
+	grid-column: 2;
+	grid-row: 2;
+	display: flex;
+	gap: 16px;
+	align-items: baseline;
+}
+[data-edition='letter'] .recording-bar :is(button, a) {
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--muted);
+	font: 12px/1.7 var(--font-mono);
+	text-decoration: none;
+	cursor: pointer;
+}
+[data-edition='letter'] .recording-bar :is(button, a):is(:hover, :focus-visible) {
+	color: var(--text);
+	text-decoration: underline;
+	text-underline-offset: 4px;
+}
+[data-edition='letter'] .post-article .not-yet,
+[data-edition='letter'] .post-article .learn-more {
+	margin: 0 0 12px;
+	color: var(--muted);
+	font-size: 15px;
+	font-weight: 400;
+	line-height: 1.65;
+}
+[data-edition='letter'] .feature-aside {
+	margin-top: 24px;
+}
+[data-edition='letter'] .not-yet > strong:first-child {
+	margin-right: 4px;
+	color: var(--text);
+	font-family: var(--font-mono);
+	font-size: 12.5px;
+	font-weight: 400;
+}
+
+/* Code: a dark block without a frame; the file name and Copy are small monospace words. */
+[data-edition='letter'] figure.code {
+	margin: 32px 0;
+	border: 0;
+	border-radius: 6px;
+}
+[data-edition='letter'] .code-bar {
+	height: 38px;
+	border: 0;
+}
+[data-edition='letter'] .code-file {
+	border: 0;
+	color: var(--code-muted);
+	font-size: 12px;
+}
+[data-edition='letter'] .code-lang {
+	display: none;
+}
+[data-edition='letter'] .code-copy {
+	height: auto;
+	border: 0;
+	color: var(--code-muted);
+	font: 12px var(--font-mono);
+}
+[data-edition='letter'] figure.code pre {
+	padding: 4px 16px 20px;
+	font-size: 13.5px;
+}
+[data-edition='letter'] figure.code figcaption {
+	border: 0;
+	padding: 0 16px 16px;
+}
+[data-edition='letter'] .migration-pair {
+	display: block;
+}
+/* Before and after keep their colour on the label alone. */
+[data-edition='letter'] .code[data-migration] .code-bar {
+	background: none;
+}
+[data-edition='letter'] .table-wrap {
+	border: 0;
+	border-radius: 0;
+}
+[data-edition='letter'] .table-wrap th {
+	background: none;
+	color: var(--muted);
+	font-weight: 400;
+}
+[data-edition='letter'] .table-wrap :is(th, td) {
+	padding: 10px 16px 10px 0;
+	border-color: var(--line);
+}
+
+/* Every change: rows between hairlines that open in place. */
+[data-edition='letter'] .changes-toggle {
+	height: auto;
+	padding: 0;
+	border: 0;
+	color: var(--muted);
+	font: 12px var(--font-mono);
+}
+[data-edition='letter'] .changes-toggle:hover {
+	color: var(--text);
+	text-decoration: underline;
+}
+[data-edition='letter'] details.changes {
+	margin: 0;
+	border: 0;
+	border-top: 1px solid var(--line);
+	border-radius: 0;
+	background: none;
+	transition: none;
+}
+[data-edition='letter'] details.changes:hover {
+	border-color: var(--line);
+	transform: none;
+}
+[data-edition='letter'] details.changes summary {
+	gap: 12px;
+	padding: 16px 0;
+	border-radius: 0;
+}
+[data-edition='letter'] .changes-name {
+	font-family: var(--font-ui);
+	font-size: 16px;
+	font-weight: 400;
+	color: var(--text);
+}
+[data-edition='letter'] .changes-name strong {
+	font-weight: 600;
+}
+[data-edition='letter'] .changes-count {
+	font-family: var(--font-mono);
+	font-size: 12px;
+}
+[data-edition='letter'] .changes-chevron {
+	width: auto;
+	height: auto;
+	border: 0;
+	color: var(--muted);
+	font: 14px/1 var(--font-mono);
+	transform: none;
+	transition: none;
+}
+[data-edition='letter'] .changes-chevron::before {
+	content: '+';
+	width: auto;
+	height: auto;
+	border: 0;
+	transform: none;
+}
+[data-edition='letter'] details.changes[open] .changes-chevron {
+	transform: none;
+}
+[data-edition='letter'] details.changes[open] .changes-chevron::before {
+	content: '\2212';
+}
+[data-edition='letter'] .changes-body {
+	padding: 0 0 20px;
+	border: 0;
+}
+[data-edition='letter'] .post-article .changes-body li {
+	font-size: 15.5px;
+	line-height: 1.65;
+}
+[data-edition='letter'] .post-footer {
+	border-color: var(--line);
+	font-size: 12.5px;
+}
+[data-edition='letter'] .post-footer a {
+	text-decoration: none;
+}
+[data-edition='letter'] .post-footer a:hover {
+	color: var(--text);
+	text-decoration: underline;
+}
+
+/* The shared reveals are replaced by this edition's own (below). */
+.reveal-ready [data-edition='letter'] .reveal {
+	opacity: 1;
+	transform: none;
+	transition: none;
+}
+[data-edition='letter'] details.changes[open] .changes-body {
+	animation: none;
+}
+
+@media (max-width: 640px) {
+	[data-edition='letter'] {
+		--gutter: 20px;
+	}
+	[data-edition='letter'] .index-row {
+		grid-template-columns: minmax(0, 1fr);
+		padding: 8px 0;
+	}
+	[data-edition='letter'] .index-links {
+		padding-left: 18px;
+	}
+	[data-edition='letter'] .post-figure {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	[data-edition='letter'] .recording-bar {
+		grid-column: 1;
+		grid-row: 3;
+	}
+}
+
+/* Motion. edition-letter.js marks what moves (`data-rv`), sets `motion` on the body once that
+   is done, and adds `in` as each part reaches the window. Hidden here means transparent or
+   moved, never removed: the text stays in the accessibility tree and in find-in-page. Only
+   opacity, transform, translate and scale change. */
+@media (prefers-reduced-motion: no-preference) {
+	/* Blocks rise into place. */
+	.motion[data-edition='letter'] [data-rv='rise'] {
+		opacity: 0;
+		transform: translate3d(0, 32px, 0);
+		transition:
+			opacity 0.9s var(--out) var(--d, 0ms),
+			transform 1.2s var(--out) var(--d, 0ms);
+	}
+	.motion[data-edition='letter'] [data-rv='rise'].in {
+		opacity: 1;
+		transform: none;
+	}
+	/* Headings come up word by word from behind their own baseline. */
+	[data-edition='letter'] .w {
+		display: inline-block;
+		overflow: hidden;
+		padding-bottom: 0.14em;
+		margin-bottom: -0.14em;
+		vertical-align: bottom;
+	}
+	[data-edition='letter'] .w > span {
+		display: inline-block;
+	}
+	.motion[data-edition='letter'] [data-rv='words'] .w > span {
+		transform: translate3d(0, 110%, 0);
+		transition: transform 1.1s var(--out) calc(var(--i, 0) * 70ms + var(--d, 0ms));
+	}
+	.motion[data-edition='letter'] [data-rv='words'].in .w > span {
+		transform: none;
+	}
+	/* A chapter opens: its hairline draws across, its dot pops, its name comes up. */
+	.motion[data-edition='letter'] .chapter-head::before {
+		transform: scaleX(0);
+		transition: transform 1.6s var(--out);
+	}
+	.motion[data-edition='letter'] .chapter-head.in::before {
+		transform: none;
+	}
+	.motion[data-edition='letter'] .chapter-head > .tile {
+		transform: scale(0);
+		transition: transform 0.8s var(--spring) 0.45s;
+	}
+	.motion[data-edition='letter'] .chapter-head.in > .tile {
+		transform: none;
+	}
+	/* A recording grows into its frame while the picture settles inside it. */
+	.motion[data-edition='letter'] [data-rv='frame'] .frame {
+		opacity: 0;
+		transform: translate3d(0, 56px, 0) scale(0.92);
+		transform-origin: 50% 100%;
+		transition:
+			opacity 0.9s var(--out),
+			transform 1.5s var(--out);
+	}
+	.motion[data-edition='letter'] [data-rv='frame'] .frame img {
+		scale: 1.14;
+		transition: scale 1.9s var(--out);
+	}
+	.motion[data-edition='letter'] [data-rv='frame'] :is(figcaption, .recording-bar) {
+		opacity: 0;
+		transition: opacity 0.9s var(--out) 0.5s;
+	}
+	.motion[data-edition='letter'] [data-rv='frame'].in :is(.frame, figcaption, .recording-bar) {
+		opacity: 1;
+		transform: none;
+	}
+	.motion[data-edition='letter'] [data-rv='frame'].in .frame img {
+		scale: 1;
+	}
+
+	/* On load. */
+	@keyframes letter-rise {
+		from {
+			opacity: 0;
+			transform: translate3d(0, 28px, 0);
+		}
+	}
+	@keyframes letter-fade {
+		from {
+			opacity: 0;
+		}
+	}
+	@keyframes letter-draw {
+		from {
+			transform: scaleX(0);
+		}
+	}
+	@keyframes letter-pop {
+		from {
+			transform: scale(0);
+		}
+	}
+	/* These run from the stylesheet alone, so the opening never shows first and then hides: the
+	   name rises, its number after it, then the date, the sentence, the hairline and the lines
+	   of the contents, each dot popping in beside its name. */
+	[data-edition='letter'] .post-bar {
+		animation: letter-fade 1.4s ease 0.1s both;
+	}
+	[data-edition='letter'] .post-hero h1 {
+		animation: letter-rise 1.4s var(--out) 0.1s both;
+	}
+	[data-edition='letter'] .post-version {
+		display: inline-block;
+		animation: letter-rise 1.4s var(--out) 0.32s both;
+	}
+	[data-edition='letter'] .post-meta {
+		animation: letter-rise 1.2s var(--out) 0.7s both;
+	}
+	[data-edition='letter'] .release-intro {
+		animation: letter-rise 1.2s var(--out) 0.85s both;
+	}
+	[data-edition='letter'] .index-rows {
+		border-top-color: transparent;
+	}
+	[data-edition='letter'] .edition-index::before {
+		content: '';
+		position: absolute;
+		inset: 0 var(--gutter) auto;
+		height: 1px;
+		background: var(--line-strong);
+		transform-origin: left;
+		animation: letter-draw 1.8s var(--out) 1s both;
+	}
+	[data-edition='letter'] .index-row {
+		--at: 1.15s;
+		animation: letter-rise 1.1s var(--out) var(--at) both;
+	}
+	[data-edition='letter'] .index-row:nth-child(2) {
+		--at: 1.23s;
+	}
+	[data-edition='letter'] .index-row:nth-child(3) {
+		--at: 1.31s;
+	}
+	[data-edition='letter'] .index-row:nth-child(4) {
+		--at: 1.39s;
+	}
+	[data-edition='letter'] .index-row:nth-child(5) {
+		--at: 1.47s;
+	}
+	[data-edition='letter'] .index-row:nth-child(n + 6) {
+		--at: 1.55s;
+	}
+	[data-edition='letter'] .index-name > .tile {
+		animation: letter-pop 0.8s var(--spring) calc(var(--at) + 0.35s) both;
+	}
+	[data-edition='letter'] .post-lede > * {
+		animation: letter-rise 1.2s var(--out) 1.7s both;
+	}
+
+	/* The opening stays put while the page slides over it. */
+	@media (min-width: 721px) and (min-height: 720px) {
+		.motion[data-edition='letter'] .post-hero {
+			position: sticky;
+			top: 0;
+		}
+	}
+
+	/* Tied to the scroll position itself where the browser can do that off the main thread:
+	   the opening recedes as the page covers it, each recording drifts against
+	   the text, and a hairline across the top of the window draws with the reader's progress. */
+	@supports (animation-timeline: view()) {
+		@keyframes letter-recede {
+			to {
+				opacity: 0;
+				transform: translate3d(0, -48px, 0) scale(0.94);
+			}
+		}
+		@keyframes letter-drift {
+			from {
+				translate: 0 36px;
+			}
+			to {
+				translate: 0 -36px;
+			}
+		}
+		@keyframes letter-progress {
+			from {
+				transform: scaleX(0);
+			}
+		}
+		@media (min-width: 721px) and (min-height: 720px) {
+			.motion[data-edition='letter'] .post-hero {
+				animation: letter-recede linear both;
+				animation-timeline: scroll(root);
+				animation-range: 0 80vh;
+				transform-origin: 0 40%;
+			}
+		}
+		.motion[data-edition='letter'] .post-figure {
+			animation: letter-drift linear both;
+			animation-timeline: view();
+		}
+		.motion[data-edition='letter']::after {
+			content: '';
+			position: fixed;
+			inset: 0 0 auto;
+			z-index: 6;
+			height: 2px;
+			background: var(--text);
+			transform-origin: left;
+			animation: letter-progress linear both;
+			animation-timeline: scroll(root);
+		}
+	}
+}
+@media print {
+	.motion[data-edition='letter'] [data-rv],
+	.motion[data-edition='letter'] [data-rv] * {
+		opacity: 1 !important;
+		transform: none !important;
+		scale: none !important;
+		animation: none !important;
+	}
+}
