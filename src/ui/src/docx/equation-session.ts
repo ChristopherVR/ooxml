@@ -65,13 +65,16 @@ export function syncEquationTab(
 			.tabButton('equation')
 			?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 	}
+	const ink = panel.querySelector<HTMLButtonElement>('[data-equation-ink]');
+	// Without a recognizer Ink Equation is unavailable: it stays off and keeps its reason as its
+	// tooltip (the ribbon's label tooltips skip unavailable commands).
+	ink?.toggleAttribute('data-unavailable', Boolean(status.inkUnavailable));
 	for (const control of panel.querySelectorAll<HTMLButtonElement | HTMLSelectElement>(
 		'button:not([data-unavailable]), select',
 	))
 		// A read-only equation still takes the gallery and Convert > All, which leave it alone.
 		control.disabled =
 			!selected || !editable || (!status.canEdit && !control.closest('[data-equation-any]'));
-	const ink = panel.querySelector<HTMLButtonElement>('[data-equation-ink]');
 	if (ink) {
 		if (status.inkUnavailable) ink.disabled = true;
 		ink.title = status.inkUnavailable ?? status.inkTitle ?? ink.title;

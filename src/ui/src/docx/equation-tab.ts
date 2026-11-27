@@ -69,6 +69,7 @@ export function buildEquationPanel(panel: HTMLElement): void {
 		{ large: true },
 	);
 	ink.dataset.equationInk = '';
+	ink.dataset.unavailable = '';
 	ink.disabled = true;
 	ink.title = 'Ink Equation needs handwriting recognition, which this editor does not have.';
 	const builtIn = opensGallery(
