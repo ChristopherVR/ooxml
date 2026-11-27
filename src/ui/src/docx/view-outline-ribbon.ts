@@ -8,6 +8,7 @@ import {
 	type LocalizationKey,
 } from './localization';
 import type { OutlineAction } from './document-views';
+import type { OutlineAvailability } from './view-outline-rules';
 import { refitRibbon } from './ribbon-overflow';
 import { panelOf, selectedTab, selectTab, setTabHidden } from './ribbon-tab-api';
 
@@ -92,14 +93,15 @@ export function mountOutlineRibbon(toolbar: HTMLElement, locale: EditorLocale) {
 	return {
 		sync(
 			nextLevel: number,
-			selectedLevel: number | undefined,
 			formatting: boolean,
 			firstLine: boolean,
-			enabled: Set<OutlineKey>,
+			{ enabled, reasons, levels, paragraphLevel: selectedLevel }: OutlineAvailability,
 			locale: EditorLocale,
 		) {
 			levelSelect.value = String(nextLevel);
 			paragraphLevel.value = selectedLevel === undefined ? '' : String(selectedLevel);
+			for (const option of paragraphLevel.options)
+				option.disabled = !levels.has(Number(option.value));
 			if (locale !== optionLocale) {
 				optionLocale = locale;
 				for (const control of [levelSelect, paragraphLevel]) {
@@ -116,7 +118,10 @@ export function mountOutlineRibbon(toolbar: HTMLElement, locale: EditorLocale) {
 				if (pressed !== undefined) control.setAttribute('aria-pressed', String(pressed));
 				control.disabled = !enabled.has(key);
 				if (control.disabled) {
-					const reason = translate(locale, 'Unavailable for the current selection');
+					const reason = translate(
+						locale,
+						reasons.get(key) ?? 'Unavailable for the current selection',
+					);
 					control.title = reason;
 					control.setAttribute('aria-description', reason);
 				} else {

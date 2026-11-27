@@ -56,6 +56,8 @@ export class ViewModes {
 	}
 
 	escape(): boolean {
+		// A view's own layer (Read Mode's note callout) closes before the view does.
+		if (this.presentation?.escape?.()) return true;
 		if (this.active === 'focus') this.select(this.mode);
 		else if (this.mode === 'read') this.request(this.readFrom, true);
 		else return false;

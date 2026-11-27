@@ -573,8 +573,16 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Read Mode (columns and paging), Web Layout, Outline (levels, collapse, promote and
       demote with heading styles, branch moves) and Focus, in every binding (`docx/view-modes.ts`,
       2026-11-26).
-- [ ] **P1** Read Mode has no footnote or endnote navigation, and Outline structural edits are
-      disabled during tracked changes and collaboration.
+- [x] **P1** Read Mode shows a footnote or endnote in a callout from its reference (click, Enter
+      or Space; Escape or Back to text returns to the reference), and Outline's promote, demote,
+      Outline Level and branch moves work with Track Changes on (paragraph property changes and
+      linked `w:moveFrom`/`w:moveTo` text and paragraph marks) and in collaboration
+      (`view-read-notes.ts`, `view-outline-rules.ts`, `docx/ui/outline-tracked.ts`, 2026-11-27).
+- [ ] **P2** Outline stays honest where it cannot follow Word: a tracked branch move is refused
+      (with its reason) when the branch holds tables, pictures, fields or breaks, already carries
+      tracked changes, or would leave or land without a following paragraph; in collaboration a
+      level change that must define a new heading style is refused, since style catalogs are not
+      shared with the room.
 - [x] **P1** Index (Mark Entry, Insert and Update Index), citations and bibliography (Manage
       Sources in `b:Sources`, APA, MLA and Chicago), and Table of Authorities (2026-11-27).
 - [ ] **P2** The Index's section layout, the native Index and TOA styles and tab stops, and the

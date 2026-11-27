@@ -363,6 +363,9 @@ export class EditorCore {
 			configureRibbon: () => applyViewOptions(this),
 			refreshEditable: () => this.view?.setProps({ editable: () => this.canEditBody() }),
 			refreshControls: () => this.refreshControls(),
+			reviewAuthor: () => this.reviewAuthor,
+			collaborating: () => this.collab.active,
+			revisionIds: () => this.collab.ids,
 		});
 	}
 

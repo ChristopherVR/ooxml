@@ -1,6 +1,7 @@
 import type { EditorView } from 'prosemirror-view';
 import { mountViewStyle, type ViewHost, type ViewPresentation } from './document-views';
 import { formatPageStatus, translate, type LocalizationKey } from './localization';
+import { mountReadNotes } from './view-read-notes';
 import css from './styles/view-read.css?raw';
 
 export function mountView(host: ViewHost): ViewPresentation {
@@ -84,8 +85,14 @@ export function mountView(host: ViewHost): ViewPresentation {
 		page = Math.min(lastPage, Math.round(paper.scrollLeft / step));
 		paint();
 	};
+	const notes = mountReadNotes(
+		frame,
+		() => host.locale(),
+		() => host.model(),
+	);
 	const keys = (event: KeyboardEvent) => {
 		if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+		if (notes.keydown(event)) return;
 		const path = event.composedPath();
 		const pagingButton = path.find((target) => target === previous || target === next);
 		if (pagingButton && !['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown'].includes(event.key))
@@ -135,7 +142,9 @@ export function mountView(host: ViewHost): ViewPresentation {
 	frame.addEventListener('keydown', keys, true);
 
 	return {
+		escape: () => notes.escape(),
 		sync(view) {
+			notes.sync(view);
 			bar.setAttribute('aria-label', translate(host.locale(), 'Read Mode'));
 			previous.textContent = translate(host.locale(), 'Previous page');
 			next.textContent = translate(host.locale(), 'Next page');
@@ -148,6 +157,7 @@ export function mountView(host: ViewHost): ViewPresentation {
 			paint();
 		},
 		dispose() {
+			notes.dispose();
 			observer?.disconnect();
 			if (pending) cancelAnimationFrame(pending);
 			paper.removeEventListener('scroll', scroll);

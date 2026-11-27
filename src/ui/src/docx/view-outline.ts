@@ -1,13 +1,8 @@
 import {
-	canChangeOutlineLevel,
-	changeOutlineLevel,
 	dispatchIsolatedCommand,
 	indexOutline,
-	moveOutline,
 	OUTLINE_BODY,
 	outlineParagraphs,
-	outlinePeer,
-	setOutlineLevel,
 	visibleOutline,
 	type OutlineEntry,
 } from 'ooxml-core/docx/ui';
@@ -20,11 +15,15 @@ import {
 	type ViewPresentation,
 } from './document-views';
 import { focusView } from './focus-view';
-import { mountOutlineRibbon, type OutlineKey } from './view-outline-ribbon';
+import { mountOutlineRibbon } from './view-outline-ribbon';
 import { outlineKey, outlineSelectionPlugin } from './view-outline-selection';
+import {
+	outlineAvailability,
+	outlineLevelEdit,
+	outlineMoveEdit,
+	type OutlineEditContext,
+} from './view-outline-rules';
 import css from './styles/view-outline.css?raw';
-
-const alwaysEnabled: OutlineKey[] = ['firstLine', 'format', 'close'];
 
 export function mountView(host: ViewHost): ViewPresentation {
 	const style = mountViewStyle(host, css);
@@ -80,11 +79,15 @@ export function mountView(host: ViewHost): ViewPresentation {
 		return { entries, visible: visibility, decorations, collapsed };
 	});
 
-	const allowsEdit = (view: EditorView) =>
-		view.editable &&
-		host.canEditOutsideBody() &&
-		!host.model().trackChanges &&
-		!host.model().protection?.enforced;
+	// Structural edits follow Track Changes (moves and paragraph changes, as Word records them) and
+	// travel to a collaboration room as ordinary body steps.
+	const context = (view: EditorView): OutlineEditContext => ({
+		editable: view.editable,
+		model: host.model(),
+		collaborating: host.collaborating?.() ?? false,
+		author: host.reviewAuthor?.() ?? 'Author',
+		revisionIds: host.revisionIds?.(),
+	});
 	function selected(state: EditorState, entries: readonly OutlineEntry[]) {
 		const index = state.selection.$from.index(0);
 		return outlineKey.getState(state)?.visible[index] ? entries[index] : undefined;
@@ -96,29 +99,9 @@ export function mountView(host: ViewHost): ViewPresentation {
 			view.updateState(view.state.reconfigure({ plugins: [plugin, ...view.state.plugins] }));
 		}
 		const entries = outlineKey.getState(view.state)?.entries ?? [];
-		const enabled = new Set(alwaysEnabled);
 		const entry = selected(view.state, entries);
-		let paragraphLevel: number | undefined;
-		if (entry) {
-			const branch = entry.end > entry.index + 1;
-			if (branch) enabled.add(collapsed.has(entry.id) ? 'expand' : 'collapse');
-			if (allowsEdit(view)) {
-				const paragraphs = outlineParagraphs(view.state, entries);
-				if (paragraphs.length) {
-					enabled.add('paragraphLevel');
-					const first = paragraphs[0]?.level;
-					if (paragraphs.every((paragraph) => paragraph.level === first)) paragraphLevel = first;
-				}
-				if (paragraphs.some((p) => canChangeOutlineLevel(p, -1))) enabled.add('promote');
-				if (paragraphs.some((p) => canChangeOutlineLevel(p, 1))) enabled.add('demote');
-				const end = entries[entry.end]?.pos ?? view.state.doc.content.size;
-				if (view.state.selection.to < end) {
-					if (outlinePeer(entries, entry, -1)) enabled.add('up');
-					if (outlinePeer(entries, entry, 1)) enabled.add('down');
-				}
-			}
-		}
-		ribbon?.sync(level, paragraphLevel, formatting, firstLine, enabled, host.locale());
+		const available = outlineAvailability(view.state, context(view), entries, entry, collapsed);
+		ribbon?.sync(level, formatting, firstLine, available, host.locale());
 	}
 
 	function show(view: EditorView) {
@@ -164,21 +147,23 @@ export function mountView(host: ViewHost): ViewPresentation {
 					break;
 				case 'up':
 				case 'down': {
-					if (!entry || !allowsEdit(view)) return;
-					const tr = moveOutline(state, entries, entry, action.key === 'up' ? -1 : 1);
-					edit(view, tr);
+					if (!entry) return;
+					const direction = action.key === 'up' ? -1 : 1;
+					edit(view, outlineMoveEdit(state, context(view), entries, entry, direction));
 					break;
 				}
 				case 'promote':
 				case 'paragraphLevel':
 				case 'demote': {
-					if (!allowsEdit(view)) return;
-					const model = host.model();
 					const paragraphs = outlineParagraphs(state, entries);
-					const tr =
+					const tr = outlineLevelEdit(
+						state,
+						context(view),
+						paragraphs,
 						action.key === 'paragraphLevel'
-							? setOutlineLevel(state, model, paragraphs, action.value)
-							: changeOutlineLevel(state, model, paragraphs, action.key === 'promote' ? -1 : 1);
+							? { level: action.value }
+							: { direction: action.key === 'promote' ? -1 : 1 },
+					);
 					if (tr) {
 						const next = indexOutline(tr.doc, host.model());
 						const visible = visibleOutline(next, level, collapsed);

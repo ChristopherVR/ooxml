@@ -26,6 +26,16 @@ export const viewsStrings = {
 		'Exit Read Mode': 'Exit Read Mode',
 		'Exit Focus': 'Exit Focus',
 		'Unavailable for the current selection': 'Unavailable for the current selection',
+		'outline.reason.trackedMoveContent':
+			"Moving this branch can't be tracked: it holds tables, pictures, fields or breaks",
+		'outline.reason.trackedMoveRevisions':
+			"Moving this branch can't be tracked: it already has tracked changes",
+		'outline.reason.trackedMoveBoundary':
+			"Moving this branch can't be tracked here: a paragraph must follow both places",
+		'outline.reason.sharedStyle': "A new heading style can't be shared with the other editors",
+		'readMode.footnote': 'Footnote {number}',
+		'readMode.endnote': 'Endnote {number}',
+		'readMode.backToText': 'Back to text',
 	},
 	fr: {
 		'Promote in Outline': 'Hausser le niveau dans le plan',
@@ -54,6 +64,17 @@ export const viewsStrings = {
 		'Exit Read Mode': 'Quitter le mode Lecture',
 		'Exit Focus': 'Quitter la concentration',
 		'Unavailable for the current selection': 'Indisponible pour la sélection actuelle',
+		'outline.reason.trackedMoveContent':
+			'Le déplacement de cette branche ne peut pas être suivi : elle contient des tableaux, des images, des champs ou des sauts',
+		'outline.reason.trackedMoveRevisions':
+			'Le déplacement de cette branche ne peut pas être suivi : elle contient déjà des modifications suivies',
+		'outline.reason.trackedMoveBoundary':
+			'Ce déplacement ne peut pas être suivi ici : un paragraphe doit suivre les deux emplacements',
+		'outline.reason.sharedStyle':
+			'Un nouveau style de titre ne peut pas être partagé avec les autres rédacteurs',
+		'readMode.footnote': 'Note de bas de page {number}',
+		'readMode.endnote': 'Note de fin {number}',
+		'readMode.backToText': 'Retour au texte',
 	},
 	de: {
 		'Promote in Outline': 'In der Gliederung höher stufen',
@@ -82,6 +103,17 @@ export const viewsStrings = {
 		'Exit Read Mode': 'Lesemodus beenden',
 		'Exit Focus': 'Fokus beenden',
 		'Unavailable for the current selection': 'Für die aktuelle Auswahl nicht verfügbar',
+		'outline.reason.trackedMoveContent':
+			'Das Verschieben dieses Zweigs kann nicht nachverfolgt werden: Er enthält Tabellen, Bilder, Felder oder Umbrüche',
+		'outline.reason.trackedMoveRevisions':
+			'Das Verschieben dieses Zweigs kann nicht nachverfolgt werden: Er enthält bereits nachverfolgte Änderungen',
+		'outline.reason.trackedMoveBoundary':
+			'Diese Verschiebung kann hier nicht nachverfolgt werden: Auf beide Stellen muss ein Absatz folgen',
+		'outline.reason.sharedStyle':
+			'Eine neue Überschriftenformatvorlage kann nicht mit den anderen Bearbeitern geteilt werden',
+		'readMode.footnote': 'Fußnote {number}',
+		'readMode.endnote': 'Endnote {number}',
+		'readMode.backToText': 'Zurück zum Text',
 	},
 	es: {
 		'Promote in Outline': 'Subir de nivel en el esquema',
@@ -110,6 +142,17 @@ export const viewsStrings = {
 		'Exit Read Mode': 'Salir del modo lectura',
 		'Exit Focus': 'Salir del modo concentración',
 		'Unavailable for the current selection': 'No disponible para la selección actual',
+		'outline.reason.trackedMoveContent':
+			'No se puede realizar el seguimiento del movimiento de esta rama: contiene tablas, imágenes, campos o saltos',
+		'outline.reason.trackedMoveRevisions':
+			'No se puede realizar el seguimiento del movimiento de esta rama: ya tiene cambios controlados',
+		'outline.reason.trackedMoveBoundary':
+			'No se puede realizar el seguimiento de este movimiento aquí: debe haber un párrafo después de ambos lugares',
+		'outline.reason.sharedStyle':
+			'Un nuevo estilo de título no se puede compartir con los demás editores',
+		'readMode.footnote': 'Nota al pie {number}',
+		'readMode.endnote': 'Nota al final {number}',
+		'readMode.backToText': 'Volver al texto',
 	},
 	'zh-CN': {
 		'Promote in Outline': '在大纲中升级',
@@ -138,5 +181,12 @@ export const viewsStrings = {
 		'Exit Read Mode': '退出阅读模式',
 		'Exit Focus': '退出专注模式',
 		'Unavailable for the current selection': '当前选区不可用',
+		'outline.reason.trackedMoveContent': '无法跟踪此分支的移动：其中包含表格、图片、域或分隔符',
+		'outline.reason.trackedMoveRevisions': '无法跟踪此分支的移动：其中已有修订',
+		'outline.reason.trackedMoveBoundary': '无法在此处跟踪此移动：两个位置之后都必须有段落',
+		'outline.reason.sharedStyle': '无法与其他编辑者共享新的标题样式',
+		'readMode.footnote': '脚注 {number}',
+		'readMode.endnote': '尾注 {number}',
+		'readMode.backToText': '返回正文',
 	},
 } as const;

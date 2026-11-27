@@ -38,11 +38,16 @@ export interface ViewHost extends EditorHost {
 	frame: HTMLElement;
 	toolbar: HTMLElement | undefined;
 	leave(): void;
+	reviewAuthor?(): string;
+	collaborating?(): boolean;
+	revisionIds?(): ((kind: string) => string) | undefined;
 }
 
 export interface ViewPresentation {
 	sync?(view: EditorView | undefined): void;
 	run?(action: OutlineAction): void;
+	/** Closes a layer the view owns; true when Escape was used. */
+	escape?(): boolean;
 	dispose(): void;
 }
 

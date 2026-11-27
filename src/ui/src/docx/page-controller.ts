@@ -44,6 +44,12 @@ export interface PageControllerHost extends EditorHost {
 	configureRibbon?(): void;
 	refreshEditable?(): void;
 	refreshControls(): void;
+	/** The author tracked changes are recorded under (Outline's tracked moves). */
+	reviewAuthor?(): string;
+	/** True while a collaboration session shares the body. */
+	collaborating?(): boolean;
+	/** The collaboration room's id generator, so new revisions and paragraphs never collide. */
+	revisionIds?(): ((kind: string) => string) | undefined;
 }
 
 /** Page setup, section breaks, zoom, Web/Print Layout and printing. */
