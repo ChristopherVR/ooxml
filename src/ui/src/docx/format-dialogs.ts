@@ -97,6 +97,7 @@ export class FormatDialogs {
 
 	constructor(private readonly host: FormatDialogsHost) {
 		const charts = { view: () => host.view(), theme: () => host.theme?.() };
+		const failed = (error: Error) => host.reportError?.(error);
 		this.dialogs = {
 			font: createFontDialog(
 				() => host.view(),
@@ -171,14 +172,17 @@ export class FormatDialogs {
 				() => host.canDefineList?.() ?? true,
 			),
 			// The chart dialogs load on first use.
-			insertChart: lazyDialog(() =>
-				import('./chart-dialogs').then((m) => m.createChartTypeDialog(charts, false)),
+			insertChart: lazyDialog(
+				() => import('./chart-dialogs').then((m) => m.createChartTypeDialog(charts, false)),
+				failed,
 			),
-			changeChartType: lazyDialog(() =>
-				import('./chart-dialogs').then((m) => m.createChartTypeDialog(charts, true)),
+			changeChartType: lazyDialog(
+				() => import('./chart-dialogs').then((m) => m.createChartTypeDialog(charts, true)),
+				failed,
 			),
-			chartData: lazyDialog(() =>
-				import('./chart-dialogs').then((m) => m.createChartDataDialog(charts)),
+			chartData: lazyDialog(
+				() => import('./chart-dialogs').then((m) => m.createChartDataDialog(charts)),
+				failed,
 			),
 			restrictEditing: createRestrictEditingPane({
 				view: () => (host.reviewView ? host.reviewView() : host.view()),
