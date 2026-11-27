@@ -79,7 +79,7 @@ describe('shapeSvg', () => {
 						{ position: 100000, color: color('0000FF') },
 					],
 				},
-				text: { paragraphs: [{ runs: [{ text: 'A' }] }] },
+				text: { paragraphs: [{ runs: [{ text: 'A' }] }], text: 'A' },
 			},
 			40,
 			20,
