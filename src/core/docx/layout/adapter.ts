@@ -236,7 +236,7 @@ export function adaptDocumentModel(
 			noteText ??
 			formText ??
 			(run.field && !isFieldLocked(run) && (name === 'DATE' || name === 'TIME')
-				? dateFieldResult(name, run.field.instr, now)
+				? dateFieldResult(name, run.field.instr, now, formatting.language)
 				: run.equation
 					? equation
 						? ''

@@ -21,6 +21,7 @@ import { createTextBoxLayouts, type TextBoxLayouts } from './text-box-layout';
 import { refreshComputedFields } from '../computed-fields';
 import { fieldName } from '../field-runs';
 import { fieldResultSpans } from '../field-result-spans';
+import { resolveRunFormatting } from '../run-formatting';
 
 const DEFAULT_DISTANCE_PX = 48;
 
@@ -133,12 +134,21 @@ export interface PlacedStory {
 	distancePx: number;
 }
 
-function fillFields(blocks: Block[], values: PageFieldContext): Block[] {
+function fillFields(blocks: Block[], values: PageFieldContext, model: DocumentModel): Block[] {
 	const paragraph = (p: Extract<Block, { type: 'paragraph' }>) => {
+		const paragraphValues: PageFieldContext = {
+			...values,
+			languageOf: (run) =>
+				resolveRunFormatting(run, {
+					runCatalog: model.characterStyles,
+					paragraphCatalog: model.paragraphStyles,
+					paragraphStyleId: p.style,
+				}).language,
+		};
 		let changed = false;
 		const runs = p.runs.map((run) => {
 			if (!run.field) return run;
-			const text = fieldDisplayText(run, values);
+			const text = fieldDisplayText(run, paragraphValues);
 			// DATE/TIME are evaluated for the page's time, instead of again during adaptation.
 			const name = fieldName(run.field.instr);
 			if (name === 'DATE' || name === 'TIME') {
@@ -160,7 +170,7 @@ function fillFields(blocks: Block[], values: PageFieldContext): Block[] {
 					continue;
 				const run = runs[span.to];
 				if (!run) continue;
-				const text = fieldDisplayText({ ...run, field: { instr: span.instr } }, values);
+				const text = fieldDisplayText({ ...run, field: { instr: span.instr } }, paragraphValues);
 				if (!text) continue;
 				runs[span.to] = { ...run, text };
 				changed = true;
@@ -222,7 +232,7 @@ export function createPageStories(
 		for (const kind of ['header', 'footer'] as const) {
 			const content = headerFooterForPage(model, page, pageNumber, `${kind}s`);
 			if (!content) continue;
-			const source = fillFields(styleRefs.content(content, index).blocks, values);
+			const source = fillFields(styleRefs.content(content, index).blocks, values, model);
 			let widths = cache.get(source);
 			if (!widths) cache.set(source, (widths = new Map()));
 			let flow = widths.get(widthPx);

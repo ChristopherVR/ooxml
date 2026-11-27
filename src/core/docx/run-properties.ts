@@ -34,12 +34,10 @@ export function runPropertyChanged(
 /** Direct properties shared by ordinary runs and restored formatting snapshots. */
 export function parseDirectRunProperties(
 	props: XmlElement | undefined,
-): RunFormatting &
-	Pick<TextRun, 'language' | 'eastAsiaLanguage' | 'bidiLanguage' | 'rtl' | 'style'> {
+): RunFormatting & Pick<TextRun, 'eastAsiaLanguage' | 'bidiLanguage' | 'rtl' | 'style'> {
 	const result: ReturnType<typeof parseDirectRunProperties> = parseRunProperties(props);
 	const language = first(props, 'lang');
 	for (const [attribute, key] of [
-		['val', 'language'],
 		['eastAsia', 'eastAsiaLanguage'],
 		['bidi', 'bidiLanguage'],
 	] as const) {
@@ -57,6 +55,8 @@ export function parseDirectRunProperties(
 export function parseRunProperties(props: XmlElement | undefined): RunFormatting {
 	const result: RunFormatting = {};
 	if (!props) return result;
+	const language = getW(first(props, 'lang'), 'val');
+	if (language !== undefined) result.language = language;
 	const ligatures = parseLigatures(props);
 	if (ligatures !== undefined) result.ligatures = ligatures;
 	// Toggles are kept when explicitly off too (`w:val="0"`): that cancels a style's value.

@@ -16,6 +16,8 @@ export interface DatePictureOptions {
 	locale?: string;
 	/** Read the date's UTC fields instead of its local ones (Visio stores wall-clock time as UTC). */
 	utc?: boolean;
+	/** Use a contextual month name when a day-of-month token precedes it, as Word fields do. */
+	monthAfterDay?: boolean;
 }
 
 const TOKENS =
@@ -28,16 +30,19 @@ function name(
 	locale: string,
 	utc: boolean,
 	options: Intl.DateTimeFormatOptions,
+	part?: 'month',
 ): string {
+	const formatOptions = utc ? { ...options, timeZone: 'UTC' } : options;
+	let formatter: Intl.DateTimeFormat;
 	try {
-		return new Intl.DateTimeFormat(locale, utc ? { ...options, timeZone: 'UTC' } : options).format(
-			date,
-		);
+		formatter = new Intl.DateTimeFormat([locale, 'en-US'], formatOptions);
 	} catch {
-		return new Intl.DateTimeFormat('en-US', utc ? { ...options, timeZone: 'UTC' } : options).format(
-			date,
-		);
+		formatter = new Intl.DateTimeFormat('en-US', formatOptions);
 	}
+	return (
+		(part && formatter.formatToParts(date).find((item) => item.type === part)?.value) ||
+		formatter.format(date)
+	);
 }
 
 /** Formats `date` with a date/time picture; see the module comment for the tokens. */
@@ -56,6 +61,11 @@ export function formatDatePicture(
 	const seconds = utc ? date.getUTCSeconds() : date.getSeconds();
 	const hours12 = hours % 12 || 12;
 	const label = (options: Intl.DateTimeFormatOptions) => name(date, locale, utc, options);
+	let dayBeforeMonth = false;
+	const monthLabel = (width: 'long' | 'short') =>
+		dayBeforeMonth
+			? name(date, locale, utc, { month: width, day: 'numeric' }, 'month')
+			: label({ month: width });
 	return picture.replace(TOKENS, (token) => {
 		switch (token) {
 			case 'yyyy':
@@ -63,9 +73,9 @@ export function formatDatePicture(
 			case 'yy':
 				return pad(year % 100);
 			case 'MMMM':
-				return label({ month: 'long' });
+				return monthLabel('long');
 			case 'MMM':
-				return label({ month: 'short' });
+				return monthLabel('short');
 			case 'MM':
 				return pad(month + 1);
 			case 'M':
@@ -77,9 +87,9 @@ export function formatDatePicture(
 			case 'EEE':
 				return label({ weekday: 'short' });
 			case 'dd':
-				return pad(day);
 			case 'd':
-				return String(day);
+				dayBeforeMonth = options.monthAfterDay === true;
+				return token === 'dd' ? pad(day) : String(day);
 			case 'HH':
 				return pad(hours);
 			case 'H':

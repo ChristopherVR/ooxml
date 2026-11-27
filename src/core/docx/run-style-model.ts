@@ -15,6 +15,7 @@ export type RunFormatting = Pick<
 	| 'caps'
 	| 'smallCaps'
 	| 'vanish'
+	| 'language'
 	| 'highlight'
 	| 'verticalAlign'
 	| 'fontSize'

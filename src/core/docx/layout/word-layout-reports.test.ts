@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { loadDocx, twipsToPixels } from '../index';
 import { parseXml } from '../../xml/index';
 import {
@@ -597,3 +597,31 @@ it.each([
 		}
 	},
 );
+
+it.each([
+	[
+		'issue-357-date-field-fr-FR',
+		[
+			'Run language fr-FR: 26 novembre 2026',
+			'Run language fr-FR: jeudi 26 novembre 2026',
+			'No run language, document default fr-FR: 26 novembre 2026',
+		],
+	],
+	[
+		'issue-357-date-field-en-US-control',
+		['Run language en-US: 26 November 2026', 'Run language en-US: Thursday 26 November 2026'],
+	],
+])('localizes complex DATE results in %s (#357)', async (name, expected) => {
+	vi.useFakeTimers({ toFake: ['Date'] });
+	try {
+		vi.setSystemTime(new Date(2026, 10, 26, 12));
+		const { paragraphs } = await layout(name);
+		expect(
+			paragraphs.map((paragraph) =>
+				paragraph.lines.flatMap((line) => line.fragments.map(({ text }) => text)).join(''),
+			),
+		).toEqual(expected);
+	} finally {
+		vi.useRealTimers();
+	}
+});

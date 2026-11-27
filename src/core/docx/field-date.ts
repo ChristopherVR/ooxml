@@ -22,8 +22,8 @@ export function dateFieldResult(
 	name: 'DATE' | 'TIME',
 	instr: string,
 	now: Date,
-	locale?: string,
+	locale = 'en-US',
 ): string {
 	const picture = datePicture(instr) ?? (name === 'DATE' ? 'M/d/yyyy' : 'h:mm am/pm');
-	return formatWordDate(now, picture, locale);
+	return formatDatePicture(now, picture, { locale, monthAfterDay: true });
 }

@@ -25,4 +25,19 @@ describe('Word date and time fields', () => {
 			'7 septembre 2026',
 		);
 	});
+
+	it('inflects the Russian month after a day number in a DATE picture', () => {
+		expect(dateFieldResult('DATE', 'DATE \\@ "d MMMM yyyy"', date, 'ru-RU')).toBe(
+			'7 сентября 2026',
+		);
+		expect(dateFieldResult('DATE', 'DATE \\@ "MMMM d yyyy"', date, 'ru-RU')).toBe(
+			'сентябрь 7 2026',
+		);
+	});
+
+	it('uses English names if the language tag is invalid', () => {
+		expect(dateFieldResult('TIME', 'TIME \\@ "dddd HH:mm"', date, 'invalid_locale')).toBe(
+			'Monday 14:05',
+		);
+	});
 });

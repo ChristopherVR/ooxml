@@ -1,9 +1,17 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, signedTwips, type DocumentModel, type HeaderFooterContent } from '../index';
+import {
+	loadDocx,
+	parseParagraphStyleCatalog,
+	parseRunStyleCatalog,
+	signedTwips,
+	type DocumentModel,
+	type HeaderFooterContent,
+} from '../index';
 import { letterheadFixture } from '../test-support/letterhead-fixture';
 import { layoutDocumentModel } from './layout';
 import { createFakeMeasurer } from './measure';
+import { createPageStories } from './story-flow';
 import type { LayoutPageBox } from './result';
 import {
 	headerFooterForPage,
@@ -108,4 +116,73 @@ it('clears the first-page header paragraphs without counting the floating letter
 
 	section.marginTopTwips = signedTwips(-1440);
 	expect(layoutDocumentModel(model, measurer).pages[0]?.marginTopPx).toBe(96);
+});
+
+it('updates story DATE and TIME fields in their result language at the page time', async () => {
+	const { model } = await loadDocx(await letterheadFixture());
+	const section = model.sections?.[0];
+	if (!section) throw new Error('Expected a section');
+	delete section.titlePage;
+	const styles = `<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:docDefaults><w:rPrDefault><w:rPr><w:lang w:val="fr-FR"/></w:rPr></w:rPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:styleId="German"><w:rPr><w:lang w:val="de-DE"/></w:rPr></w:style>
+</w:styles>`;
+	model.paragraphStyles = parseParagraphStyleCatalog(styles);
+	model.characterStyles = parseRunStyleCatalog(styles);
+	const date = 'DATE \\@ "dddd d MMMM yyyy"';
+	const time = 'TIME \\@ "dddd HH:mm"';
+	section.headers = {
+		default: {
+			blocks: [
+				{
+					type: 'paragraph',
+					id: 'header',
+					style: 'German',
+					runs: [
+						{ text: '', fieldChar: 'begin', language: 'en-US' },
+						{ text: '', fieldCode: date, language: 'en-US' },
+						{ text: '', fieldChar: 'separate' },
+						{ text: 'Saved', field: { instr: date } },
+						{ text: '', fieldChar: 'end', language: 'en-US' },
+					],
+				},
+			],
+		},
+	};
+	section.footers = {
+		default: {
+			blocks: [
+				{
+					type: 'paragraph',
+					id: 'footer',
+					runs: [
+						{ text: 'Saved', field: { instr: time, simple: true } },
+						{ text: ' / ' },
+						{ text: 'Saved', field: { instr: time, simple: true }, fieldFlags: { locked: true } },
+					],
+				},
+			],
+		},
+	};
+	const measurer = createFakeMeasurer();
+	const { pages } = layoutDocumentModel(model, measurer);
+	const stories = createPageStories(
+		model,
+		pages,
+		measurer,
+		{},
+		undefined,
+		new Date(2026, 10, 26, 15, 5),
+	);
+	expect(
+		stories(0).map(({ blocks }) =>
+			blocks
+				.flatMap((block) =>
+					block.kind === 'paragraph'
+						? block.lines.flatMap((line) => line.fragments.map(({ text }) => text))
+						: [],
+				)
+				.join(''),
+		),
+	).toEqual(['Donnerstag 26 November 2026', 'jeudi 15:05 / Saved']);
 });

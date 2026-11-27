@@ -57,6 +57,30 @@ describe('character style catalog and run formatting resolution', () => {
 		expect(resolved.italic).toBe(true);
 	});
 
+	it('inherits the field result language through the character and paragraph style chains', () => {
+		const styles = `<w:styles xmlns:w="${ns}">
+<w:docDefaults><w:rPrDefault><w:rPr><w:lang w:val="fr-FR"/></w:rPr></w:rPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:styleId="Base"><w:rPr><w:lang w:val="de-DE"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Heading"><w:basedOn w:val="Base"/></w:style>
+<w:style w:type="character" w:styleId="Emph"><w:rPr><w:lang w:val="es-ES"/></w:rPr></w:style>
+<w:style w:type="character" w:styleId="Derived"><w:basedOn w:val="Emph"/></w:style>
+</w:styles>`;
+		const context = {
+			paragraphCatalog: parseParagraphStyleCatalog(styles),
+			runCatalog: parseRunStyleCatalog(styles),
+		};
+		const heading = { ...context, paragraphStyleId: 'Heading' };
+		const run = { text: 'Saved result' };
+		expect(resolveRunFormatting(run, context)).toMatchObject({ language: 'fr-FR' });
+		expect(resolveRunFormatting(run, heading)).toMatchObject({ language: 'de-DE' });
+		expect(resolveRunFormatting({ ...run, style: 'Derived' }, heading)).toMatchObject({
+			language: 'es-ES',
+		});
+		expect(
+			resolveRunFormatting({ ...run, style: 'Derived', language: 'en-US' }, heading),
+		).toMatchObject({ language: 'en-US' });
+	});
+
 	it('applies Word toggle-property semantics (ECMA-376 §17.7.3)', () => {
 		const styles = `<w:styles xmlns:w="${ns}">
 <w:style w:type="paragraph" w:styleId="Heading"><w:rPr><w:b/></w:rPr></w:style>

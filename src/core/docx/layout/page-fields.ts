@@ -11,6 +11,8 @@ export interface PageFieldContext {
 	sectionPages: string;
 	/** DATE and TIME fields update to the pagination time. */
 	now?: Date;
+	/** The effective language of the result run, including its enclosing paragraph style. */
+	languageOf?: (run: TextRun) => string | undefined;
 }
 
 /** Recalculate page/date fields; other fields retain their saved result. */
@@ -21,7 +23,12 @@ export function fieldDisplayText(run: TextRun, values: PageFieldContext): string
 	if (name === 'NUMPAGES') return values.numPages;
 	if (name === 'SECTIONPAGES') return values.sectionPages;
 	if (name === 'DATE' || name === 'TIME')
-		return dateFieldResult(name, run.field.instr, values.now ?? new Date());
+		return dateFieldResult(
+			name,
+			run.field.instr,
+			values.now ?? new Date(),
+			values.languageOf?.(run) ?? run.language,
+		);
 	return run.text;
 }
 

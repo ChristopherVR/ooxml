@@ -22,6 +22,7 @@ const TOGGLE_KEYS = [
 ] as const satisfies readonly (keyof RunFormatting)[];
 const FONT_SIZE_KEYS = ['fontSize', 'fontSizeComplexScript'] as const;
 const OVERRIDE_KEYS = [
+	'language',
 	'underline',
 	'underlineStyle',
 	'underlineColor',
@@ -47,7 +48,6 @@ export const DIRECT_RUN_PROPERTY_KEYS = [
 	...TOGGLE_KEYS,
 	...OVERRIDE_KEYS,
 	...FONT_SIZE_KEYS,
-	'language',
 	'eastAsiaLanguage',
 	'bidiLanguage',
 	'rtl',
