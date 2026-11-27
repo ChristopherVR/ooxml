@@ -184,8 +184,9 @@ describe('mergeFields from ooxml-core/docx, saved and reloaded', () => {
 			['Amount', 'filled', 'the value is not a number, so the \\# picture was not applied'],
 			['When', 'filled', 'the value is not a date, so the \\@ picture was not applied'],
 			['Amount', 'filled', 'the value is not a number, so the \\# picture was not applied'],
-			['Cell', 'missing', 'no value named "Cell" in row 0 of region Rows or in values'],
+			['Cell', 'missing', 'no value named "Cell" in row 1 of region Rows or in values'],
 		]);
+		expect(first.results.at(-1)).toMatchObject({ region: 'Rows', row: 0 });
 		// The region covers two paragraphs, so its one row writes two.
 		expect(text(first.model.blocks)).toEqual(['', 'abc', 'soon', 'abc', '', '']);
 		const second = await mergeFields(
@@ -208,13 +209,30 @@ describe('mergeFields from ooxml-core/docx, saved and reloaded', () => {
 			{ values: { Name: 'Ada' } },
 			{ unlink: true },
 		);
-		expect(results).toHaveLength(1);
-		expect(results[0]).toMatchObject({ status: 'unsupported' });
-		expect(results[0]!.reason).toContain('other than IF');
+		expect(results).toEqual([
+			{
+				name: 'QUOTE',
+				story: 'body',
+				status: 'unsupported',
+				reason: 'a QUOTE field holding merge fields is not evaluated, so it keeps its result',
+			},
+		]);
 		// The QUOTE field stays a field, with its code and its saved result.
 		const xml = (await part(await loaded.save(model), 'word/document.xml'))!;
 		expect(xml).toContain(' QUOTE ');
 		expect(xml).toContain('>outer<');
+	});
+
+	it('reports a top-level MERGEBARCODE field as unsupported, with its own reason', async () => {
+		const loaded = await template(paragraph(field(' MERGEBARCODE Zip QR ', 'old')));
+		const { results } = await mergeFields(loaded.model, { values: { Zip: '1' } });
+		expect(results.map(({ name, status, reason }) => [name, status, reason])).toEqual([
+			[
+				'MERGEBARCODE',
+				'unsupported',
+				'MERGEBARCODE fields are not supported, so the field keeps its result',
+			],
+		]);
 	});
 
 	it('reports an unreadable merge field as invalid', async () => {

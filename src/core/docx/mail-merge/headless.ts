@@ -60,15 +60,15 @@ export interface MergeFieldResult {
 const REASONS: Partial<Record<MergeFieldEvent['status'], string>> = {
 	invalid: 'the field instruction could not be read',
 	locked: 'the field is locked (w:fldLock) and keeps its result',
-	unsupported:
-		'the merge does not evaluate this field: a MERGEFIELD in the code of a field other than IF leaves the outer field with its result',
+	unsupported: 'the merge does not evaluate this field, so it keeps its result',
 };
 
 function reasonOf(event: MergeFieldEvent, place: { region: string; row: number } | undefined) {
 	if (event.status === 'filled') return event.reason && `the value is ${event.reason}`;
-	if (event.status !== 'missing') return REASONS[event.status];
+	if (event.status !== 'missing') return event.reason ?? REASONS[event.status];
+	// The text counts rows from one, as a person does; `row` stays zero-based.
 	return place
-		? `no value named "${event.name}" in row ${place.row} of region ${place.region} or in values`
+		? `no value named "${event.name}" in row ${place.row + 1} of region ${place.region} or in values`
 		: `no value named "${event.name}"`;
 }
 

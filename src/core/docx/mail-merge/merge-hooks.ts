@@ -7,7 +7,10 @@ export interface MergeFieldEvent {
 	/** The column the field reads, or the field type when it could not be read. */
 	name: string;
 	status: 'filled' | 'missing' | 'invalid' | 'locked' | 'unsupported';
-	/** Why a filled value was not written through the field's picture switch. */
+	/**
+	 * Why a filled value was not written through the field's picture switch, or why an
+	 * unsupported field was left.
+	 */
 	reason?: string;
 }
 

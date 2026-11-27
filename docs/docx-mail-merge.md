@@ -31,8 +31,14 @@ body, and the Mailings controls require an editable, unshared document.
 `listMergeFields` and `mergeFields` fill the MERGEFIELD fields of one document from values, for
 a service that generates documents from `.docx` templates in Node or a worker, without a DOM or
 an editor. They sit next to `listFormFields` and `fillFormFields` in `ooxml-core/docx` (and
-`docx-core`), and `ooxml-core/docx/mail-merge` exports the same two functions. Both load their
-code on first use, so they return promises; the main entry only carries the two loaders.
+`docx-core`), and `ooxml-core/docx/mail-merge` exports the same two functions with the same
+signatures. Both load their code on first use, so they return promises; the main entry only
+carries the two loaders, which import `ooxml-core/docx/mail-merge` by name. Any pairing of
+entries works (`loadDocx` from `ooxml-core/docx` or `loadDocument` from `ooxml-core/docx/load`,
+either `mergeFields`, ESM or CommonJS): what the merge records for the writer is shared between
+the entries' bundles. The CommonJS build loads the merge with a dynamic `import()`, as the
+`math` and Visio chart loaders do, so a CommonJS test runner must allow it (Jest needs
+`--experimental-vm-modules`).
 
 ```ts
 import { listMergeFields, loadDocx, mergeFields } from 'ooxml-core/docx';
@@ -56,8 +62,9 @@ const { model, results } = await mergeFields(
 const bytes = await template.save(model);
 ```
 
-`listMergeFields(model)` returns `fields`, one entry per MERGEFIELD in story order (the body with
-its table cells and text boxes, then headers and footers, footnotes and endnotes): its `name` as
+`listMergeFields(model)` returns `fields`, one entry per MERGEFIELD, story by story (the body,
+then headers and footers, footnotes and endnotes; within a story the fields of table cells and
+text boxes come before those of the paragraphs around them): its `name` as
 written, its `instruction`, `story` (`body`, `header`, `footer`, `footnote`, `endnote` or
 `textBox`; a table cell or content control reports the story it sits in), in a header or
 footer its section `slot` (`default`, `first` or `even`), `kind` (`simple` for `w:fldSimple`, `complex` for
@@ -70,7 +77,8 @@ input model is not changed), with:
 
 - `results`: one entry per MERGEFIELD evaluated, with its `name`, `story` and `slot`, `status`
   (`filled`, `missing`, `invalid`, `locked` or `unsupported`), a `reason` for every status but
-  `filled` (such as `no value named "Cell" in row 0 of region Rows or in values`), and, inside a
+  `filled` (such as `no value named "Cell" in row 1 of region Rows or in values`, the row counted from one in
+  the text), and, inside a
   region, the `region` and the zero-based `row`. A `filled` field also has a `reason` when its
   value does not match its picture switch and is written as it is (`the value is
   not a number, so the \# picture was not applied`, and the same for `\@` and dates);
@@ -93,18 +101,18 @@ several runs. The MERGEFIELD switches apply as in the editor's merge (`\b`, `\f`
 with `options.locale`, `\#`), and the result takes its formatting as described under
 [Fields and settings](#fields-and-settings).
 
-| Option                  | Default   | Effect                                                                                                                                                                                  |
-| ----------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `unlink`                | `false`   | `true` replaces each field by its result, as Word's Unlink Fields (Ctrl+Shift+F9). `false` keeps each field and gives it a new cached result.                                           |
-| `missing`               | `'empty'` | A field whose name has no value shows nothing; `'keep'` keeps the result it has (unlinked, that result becomes the text).                                                               |
-| `removeEmptyParagraphs` | `false`   | Removes the paragraphs whose merge fields were all empty and that show nothing else (a table cell keeps one paragraph).                                                                 |
-| `updateFields`          | `true`    | Refreshes the computed fields afterwards (DOCPROPERTY, document information, IF, `=`, numbering fields). PAGE, NUMPAGES, TOC and REF keep their saved results: they need Word's layout. |
-| `locale`                | `'en-US'` | The locale of `\@` date pictures.                                                                                                                                                       |
+| Option                  | Default   | Effect                                                                                                                                                                                                                         |
+| ----------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `unlink`                | `false`   | `true` replaces each field by its result, as Word's Unlink Fields (Ctrl+Shift+F9). `false` keeps each field and gives it a new cached result.                                                                                  |
+| `missing`               | `'empty'` | A field whose name has no value shows nothing; `'keep'` keeps the result it has (unlinked, that result becomes the text).                                                                                                      |
+| `removeEmptyParagraphs` | `false`   | Removes the paragraphs whose merge fields were all empty and that show nothing else (a table cell keeps one paragraph).                                                                                                        |
+| `updateFields`          | `true`    | Refreshes the computed fields afterwards (DOCPROPERTY, document information, IF, `=`, numbering fields). PAGE, NUMPAGES and TOC keep their saved results (they need page layout), and so does REF, which is not evaluated yet. |
+| `locale`                | `'en-US'` | The locale of `\@` date pictures.                                                                                                                                                                                              |
 
 Locked fields (`w:fldLock`) are left as they are and reported as `locked`. A MERGEFIELD in the
 code of an IF field is filled and the IF evaluated, as in the editor's merge; in the code of any
-other field (QUOTE, for instance) the outer field keeps its result and the merge field is
-reported as `unsupported`.
+other field (QUOTE, for instance) the outer field keeps its result and is reported, under its
+own name, as `unsupported`. So is a MERGEBARCODE field, which keeps its saved result.
 
 A kept field (`unlink: false`) holds the value as its cached result, and Word shows it on
 opening. Word's Update Field (F9) on such a document shows `«Name»`, because the document has no

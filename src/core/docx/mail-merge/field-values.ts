@@ -172,13 +172,14 @@ export class MergeFields {
 		this.mappings = mailMergeFieldMap(fields, options.fieldMappings);
 	}
 
-	issue(code: FieldIssueCode, blockId: string, field: string): undefined {
+	issue(code: FieldIssueCode, blockId: string, field: string, reason?: string): undefined {
 		this.issues.push({ code, recordNumber: this.index + 1, blockId, field });
 		if (code === 'invalid-instruction' || code === 'unsupported-field')
 			this.hooks.observe?.({
 				blockId,
 				name: field,
 				status: code === 'invalid-instruction' ? 'invalid' : 'unsupported',
+				...(reason && { reason }),
 			});
 		return undefined;
 	}
@@ -199,8 +200,20 @@ export class MergeFields {
 		const { instruction, blockId, cached, allowRecordRules, nestedMerge, resolve } = input;
 		const name = fieldName(instruction);
 		const issue = (code: FieldIssueCode, field = name) => this.issue(code, blockId, field);
-		if (UNSUPPORTED_FIELDS.has(name) || (nestedMerge && !MERGE_FIELDS.has(name) && name !== 'IF'))
-			return issue('unsupported-field');
+		if (UNSUPPORTED_FIELDS.has(name))
+			return this.issue(
+				'unsupported-field',
+				blockId,
+				name,
+				`${name} fields are not supported, so the field keeps its result`,
+			);
+		if (nestedMerge && !MERGE_FIELDS.has(name) && name !== 'IF')
+			return this.issue(
+				'unsupported-field',
+				blockId,
+				name,
+				`a ${name} field holding merge fields is not evaluated, so it keeps its result`,
+			);
 		const isPrompt = name === 'ASK' || name === 'FILLIN';
 		const isRef = name === 'REF';
 		if (!MERGE_FIELDS.has(name) && !isRef && !(name === 'IF' && nestedMerge)) return undefined;
