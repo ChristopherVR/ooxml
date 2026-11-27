@@ -5,7 +5,7 @@ const cell = (name: string, extra = '') =>
 	parseXml(
 		`<Shape><Section N="Field"><Row IX="0" ${extra}><Cell N="${name}"/></Row></Section></Shape>`,
 	).getElementsByTagName('Cell')[0]!;
-it.each(['2', '37', '204'])('proves only measured independent Field picture %s', (code) =>
+it.each(['0', '2', '37', '204'])('proves only measured independent Field picture %s', (code) =>
 	expect(independentTextFieldFormula(cell('Format'), `FIELDPICTURE(${code})`)).toBe(true),
 );
 it.each([

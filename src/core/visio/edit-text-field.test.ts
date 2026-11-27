@@ -49,7 +49,8 @@ describe('insert-text-field', () => {
 		const out = await xml(saved.bytes);
 		expect(out).toContain('<fld IX="0">Page 1</fld>');
 		expect(out).toContain(
-			'<Section N="Field"><Row IX="0"><Cell N="Value" V="Page 1" U="STR" F="PAGENAME()"/><Cell N="Type" V="0"/></Row></Section>',
+			// No format is Visio's General picture: a field without a Format cell shows blank in Visio.
+			'<Section N="Field"><Row IX="0"><Cell N="Value" V="Page 1" U="STR" F="PAGENAME()"/><Cell N="Format" V="esc(0)" U="STR" F="FIELDPICTURE(0)"/><Cell N="Type" V="0"/></Row></Section>',
 		);
 		const parsed = await text(saved.bytes);
 		expect(parsed.plainText).toBe('Hello Page 1');
@@ -62,7 +63,8 @@ describe('insert-text-field', () => {
 				index: '0',
 				editable: true,
 				format: '',
-				sourceKey: '[["Type","0",null,null,null],["Value","Page 1","PAGENAME()","STR",null]]',
+				sourceKey:
+					'[["Format","esc(0)","FIELDPICTURE(0)","STR",null],["Type","0",null,null,null],["Value","Page 1","PAGENAME()","STR",null]]',
 			},
 		]);
 	});

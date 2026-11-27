@@ -55,10 +55,14 @@ export function textFieldDisplay(
 		format = row?.cells.get('Format');
 	const formula = value?.formula && value.formula !== 'Inh' ? value.formula : undefined;
 	const sourceKey = row ? textFieldSourceKey(row.cells) : undefined;
+	// Visio's General picture (FIELDPICTURE(0)) is the empty format an edit passes back.
+	const general = /^\s*FIELDPICTURE\s*\(\s*0\s*\)\s*$/i.test(format?.formula ?? '');
 	const result = {
 		cached,
 		...(formula ? { formula } : {}),
-		...(sourceKey !== undefined ? { index, format: format?.value ?? '', sourceKey } : {}),
+		...(sourceKey !== undefined
+			? { index, format: general ? '' : (format?.value ?? ''), sourceKey }
+			: {}),
 	};
 	if (!row || !context) return { text: cached, ...result };
 	const picture = format?.value ?? '';

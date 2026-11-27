@@ -24,6 +24,10 @@ import {
 	type VisioFieldValue,
 } from './text-fields';
 
+/** The Format cell of a General field as Visio writes it (visFmtNumGenNoUnits). */
+const GENERAL_FORMAT_VALUE = 'esc(0)';
+const GENERAL_FORMAT_FORMULA = 'FIELDPICTURE(0)';
+
 const STRING_PROPERTIES = [
 	'title',
 	'subject',
@@ -170,6 +174,10 @@ export async function insertVisioTextField(
 	if (display === undefined)
 		fail('UNSUPPORTED_TEXT_FIELD', 'The field format does not suit the field value.');
 	const prepared = valueCell(value);
+	// General is Visio's own format picture, FIELDPICTURE(0); a field with no Format cell shows blank.
+	const formatCell = format
+		? { v: format, f: `"${format.replaceAll('"', '""')}"` }
+		: { v: GENERAL_FORMAT_VALUE, f: GENERAL_FORMAT_FORMULA };
 	if (existing && markers[0]!.textContent === display) {
 		const same = (name: string, v: string, u: string | undefined, f: string | undefined) => {
 			const cell = children(existing, 'Cell').find((cell) => attribute(cell, 'N') === name);
@@ -177,7 +185,7 @@ export async function insertVisioTextField(
 		};
 		if (
 			same('Value', prepared.v, prepared.u, edit.formula) &&
-			same('Format', format, 'STR', `"${format.replaceAll('"', '""')}"`) &&
+			same('Format', formatCell.v, 'STR', formatCell.f) &&
 			same('Type', String(prepared.type), undefined, undefined)
 		)
 			return false;
@@ -230,8 +238,7 @@ export async function insertVisioTextField(
 	};
 	const stored = prepared;
 	cell('Value', stored.v, { ...(stored.u ? { U: stored.u } : {}), F: edit.formula });
-	if (format || updating)
-		cell('Format', format, { U: 'STR', F: `"${format.replaceAll('"', '""')}"` });
+	cell('Format', formatCell.v, { U: 'STR', F: formatCell.f });
 	cell('Type', String(stored.type));
 	if (!row.parentNode) section.appendChild(row);
 	if (updating) {
