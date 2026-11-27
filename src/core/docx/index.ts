@@ -331,6 +331,7 @@ export {
 	SIGNATURE_LINE_SIZE_PT,
 	parseSignatureLineShape,
 	signatureLineImage,
+	signatureLinesOf,
 	signatureLinePlaceholderPng,
 	type SignatureLineSpec,
 } from './signature-line';
@@ -362,6 +363,12 @@ export {
 	type GlossaryEntry,
 	type GlossaryGallery,
 } from './glossary-document';
+export {
+	MAX_SHARED_BUILDING_BLOCKS,
+	parseSharedBuildingBlocks,
+	sharedBuildingBlocksValue,
+	type SharedBuildingBlocksValue,
+} from './glossary-shared';
 export {
 	HEADER_FOOTER_DESIGNS,
 	headerFooterDesignBlocks,
