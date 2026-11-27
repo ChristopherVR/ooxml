@@ -21,7 +21,8 @@ const selected = selectedPivot;
 
 export function pivotCommands(): Command[] {
 	return [
-		pivotEditing({
+		// A new PivotTable is shared like any other, whichever cell it starts from.
+		editing({
 			id: 'insert.pivot-table',
 			label: 'PivotTable',
 			icon: icon('table'),
