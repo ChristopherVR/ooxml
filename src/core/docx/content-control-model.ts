@@ -17,7 +17,10 @@ export type ContentControlKind =
 	| 'bibliography'
 	| 'docPartObj'
 	| 'docPartList'
+	/** `w15:repeatingSection` ([MS-DOCX] 2.6.2), around the items it repeats. */
 	| 'repeatingSection'
+	/** `w15:repeatingSectionItem`, one item of a repeating section. */
+	| 'repeatingSectionItem'
 	| 'unknown';
 
 /** Where the `w:sdt` sits: around runs, around paragraphs/tables, around a row, or around a cell. */

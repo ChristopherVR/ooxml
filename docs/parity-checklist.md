@@ -608,7 +608,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and the privacy flag cannot be turned off.
 - [ ] **P2** Content controls: picture, building-block gallery and repeating-section controls are
       kept but cannot be inserted, and repeating items cannot be added or removed
-      (`docx/content-control-model.ts`).
+      (`docx/content-control-model.ts`). The writer writes `w15:repeatingSection` and
+      `w15:repeatingSectionItem` for a block or row control the model gives that kind, but the
+      model holds one control per block or row, so a section wrapping its items (nested `w:sdt`)
+      cannot be built from the model.
 - [x] **P2** Content controls shown as tags (`w15:appearance="tags"`) draw start and end tags for
       inline, paragraph, row and cell controls in the editor, Print Layout and PDF, with the
       advances, tagged line height and outlines measured from Word 16 through COM and its PDF

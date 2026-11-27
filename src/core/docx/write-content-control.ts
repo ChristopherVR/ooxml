@@ -179,10 +179,19 @@ function writeDate(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl)
 	set('lid', control.dateLocale, 1);
 }
 
-/** Whether the writer writes a type element for `kind`: rich text has none, unknown kinds none. */
-const writesType = (kind: string): boolean =>
-	NAMED_TYPES.has(kind) ||
-	['richText', 'text', 'checkbox', 'dropDownList', 'comboBox', 'date'].includes(kind);
+/**
+ * A repeating section and its items wrap blocks or table rows ([MS-DOCX] 2.6.2, 2.6.3); a control
+ * of another level keeps no such type element.
+ */
+const repeats = (control: ContentControl): boolean =>
+	(control.kind === 'repeatingSection' || control.kind === 'repeatingSectionItem') &&
+	(control.level === 'block' || control.level === 'row');
+
+/** Whether the writer writes a type element for `control`: rich text has none, unknown kinds none. */
+const writesType = (control: ContentControl): boolean =>
+	NAMED_TYPES.has(control.kind) ||
+	repeats(control) ||
+	['richText', 'text', 'checkbox', 'dropDownList', 'comboBox', 'date'].includes(control.kind);
 
 /** Applies every modeled field of `control` that differs from what `sdt`'s own `w:sdtPr` says. */
 export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: ContentControl) {
@@ -193,7 +202,7 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 	// id and kind are written too, the old kind's element going, so the properties stay one control.
 	if (control.id !== current.id && validId(control.id) !== undefined)
 		setValued(doc, sdtPr, 'id', control.id);
-	if (control.kind !== current.kind && writesType(control.kind)) {
+	if (control.kind !== current.kind && writesType(control)) {
 		for (const old of typeElements(sdtPr)) sdtPr.removeChild(old);
 		const { sourceXml: _source, ...model } = control;
 		for (const type of typeElements(buildProperties(doc, model))) sdtPr.appendChild(type);
@@ -275,6 +284,13 @@ function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement 
 		case 'date':
 			sdtPr.appendChild(makeW(doc, 'date'));
 			writeDate(doc, sdtPr, control);
+			break;
+		case 'repeatingSection':
+		case 'repeatingSectionItem':
+			if (repeats(control)) {
+				const prefix = declareIgnorableExtension(doc, WORD_2012_NS, 'w15');
+				sdtPr.appendChild(doc.createElementNS(WORD_2012_NS, `${prefix}:${control.kind}`));
+			}
 			break;
 		default:
 			if (NAMED_TYPES.has(control.kind)) sdtPr.appendChild(makeW(doc, control.kind));

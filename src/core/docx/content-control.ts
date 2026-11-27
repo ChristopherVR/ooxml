@@ -53,12 +53,14 @@ function kindOf(child: XmlElement): ContentControlKind | undefined {
 	if (child.namespaceURI === WORD_2010_NS && child.localName === 'checkbox') return 'checkbox';
 	if (child.namespaceURI === WORD_2012_NS && child.localName === 'repeatingSection')
 		return 'repeatingSection';
+	if (child.namespaceURI === WORD_2012_NS && child.localName === 'repeatingSectionItem')
+		return 'repeatingSectionItem';
 	return undefined;
 }
 
 /**
  * The type elements of a `w:sdtPr`, one at most in a valid file: also `w:richText`, which the
- * default type need not be written as, an entity picker and a repeating section's item.
+ * default type need not be written as, and an entity picker.
  */
 export const typeElements = (sdtPr: XmlElement): XmlElement[] =>
 	Array.from(sdtPr.childNodes)
@@ -67,8 +69,7 @@ export const typeElements = (sdtPr: XmlElement): XmlElement[] =>
 			(child) =>
 				kindOf(child) !== undefined ||
 				(child.namespaceURI === WORD_NS && child.localName === 'richText') ||
-				(child.namespaceURI === WORD_2010_NS && child.localName === 'entityPicker') ||
-				(child.namespaceURI === WORD_2012_NS && child.localName === 'repeatingSectionItem'),
+				(child.namespaceURI === WORD_2010_NS && child.localName === 'entityPicker'),
 		);
 
 export function parseKind(sdtPr: XmlElement): ContentControlKind {
