@@ -8,7 +8,7 @@
 
 [Live demo](https://christophervr.github.io/ooxml/xlsx/demo-vue/) · [Documentation](https://christophervr.github.io/ooxml/xlsx/) · [Vue guide](https://christophervr.github.io/ooxml/xlsx/frameworks/vue) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/vue/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-![The Excel editor with its ribbon, formula bar, grid and sheet tabs](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/xlsx/docs/public/hero-editor.webp)
+[![The Excel editor in use: selecting a range, inserting a column chart, adding a SUM formula and changing values while the chart and the total update](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/xlsx/docs/public/hero-editor.gif)](https://christophervr.github.io/ooxml/apps/excel/)
 
 ## Install
 

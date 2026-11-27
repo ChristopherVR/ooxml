@@ -22,7 +22,7 @@ One library for every format, real editors for every major framework, and no ser
 [**Discussions**](https://github.com/ChristopherVR/ooxml/discussions) &nbsp;&middot;&nbsp;
 [**Discord**](https://discord.gg/haE8xpMET9)
 
-<a href="https://christophervr.github.io/ooxml/"><img src="assets/suite-workspace.webp" alt="OOXML Office: Word, Excel, PowerPoint, Visio and OpenTeams in one workspace" width="860"></a>
+<a href="https://christophervr.github.io/ooxml/"><img src="assets/suite-workspace.gif" alt="OOXML Office in use: opening a workbook and a deck from the file library and switching between live document tabs" width="860"></a>
 
 </div>
 
@@ -43,7 +43,7 @@ ooxml is an open-source Office stack written in TypeScript. At the bottom is **[
 [**OOXML Office**](https://christophervr.github.io/ooxml/) is the integrated application built from everything in this repository. It mounts the real Word, Excel, PowerPoint, Visio and OpenTeams editors, the same components the npm packages ship, in one tabbed workspace.
 
 <p align="center">
-<a href="https://christophervr.github.io/ooxml/"><img src="assets/suite-chooser.webp" alt="The start chooser: open the whole suite, Word, Excel, PowerPoint, Visio or Teams on its own, or the documentation" width="720"></a>
+<a href="https://christophervr.github.io/ooxml/"><img src="assets/suite-chooser.gif" alt="The start chooser: pointing at Word, Excel, PowerPoint, Visio and Teams, then opening the whole OOXML Office workspace" width="720"></a>
 </p>
 
 - **A local library.** Import `.docx`, `.xlsx`, `.pptx` and `.vsdx` files or create blank ones. Files stay in the browser's IndexedDB (or the desktop app's WebView), nothing is uploaded, and Download always gives you the saved bytes.
@@ -59,34 +59,34 @@ Profiles are local conveniences, not sign-in; the only cloud drive is a OneDrive
 <table>
 <tr>
 <td align="center" width="33%">
-<a href="../viewers/docx#readme"><img src="../viewers/docx/docs/public/hero-editor.webp" alt="The Word editor"></a><br>
+<a href="https://christophervr.github.io/ooxml/apps/word/"><img src="../viewers/docx/docs/public/hero-editor.gif" alt="The Word editor in use: typing a heading and a paragraph, then making the heading bold and larger and highlighting two words from the ribbon"></a><br>
 <a href="../viewers/docx#readme"><strong>Word</strong></a><br>
 <sub>Print Layout, styles, tables, fields, comments and tracked changes.<br><a href="https://christophervr.github.io/ooxml/docx/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/docx/">Docs</a></sub>
 </td>
 <td align="center" width="33%">
-<a href="../viewers/xlsx#readme"><img src="../viewers/xlsx/docs/public/hero-editor.webp" alt="The Excel editor"></a><br>
+<a href="https://christophervr.github.io/ooxml/apps/excel/"><img src="../viewers/xlsx/docs/public/hero-editor.gif" alt="The Excel editor in use: selecting a range, inserting a column chart, adding a SUM formula and changing values while the chart and the total update"></a><br>
 <a href="../viewers/xlsx#readme"><strong>Excel</strong></a><br>
 <sub>A grid with a real formula engine, charts, tables, pivots, conditional formats and slicers.<br><a href="https://christophervr.github.io/ooxml/xlsx/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/xlsx/">Docs</a></sub>
 </td>
 <td align="center" width="33%">
-<a href="../viewers/pptx#readme"><img src="../viewers/pptx/.github/assets/editor.webp" alt="The PowerPoint editor"></a><br>
+<a href="https://christophervr.github.io/ooxml/apps/powerpoint/?sample=product-launch-keynote"><img src="../viewers/pptx/.github/assets/editor.gif" alt="The PowerPoint editor in use: dragging a slide title along the alignment guides, undoing the move and switching slides"></a><br>
 <a href="../viewers/pptx#readme"><strong>PowerPoint</strong></a><br>
 <sub>Editing, slide shows, transitions, charts, SmartArt, sharing and an assistant.<br><a href="https://christophervr.github.io/ooxml/pptx/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/pptx/">Docs</a></sub>
 </td>
 </tr>
 <tr>
 <td align="center" width="33%">
-<a href="../viewers/visio#readme"><img src="../viewers/visio/docs/public/hero-viewer.webp" alt="The Visio viewer"></a><br>
+<a href="https://christophervr.github.io/ooxml/apps/visio/?sample=order-to-delivery-flowchart"><img src="../viewers/visio/docs/public/hero-viewer.gif" alt="The Visio editor in use: selecting a shape in a cross-functional flowchart, zooming in, scrolling and opening another page"></a><br>
 <a href="../viewers/visio#readme"><strong>Visio</strong></a><br>
 <sub>A local-first diagram viewer with bounded editing, layers and shape data.<br><a href="https://christophervr.github.io/ooxml/visio/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/visio/">Docs</a></sub>
 </td>
 <td align="center" width="33%">
-<a href="../viewers/teams#readme"><img src="../viewers/teams/docs/public/hero-workspace.webp" alt="The OpenTeams workspace"></a><br>
+<a href="https://christophervr.github.io/ooxml/apps/teams/"><img src="../viewers/teams/docs/public/hero-workspace.gif" alt="OpenTeams in use: posting two messages in a channel and reacting to one"></a><br>
 <a href="../viewers/teams#readme"><strong>OpenTeams</strong></a><br>
 <sub>A bring-your-own-server workspace: channels, chat, calls and shared Office files.<br><a href="https://christophervr.github.io/ooxml/teams/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/teams/">Docs</a></sub>
 </td>
 <td align="center" width="33%">
-<a href="https://christophervr.github.io/ooxml/"><img src="assets/suite-chooser.webp" alt="OOXML Office"></a><br>
+<a href="https://christophervr.github.io/ooxml/"><img src="assets/suite-chooser.gif" alt="The start chooser: pointing at Word, Excel, PowerPoint, Visio and Teams, then opening the whole OOXML Office workspace"></a><br>
 <a href="../apps/office-suite#readme"><strong>OOXML Office</strong></a><br>
 <sub>Every product in one installable app.<br><a href="https://christophervr.github.io/ooxml/">Open</a> &middot; <a href="#ooxml-office-the-whole-suite-in-one-app">About</a></sub>
 </td>

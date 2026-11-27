@@ -12,7 +12,7 @@ For applications that need to open, edit and save Word documents in the page, wi
 
 [**Live demo**](https://christophervr.github.io/ooxml/docx/demo/) &middot; [**Docs**](https://christophervr.github.io/ooxml/docx/) &middot; [**Samples**](https://christophervr.github.io/ooxml/samples/) &middot; [**Packages**](#packages) &middot; [**Changelog**](CHANGELOG.md)
 
-![The Word editor with its ribbon, showing a sample document in Print Layout](docs/public/hero-editor.webp)
+[![The Word editor in use: typing a heading and a paragraph, then making the heading bold and larger and highlighting two words from the ribbon](docs/public/hero-editor.gif)](https://christophervr.github.io/ooxml/apps/word/)
 
 </div>
 

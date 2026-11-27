@@ -13,7 +13,7 @@
 [**Changelog**](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/CHANGELOG.md) &nbsp;&middot;&nbsp;
 [**Report a bug**](https://github.com/ChristopherVR/ooxml/issues/new/choose)
 
-<a href="https://christophervr.github.io/ooxml/"><img src="https://raw.githubusercontent.com/ChristopherVR/ooxml/main/.github/assets/suite-workspace.webp" alt="OOXML Office: the Word, Excel, PowerPoint, Visio and Teams editors built from ooxml-ui" width="760"></a>
+<a href="https://christophervr.github.io/ooxml/"><img src="https://raw.githubusercontent.com/ChristopherVR/ooxml/main/.github/assets/suite-workspace.gif" alt="OOXML Office in use: opening a workbook and a deck from the file library and switching between live document tabs" width="760"></a>
 
 </div>
 

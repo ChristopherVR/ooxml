@@ -8,7 +8,7 @@
 
 [Live demo](https://christophervr.github.io/ooxml/visio/demo-angular/) · [Documentation](https://christophervr.github.io/ooxml/visio/) · [Angular guide](https://christophervr.github.io/ooxml/visio/frameworks/angular) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/angular/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-![The Visio viewer showing a workflow diagram with its ribbon, Shapes window and page tabs](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/visio/docs/public/hero-viewer.png)
+[![The Visio editor in use: selecting a shape in a cross-functional flowchart, zooming in, scrolling and opening another page](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/visio/docs/public/hero-viewer.gif)](https://christophervr.github.io/ooxml/apps/visio/?sample=order-to-delivery-flowchart)
 
 ## Install
 

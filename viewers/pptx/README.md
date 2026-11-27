@@ -13,7 +13,7 @@ For web apps that need decks without a PowerPoint install or a conversion servic
 
 Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Word](../docx#readme) &middot; [Excel](../xlsx#readme) &middot; **PowerPoint** &middot; [Visio](../visio#readme) &middot; [OpenTeams](../teams#readme) &middot; [Core](../../src/core#readme)
 
-![The PowerPoint editor rendering a slide with the ribbon and slide thumbnails](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/editor.webp)
+[![The PowerPoint editor in use: dragging a slide title along the alignment guides, undoing the move and switching slides](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/editor.gif)](https://christophervr.github.io/ooxml/apps/powerpoint/?sample=product-launch-keynote)
 
 </div>
 

@@ -5,7 +5,7 @@ For web applications that need to open, edit, calculate and save workbooks witho
 
 [Live demo](https://christophervr.github.io/ooxml/xlsx/demo/) · [Docs](https://christophervr.github.io/ooxml/xlsx/) · [Samples](https://christophervr.github.io/ooxml/samples/) · [Packages](#packages) · [Changelog](CHANGELOG.md)
 
-![The Excel editor showing a workbook with the ribbon, formula bar, grid and sheet tabs](docs/public/hero-editor.webp)
+[![The Excel editor in use: selecting a range, inserting a column chart, adding a SUM formula and changing values while the chart and the total update](docs/public/hero-editor.gif)](https://christophervr.github.io/ooxml/apps/excel/)
 
 ## Packages
 

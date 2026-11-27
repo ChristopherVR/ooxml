@@ -17,7 +17,7 @@ For teams and products that want chat and calls they host themselves, with no ho
 [**Packages**](#packages) &middot;
 [**Changelog**](CHANGELOG.md)
 
-![The OpenTeams workspace: a channel list, a conversation with reactions and a quoted reply, and the composer](docs/public/hero-workspace.webp)
+[![OpenTeams in use: posting two messages in a channel and reacting to one](docs/public/hero-workspace.gif)](https://christophervr.github.io/ooxml/apps/teams/)
 
 </div>
 

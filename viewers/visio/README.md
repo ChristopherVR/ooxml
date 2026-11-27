@@ -4,7 +4,7 @@
 
 [Live demo](https://christophervr.github.io/ooxml/visio/demo/) · [Docs](https://christophervr.github.io/ooxml/visio/) · [Samples](https://christophervr.github.io/ooxml/samples/) · [Packages](#packages) · [Changelog](CHANGELOG.md)
 
-![The Visio viewer rendering a workflow diagram with its ribbon, Shapes window and page tabs](docs/public/hero-viewer.webp)
+[![The Visio editor in use: selecting a shape in a cross-functional flowchart, zooming in, scrolling and opening another page](docs/public/hero-viewer.gif)](https://christophervr.github.io/ooxml/apps/visio/?sample=order-to-delivery-flowchart)
 
 ## Packages
 

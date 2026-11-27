@@ -9,7 +9,7 @@
 
 [Live demo](https://christophervr.github.io/ooxml/teams/demo-react/) · [Documentation](https://christophervr.github.io/ooxml/teams/) · [React guide](https://christophervr.github.io/ooxml/teams/frameworks/react) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/packages/react/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-![The OpenTeams workspace: a channel list, a conversation with reactions and a quoted reply, and the composer](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/teams/docs/public/hero-workspace.webp)
+[![OpenTeams in use: posting two messages in a channel and reacting to one](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/teams/docs/public/hero-workspace.gif)](https://christophervr.github.io/ooxml/apps/teams/)
 
 OpenTeams is not Microsoft Teams and is not affiliated with Microsoft. There is no end-to-end
 encryption: your server can read chat and files.

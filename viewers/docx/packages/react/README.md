@@ -8,7 +8,7 @@
 
 [Live demo](https://christophervr.github.io/ooxml/docx/demo/) · [Documentation](https://christophervr.github.io/ooxml/docx/) · [React guide](https://christophervr.github.io/ooxml/docx/frameworks/react) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/react/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-![The Word editor with its ribbon, showing a sample document in Print Layout](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/docx/docs/public/hero-editor.webp)
+[![The Word editor in use: typing a heading and a paragraph, then making the heading bold and larger and highlighting two words from the ribbon](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/docx/docs/public/hero-editor.gif)](https://christophervr.github.io/ooxml/apps/word/)
 
 ## Install
 

@@ -9,7 +9,7 @@
 [**Integration and limits**](../../docs/suite-integration.md) &nbsp;&middot;&nbsp;
 [**Desktop**](../../desktop/README.md)
 
-![OOXML Office: the home page with blank Word, Excel, PowerPoint and Visio documents and the shared file library](../../.github/assets/suite-workspace.webp)
+[![OOXML Office in use: opening a workbook and a deck from the file library and switching between live document tabs](../../.github/assets/suite-workspace.gif)](https://christophervr.github.io/ooxml/)
 
 </div>
 
