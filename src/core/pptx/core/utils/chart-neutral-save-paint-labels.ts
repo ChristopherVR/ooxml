@@ -6,6 +6,7 @@ import {
 } from '../../../chart/index';
 import type { PptxChartData, PptxChartStyle } from '../types';
 import type { NeutralChartEdit } from './chart-neutral-save-plan';
+import { isLineDrawnChartType } from './chart-container-type-map';
 
 const FLAGS = {
 	showValue: 'showValue',
@@ -95,6 +96,14 @@ export function planNeutralChartSeriesColors(
 		if (series.gradientFill !== undefined) return;
 		const value = series.color?.replace(/^#/, '');
 		if (value !== undefined && !/^[\da-f]{6}$/i.test(value)) return;
+		// A line, scatter or radar series paints its colour on its line, so one that draws no line
+		// (`lineNoFill`, `a:ln/a:noFill`) gets no line colour: its markers carry their own fill.
+		const lineDrawn = isLineDrawnChartType(series.seriesChartType ?? probe.chartType);
+		if (lineDrawn && series.lineNoFill) {
+			if (previous.color === undefined) delete series.color;
+			else series.color = previous.color;
+			return;
+		}
 		// The model states point overrides on their own (`dataPoints`), so the series colour keeps
 		// them, as the PowerPoint writer did.
 		edits.push((space) =>

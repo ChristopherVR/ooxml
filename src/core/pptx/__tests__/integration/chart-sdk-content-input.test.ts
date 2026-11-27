@@ -174,6 +174,29 @@ describe('declarative chart inputs', () => {
 		expect(bubble.chart.series[0]!.bubbleSizes).toStrictEqual([10, 20, 30]);
 	});
 
+	it('writes no line for a coloured scatter series that asks for none', async () => {
+		const { xml, chart } = await save('scatter', {
+			categories: CATEGORIES,
+			scatterStyle: 'marker',
+			series: [
+				{
+					name: 'S',
+					values: [5, 6, 7],
+					xValues: [1, 2, 3],
+					color: '#C0504D',
+					line: 'none',
+					marker: { symbol: 'circle', size: 9, fill: '#C0504D' },
+				},
+			],
+		});
+		const series = element(xml, 'ser');
+		const outline = /<c:ser>.*?<c:spPr>(.*?)<\/c:spPr>/su.exec(series)?.[1] ?? '';
+		expect(outline).toMatch(/<a:ln[^>]*>\s*<a:noFill\s*\/>\s*<\/a:ln>/u);
+		expect(outline).not.toContain('<a:solidFill>');
+		expect(element(series, 'marker')).toContain('C0504D');
+		expect(chart.series[0]!.lineNoFill).toBe(true);
+	});
+
 	it('expands a palette into point fills on a doughnut and series colours on a bar', async () => {
 		const doughnut = await save('doughnut', {
 			categories: CATEGORIES,
