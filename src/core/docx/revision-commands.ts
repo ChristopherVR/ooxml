@@ -222,7 +222,8 @@ function acceptOne(model: DocumentModel, id: string): DocumentModel {
 		delete paragraph.formatRevision;
 		return next;
 	}
-	if (entry.runIndex === undefined) return resolveParagraphMark(model, id, entry.kind === 'insert');
+	if (entry.runIndex === undefined)
+		return resolveParagraphMark(model, id, entry.kind === 'insert' || entry.kind === 'moveTo');
 	if (entry.kind === 'insert' || entry.kind === 'moveTo')
 		return updateRuns(model, id, (paragraph, runIndex) => {
 			clearRunRevision(paragraph, runIndex);
@@ -246,7 +247,8 @@ function rejectOne(model: DocumentModel, id: string): DocumentModel {
 		restoreParagraphFormatting(paragraph);
 		return next;
 	}
-	if (entry.runIndex === undefined) return resolveParagraphMark(model, id, entry.kind === 'delete');
+	if (entry.runIndex === undefined)
+		return resolveParagraphMark(model, id, entry.kind === 'delete' || entry.kind === 'moveFrom');
 	if (entry.kind === 'insert' || entry.kind === 'moveTo')
 		return updateRuns(model, id, (paragraph, runIndex) => {
 			paragraph.runs.splice(runIndex, 1);

@@ -132,7 +132,7 @@ export function rowRevisionElement(doc: XmlDocument, revision: Revision): XmlEle
 	return element;
 }
 
-/** Writes/clears the paragraph mark's own tracked insertion/deletion (`w:pPr/w:rPr/w:ins|w:del`). */
+/** Writes/clears the paragraph mark's own revision (`w:pPr/w:rPr/w:ins|w:del|w:moveFrom|w:moveTo`). */
 export function writeParagraphMarkRevision(
 	doc: XmlDocument,
 	pPr: XmlElement,
@@ -141,10 +141,7 @@ export function writeParagraphMarkRevision(
 ): void {
 	if (base && JSON.stringify(paragraph.markRevision) === JSON.stringify(base.markRevision)) return;
 	let rPr = first(pPr, 'rPr');
-	if (rPr) {
-		removeChildren(rPr, 'ins');
-		removeChildren(rPr, 'del');
-	}
+	if (rPr) for (const name of REVISION_WRAPPER_NAMES) removeChildren(rPr, name);
 	if (!paragraph.markRevision) {
 		if (rPr && !rPr.attributes.length && !rPr.childNodes.length) pPr.removeChild(rPr);
 		return;
@@ -154,7 +151,7 @@ export function writeParagraphMarkRevision(
 		pPr.appendChild(rPr);
 	}
 	const revision = paragraph.markRevision;
-	const element = makeW(doc, revision.kind === 'delete' ? 'del' : 'ins');
+	const element = makeW(doc, revisionTag(revision.kind));
 	writeRevisionMetadata(element, revision);
 	rPr.insertBefore(element, rPr.firstChild);
 }

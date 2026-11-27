@@ -259,7 +259,7 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 	const bookmarks = paragraphBookmarkNames(node, paragraph);
 	if (bookmarks.length) paragraph.bookmarks = bookmarks;
 	readParagraphPermissionMarkers(node, paragraph);
-	const markRevision = paragraphMarkRevision(props);
+	const markRevision = paragraphMarkRevision(props, runs, openMoves);
 	if (markRevision) paragraph.markRevision = markRevision;
 	const formatRevision = paragraphFormatRevision(props);
 	if (formatRevision) paragraph.formatRevision = formatRevision;

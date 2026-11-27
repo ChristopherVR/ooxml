@@ -7,7 +7,10 @@ import { paragraphAttrs, paragraphFromAttrs } from './paragraph-attributes';
 export function paragraphMarkRevision(node: Node): Revision | undefined {
 	const revision = node.attrs.markRevision as Revision | undefined;
 	return node.type.name === 'paragraph' &&
-		(revision?.kind === 'insert' || revision?.kind === 'delete')
+		(revision?.kind === 'insert' ||
+			revision?.kind === 'delete' ||
+			revision?.kind === 'moveFrom' ||
+			revision?.kind === 'moveTo')
 		? revision
 		: undefined;
 }
@@ -22,7 +25,8 @@ export function resolveParagraphMarkRange(
 	if (!node) return;
 	const revision = paragraphMarkRevision(node);
 	if (!revision) return;
-	const keepBreak = (mode === 'accept') === (revision.kind === 'insert');
+	const keepBreak =
+		(mode === 'accept') === (revision.kind === 'insert' || revision.kind === 'moveTo');
 	const current = paragraphFromAttrs(node.attrs, String(node.attrs.id), []);
 	const nextPos = pos + node.nodeSize;
 	const $next = tr.doc.resolve(nextPos);

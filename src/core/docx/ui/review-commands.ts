@@ -52,6 +52,7 @@ export function collectRevisionRanges(doc: import('prosemirror-model').Node): Re
 				paragraphPos: pos,
 				from: pos + node.nodeSize - 1,
 				to: pos + node.nodeSize - 1,
+				...(mark.move?.name ? { move: mark.move.name } : {}),
 			});
 		const paragraph = paragraphFormattingRevision(node);
 		if (paragraph)

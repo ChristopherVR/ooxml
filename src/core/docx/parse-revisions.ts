@@ -70,13 +70,33 @@ function revisionFrom(node: XmlElement, kind: Revision['kind']): Revision {
 	return revision;
 }
 
-/** Paragraph mark insertion/deletion, recorded as `w:pPr/w:rPr/w:ins|w:del`. */
-export function paragraphMarkRevision(pPr: XmlElement | undefined): Revision | undefined {
+/**
+ * Paragraph mark insertion/deletion or move, recorded as `w:pPr/w:rPr/w:ins|w:del|w:moveFrom|
+ * w:moveTo`. A moved mark takes its move name from the paragraph's moved runs or, failing those,
+ * from the move range still open at the end of the paragraph.
+ */
+export function paragraphMarkRevision(
+	pPr: XmlElement | undefined,
+	runs: readonly TextRun[] = [],
+	moves?: OpenMoves,
+): Revision | undefined {
 	const rPr = first(pPr, 'rPr');
 	const ins = first(rPr, 'ins');
 	if (ins) return revisionFrom(ins, 'insert');
 	const del = first(rPr, 'del');
 	if (del) return revisionFrom(del, 'delete');
+	for (const kind of ['moveFrom', 'moveTo'] as const) {
+		const element = first(rPr, kind);
+		if (!element) continue;
+		const revision = revisionFrom(element, kind);
+		const moved = [...runs]
+			.reverse()
+			.find((run) => run.revision?.kind === kind && run.revision.move);
+		const range = moves?.[kind].at(-1);
+		const move = moved?.revision?.move ?? (range && { name: range.name, rangeId: range.id });
+		if (move) revision.move = { ...move };
+		return revision;
+	}
 	return undefined;
 }
 
