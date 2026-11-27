@@ -10,6 +10,7 @@ The list comes from comparing the published 2.1.2 packages with this release: th
 - [Word view modes have six values](#word-view-modes-have-six-values)
 - [The add-ins Store is off until the host enables it](#the-add-ins-store-is-off-until-the-host-enables-it)
 - [Ribbon layouts follow Microsoft 365](#ribbon-layouts-follow-microsoft-365)
+- [Ink brush widths are written in centimetres](#ink-brush-widths-are-written-in-centimetres)
 - [More code loads on first use](#more-code-loads-on-first-use)
 - [Commands disabled while a document is shared](#commands-disabled-while-a-document-is-shared)
 - [Package size budgets](#package-size-budgets)
@@ -18,8 +19,8 @@ The list comes from comparing the published 2.1.2 packages with this release: th
 
 - **Entry points:** every subpath of `ooxml-core` and `ooxml-ui` in 2.1.2 still exists. `ooxml-core` adds `./docx/mail-merge` and `./automation/add-ins`.
 - **Exports:** apart from the Excel string tables below, every name exported by 2.1.2 is still exported, from the same entry point.
-- **Elements, events and tokens:** no custom element tag, element event or `--office-*` token was removed or renamed. PowerPoint adds two internal tags, `pptx-ui-contextual-ribbon` and `pptx-ui-picture-ribbon`.
-- **Bindings:** the React, Vue, Angular, Svelte, Solid and vanilla packages export the same components and props as before; Excel adds an optional `imageProvider` prop.
+- **Elements, events and tokens:** no custom element tag, element event or `--office-*` token was removed or renamed. PowerPoint adds two internal tags, `pptx-ui-contextual-ribbon` and `pptx-ui-picture-ribbon`, and `ooxml-ui` adds `office-ui-ink-canvas` and `office-ui-ink-pens` for the Draw tabs.
+- **Bindings:** the React, Vue, Angular, Svelte, Solid and vanilla packages export the same components and props as before; Excel adds an optional `imageProvider` prop and Word an optional `onlineVideoHosts` prop.
 - **Requirements:** Node.js 22.3 or newer, the last two major versions of Chrome, Edge, Firefox and Safari (Safari 16.4 at least), and the peer ranges of the bindings are unchanged.
 - **OpenTeams, Visio and the MCP servers:** nothing to change.
 
@@ -43,8 +44,8 @@ After:
 ```json
 {
 	"dependencies": {
-		"ooxml-core": "^2.5.0",
-		"ooxml-ui": "^2.5.0"
+		"ooxml-core": "^2.5",
+		"ooxml-ui": "^2.5"
 	}
 }
 ```
@@ -136,7 +137,8 @@ Several groups moved to where Microsoft 365 puts them. Every ribbon ID that exis
 
 - **PowerPoint Home:** the Arrange menu moved into the Drawing group as one vertical menu, and the Comments group left Home; the header **Comments** button now toggles a docked Comments pane. `hiddenGroups: ['home.arrange']` still hides the menu and its commands, `home.drawing.arrange` hides only the trigger, and `home.arrange.align-left` and the other row IDs hide single rows. Video, audio and SmartArt selections show the new Video Format, Audio Format, Playback and SmartArt Format tabs.
 - **Excel Insert:** Add-ins sits after Illustrations, and Insert gains Shapes, Text Box, New Note, Header & Footer, PivotChart, Recommended PivotTables and Equation. PivotTable and Sparkline editing moved to their contextual tabs.
-- **Word Insert:** the groups follow Word's order and fold in priority order at narrower widths. Table commands moved to the contextual Table Design and Table Layout tabs.
+- **Word Insert:** the groups follow Word's order and fold in priority order at narrower widths, and the Text group gains Quick Parts and Signature Line. Table commands moved to the contextual Table Design and Table Layout tabs.
+- **Word and Excel Draw:** a Draw tab sits after Insert; `hiddenTabs: ['draw']` hides it. Word shows a contextual Equation tab (`equation`) while an equation is selected.
 
 Before:
 
@@ -154,9 +156,28 @@ await page.getByRole('tab', { name: 'Home' }).click();
 await page.locator('[data-ribbon-control="home.drawing.arrange"]').click();
 ```
 
+## Ink brush widths are written in centimetres
+
+Word and Excel now read, draw and save ink, on the InkML reader and writer PowerPoint already used. Saved ink states its brush width and height in centimetres, with InkML `transparency` beside the opacity, because Word, Excel and PowerPoint draw a width without a unit as a grey hairline. Ink written by 2.1 still reads back at its old width (a width without a unit is pixels), and saving it again writes centimetres. A 3 pixel pen:
+
+Before:
+
+```xml
+<ink:brushProperty name="width" value="3" />
+```
+
+After:
+
+```xml
+<ink:brushProperty name="width" value="0.079375" units="cm" />
+<ink:brushProperty name="height" value="0.079375" units="cm" />
+```
+
+There is nothing to change when you load and save ink through `ooxml-core`. Code of your own that reads these parts and assumed pixel widths must honour `units="cm"`.
+
 ## More code loads on first use
 
-To keep the editors small, more code now loads from your own origin the first time it is used: Excel's non-English languages, chart tools, PivotTable dialogs and comments pane; Word's mail merge (including a recipient worker), References and table tools and Design theme data; PowerPoint's ink tools, slide previews and legacy `.ppt` writer; Visio's embedded chart and metafile code. Bundlers handle this without configuration. If you copy the built files by hand or serve them through an allowlist, deploy every file of the package's `dist` folder, keep their relative paths, and allow same-origin scripts and workers in your Content Security Policy.
+To keep the editors small, more code now loads from your own origin the first time it is used: Excel's non-English languages, chart tools, PivotTable dialogs and comments pane; Word's mail merge (including a recipient worker), References and table tools, Design theme data, Draw tab, Equation tools, Quick Parts and chart dialogs; Excel's Draw tab; the InkML part reader and writer the three Draw tabs share; PowerPoint's ink tools, slide previews and legacy `.ppt` writer; Visio's embedded chart and metafile code. Bundlers handle this without configuration. If you copy the built files by hand or serve them through an allowlist, deploy every file of the package's `dist` folder, keep their relative paths, and allow same-origin scripts and workers in your Content Security Policy.
 
 Before:
 
@@ -175,7 +196,7 @@ cp -r node_modules/ooxml-core/dist public/vendor/ooxml-core
 
 ## Commands disabled while a document is shared
 
-Some new data is not mapped to collaboration yet, so its commands are disabled, with the reason as their description, while a collaboration session is bound: Excel PivotTable editing and Place in Cell, and Word's Outline promote, demote and move commands (also disabled while changes are tracked). Nothing changes for documents that are not shared.
+Some new data is not mapped to collaboration yet, so its commands are disabled, with the reason as their description, while a collaboration session is bound: Excel PivotTable editing and Place in Cell, and Word's Outline promote, demote and move commands (also disabled while changes are tracked). Ink drawn in Excel is not sent to the room; it stays in the window that drew it and is saved from there. Nothing changes for documents that are not shared.
 
 There is no code to change. A host that shows its own controls for these commands can read the reason from the command's accessible description (`aria-description`).
 
