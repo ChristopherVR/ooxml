@@ -657,7 +657,11 @@ export class VisioViewerElement extends BaseElement {
 	get renderWarnings(): readonly string[] {
 		return this.#canvas.warnings;
 	}
-	async load(source: VsdxSource): Promise<void> {
+	/**
+	 * Open a drawing. `fileName` names bytes or a blob in the title bar, as a File's own name does
+	 * (a host such as the Office suite opens stored bytes); without either the drawing is Drawing1.
+	 */
+	async load(source: VsdxSource, fileName?: string): Promise<void> {
 		this.#assertAlive();
 		const token = ++this.#loadToken;
 		this.#forgetOpenedFile();
@@ -677,7 +681,8 @@ export class VisioViewerElement extends BaseElement {
 		}
 		// A destroyed or superseded viewer keeps no name from a late load.
 		if (this.#disposed || token !== this.#loadToken) return;
-		this.#fileName = typeof File !== 'undefined' && source instanceof File ? source.name : '';
+		this.#fileName =
+			typeof File !== 'undefined' && source instanceof File ? source.name : (fileName ?? '');
 		// Said once it opens, not on the first refused edit: the drawing is read-only here.
 		const tooLarge = editSizeLimit(this.controller.state.document);
 		if (tooLarge)

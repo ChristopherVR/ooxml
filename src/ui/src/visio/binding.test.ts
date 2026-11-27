@@ -1,9 +1,25 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mountViewer } from './binding';
 import { demoDocument } from 'ooxml-core/visio/ui';
+import { createVsdxFixture } from './__fixtures__/fixture.mjs';
 
 afterEach(() => document.body.replaceChildren());
 describe('shared lifecycle binding', () => {
+	// The Office suite opens stored bytes; its title bar showed "Drawing1" for a named sample.
+	it('names loaded bytes after the host file name, not Drawing1', async () => {
+		const host = document.createElement('div');
+		document.body.append(host);
+		const viewer = mountViewer(host, {});
+		await viewer.load(await createVsdxFixture('Named'), 'order-to-delivery-flowchart.vsdx');
+		expect(viewer.element.fileName).toBe('order-to-delivery-flowchart.vsdx');
+		const title = viewer.element.shadowRoot!.querySelector('office-ui-title-bar') as
+			| (HTMLElement & { state?: { fileName?: string } })
+			| null;
+		expect(title?.state?.fileName).toBe('order-to-delivery-flowchart.vsdx');
+		await viewer.load(await createVsdxFixture('Unnamed'));
+		expect(viewer.element.fileName).toBe('');
+		viewer.destroy();
+	});
 	it('applies initial properties and forwards latest callbacks only', () => {
 		const host = document.createElement('div');
 		document.body.append(host);

@@ -17,7 +17,8 @@ export interface MountedViewer {
 	readonly element: VisioViewerElement;
 	readonly controller: ViewerController;
 	update(options: ViewerOptions): void;
-	load(source: VsdxSource): Promise<void>;
+	/** `fileName` names bytes or a blob in the title bar (a File carries its own name). */
+	load(source: VsdxSource, fileName?: string): Promise<void>;
 	createBlankDrawing(options?: CreateVsdxOptions): Promise<void>;
 	createFromTemplate(template: VisioTemplateId): Promise<void>;
 	/** Opens a file from a `CloudFileProvider`, as File > Open > OneDrive does (storage, read-only). */
@@ -100,9 +101,9 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		element,
 		controller: element.controller,
 		update,
-		async load(source) {
+		async load(source, fileName) {
 			assertAlive();
-			await element.load(source);
+			await element.load(source, fileName);
 		},
 		async createBlankDrawing(options) {
 			assertAlive();
