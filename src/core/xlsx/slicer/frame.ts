@@ -27,7 +27,11 @@ export function readSlicerFrame(
 const escape = (text: string) =>
 	text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
-/** A fresh frame for a slicer or timeline, with the "not supported" fallback Excel writes. */
+/**
+ * A fresh frame for a slicer or timeline, with the "not supported" fallback Excel writes. The
+ * fallback shape is the same object as the frame, so it takes the frame's id and name: a reader
+ * sees one of the two, and no two slicers' fallbacks share an id.
+ */
 export function slicerFrameXml(
 	kind: 'slicer' | 'timeline',
 	name: string,
@@ -55,7 +59,7 @@ export function slicerFrameXml(
 		`<mc:AlternateContent xmlns:mc="${NS.mc}"><mc:Choice ${ns} Requires="${requires}">` +
 		`<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="${id}" name="${escape(name)}"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>` +
 		`<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm><a:graphic><a:graphicData uri="${uri}">${tag}</a:graphicData></a:graphic></xdr:graphicFrame></mc:Choice>` +
-		`<mc:Fallback><xdr:sp macro="" textlink=""><xdr:nvSpPr><xdr:cNvPr id="0" name=""/><xdr:cNvSpPr><a:spLocks noTextEdit="1"/></xdr:cNvSpPr></xdr:nvSpPr>` +
+		`<mc:Fallback><xdr:sp macro="" textlink=""><xdr:nvSpPr><xdr:cNvPr id="${id}" name="${escape(name)}"/><xdr:cNvSpPr><a:spLocks noTextEdit="1"/></xdr:cNvSpPr></xdr:nvSpPr>` +
 		`<xdr:spPr><a:xfrm><a:off x="${Math.round(box.x)}" y="${Math.round(box.y)}"/><a:ext cx="${Math.round(box.cx)}" cy="${Math.round(box.cy)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:prstClr val="white"/></a:solidFill><a:ln w="1"><a:solidFill><a:prstClr val="green"/></a:solidFill></a:ln></xdr:spPr>` +
 		`<xdr:txBody><a:bodyPr vertOverflow="clip" horzOverflow="clip"/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US" sz="1100"/><a:t>${escape(note)}</a:t></a:r></a:p></xdr:txBody></xdr:sp></mc:Fallback></mc:AlternateContent><xdr:clientData/></xdr:twoCellAnchor>`
 	);
