@@ -46,6 +46,7 @@ export * from './toggle-format';
 export * from './customization';
 export * from './ribbon-action-ids';
 export * from './outline';
+export * from './outline-tracked';
 export * from './ribbon-colors';
 export * from './ribbon-legacy-labels';
 export * from './run-compare';

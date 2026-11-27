@@ -1,6 +1,6 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
-import { AttrStep, ReplaceAroundStep, type Step } from 'prosemirror-transform';
+import { AttrStep, DocAttrStep, ReplaceAroundStep, type Step } from 'prosemirror-transform';
 import { PARAGRAPH_FORMAT_KEYS } from '../restore-paragraph-format';
 import { parsePropertiesSnapshot, propertiesSignature } from '../revision-properties';
 import { createParagraph } from '../write-paragraph';
@@ -26,6 +26,9 @@ function sameContent(before: ProseMirrorNode, after: ProseMirrorNode): boolean {
 		return false;
 	for (const key of new Set([...Object.keys(before.attrs), ...Object.keys(after.attrs)])) {
 		if (before.type.name === 'paragraph' && FORMAT_ATTRS.has(key)) continue;
+		// A style a paragraph change applies may be defined in the same step (Outline promotes a
+		// paragraph to a Heading style the document lacks); Word does not track style definitions.
+		if (before.type === before.type.schema.topNodeType && key === 'styleCatalogs') continue;
 		if (JSON.stringify(before.attrs[key]) !== JSON.stringify(after.attrs[key])) return false;
 	}
 	for (let index = 0; index < before.childCount; index++)
@@ -60,7 +63,13 @@ export function trackParagraphFormatting(
 ): Transaction | null {
 	if (
 		!steps.length ||
-		!steps.every((step) => step instanceof AttrStep || step instanceof ReplaceAroundStep) ||
+		!steps.every(
+			(step) =>
+				step instanceof AttrStep ||
+				step instanceof ReplaceAroundStep ||
+				(step instanceof DocAttrStep && step.attr === 'styleCatalogs'),
+		) ||
+		!steps.some((step) => !(step instanceof DocAttrStep)) ||
 		!sameContent(oldState.doc, newState.doc)
 	)
 		return null;
