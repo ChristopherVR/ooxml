@@ -438,7 +438,7 @@ to supply optional host settings for the element marked `data-pptx-theme-root`. 
 returns a cleanup callback. `penPreferences` supplies synchronous `read()` and `write(presets)`
 methods. `recognizeMath(strokes, signal)` receives only selected slide-local X/Y coordinates
 and resolves to LaTeX or `undefined`. The viewer calls it when the user invokes Ink to Math
-and opens the shared equation editor for review. See [PowerPoint privacy](../../../../PRIVACY.md#ink-to-math).
+and opens the shared equation editor for review. See [PowerPoint privacy](../../../../../PRIVACY.md#ink-to-math).
 
 ## View ribbon
 

@@ -1,53 +1,21 @@
-# Locale reference dictionaries
+# pptx-viewer-locales
 
-This private workspace package contains the complete French, Spanish, German, Simplified Chinese, Japanese and Korean
-UI dictionaries used by the demos and bundled into all five viewer packages.
-This workspace is not published separately and is not a runtime dependency of
-any viewer binding.
+**A private workspace package with the French, Spanish, German, Simplified Chinese, Japanese and Korean dictionaries of the PowerPoint viewer UI. It is never published to npm.**
 
-Repository workspaces reference the dictionaries by package name:
+The five viewer packages bundle these dictionaries: after each framework build, `scripts/copy-subpaths.mjs` copies them into the viewer's `dist/i18n`, so applications import them from their viewer and never install this package:
 
 ```ts
-import { translationsDe } from 'pptx-viewer-locales/de';
-import { translationsEs } from 'pptx-viewer-locales/es';
-import { translationsFr } from 'pptx-viewer-locales/fr';
-import { translationsJa } from 'pptx-viewer-locales/ja';
-import { translationsKo } from 'pptx-viewer-locales/ko';
-import { translationsZhCN } from 'pptx-viewer-locales/zh-CN';
+import { translationsFr } from 'pptx-react-viewer/i18n/fr';
+import { translationsZhCN } from 'pptx-vue-viewer/i18n/zh-CN';
 ```
 
-Each language has its own entry point, and each dictionary contains every
-canonical English key. External applications import dictionaries directly from
-their installed viewer package:
+Every viewer (`pptx-react-viewer`, `pptx-vue-viewer`, `pptx-angular-viewer`, `pptx-svelte-viewer`, `pptx-vanilla-viewer`) has the `i18n/fr`, `/es`, `/de`, `/zh-CN`, `/ja` and `/ko` subpaths. Inside the workspace, the demos import them by package name (`pptx-viewer-locales/de`, `translationsDe`, and so on). The English source is `src/ui/src/pptx/i18n/translations-en.ts` at the repository root; the [localisation guide](../../docs/guide/localization.md) explains how each binding registers a dictionary.
 
-```ts
-import { translationsZhCN } from 'pptx-react-viewer/i18n/zh-CN';
-import { translationsFr } from 'pptx-vue-viewer/i18n/fr';
-```
+Each dictionary has every English key; the tests check exact key parity and the `{{placeholder}}` tokens. The translations began as machine-assisted drafts, so native-speaker review is welcome.
 
-The same `i18n/fr`, `i18n/es`, `i18n/de`, `i18n/zh-CN`, `i18n/ja` and `i18n/ko` subpaths are available
-in the Angular, Svelte, and Vanilla packages. See the
-[localization guide](../../docs/guide/localization.md) for registration and Vue's
-placeholder conversion.
+## Reviewing a translation
 
-The initial expanded translations are machine-assisted drafts built on the
-existing curated demo vocabulary. Exact key and interpolation-placeholder
-coverage is tested; native-speaker terminology review is still welcome.
-
-## How to help
-
-Native and fluent speakers can review one semantic file at a time under
-`src/fr`, `src/es`, `src/de`, `src/zh-CN`, `src/ja` or `src/ko`. Files are organized by product area, such as
-`charts.ts`, `presenting-and-slide-show.ts`, and `text-and-equations.ts`.
-
-1. Find the same key in `src/ui/src/pptx/i18n/translations-en.ts` to confirm
-   the English source and UI context.
-2. Improve only the translated value. Keep the dotted `pptx.*` key unchanged.
-3. Preserve every `{{placeholder}}` exactly, including spelling and braces.
-4. Prefer terminology used by the localized Microsoft PowerPoint UI, especially
-   for charts, SmartArt, animation, transitions, and master views.
-5. Run the validation commands below and mention the reviewed language and
-   product areas in the pull request.
+Files are split by product area under `src/<locale>/` (for example `charts.ts` or `presenting-and-slide-show.ts`). Find the key in the English source to see its context, change only the translated value, keep the `pptx.*` key and every `{{placeholder}}` exactly, and prefer the terms the localised PowerPoint UI uses. Then run:
 
 ```bash
 bun run --filter 'pptx-viewer-locales' test
@@ -55,36 +23,8 @@ bun run --filter 'pptx-viewer-locales' typecheck
 bun run --filter 'pptx-viewer-locales' build
 ```
 
-The tests require exact key parity with English and verify interpolation tokens.
+## Adding keys
 
-## Filling newly added keys
+After English strings are added, run `bun run locales:generate` in `viewers/pptx`. It keeps every valid existing translation, machine-translates only missing entries or entries with broken placeholders, and fails when a new key prefix has no named section. Review what it adds before committing.
 
-After English UI strings are added, run:
-
-```bash
-bun run locales:generate
-```
-
-The generator reads all existing semantic files first. It keeps every valid
-existing translation, including reviewed values that intentionally match
-English, and machine-translates only missing entries or entries with invalid
-placeholders. Review generated additions before committing them. The generator
-also fails when a new key prefix has not been assigned to a named section, so
-the dictionaries stay organized as they grow.
-
-## Building the public subpaths
-
-Build this workspace before building a viewer package. `scripts/copy-subpaths.mjs`
-copies its standalone runtime artifacts and declarations into each viewer's
-`dist/i18n` directory after the framework build. Dictionary values remain
-maintained here in one place.
-
-From `viewers/pptx`, after building the viewers, run:
-
-```sh
-bun run test:locale-subpaths
-```
-
-This packs the actual component packages, imports every language without
-framework or private-workspace dependencies, and checks ESM/CommonJS, bundling,
-and TypeScript declarations.
+Build this package before the viewers. After building them, `bun run test:locale-subpaths` (in `viewers/pptx`) packs the real viewer packages and imports every language through ESM, CommonJS, a bundler and TypeScript.

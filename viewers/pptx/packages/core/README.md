@@ -1,16 +1,14 @@
 # pptx-viewer-core
 
-Read, build, edit and save PowerPoint (`.pptx`) files from TypeScript, in the browser or in Node.js, with no native or system dependencies.
+**The headless PowerPoint engine: read, build, edit, save and convert `.pptx` (and legacy `.ppt`) files from TypeScript in Node.js, workers or the browser, with no UI and no native dependencies.**
 
 [![npm version](https://img.shields.io/npm/v/pptx-viewer-core.svg)](https://www.npmjs.com/package/pptx-viewer-core)
 [![license](https://img.shields.io/npm/l/pptx-viewer-core.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 [![types](https://img.shields.io/npm/types/pptx-viewer-core.svg)](https://www.npmjs.com/package/pptx-viewer-core)
 
-[Docs](https://christophervr.github.io/ooxml/pptx/core/) · [Live demo](https://christophervr.github.io/ooxml/pptx/demo/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/core/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
+[Documentation](https://christophervr.github.io/ooxml/pptx/core/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/core/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-![The engine loading a PPTX into a typed slide model, then saving or converting it](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/core-engine.svg)
-
-Hand it the bytes of a deck and it returns a fully typed model of every slide: text, shapes, pictures, tables, charts, SmartArt, themes, masters and layouts. Change the model and save it back to a valid `.pptx`, build a deck from scratch, or convert one to Markdown, JSON or SVG. It is the engine behind the [React](https://www.npmjs.com/package/pptx-react-viewer), [Vue](https://www.npmjs.com/package/pptx-vue-viewer), [Angular](https://www.npmjs.com/package/pptx-angular-viewer), [Svelte](https://www.npmjs.com/package/pptx-svelte-viewer) and [vanilla](https://www.npmjs.com/package/pptx-vanilla-viewer) viewers, and a thin re-export of `ooxml-core/pptx`.
+It is a thin entry point over `ooxml-core/pptx` and the engine behind the [React](https://www.npmjs.com/package/pptx-react-viewer), [Vue](https://www.npmjs.com/package/pptx-vue-viewer), [Angular](https://www.npmjs.com/package/pptx-angular-viewer), [Svelte](https://www.npmjs.com/package/pptx-svelte-viewer) and [vanilla](https://www.npmjs.com/package/pptx-vanilla-viewer) viewers.
 
 ## Install
 
@@ -18,40 +16,39 @@ Hand it the bytes of a deck and it returns a fully typed model of every slide: t
 npm install pptx-viewer-core
 ```
 
-Everything for reading, editing, saving and password protection installs with it (encryption runs on the Web Crypto API). Only Node signature signing and verification needs the optional peers `node-forge`, `xml-crypto` and `@xmldom/xmldom`.
+Reading, editing, saving and password protection need nothing else (`ooxml-core` is its one dependency; encryption runs on the Web Crypto API). Node signature signing and verification through `pptx-viewer-core/signature-node` need the optional peers `node-forge` 1, `xml-crypto` 6 and `@xmldom/xmldom` 0.8 or 0.9.
 
 ## Quick start
 
 ```ts
+import { readFile, writeFile } from 'node:fs/promises';
+
 import { PptxHandler } from 'pptx-viewer-core';
 
+const file = await readFile('deck.pptx');
 const handler = new PptxHandler();
-const buffer = await fetch('presentation.pptx').then((r) => r.arrayBuffer());
-const data = await handler.load(buffer); // .pptx, legacy .ppt, or pptx-viewer-json
+// load() takes an ArrayBuffer: .pptx, .pptm, .ppsx, .potx, legacy .ppt or pptx-viewer-json
+const data = await handler.load(
+	file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength),
+);
 
-console.log(`${data.slides.length} slides, ${data.width}x${data.height}`);
-
+console.log(`${data.slides.length} slides, ${data.width}x${data.height} px`);
 for (const element of data.slides[0]?.elements ?? []) {
 	if (element.type === 'text') console.log(element.text);
 }
 
-const bytes = await handler.save(data.slides); // Uint8Array of a valid .pptx
-const excerpt = await handler.save([data.slides[0]!, data.slides[2]!]); // just two slides
+await writeFile('copy.pptx', await handler.save(data.slides)); // Uint8Array of a .pptx
 ```
 
-In Node, read the file with `readFile` and pass `buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)`: `load` takes an `ArrayBuffer`.
-
-### Build a deck from scratch
+For whole-deck edits, `Presentation` wraps the handler:
 
 ```ts
 import { ChartBuilder, Presentation, ThemePresets } from 'pptx-viewer-core';
 
 const pptx = await Presentation.create({ title: 'Sales Report', theme: ThemePresets.MODERN_BLUE });
-
 pptx
 	.addSlide('Title Slide')
 	.addText('Q4 Sales Report', { fontSize: 44, bold: true, x: 100, y: 200, width: 800, height: 80 });
-
 pptx
 	.addSlide('Blank')
 	.addBuilderElement(
@@ -61,90 +58,55 @@ pptx
 			.title('Revenue ($M)')
 			.bounds(50, 100, 860, 420),
 	);
-
 pptx.replaceText('2026', 'FY2026');
 const bytes = await pptx.save();
 ```
 
-`Presentation` works on the whole deck (slides, sections, templates, merging, find and replace). Element builders (`TextBuilder`, `ShapeBuilder`, `ChartBuilder`, `TableBuilder`, `ImageBuilder`, `ConnectorBuilder`, `MediaBuilder`, `GroupBuilder`) give finer control, and `PptxXmlBuilder` writes raw XML for the rare case the others do not cover. Unit helpers (`inches`, `cm`, `mm`, `pt`), `SlideSizes` and eight `ThemePresets` come with it. See the [builder guide](https://christophervr.github.io/ooxml/pptx/core/builder).
+`Presentation.load(buffer)` opens an existing deck the same way. Positions and sizes in the model are pixels at 96 DPI; the exact EMU values read from the file are kept beside them (`xEmu`, `widthEmu` and so on) for the save.
 
-### Convert
+## API overview
 
-```ts
-import { PptxJsonConverter, PptxMarkdownConverter } from 'pptx-viewer-core';
+| Import                                                            | Main entry points                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-viewer-core`                                                | `PptxHandler` (`load`, `save`, `saveEncrypted`), `Presentation`, the element builders (`TextBuilder`, `ShapeBuilder`, `ChartBuilder`, `TableBuilder`, `ImageBuilder`, `ConnectorBuilder`, `MediaBuilder`, `GroupBuilder`), `ThemePresets`, `SlideSizes`, unit helpers (`inches`, `cm`, `mm`, `pt`), the converters and the `PptxData` types. |
+| `pptx-viewer-core/converter`                                      | `PptxMarkdownConverter` and `SvgExporter` on their own.                                                                                                                                                                                                                                                                                      |
+| `pptx-viewer-core/signature-node`                                 | Node signature inspection (`inspectPptxDigitalSignatures`) and signing.                                                                                                                                                                                                                                                                      |
+| `pptx-viewer-core/chart`, `/geometry`, `/color`, `/text`, `/math` | The shared chart, geometry, colour, text and maths helpers.                                                                                                                                                                                                                                                                                  |
+| `pptx-viewer-core/smartart-layouts`                               | The built-in SmartArt layout definitions.                                                                                                                                                                                                                                                                                                    |
 
-const markdown = await new PptxMarkdownConverter(
-	'./output',
-	{ sourceName: 'deck.pptx', includeSpeakerNotes: true, semanticMode: true },
-	fileSystemAdapter, // { writeFile, writeBinaryFile, createFolder }, to extract media
-).convert(data);
+Converters: `new PptxMarkdownConverter(outputDir, options, fileSystem?).convert(data)` writes Markdown (pass a file system adapter to extract media), `PptxJsonConverter.toJson(data)` writes the self-contained `pptx-viewer-json` model that `load()` reads back, and `SvgExporter` draws slides as SVG. The package also has a `pptx` command (`info`, `export-svg`, `export-md`, `merge`, `find`, `replace`, `create`, `diff`); run it by package name, `npx pptx-viewer-core info deck.pptx`, since `npx pptx` fetches an unrelated package. See the [builder](https://christophervr.github.io/ooxml/pptx/core/builder), [converter](https://christophervr.github.io/ooxml/pptx/core/converter), [SVG export](https://christophervr.github.io/ooxml/pptx/core/svg-export) and [CLI](https://christophervr.github.io/ooxml/pptx/core/cli) pages.
 
-const json = PptxJsonConverter.toJson(data, { pretty: true }); // load() reads it back
-```
+## Status and limits
 
-The JSON document (`format: "pptx-viewer-json"`) is self-contained model interchange, not a copy of the ZIP archive. `SvgExporter` draws slides headlessly. See [converter](https://christophervr.github.io/ooxml/pptx/core/converter) and [SVG export](https://christophervr.github.io/ooxml/pptx/core/svg-export).
+PowerPoint carries no stability label yet: it has not been assessed against the [stability policy](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md).
 
-### From the terminal
+- Untouched parts are carried through a save, but saving an edited slide can still rewrite minor markup; it is not a lossless round trip.
+- SmartArt without its cached drawing is laid out by an approximate engine, and some constructs load as approximations; both are reported on `data.warnings`.
+- For decks you do not trust, `load(buffer, { limits })` bounds the input, uncompressed bytes, entries and slides.
+- Signature verification reports `verified-trusted` only for a certificate that chains to a root you configure (`PPTX_VIEWER_TRUST_ROOTS_PEM` or `PPTX_VIEWER_TRUST_ROOTS_FILE`); no roots are built in.
 
-The package ships a `pptx` command for `info`, `export-svg`, `export-md`, `merge`, `find`, `replace`, `create` and `diff`:
-
-```bash
-npx pptx-viewer-core info deck.pptx
-```
-
-Run it by the package name: `npx pptx` fetches an unrelated package. See the [CLI](https://christophervr.github.io/ooxml/pptx/core/cli).
-
-## What it covers
-
-| Area           | Details                                                                                                                                  |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **Elements**   | 16 types: text, shape, connector, image, picture, table, chart, SmartArt, OLE, media, group, ink, content part, zoom, 3D model, unknown. |
-| **Shapes**     | All 187 ECMA-376 preset shapes with their adjust handles, plus custom geometry.                                                          |
-| **Charts**     | 23 types, including waterfall, funnel, treemap, sunburst, box and whisker, region map and combo, with their embedded workbooks.          |
-| **SmartArt**   | Broken into editable shapes, with a reflow engine for structural edits.                                                                  |
-| **Motion**     | 57 transitions (including Morph), 39 animation presets and 26 motion paths.                                                              |
-| **Formats**    | `.pptx`, `.pptm`, `.ppsx`, `.potx`, ISO/IEC 29500 Strict (converted to Transitional on load and back on save), legacy `.ppt` in and out. |
-| **Protection** | AES-128 and AES-256 encryption, modify passwords, and digital signature inspection and signing in Node.                                  |
-| **Preserved**  | VBA macros, custom XML and comment authors are kept through a save.                                                                      |
-
-Positions and sizes are in EMU (914,400 per inch, 12,700 per point). Every element has a `type` field to narrow on, and colours resolve through the deck's theme. Some constructs load as approximations and are reported on `data.warnings`; see the [limitations page](https://christophervr.github.io/ooxml/pptx/guide/limitations).
-
-## Loading decks you do not control
-
-- `load(buffer, { limits })` bounds the work a load may do (input and uncompressed bytes, entries, slides). Every package is read through a guarded zip reader either way.
-- Linked pictures and media keep their addresses but are not fetched unless you pass `allowExternalImages: true`.
-- Node signature verification (`pptx-viewer-core/signature-node`, `inspectPptxDigitalSignatures`) reports `verified-trusted` only for an intact signature that covers the document, from a document-signing certificate that chains to a root you configure with `PPTX_VIEWER_TRUST_ROOTS_PEM` or `PPTX_VIEWER_TRUST_ROOTS_FILE`. No roots are built in. See [encryption and signatures](https://christophervr.github.io/ooxml/pptx/core/encryption).
-
-## Entry points
-
-| Import                                                            | Contents                                                       |
-| ----------------------------------------------------------------- | -------------------------------------------------------------- |
-| `pptx-viewer-core`                                                | `PptxHandler`, `Presentation`, builders, converters and types. |
-| `pptx-viewer-core/signature-node`                                 | Node signature inspection and signing.                         |
-| `pptx-viewer-core/converter`                                      | The Markdown converter and `SvgExporter` on their own.         |
-| `pptx-viewer-core/chart`, `/geometry`, `/color`, `/text`, `/math` | The shared chart, geometry, colour, text and maths helpers.    |
-| `pptx-viewer-core/smartart-layouts`                               | The built-in SmartArt layout definitions.                      |
-
-## Supported environments
-
-- Node.js 22.3 or newer, Bun, Deno, workers and serverless runtimes.
-- Browsers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+See the [limitations page](https://christophervr.github.io/ooxml/pptx/guide/limitations) and the [Office parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md#powerpoint).
 
 ## Privacy and network use
 
-Parsing, editing and saving happen locally and never upload the file. Linked (external) pictures and media are not fetched unless you pass `allowExternalImages: true`. Node signature inspection checks certificate revocation with the OCSP responder named in each certificate, only for certificates that verified a signature value; pass `{ checkRevocation: false }` to make no request. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+Parsing, editing and saving happen locally and never upload the file. Nothing collects analytics or telemetry.
 
-## Related packages
+- Linked (external) pictures and media keep their addresses but are not fetched unless you pass `allowExternalImages: true` to `load`.
+- Node signature inspection sends an OCSP request to the responder named in each certificate that verified a signature value; pass `{ checkRevocation: false }` to make no request.
 
-| Package                                                                    | Use it for                                                   |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [`pptx-react-viewer`](https://www.npmjs.com/package/pptx-react-viewer)     | A full viewer and editor for React.                          |
-| [`pptx-vue-viewer`](https://www.npmjs.com/package/pptx-vue-viewer)         | The same for Vue 3.                                          |
-| [`pptx-angular-viewer`](https://www.npmjs.com/package/pptx-angular-viewer) | The same for Angular.                                        |
-| [`pptx-svelte-viewer`](https://www.npmjs.com/package/pptx-svelte-viewer)   | The same for Svelte 5.                                       |
-| [`pptx-vanilla-viewer`](https://www.npmjs.com/package/pptx-vanilla-viewer) | The same with no framework.                                  |
-| [`pptx-viewer-mcp`](https://www.npmjs.com/package/pptx-viewer-mcp)         | 74 editing tools over this engine, as an MCP server.         |
-| [`ooxml-core`](https://www.npmjs.com/package/ooxml-core)                   | The Word, Excel, PowerPoint and Visio logic this re-exports. |
+See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#digital-signature-inspection-node-only).
+
+## Environments
+
+- Node.js 22.3 or newer, Bun, Deno, web workers and serverless runtimes; ESM and CommonJS builds.
+- Browsers: the last two major versions of Chrome, Edge, Firefox and Safari, Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+- `pptx-viewer-core/signature-node` is Node only.
+
+## Documentation
+
+- The [core guide](https://christophervr.github.io/ooxml/pptx/core/): [loading](https://christophervr.github.io/ooxml/pptx/core/loading), [editing](https://christophervr.github.io/ooxml/pptx/core/editing), [saving](https://christophervr.github.io/ooxml/pptx/core/saving) and [encryption and signatures](https://christophervr.github.io/ooxml/pptx/core/encryption).
+- [`pptx-viewer-mcp`](https://www.npmjs.com/package/pptx-viewer-mcp) exposes this engine as MCP tools; [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) holds the Word, Excel, PowerPoint and Visio logic it re-exports.
+- Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme).
 
 ## License
 

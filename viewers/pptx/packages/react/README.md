@@ -1,16 +1,14 @@
 # pptx-react-viewer
 
-A React component that opens, edits, presents and saves PowerPoint (`.pptx`) files in the browser. No server, no conversion step, no PowerPoint install.
+**A React component that opens, edits, presents and saves PowerPoint files (`.pptx`, `.pptm`, `.ppsx`, `.potx` and legacy `.ppt`) in the browser, with no server.**
 
 [![npm version](https://img.shields.io/npm/v/pptx-react-viewer.svg)](https://www.npmjs.com/package/pptx-react-viewer)
 [![license](https://img.shields.io/npm/l/pptx-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 [![types](https://img.shields.io/npm/types/pptx-react-viewer.svg)](https://www.npmjs.com/package/pptx-react-viewer)
 
-[Live demo](https://christophervr.github.io/ooxml/pptx/demo/) · [Docs](https://christophervr.github.io/ooxml/pptx/react/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/react/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
+[Live demo](https://christophervr.github.io/ooxml/pptx/demo/) · [Documentation](https://christophervr.github.io/ooxml/pptx/) · [React guide](https://christophervr.github.io/ooxml/pptx/react/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/react/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
 ![Selecting, dragging and resizing a slide element in the React demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/react-demo.webp)
-
-Slides are drawn as HTML, CSS and SVG, not as a canvas bitmap, so text stays sharp at any zoom, can be selected and is read by screen readers. The [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine that parses and writes the file is bundled in.
 
 ## Install
 
@@ -19,35 +17,40 @@ npm install pptx-react-viewer
 npm install react react-dom framer-motion lucide-react react-icons jspdf jszip fast-xml-parser i18next react-i18next
 ```
 
-The second line is the peer dependencies; `react` and `react-dom` may be 18.2 or 19. Optional extras:
+The second line is the required peers: `react` and `react-dom` `^18.2.0 || ^19.0.0`, `framer-motion` 12, 13 or 14, `i18next` 26 or 27, `react-i18next` 17 or 18, `lucide-react` 1, `react-icons` 5, `jspdf` 4, `jszip` 3 and `fast-xml-parser` 5. The engine comes with it (`ooxml-core` and `ooxml-ui` are dependencies). Optional extras:
 
-| For                                  | Add                                                                 |
-| ------------------------------------ | ------------------------------------------------------------------- |
-| Real-time collaboration              | `yjs` (`y-websocket` and `y-webrtc` are optional dependencies)      |
-| 3D models, 3D SmartArt and 3D charts | nothing: `three` is an optional dependency npm installs when it can |
-| The AI assistant panel               | `ai` and `@ai-sdk/react`                                            |
+| For                                  | Add                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------ |
+| Real-time collaboration              | `yjs` (`y-websocket` and `y-webrtc` are optional dependencies)           |
+| 3D models, 3D SmartArt and 3D charts | nothing: `three` is an optional dependency that npm installs when it can |
+| The AI assistant panel               | `ai` (6 or 7) and `@ai-sdk/react` 4                                      |
 
-Without them, those features stay off and everything else works.
+Without them those features stay off and everything else works.
 
 ## Quick start
 
 ```tsx
-import { PowerPointViewer } from 'pptx-react-viewer';
-import 'pptx-react-viewer/styles'; // skip if your app builds Tailwind CSS v4 itself
-import { useState } from 'react';
+import { PowerPointViewer, type PowerPointViewerHandle } from 'pptx-react-viewer';
+import 'pptx-react-viewer/styles';
+import { useRef, useState, type ChangeEvent } from 'react';
 
 export default function App() {
 	const [content, setContent] = useState<Uint8Array | null>(null);
+	const viewer = useRef<PowerPointViewerHandle>(null);
 
-	const onPick = async (event: React.ChangeEvent<HTMLInputElement>) => {
+	const onPick = async (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
 		if (file) setContent(new Uint8Array(await file.arrayBuffer()));
+	};
+
+	const save = async () => {
+		const bytes = await viewer.current?.getContent(); // the edited .pptx
 	};
 
 	return (
 		<div style={{ height: '100vh' }}>
 			{content ? (
-				<PowerPointViewer content={content} canEdit />
+				<PowerPointViewer ref={viewer} content={content} canEdit />
 			) : (
 				<input type='file' accept='.pptx,.ppt' onChange={onPick} />
 			)}
@@ -56,99 +59,81 @@ export default function App() {
 }
 ```
 
-`content` is a `Uint8Array` (wrap an `ArrayBuffer` with `new Uint8Array(buffer)`). The viewer fills its parent, so give the parent a height. To read the edited deck back, pass a `ref` and call `getContent()`:
+`content` is a `Uint8Array`. The viewer fills its parent, so give the parent a height. `pptx-react-viewer/styles` is the full stylesheet, scoped to the viewer; an app that builds Tailwind CSS v4 itself can use `pptx-react-viewer/theme.css` instead, and a host that renders only `SlideCanvas` can import `pptx-react-viewer/canvas.css`.
 
-```tsx
-const viewer = useRef<PowerPointViewerHandle>(null);
-// <PowerPointViewer ref={viewer} content={content} canEdit />
-const bytes = await viewer.current?.getContent(); // a valid .pptx
-```
+## Props
 
-## What you get
+The most used props. Every binding takes the same set; the [props reference](https://christophervr.github.io/ooxml/pptx/react/props) has all of them.
 
-- **Viewing**: text, all 187 preset shapes, pictures, tables, charts, SmartArt, connectors, audio, video, ink, OLE objects and 3D models, with themes, masters and layouts resolved.
-- **Editing**: a PowerPoint-style ribbon, inspector and on-canvas handles; inline text, tables, chart data, SmartArt, masters and layouts; full undo and redo.
-- **Presenting**: transitions (including Morph), animations and motion paths, presenter view with notes and timer, rehearse timings, pen, highlighter and laser.
-- **Exporting**: PDF, PNG, GIF, video and JSON, slides copied as images, printed handouts and notes pages, and Save As `.pptx`, `.ppsx`, `.pptm` or legacy `.ppt`.
-- **Working together**: real-time co-editing and Broadcast over Yjs, through your server or peer to peer, with presence, cursors and threaded comments.
-- **Assistant**: an optional AI panel whose edits follow a write policy you choose (apply, stage or approve).
-- **Keyboard and screen readers**: F6 between regions, Tab through slide objects, Enter to edit text, and names that match the visible captions.
-- **Seven UI languages**: English, French, Spanish, German, Simplified Chinese, Japanese and Korean.
+| Prop                                             | What it does                                                                                    |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `content`                                        | The deck's bytes (`Uint8Array`).                                                                |
+| `canEdit`, `readOnly`                            | Turn editing on, or force the deck read-only (`readOnly` wins).                                 |
+| `initialSlide`, `showToolbar`, `showThumbnails`  | Starting slide and which chrome to show.                                                        |
+| `theme`, `defaultThemeKey`, `availableThemes`    | Viewer chrome colours and radius, and the File > Options appearance choices.                    |
+| `defaultLocale`, `availableLocales`              | The starting UI language and the languages offered.                                             |
+| `customization`, `hiddenActions`, `ribbonAddIns` | Hide, lock or remap ribbon tabs, commands, options, menus, shortcuts and panels; add your tabs. |
+| `fonts`, `googleFonts`                           | Supply licensed fonts; turn off or redirect web font downloads.                                 |
+| `allowExternalContent`                           | Fetch a deck's linked pictures and media without asking (`true`) or block them (`false`).       |
+| `limits`                                         | Bound the work a load may do, for decks you do not trust.                                       |
+| `collaboration`, `shareDefaults`                 | Join or seed a real-time session.                                                               |
+| `storage`, `fileProviders`, `autosave`           | Save to your own storage or a cloud provider, and control recovery autosave.                    |
+| `ai`                                             | The optional assistant, from `createAiAssistant` in `pptx-react-viewer/ai`.                     |
+| `fitPadding`, `maxFitScale`                      | How the slide fits its viewport.                                                                |
 
-Some effects are approximated or not yet supported; the [limitations page](https://christophervr.github.io/ooxml/pptx/guide/limitations) lists them, and a deck that uses one reports it as a load warning.
+The `ref` handle (`PowerPointViewerHandle`) has `getContent`, navigation (`goTo`, `goNext`, `goPrev`), zoom (`setZoom`, `zoomIn`, `zoomOut`), `setMode`, `undo`, `redo`, `isDirty`, and the slide and element API (`getSlides`, `addSlide`, `deleteSlides`, `addElement`, `updateElement`, `deleteElements`, `selectElements`). See [the handle](https://christophervr.github.io/ooxml/pptx/react/handle).
 
-## Using it in React
+## Events
 
-**Styles.** `pptx-react-viewer/styles` is the full stylesheet. Its base reset applies only inside the viewer, so your page keeps its own headings and margins. A Tailwind CSS v4 app can build the viewer's utilities itself from `pptx-react-viewer/theme.css`, and a host that renders only `SlideCanvas` can import the smaller `pptx-react-viewer/canvas.css`. See [theming](https://christophervr.github.io/ooxml/pptx/react/theming).
+Callback props, most used first: `onContentChange` (the edited bytes), `onDirtyChange`, `onActiveSlideChange`, `onSelectionChange`, `onLoad`, `onError`, `onChange`, `onModeChange`, `onZoomChange`, `onSlideCountChange`, `onAutosave`, `onCollaborationChange`, `onHyperlinkClick`, `onOpenFile`, `onThemeChange`, `onLocaleChange` and `onPdfExportReport`. See the [props reference](https://christophervr.github.io/ooxml/pptx/react/props).
 
-**The ref handle.** `PowerPointViewerHandle` covers navigation, zoom, mode, selection, undo and redo, plus the shared slide and element API (`getSlides`, `addSlide`, `addElement`, `updateElement`, `deleteElements` and the rest). See [the handle](https://christophervr.github.io/ooxml/pptx/react/handle).
+## Your own UI
 
-**Your own shell.** `useViewerBuildingBlocks` runs the full viewer engine behind `SlideCanvas`, `Toolbar` and `SlidesPane`, so you can place them in your own layout and answer picker and dialog requests with your own UI. See [hooks](https://christophervr.github.io/ooxml/pptx/react/hooks#public-hooks).
+`useViewerBuildingBlocks` runs the full viewer engine behind `SlideCanvas`, `Toolbar` and `SlidesPane`, so you can place them in your own layout and answer picker and dialog requests with your own UI. See [hooks](https://christophervr.github.io/ooxml/pptx/react/hooks).
 
-**Translations.** Labels go through your `react-i18next` instance (`pptx-react-viewer/i18n` has the English dictionary and `keyToLabel` for a fallback). To use Lingui, FormatJS or another library, wrap the viewer in `PptxI18nProvider` with a `translate(key, params)` function, and import from `pptx-react-viewer/no-i18next` to leave i18next out of the bundle. Dictionaries for the other languages are at `pptx-react-viewer/i18n/fr`, `/es`, `/de`, `/zh-CN`, `/ja` and `/ko`. See [localization](https://christophervr.github.io/ooxml/pptx/guide/localization).
+## Theming
 
-**AI assistant.** Create one assistant with `createAiAssistant` from `pptx-react-viewer/ai` and pass it to `ai`. Its panel and the AI SDK load only when the user opens it. See the [assistant guide](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant).
+The chrome inherits the shared `--office-*` tokens: put `data-office-theme="light"`, `"dark"` or `"auto"` on a containing element, or set tokens such as `--office-accent` there. The `theme` prop (a partial `ViewerTheme`) overrides them through the viewer's `--pptx-*` properties; `vermilionLightTheme` and `vermilionDarkTheme` are ready-made, and `ViewerThemeProvider` themes a subtree. See [theming](https://christophervr.github.io/ooxml/pptx/react/theming).
 
-```tsx
-import { createAiAssistant } from 'pptx-react-viewer/ai';
+## Localisation
 
-const assistant = createAiAssistant({ connection: { kind: 'endpoint', api: '/api/ai/chat' } });
-// <PowerPointViewer content={content} ai={assistant} />
-```
+English, French, Spanish, German, Simplified Chinese, Japanese and Korean. Labels go through your `react-i18next` instance (without one the viewer shows its built-in English): register `translationsEn` from `pptx-react-viewer/i18n` and the other dictionaries from `pptx-react-viewer/i18n/fr`, `/es`, `/de`, `/zh-CN`, `/ja` and `/ko`. For another library, wrap the viewer in `PptxI18nProvider` with your own `translate(key, params)`, and import from `pptx-react-viewer/no-i18next` to leave i18next out of the bundle. See [localisation](https://christophervr.github.io/ooxml/pptx/guide/localization).
 
-## Configuration
+## Status and limits
 
-The most used props; the [props reference](https://christophervr.github.io/ooxml/pptx/react/props) has all of them, and every binding takes the same set.
+PowerPoint carries no stability label yet: it has not been assessed against the [stability policy](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md).
 
-| Prop                                                      | What it does                                                                                                     |
-| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `canEdit`, `readOnly`                                     | Turn editing on, or force the deck read-only.                                                                    |
-| `initialSlide`, `showToolbar`, `showThumbnails`           | Starting slide and which chrome to show.                                                                         |
-| `theme`, `defaultThemeKey`, `availableThemes`             | Colours and radius as `--pptx-*` tokens, and the File > Options appearance choices.                              |
-| `customization`, `hiddenActions`, `ribbonAddIns`          | Hide, lock or remap ribbon tabs, commands, options, menus, shortcuts and panels; add your own tabs.              |
-| `fonts`, `googleFonts`                                    | Supply licensed fonts, and control or redirect web font downloads.                                               |
-| `allowExternalContent`                                    | Download a deck's linked pictures and media without asking (`true`) or block them silently (`false`).            |
-| `limits`                                                  | Bound the work a load may do, for decks you do not trust.                                                        |
-| `collaboration`, `shareDefaults`                          | Join or seed a real-time session.                                                                                |
-| `storage`, `fileProviders`, `autosave`                    | Save to your own storage or OneDrive, and control recovery autosave.                                             |
-| `ai`                                                      | The optional assistant.                                                                                          |
-| `fitPadding`, `maxFitScale`                               | How the slide fits its viewport ([viewport fit](https://christophervr.github.io/ooxml/pptx/guide/viewport-fit)). |
-| `onContentChange`, `onDirtyChange`, `onActiveSlideChange` | Follow edits and navigation.                                                                                     |
+- Saving keeps the parts you did not touch, but saving an edited slide can still rewrite minor markup; it is not a lossless round trip.
+- Some effects are approximated (3D materials, some WordArt warps, SmartArt without its cached drawing). A deck that uses an approximated construct reports it as a load warning.
+- The editor covers a subset of PowerPoint: Remove Background, narration, Notes Master, Handout Master, Notes Page view, Grayscale views and Designer are not there yet.
+- OneDrive stores files through an adapter whose sign-in your host provides; there is no Office co-authoring.
 
-OneDrive needs a Microsoft sign-in your host provides; see the [OneDrive guide](https://christophervr.github.io/ooxml/pptx/guide/onedrive). It stores files and does not provide Office co-authoring.
-
-## Supported environments
-
-- Browsers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
-- React 18.2 or 19.
-- Node.js 22.3 or newer to install, build and test.
+See the [limitations page](https://christophervr.github.io/ooxml/pptx/guide/limitations) and the [Office parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md#powerpoint).
 
 ## Privacy and network use
 
-The viewer renders and saves decks in the browser and never uploads them. It contacts other servers only in these cases:
+The viewer renders and saves decks in the browser and never uploads them. Nothing collects analytics or telemetry. It contacts other servers only in these cases:
 
-- **Fonts that are neither installed nor embedded.** When a deck uses such a font and Google Fonts serves it (or a metric-compatible clone, such as Carlito for Calibri), the viewer downloads it from `fonts.googleapis.com` and `fonts.gstatic.com`, so the reader's IP address and the needed family names reach Google. This is on by default, as PowerPoint downloads its cloud fonts. Turn it off with `googleFonts: false`, or send the same requests to your own mirror with `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`. Readers can turn it off in File > Options > Trust Center ("Download fonts that are not installed or embedded (Google Fonts)"); a host value locks that toggle. With downloads off, text uses installed, embedded or substitute fonts, so line breaks can differ from PowerPoint. A slow download holds the deck for up to 8 seconds, and the deck opens at once when the font server cannot be reached, so offline use works. See [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md).
-- **Linked pictures and media** are not fetched when a deck opens, as in PowerPoint. A security bar offers **Enable Content**, which downloads them for that presentation only; in a shared session each participant chooses for themselves. The Trust Center option "Allow external content" (off by default) always allows them. `allowExternalContent: true` downloads them without asking, and `false` blocks them without the bar.
-- **Hyperlinks** open only when the reader clicks them, always in a new tab with `noopener` and `noreferrer`, so the linked site receives no referrer and cannot script the viewer's page, whatever frame the deck names. `file:` and `ftp:` links stay in the deck but never open. Relative links (no scheme, such as `notes.html`) open, against the host page's address, only after the host calls `setOpenRelativeHyperlinks(true)` from `ooxml-ui/pptx`.
-- **Share and Broadcast**, only when started. Updates go to the server you configure. With no server, peers meet through y-webrtc's public signaling server and public STUN servers; the signaling server sees a hash of the secret in the invitation link's `#key=` fragment (never the room name), the participants' IP addresses and encrypted signaling messages.
+- **Web fonts (on by default).** A font that is neither installed nor embedded, when the bundled Google Fonts catalogue serves it or a stand-in, is downloaded from `fonts.googleapis.com` and `fonts.gstatic.com`; Google sees the reader's IP address and the family names. Set `googleFonts` to `false` to turn it off, or to `{ baseUrl }` to use your own mirror; readers can turn it off in File > Options > Trust Center. Offline, the deck opens with substitute fonts.
+- **Linked pictures and media (off by default).** Fetched only after the reader chooses Enable Content on the security bar, or always with `allowExternalContent: true`; `false` blocks them without the bar.
+- **Share and Broadcast (only when started).** Updates go to the server you configure; without one, peers meet through y-webrtc's public signalling server and public STUN servers. Pass your own `collaboration.signaling` list to avoid them.
+- **AI assistant (off unless you pass `ai`).** Requests go to the connection you configure, with the conversation and deck context (`contextStrategy: 'none'` sends no deck context).
+- **Links** (hyperlinks, Microsoft Forms responses) open only when clicked, in a new tab without opener or referrer.
 
-Nothing collects analytics or telemetry. The full list, including what is kept in local storage, is in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+Autosave, recovery and preferences stay on the device (IndexedDB and localStorage). The full list, including Ink to Math and the camera, is in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#powerpoint-ooxml-uipptx-and-the-pptx--viewer-packages).
 
-Draw stores pen preset types, colours and thicknesses in the local viewer preferences. A host can redirect that storage with the pen preference adapter in `configurePptxDraw`. Ink to Math calls a host recognizer only when configured and explicitly requested. It passes the selected strokes as slide-local coordinates. See [PowerPoint privacy](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#ink-to-math).
+## Browser support
 
-## Related packages
+- The last two major versions of Chrome, Edge, Firefox and Safari; Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+- React 18.2 or 19.
+- Node.js 22.3 or newer to install and build.
 
-| Package                                                                                  | Use it for                                                        |
-| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| [`pptx-vue-viewer`](https://www.npmjs.com/package/pptx-vue-viewer)                       | The same viewer for Vue 3.                                        |
-| [`pptx-angular-viewer`](https://www.npmjs.com/package/pptx-angular-viewer)               | The same viewer for Angular.                                      |
-| [`pptx-svelte-viewer`](https://www.npmjs.com/package/pptx-svelte-viewer)                 | The same viewer for Svelte 5.                                     |
-| [`pptx-vanilla-viewer`](https://www.npmjs.com/package/pptx-vanilla-viewer)               | The same viewer with no framework.                                |
-| [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core)                     | Reading, building and saving decks in Node or a worker, no UI.    |
-| [`pptx-viewer-mcp`](https://www.npmjs.com/package/pptx-viewer-mcp)                       | PowerPoint editing tools for AI agents, as an MCP server.         |
-| [`@christophervr/pptx-viewer`](https://www.npmjs.com/package/@christophervr/pptx-viewer) | This viewer under a scoped name, plus an `npx` project installer. |
+## Documentation and demos
 
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme), which also has [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme), [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) and [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) viewers.
+- [Documentation](https://christophervr.github.io/ooxml/pptx/), the [React guide](https://christophervr.github.io/ooxml/pptx/react/) and the [live demo](https://christophervr.github.io/ooxml/pptx/demo/).
+- The same viewer for [Vue](https://www.npmjs.com/package/pptx-vue-viewer), [Angular](https://www.npmjs.com/package/pptx-angular-viewer), [Svelte](https://www.npmjs.com/package/pptx-svelte-viewer) and [no framework](https://www.npmjs.com/package/pptx-vanilla-viewer).
+- [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) for decks without a UI, and [`pptx-viewer-mcp`](https://www.npmjs.com/package/pptx-viewer-mcp) for AI agents.
+- Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme), with Word, Excel and Visio editors.
 
 ## License
 

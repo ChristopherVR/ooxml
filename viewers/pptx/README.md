@@ -1,77 +1,42 @@
 <div align="center">
 
-# pptx-viewer
+# PowerPoint viewer
 
-**Open, edit, present and save PowerPoint files in the browser, or build and convert them in Node.js.**
-One TypeScript engine, five UI bindings, no server.
+**Open, edit, present and save PowerPoint files in the browser, or build and convert them in Node.js: one TypeScript engine, five UI bindings, no server.**
+For web apps that need decks without a PowerPoint install or a conversion service, and for scripts and AI agents that read or write them.
 
-[![docs](https://img.shields.io/badge/docs-christophervr.github.io-6366f1.svg)](https://christophervr.github.io/ooxml/pptx/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/pptx-viewer-core?label=pptx-viewer-core)](https://www.npmjs.com/package/pptx-viewer-core)
+[![npm](https://img.shields.io/npm/v/pptx-react-viewer?label=pptx-react-viewer)](https://www.npmjs.com/package/pptx-react-viewer)
 
-[**Live demo**](https://christophervr.github.io/ooxml/pptx/demo/) &nbsp;&middot;&nbsp;
-[**Documentation**](https://christophervr.github.io/ooxml/pptx/) &nbsp;&middot;&nbsp;
-[**Quick start**](#quick-start) &nbsp;&middot;&nbsp;
-[**Packages**](#packages) &nbsp;&middot;&nbsp;
-[**Changelog**](CHANGELOG.md)
+[**Live demo**](https://christophervr.github.io/ooxml/pptx/demo/) &middot; [**Docs**](https://christophervr.github.io/ooxml/pptx/) &middot; [**Samples**](https://christophervr.github.io/ooxml/samples/) &middot; [**Packages**](#packages) &middot; [**Changelog**](CHANGELOG.md)
 
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](../docx#readme) &middot; [Excel](../xlsx#readme) &middot; **PowerPoint** &middot; [Visio](../visio#readme) &middot; [OpenTeams](../teams#readme) &middot; [Core](../../src/core#readme)
+Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Word](../docx#readme) &middot; [Excel](../xlsx#readme) &middot; **PowerPoint** &middot; [Visio](../visio#readme) &middot; [OpenTeams](../teams#readme) &middot; [Core](../../src/core#readme)
 
 ![The PowerPoint editor rendering a slide with the ribbon and slide thumbnails](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/editor.webp)
 
 </div>
 
-## Why pptx-viewer
+## Packages
 
-- **Client-side.** Decks never leave the user's machine: no PowerPoint install, no conversion service, no native binaries.
-- **An editor, not just a viewer.** Ribbon, inspector, on-canvas handles, undo and redo, slide sorter, notes, comments, find and replace, and presenter view.
-- **Saves real `.pptx`.** Edit a deck and save a file PowerPoint opens, with the parts you did not touch carried through.
-- **Your framework, same product.** React 18 and 19, Vue 3, Angular 19 to 22, Svelte 5 and plain JavaScript run the same viewer from one shared rendering layer, and one manifest keeps their props in step.
-- **Sharp and accessible.** Slides are HTML, CSS and SVG, so text is selectable, searchable and read by screen readers. Every change is checked in a real browser for keyboard use, axe-core rules, contrast and 400% zoom, in all five bindings.
-- **Safe with files you did not write.** Linked content waits for Enable Content, links open in an isolated tab, signatures show their verified state, and crafted packages cannot exhaust memory.
-- **Headless when you need it.** The engine runs in Node.js, Bun, Deno, workers and serverless functions.
-- **Ready for agents.** An MCP server with 74 tools reads and edits decks, and a Markdown converter turns slides into text a model can read.
+| Package                                                | Framework              | npm                                                             | What it is                                                          |
+| ------------------------------------------------------ | ---------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [`pptx-react-viewer`](packages/react/README.md)        | React 18.2 or 19       | [npm](https://www.npmjs.com/package/pptx-react-viewer)          | Viewer, editor and presenter component.                             |
+| [`pptx-vue-viewer`](packages/vue/README.md)            | Vue 3.5                | [npm](https://www.npmjs.com/package/pptx-vue-viewer)            | The same, as a Vue component.                                       |
+| [`pptx-angular-viewer`](packages/angular/README.md)    | Angular 19 to 22       | [npm](https://www.npmjs.com/package/pptx-angular-viewer)        | The same, as a standalone component (`<pptx-viewer>`).              |
+| [`pptx-svelte-viewer`](packages/svelte/README.md)      | Svelte 5               | [npm](https://www.npmjs.com/package/pptx-svelte-viewer)         | The same, as a Svelte component.                                    |
+| [`pptx-vanilla-viewer`](packages/vanilla/README.md)    | None                   | [npm](https://www.npmjs.com/package/pptx-vanilla-viewer)        | The same, from one `createPptxViewer` call.                         |
+| [`pptx-viewer-core`](packages/core/README.md)          | None (Node or browser) | [npm](https://www.npmjs.com/package/pptx-viewer-core)           | Read, build, edit, save and convert decks with no UI; a `pptx` CLI. |
+| [`pptx-viewer-mcp`](packages/tools/README.md)          | None (Node)            | [npm](https://www.npmjs.com/package/pptx-viewer-mcp)            | MCP server with 74 PowerPoint tools, and the tools as functions.    |
+| [`@christophervr/pptx-viewer`](packages/cli/README.md) | Any                    | [npm](https://www.npmjs.com/package/@christophervr/pptx-viewer) | The `npx` installer, and the React viewer under a scoped name.      |
 
-## Feature tour
-
-|                   |                                                                                                                                                                                                                                                                                            |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Rendering**     | 187 preset shapes, custom geometry, gradients, pattern and picture fills, shadows, glow, reflections, soft edges, 3D bevels and camera scenes, WordArt warps, tables with built-in styles, SVG charts, SmartArt, EMF/WMF metafiles, embedded fonts, ink, audio, video and GLB/GLTF models. |
-| **Editing**       | Text and rich formatting, style galleries, Edit Points, Merge Shapes, picture cropping, connectors that follow their shapes, chart data and formatting, SmartArt text and layouts, tables, masters and layouts, animation authoring, and full undo and redo.                               |
-| **Presenting**    | Fullscreen slide show with transitions (including Morph), entrance, emphasis, exit and motion-path animations, triggers, presenter view with notes and timer, laser pointer and ink.                                                                                                       |
-| **Exporting**     | PDF, PNG, GIF, video and JSON from the viewers; SVG and Markdown (with media extraction) from the engine.                                                                                                                                                                                  |
-| **Collaboration** | Real-time co-editing and Broadcast over Yjs, through your server or peer to peer, with presence, cursors and threaded comments.                                                                                                                                                            |
-| **File formats**  | `.pptx`, `.pptm`, `.ppsx`, `.potx`, OOXML Strict, and legacy binary `.ppt` (PowerPoint 97-2003) for import and export.                                                                                                                                                                     |
-| **Security**      | Password-protected decks (AES-128 and AES-256), verified digital signatures, VBA macros kept intact.                                                                                                                                                                                       |
-| **Localization**  | English, French, Spanish, German, Simplified Chinese, Japanese and Korean, with pluggable dictionaries.                                                                                                                                                                                    |
-| **Storage**       | Host-owned storage and OneDrive through an optional adapter ([integration guide](docs/guide/onedrive.md), [testing](docs/guide/onedrive-testing.md)); sign-in stays with the host, and there is no Office co-authoring.                                                                    |
+[`pptx-viewer-shared`](packages/shared/README.md) and [`pptx-viewer-locales`](packages/locales/README.md) are private workspace packages and are never published.
 
 ## Quick start
 
-### 1. Install
-
-The interactive installer detects your framework and package manager, then installs the right package or scaffolds a starter app:
-
 ```bash
-npx @christophervr/pptx-viewer@latest
+npx @christophervr/pptx-viewer@latest # picks your framework and installs the right package
 ```
-
-Or install one package yourself. Every UI package bundles or installs the engine.
-
-| I'm building...                    | Install                     |
-| ---------------------------------- | --------------------------- |
-| A **React** app                    | `npm i pptx-react-viewer`   |
-| A **Vue 3** app                    | `npm i pptx-vue-viewer`     |
-| An **Angular** app                 | `npm i pptx-angular-viewer` |
-| A **Svelte 5** app                 | `npm i pptx-svelte-viewer`  |
-| A page with **no framework**       | `npm i pptx-vanilla-viewer` |
-| **Headless** tooling (Node or web) | `npm i pptx-viewer-core`    |
-| An **AI agent** workflow           | `npm i pptx-viewer-mcp`     |
-
-Each package README lists its peer dependencies.
-
-### 2. Drop in the viewer
 
 ```tsx
 import { PowerPointViewer } from 'pptx-react-viewer';
@@ -80,138 +45,64 @@ import 'pptx-react-viewer/styles';
 export function App({ content }: { content: Uint8Array }) {
 	return (
 		<div style={{ height: '100vh' }}>
-			<PowerPointViewer
-				content={content}
-				canEdit
-				onContentChange={(bytes) => saveToServer(bytes)} // the edited .pptx
-			/>
+			<PowerPointViewer content={content} canEdit onContentChange={(bytes) => save(bytes)} />
 		</div>
 	);
 }
 ```
 
-The Vue, Angular and Svelte viewers read their labels through the framework's i18n library (`vue-i18n`, `@ngx-translate/core`) or a built-in translator, so their quick starts include a few lines of setup:
+Every framework has the same shape: pass the deck's bytes, turn editing on, listen for the edited bytes or read them from the handle. The props and events of the five bindings are kept identical by one manifest (`src/ui/src/pptx/render/viewer-props-manifest.ts`, checked by `bun run check:viewer-props`). Vue and Angular read their labels through `vue-i18n` and `@ngx-translate/core`, so their quick starts add a few lines; see each [package](#packages).
 
-| Framework  | Quick start                                                | Live demo                                                                |
-| ---------- | ---------------------------------------------------------- | ------------------------------------------------------------------------ |
-| React      | [packages/react](packages/react/README.md#quick-start)     | [demo](https://christophervr.github.io/ooxml/pptx/demo/)                 |
-| Vue 3      | [packages/vue](packages/vue/README.md#quick-start)         | [demo-vue](https://christophervr.github.io/ooxml/pptx/demo-vue/)         |
-| Angular    | [packages/angular](packages/angular/README.md#quick-start) | [demo-angular](https://christophervr.github.io/ooxml/pptx/demo-angular/) |
-| Svelte 5   | [packages/svelte](packages/svelte/README.md#quick-start)   | [demo-svelte](https://christophervr.github.io/ooxml/pptx/demo-svelte/)   |
-| Vanilla JS | [packages/vanilla](packages/vanilla/README.md#quick-start) | [demo-vanilla](https://christophervr.github.io/ooxml/pptx/demo-vanilla/) |
+## Features
 
-For file loading, CSS setup and container sizing, follow the [getting-started guide](https://christophervr.github.io/ooxml/pptx/guide/quick-start).
+- **Rendering** as HTML, CSS and SVG (selectable text, screen readers): the 187 preset shapes, custom geometry, effects, tables, charts, SmartArt, EMF/WMF pictures, embedded fonts, ink, audio, video and 3D models.
+- **Editing** with a PowerPoint-style ribbon, inspector and on-canvas handles: text, tables, chart data, SmartArt, masters and layouts, animations, undo and redo.
+- **Presenting** with transitions (including Morph), animations and motion paths, presenter view, rehearse timings, pen and laser.
+- **Files**: `.pptx`, `.pptm`, `.ppsx`, `.potx`, Strict OOXML and legacy `.ppt` in and out; password-protected decks; signature inspection; export to PDF, PNG, GIF, video and JSON, and to SVG and Markdown from the engine.
+- **Collaboration** over Yjs, through your server or peer to peer, with presence and threaded comments.
+- **Host control**: hide or lock any ribbon command, panel or option, bring your own storage, fonts and load limits, and an optional AI assistant with a write policy.
+- **Seven UI languages**: English, French, Spanish, German, Simplified Chinese, Japanese and Korean.
 
-## Headless: create, edit and convert decks in code
+## Status and limits
 
-`pptx-viewer-core` is the engine the viewers use, with no UI.
+PowerPoint carries no stability label yet: it has not been assessed against the [stability policy](../../docs/stability.md). It does not claim PowerPoint parity or a lossless round trip: untouched parts are carried through a save, but an edited slide can still lose minor markup, some effects are approximated, and the editor covers a subset of PowerPoint. A deck that hits a known gap reports it on load (`data.warnings`). The [limitations page](https://christophervr.github.io/ooxml/pptx/guide/limitations), the [OpenXML conformance inventory](docs/architecture/openxml-conformance.md) and the PowerPoint section of the [Office parity checklist](../../docs/parity-checklist.md#powerpoint) list what is open.
 
-```ts
-import { PptxHandler, PptxMarkdownConverter } from 'pptx-viewer-core';
+## Privacy and network use
 
-// Build a deck
-const { handler, data, createSlide } = await PptxHandler.create({ title: 'Quarterly Review' });
-data.slides.push(
-	createSlide()
-		.addText('Hello World', { x: 100, y: 100, width: 600, height: 80, fontSize: 36 })
-		.addShape('rect', { x: 100, y: 250, width: 300, height: 200 })
-		.build(),
-);
-const bytes = await handler.save(data.slides); // a valid .pptx
+Decks are opened and saved on the device and never uploaded, and nothing collects telemetry. By default the viewers download fonts that are neither installed nor embedded from Google Fonts (`googleFonts: false` or a mirror turns it off); linked media wait for Enable Content (`allowExternalContent`), and collaboration and the AI assistant contact only what you configure once started. Details are in the [PowerPoint section of PRIVACY.md](../../PRIVACY.md#powerpoint-ooxml-uipptx-and-the-pptx--viewer-packages).
 
-// Open one, read it, convert it
-const opened = await new PptxHandler().load(arrayBuffer);
-const markdown = await new PptxMarkdownConverter('./output', {
-	sourceName: 'deck.pptx',
-	includeSpeakerNotes: true,
-	semanticMode: true,
-}).convert(opened);
-```
+## Samples
 
-The engine also ships a `pptx` command (`npx pptx-viewer-core info deck.pptx`). See the [core guide](https://christophervr.github.io/ooxml/pptx/core/) for the data model, builders, encryption, signatures and the [converter options](docs/core/converter.md).
+Sample files to try: https://christophervr.github.io/ooxml/samples/
 
-## AI agents and MCP
+## Documentation
 
-`pptx-viewer-mcp` exposes the engine as Model Context Protocol tools, so Claude, Cursor and other agents can read, edit and save presentations under a root folder you choose:
+- [Docs site](https://christophervr.github.io/ooxml/pptx/): the [getting-started guide](https://christophervr.github.io/ooxml/pptx/guide/quick-start), one guide per framework, the [core guide](https://christophervr.github.io/ooxml/pptx/core/), the [architecture](https://christophervr.github.io/ooxml/pptx/guide/architecture) and the [user guide](https://christophervr.github.io/ooxml/pptx/user/). Its source is [`docs/`](docs/).
+- [Browser support](../../docs/browser-support.md): the last two major versions of Chrome, Edge, Firefox and Safari, Safari 16.4 at least; Node.js 22.3 or newer.
+- [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) for contributors: the parity rule (a UI change lands in all five bindings), where code goes, and how the demos resolve packages. Report vulnerabilities through [SECURITY.md](SECURITY.md).
 
-```json
-{
-	"mcpServers": {
-		"pptx": { "command": "npx", "args": ["pptx-viewer-mcp", "--root", "/path/to/decks"] }
-	}
-}
-```
+## Development
 
-Every tool is also a plain function (`replaceText({ pptxData }, { query: 'Draft', replacement: 'Final' })`). The viewers' optional built-in [AI assistant](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant) drives the same tools, with a write policy that applies, stages or asks for approval of each change.
-
-## See it in each framework
-
-| React                                                                                                                            | Vue 3                                                                                                                              | Angular                                                                                                                            |
-| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| ![React demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/react-demo.webp)   | ![Vue demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/vue-demo.webp)         | ![Angular demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/angular-demo.webp) |
-| **Svelte 5**                                                                                                                     | **Vanilla JS**                                                                                                                     | **Installer**                                                                                                                      |
-| ![Svelte demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/svelte-demo.webp) | ![Vanilla demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/vanilla-demo.webp) | ![Installer](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/cli-installer.webp)   |
-
-## Packages
-
-| Package                                                | What it is                                                                       |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| [`pptx-viewer-core`](packages/core/README.md)          | Parse, build, edit, save and convert PowerPoint files, with a CLI. No UI.        |
-| [`pptx-react-viewer`](packages/react/README.md)        | React viewer, editor and presenter.                                              |
-| [`pptx-vue-viewer`](packages/vue/README.md)            | Vue 3 viewer, editor and presenter.                                              |
-| [`pptx-angular-viewer`](packages/angular/README.md)    | Angular viewer, editor and presenter.                                            |
-| [`pptx-svelte-viewer`](packages/svelte/README.md)      | Svelte 5 viewer, editor and presenter.                                           |
-| [`pptx-vanilla-viewer`](packages/vanilla/README.md)    | Viewer, editor and presenter with no framework: one factory function, plain DOM. |
-| [`pptx-viewer-mcp`](packages/tools/README.md)          | MCP server and tool functions for AI agents.                                     |
-| [`@christophervr/pptx-viewer`](packages/cli/README.md) | The `npx` installer and scaffolder, and the React viewer under a scoped name.    |
-
-Internal and never installed directly: [`pptx-viewer-shared`](packages/shared/README.md) (a compatibility facade; the framework-neutral renderer lives in `ooxml-ui/pptx`) and [`pptx-viewer-locales`](packages/locales/README.md) (translations).
-
-## How it works
-
-```
-pptx-react-viewer   ┐
-pptx-vue-viewer     │
-pptx-angular-viewer ├── ooxml-ui/pptx ── pptx-viewer-core ── ooxml-core/pptx ──┬── emf-converter
-pptx-svelte-viewer  │   (viewer logic)   (thin re-export)    (file format)       └── mtx-decompressor
-pptx-vanilla-viewer ┘
-```
-
-- **Core** owns the file format: the load and save pipelines, the typed `PptxData` model (a discriminated union of 16 element types), theme inheritance (element, placeholder, layout, master, theme), geometry, encryption, signatures and converters.
-- **Shared** (`ooxml-ui/pptx`) holds everything a viewer needs that is not framework code: style and colour resolution, text layout, chart maths, connector routing, the animation and Morph engines, export preparation, and the headless controllers (undo, autosave, slide show, sorter, comments).
-- **Bindings** map the shared descriptors onto JSX, single-file components, Angular templates, Svelte runes or plain DOM, which is why all five render the same and ship the same features.
-
-Read the [architecture guide](https://christophervr.github.io/ooxml/pptx/guide/architecture) for the deep dive.
-
-## Fidelity and compatibility
-
-Fidelity is tracked in the open. Rendering is compared with real PowerPoint output, the [OpenXML conformance inventory](docs/architecture/openxml-conformance.md) grades each feature, and a construct that loads as an approximation is reported at runtime on `data.warnings`. The [limitations page](https://christophervr.github.io/ooxml/pptx/guide/limitations) lists what is still being worked on, and [`docs/parity-checklist.md`](../../docs/parity-checklist.md) the open gaps across the Office products.
-
-Browsers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](../../docs/browser-support.md)). Node.js 22.3 or newer.
-
-## Contributing
-
-The viewer lives in `viewers/pptx` of [ChristopherVR/ooxml](https://github.com/ChristopherVR/ooxml), next to the `ooxml-core` engine it is built on; its demos are in `demos/pptx` and its browser tests in `e2e/pptx` at the repository root.
+The viewer lives in `viewers/pptx` of this repository; its demos are in `demos/pptx` and its browser tests in `e2e/pptx` at the root. Install and build the engine and the shared UI at the root first, then work here:
 
 ```bash
-git clone https://github.com/ChristopherVR/ooxml.git
-cd ooxml
-bun install                                  # one workspace for the whole repository
-bun run build && bun run --cwd src/ui build  # the engine and the shared UI the viewer reads
+bun install                                  # at the repository root: one workspace
+bun run build && bun run --cwd src/ui build  # the core and ooxml-ui that the bindings read
 cd viewers/pptx
-bun run build:packages   # core -> shared -> locales -> tools -> cli -> the five bindings
-bun run test
-bun run demo             # React demo on :4173 (also demo:vue, demo:angular, demo:svelte, demo:vanilla)
+bun run build:packages   # core, shared, locales, tools, cli, then the five bindings
+bun run typecheck        # needs the built packages
+bun run test             # every package's Vitest suite
+bun run lint
+bun run check:viewer-props
+bun run demo             # React demo on :4173 (also demo:vue, demo:angular, demo:vanilla, demo:svelte)
+bun run e2e              # Playwright across the five demos (--project=react to narrow)
 bun run e2e:fast         # cached production demos, React tests and cross-binding comparisons
-bun run e2e:all          # ordinary product tests in every binding
+bun run e2e:local-only   # the specs CI skips; run before pushing changes they cover
+bun run docs:dev         # the VitePress docs site
 ```
 
-See [fast browser testing](../../docs/browser-performance.md) for selected specs, warm servers, worker budgets, CI sharding and measured results.
-
-You will need [Bun](https://bun.sh/) and Node.js 22.3 or newer. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request: it explains the **parity rule** (a UI change lands in all five bindings), Conventional Commits (they drive each package's version) and how the demos resolve packages. This project follows a [Code of Conduct](CODE_OF_CONDUCT.md); report vulnerabilities privately through [SECURITY.md](SECURITY.md).
-
-> _Developed with [Claude Code](https://claude.com/claude-code)._
+See [fast browser testing](../../docs/browser-performance.md) for selected specs, warm servers and worker budgets.
 
 ## License
 
-[Apache License 2.0](LICENSE): free to use, modify and distribute, including in commercial and closed-source products, with an explicit patent grant. When redistributing, keep the [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) files and note any files you changed. Some bundled components carry their own licenses (for example, `mtx-decompressor` is MPL-2.0); see the `NOTICE` files.
+[Apache License 2.0](LICENSE). Keep the [LICENSE](LICENSE) and [NOTICE](NOTICE) files with redistributions; some bundled components carry their own licences (for example `mtx-decompressor` is MPL-2.0), listed in the NOTICE files.

@@ -1,40 +1,30 @@
 # pptx-viewer-shared
 
-This private package is a compatibility facade for `ooxml-ui/pptx`. It owns no
-renderer, document operations, translations or browser components. All five
-framework bindings import the public UI package directly.
+**A private compatibility facade that re-exports the public `ooxml-ui/pptx` APIs under their old package name. It is never published to npm and owns no code.**
 
-The shared renderer and browser lifecycle live in `src/ui/src/pptx` at the
-monorepo root. DOM-free editing and collaboration live in `src/core/pptx/editor`,
-and assistant/MCP schemas live in `src/core/pptx/automation/schemas`.
+The PowerPoint renderer, web components and browser lifecycle live in `src/ui/src/pptx` at the repository root (published as `ooxml-ui/pptx`), DOM-free editing in `src/core/pptx/editor` and the assistant and MCP tool schemas in `src/core/pptx/automation/schemas`. Its entries map onto them:
 
-## Public APIs
+| Entry                       | Re-exports             |
+| --------------------------- | ---------------------- |
+| `pptx-viewer-shared`        | `ooxml-ui/pptx`        |
+| `pptx-viewer-shared/theme`  | `ooxml-ui/pptx/theme`  |
+| `pptx-viewer-shared/loader` | `ooxml-ui/pptx/loader` |
+| `pptx-viewer-shared/i18n`   | `ooxml-ui/pptx/i18n`   |
+| `pptx-viewer-shared/ai`     | `ooxml-ui/pptx/ai`     |
 
-Use these published entries when sharing PowerPoint features with another project:
-
-- `ooxml-ui/pptx`: renderer and web components.
-- `ooxml-ui/pptx/theme`, `/loader`, `/i18n`, `/ai`: focused browser APIs.
-- `ooxml-core/pptx/editor/<module>`: document operations.
-- `ooxml-core/pptx/automation/schemas`: tool contracts.
-
-The root, theme, loader, i18n and ai entries here only re-export those APIs.
-Do not add implementations or new dependencies here. This facade is never
-published to npm. See [the migration guide](../../../../docs/pptx-shared-migration.md)
-for ownership, build order and provenance.
+**Who imports it.** Only workspace code that is never published: some PowerPoint demos (`demos/pptx/demo-vanilla`, `demos/pptx/demo-host-review`) and the browser tests in `e2e/pptx`. The five framework bindings import `ooxml-ui` directly, and a published binding must not reference this package: `scripts/check-published-shared-refs.mjs` (`bun run check:published-types`) fails when a packed `.d.ts` imports from it. New code should import the `ooxml-ui` entries above; do not add implementations or dependencies here. See [the migration guide](../../../../docs/pptx-shared-migration.md) for ownership and build order.
 
 ## Development
 
-Build core and UI from the monorepo root before checking the facade:
+Build the core and the UI at the repository root first:
 
 ```bash
 bun run build
 bun run --cwd src/ui build
 bun run --cwd viewers/pptx/packages/shared build
 bun run --cwd viewers/pptx/packages/shared typecheck
-bun run --cwd viewers/pptx/packages/shared test
+bun run --cwd viewers/pptx/packages/shared test # runs the PowerPoint suite in src/ui
 ```
-
-`test` and `test:watch` forward to the migrated product suite in `src/ui`.
 
 ## License
 
