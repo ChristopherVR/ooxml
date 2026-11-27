@@ -865,6 +865,47 @@ test('a sample or its generator runs the script tests that check the samples', (
 	}
 });
 
+test('a core area the sample generators import runs the script tests, its tests do not', () => {
+	for (const file of [
+		'src/core/docx/save.ts',
+		'src/core/xlsx/write/save.ts',
+		'src/core/pptx/core/builders/sdk/SlideBuilder.ts',
+		'src/core/visio/edit.ts',
+		'src/core/drawingml/raster-encode.ts',
+		'src/core/chart/write/chart-space.ts',
+		'src/core/diagram/write/data.ts',
+		'src/core/opc/content-types.ts',
+	])
+		assert.equal(plan([file]).scripts, true, file);
+	for (const file of [
+		'src/core/docx/save.test.ts',
+		'src/core/units/emu.ts',
+		'src/core/teams/client.ts',
+		'src/ui/src/docx/schema.ts',
+	])
+		assert.equal(plan([file]).scripts, false, file);
+});
+
+test('only what the gallery shows or opens runs the browser gates for a samples change', () => {
+	for (const file of [
+		'samples/manifest.json',
+		'samples/thumbnails/technical-report.webp',
+		'samples/xlsx/financial-model.xlsx',
+		'samples/visio/platform-architecture.vsdx',
+	])
+		assert.equal(plan([file]).a11y.run, true, file);
+	for (const file of [
+		'samples/README.md',
+		'samples/tsconfig.json',
+		'samples/generators/build.ts',
+		'samples/generators/docx/report/data.ts',
+		'samples/generators/thumbnails.json',
+	]) {
+		assert.equal(plan([file]).a11y.run, false, file);
+		assert.equal(plan([file]).scripts, true, file);
+	}
+});
+
 test('the accessibility gates run for the suite, the shared UI, the viewers and the gates', () => {
 	const suiteOnly = ['suite'];
 	const all = ['suite', ...PPTX_BINDINGS.map((binding) => `pptx-${binding}`)];

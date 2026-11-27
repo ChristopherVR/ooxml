@@ -26,7 +26,7 @@ interface Line {
 	width: number;
 }
 
-function edges(top: Line, bottom: Line): TableCellInput['borders'] {
+function edges(top: Line, bottom: Line): NonNullable<TableCellInput['borders']> {
 	return { top, bottom, left: OPEN, right: OPEN };
 }
 

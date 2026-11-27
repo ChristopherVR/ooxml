@@ -415,11 +415,19 @@ export function pptxPlan(files, { everything, reaches, reference = false, reach 
  */
 export const A11Y_SHARDS = { withPowerPoint: 2, suiteOnly: 1 };
 /**
- * What the gates run against: the suite's sources and shell, the viewers and their demos, and the
- * sample files the gallery spec opens in each editor.
+ * What the gates run against: the suite's sources and shell, the viewers and their demos, and what
+ * the gallery spec shows and opens (the manifest, the thumbnails and the sample files). A sample's
+ * generator or the README changes nothing a browser sees until the files are rebuilt.
  */
 const A11Y_REACH =
-	/^(src\/ui\/|apps\/office-suite\/|site\/|samples\/|viewers\/|demos\/|e2e\/a11y\/|scripts\/(build-suite|build-samples-page|bundle-suite|build-pwa|preview-site|browser-performance)\.mjs$)/;
+	/^(src\/ui\/|apps\/office-suite\/|site\/|samples\/(manifest\.json$|thumbnails\/|docx\/|xlsx\/|pptx\/|visio\/)|viewers\/|demos\/|e2e\/a11y\/|scripts\/(build-suite|build-samples-page|bundle-suite|build-pwa|preview-site|browser-performance)\.mjs$)/;
+
+/**
+ * The core areas the sample generators (`samples/generators/`) import from source. A change to
+ * one of them runs the script tests, where samples.test.mjs typechecks the generators and runs
+ * each one twice, so a model or writer change that breaks a generator fails with that change.
+ */
+const SAMPLE_GENERATOR_CORE = /^src\/core\/(docx|xlsx|pptx|visio|drawingml|chart|diagram|opc)\//;
 
 /**
  * What the byte budgets measure (scripts/perf-budgets.mjs): the built core and ooxml-ui, and the
@@ -665,10 +673,11 @@ export function plan(changed, { full = false, testFiles, reference = false, reac
 	const src = live.filter((file) => file.startsWith('src/core/'));
 	const ui = live.some((file) => file.startsWith('src/ui/'));
 	// `.release-notes/` is checked by major-notes.test.mjs, so a note runs the script tests; so do
-	// the samples, which samples.test.mjs regenerates and compares.
+	// the samples and the core areas their generators import, which samples.test.mjs checks.
 	const scripts =
 		files.some((file) => CHANGELOG.test(file)) ||
-		live.some((file) => /^(scripts|\.github|site|samples|\.release-notes)\//.test(file));
+		live.some((file) => /^(scripts|\.github|site|samples|\.release-notes)\//.test(file)) ||
+		live.some((file) => SAMPLE_GENERATOR_CORE.test(file) && !isTestFile(file));
 	const mcp = live.some(
 		(file) => file.startsWith('mcp/') || file.startsWith('src/core/automation/'),
 	);
