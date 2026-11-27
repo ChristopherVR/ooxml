@@ -1,6 +1,6 @@
 import { INK_RELATIONSHIP_TYPE, INKML_CONTENT_TYPE } from '../../drawingml/inkml/constants';
 import { NS, buildXml, parseXml } from '../../xml/index';
-import type { InkObject } from '../model';
+import type { InkObject, Workbook } from '../model';
 import { XDR14_NS } from '../read/ink';
 import type { PackageWriter, RelationshipSet } from './package-writer';
 import { escapeAttr } from './xml-out';
@@ -57,6 +57,35 @@ function contentPartXml(
 	);
 }
 
+/** Anchor XML without its `mc:Fallback` (the picture of the strokes as they were). */
+function withoutFallback(xml: string): string {
+	return xml.replace(
+		/<([\w.-]+:)?Fallback\b[\s\S]*?<\/\1Fallback>|<([\w.-]+:)?Fallback\b[^>]*\/>/gu,
+		'',
+	);
+}
+
+/**
+ * Which drawing keeps each source ink part when several name it (a copy, a duplicated sheet):
+ * one whose strokes are unchanged, so the part keeps its bytes, else the first. The others get
+ * parts of their own, whatever order the sheets are written in.
+ */
+export function inkPartOwners(workbook: Workbook, writer: PackageWriter): Map<string, object> {
+	const owners = new Map<string, InkObject>();
+	const unchanged = (ink: InkObject) =>
+		writer.inkml?.updatedInkPart(writer.source?.text(ink.partName!), ink.strokes, {
+			width: ink.width,
+			height: ink.height,
+		}) === undefined;
+	for (const sheet of workbook.sheets)
+		for (const ink of sheet.drawings)
+			if (ink.kind === 'ink' && ink.partName) {
+				const owner = owners.get(ink.partName);
+				if (!owner || (!unchanged(owner) && unchanged(ink))) owners.set(ink.partName, ink);
+			}
+	return owners;
+}
+
 /**
  * Writes an ink drawing's part and returns its anchor content (new ink) or its kept anchor XML
  * (`kept`). The strokes are written in their own `width` x `height` space, which `xdr14:xfrm`
@@ -77,21 +106,25 @@ export function writeInkDrawing(
 	if (!inkml) throw new Error('The InkML writer was not loaded for this save.');
 	const { updatedInkPart, writeInkPart } = inkml;
 	const size = { w: ink.width, h: ink.height };
-	const shared = ink.partName !== undefined && writer.inkParts.has(ink.partName);
-	if (ink.partName) writer.inkParts.add(ink.partName);
-	if (ink.partName && ink.sourceXml && keepSource && !shared) {
-		const source = writer.source?.text(ink.partName);
+	const source = ink.partName ? writer.source?.text(ink.partName) : undefined;
+	if (ink.partName && ink.sourceXml && keepSource && writer.inkOwners.get(ink.partName) === ink) {
 		const xml = updatedInkPart(source, ink.strokes, { width: size.w, height: size.h });
 		if (xml === undefined) {
 			writer.carry(ink.partName);
 			return { kept: ink.sourceXml };
 		}
 		writer.add(ink.partName, xml, INKML_CONTENT_TYPE);
-		return { kept: patchXfrm(ink.sourceXml, size) };
+		// The fallback picture shows the strokes as they were: drop it once they change.
+		return { kept: withoutFallback(patchXfrm(ink.sourceXml, size)) };
 	}
 	const part = newInkPart(writer);
-	// A copy of ink read only in part copies its part; anything else is written from its strokes.
-	const bytes = ink.truncated && ink.partName ? writer.source?.bytes(ink.partName) : undefined;
+	// A copy of ink read only in part, or not changed, copies its part's bytes (Excel's own trace
+	// encoding included); anything else is written from its strokes.
+	const unchanged =
+		source !== undefined &&
+		(ink.truncated ||
+			updatedInkPart(source, ink.strokes, { width: size.w, height: size.h }) === undefined);
+	const bytes = unchanged && ink.partName ? writer.source?.bytes(ink.partName) : undefined;
 	writer.add(
 		part,
 		bytes ?? writeInkPart(ink.strokes, undefined, { width: size.w, height: size.h }),

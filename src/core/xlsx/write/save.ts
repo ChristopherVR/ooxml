@@ -2,6 +2,7 @@ import { pendingXPath } from '#xpath-runtime';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE, isSignaturePart } from '../../opc/signature/index';
 import type { Workbook } from '../model';
+import { inkPartOwners } from './ink';
 import { parsePersons } from '../read/comments';
 import { CONTENT_TYPES, SourceIndex } from '../read/package';
 import { PersonRegistry } from './comments';
@@ -57,8 +58,10 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 	if (!workbook.sheets.length) throw new Error('A workbook needs at least one sheet');
 	const source = workbook.source ? new SourceIndex(workbook.source.parts) : undefined;
 	const writer = new PackageWriter(source);
-	if (workbook.sheets.some((sheet) => sheet.drawings.some((drawing) => drawing.kind === 'ink')))
+	if (workbook.sheets.some((sheet) => sheet.drawings.some((drawing) => drawing.kind === 'ink'))) {
 		writer.inkml = await import('#inkml-runtime');
+		writer.inkOwners = inkPartOwners(workbook, writer);
+	}
 	const sourceBook = source?.workbookPart();
 	const bookPart = sourceBook ?? 'xl/workbook.xml';
 	const reserved = new Set(source?.parts.keys() ?? []);

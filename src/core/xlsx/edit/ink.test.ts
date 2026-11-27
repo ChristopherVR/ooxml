@@ -69,6 +69,23 @@ describe('Excel ink', () => {
 		expect(types).toContain('PartName="/xl/ink/ink2.xml" ContentType="application/inkml+xml"');
 	});
 
+	it('drops the stale fallback picture of ink whose strokes changed', async () => {
+		const wb = await loadXlsx(fixture('excel-ink-fallback.xlsx'));
+		const ink = inkOf(wb);
+		setInk(testContext(wb), 0, 0, ink.anchor, {
+			strokes: ink.strokes.slice(1),
+			width: ink.width,
+			height: ink.height,
+		});
+		const zip = await JSZip.loadAsync(await saveXlsx(wb));
+		const drawing = await zip.file('xl/drawings/drawing1.xml')!.async('string');
+		expect(drawing).not.toContain('Fallback');
+		expect(drawing).toContain('<xdr:contentPart');
+		expect(
+			inkOf(await loadXlsx(await zip.generateAsync({ type: 'uint8array' }))).strokes,
+		).toHaveLength(3);
+	});
+
 	it('saves new ink and erased strokes, and reads them back', async () => {
 		const wb = await loadXlsx(fixture('excel-ink.xlsx'));
 		const ctx = testContext(wb);
@@ -121,6 +138,25 @@ describe('Excel ink', () => {
 		);
 		expect(inks.map((ink) => ink.strokes.length)).toEqual([4, 4]);
 		expect(new Set(inks.map((ink) => ink.partName)).size).toBe(2);
+	});
+
+	it('keeps the part of ink whose edited copy is written first', async () => {
+		const wb = await loadXlsx(fixture('excel-ink.xlsx'));
+		const original = inkOf(wb);
+		const copy = { ...structuredClone(original), anchor: otherAnchor } as InkObject;
+		copy.strokes = copy.strokes.slice(2);
+		// The copy comes first, as on a duplicated sheet ordered before the original.
+		wb.sheets[0]!.drawings.unshift(copy);
+		const bytes = await saveXlsx(wb);
+		const zip = await JSZip.loadAsync(bytes);
+		const source = await JSZip.loadAsync(fixture('excel-ink.xlsx'));
+		expect(await zip.file('xl/ink/ink1.xml')!.async('string')).toBe(
+			await source.file('xl/ink/ink1.xml')!.async('string'),
+		);
+		const inks = (await loadXlsx(bytes)).sheets[0]!.drawings.filter(
+			(drawing): drawing is InkObject => drawing.kind === 'ink',
+		);
+		expect(inks.map((ink) => ink.strokes.length)).toEqual([2, 4]);
 	});
 
 	it('never rewrites a part read only in part', async () => {
