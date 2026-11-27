@@ -19,6 +19,10 @@ export const PROTOCOL_PARAM = 'proto';
 /** The longest room name the reference server accepts. */
 export const MAX_ROOM_ID_LENGTH = 128;
 
+/** Whether `id` can name a workspace room: 1 to {@link MAX_ROOM_ID_LENGTH} of `[A-Za-z0-9_-]`. */
+export const isWorkspaceId = (id: string): boolean =>
+	id.length > 0 && id.length <= MAX_ROOM_ID_LENGTH && /^[\w-]+$/u.test(id);
+
 /** `chat-<16 hex of the workspace>-<chat id>`: a private chat's own sync room. */
 export const CHAT_ROOM_PATTERN = /^chat-[0-9a-f]{16}-[\w-]+$/u;
 /** `dm-<32 hex>`: the chat id of a 1:1 chat (the same two people always get the same id). */

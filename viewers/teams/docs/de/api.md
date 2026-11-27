@@ -6,7 +6,7 @@ Jedes Binding umhüllt dasselbe Custom Element `<teams-app>`. Die Bindings leite
 
 | Eigenschaft     | Attribut        | Beschreibung                                                                                                                         |
 | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `workspaceId`   | `workspace-id`  | Der gemeinsame Raum: 1 bis 100 Zeichen aus Buchstaben, Ziffern, `-` und `_`; jeder andere Wert fällt auf `demo` zurück.              |
+| `workspaceId`   | `workspace-id`  | Der gemeinsame Raum: 1 bis 128 Zeichen aus Buchstaben, Ziffern, `-` und `_`; jeder andere Wert fällt auf `demo` zurück.              |
 | `userName`      | `user-name`     | Anzeigename.                                                                                                                         |
 | `userId`        | `user-id`       | Stabile ID; standardmäßig eine, die in diesem Browser gespeichert ist.                                                               |
 | `locale`        | `locale`        | Anzeigesprache: ein BCP-47-Tag wie `de` oder `zh-CN`. Unbekannt oder leer bedeutet Englisch.                                         |

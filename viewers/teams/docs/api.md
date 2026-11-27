@@ -6,7 +6,7 @@ Every binding wraps the same `<teams-app>` custom element. The bindings forward 
 
 | Property        | Attribute       | Description                                                                                                                  |
 | --------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `workspaceId`   | `workspace-id`  | The shared room: 1 to 100 characters of letters, digits, `-` and `_`; any other value falls back to `demo`.                  |
+| `workspaceId`   | `workspace-id`  | The shared room: 1 to 128 characters of letters, digits, `-` and `_`; any other value falls back to `demo`.                  |
 | `userName`      | `user-name`     | Display name.                                                                                                                |
 | `userId`        | `user-id`       | Stable id; defaults to one remembered in this browser.                                                                       |
 | `locale`        | `locale`        | Display language: a BCP 47 tag such as `de` or `zh-CN`. Unknown or empty means English.                                      |

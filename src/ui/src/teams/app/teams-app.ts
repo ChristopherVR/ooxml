@@ -22,6 +22,7 @@ import {
 	type TabContent,
 	isPresenceStatus,
 	isStatusDuration,
+	isWorkspaceId,
 	parseServerConfig,
 	type PresenceStatus,
 	type StatusDuration,
@@ -352,7 +353,7 @@ export class TeamsApp extends TeamsLitElement {
 				: remembered;
 		if (this.userName && !this.userId && !account) saveIdentity(named!);
 		if (!named) return this.teams.stop();
-		const workspaceId = /^[\w-]{1,100}$/u.test(this.workspaceId) ? this.workspaceId : 'demo';
+		const workspaceId = isWorkspaceId(this.workspaceId) ? this.workspaceId : 'demo';
 		this.themeStorageKey = `teams:theme:${encodeURIComponent(workspaceId)}:${encodeURIComponent(named.id)}`;
 		const rememberedTheme = safeStorage.getItem(this.themeStorageKey);
 		if (!this.hasAttribute('host-theme'))

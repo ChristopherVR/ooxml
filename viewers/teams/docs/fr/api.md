@@ -6,7 +6,7 @@ Toutes les intégrations enveloppent le même élément personnalisé `<teams-ap
 
 | Propriété       | Attribut        | Description                                                                                                                    |
 | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `workspaceId`   | `workspace-id`  | La salle partagée : 1 à 100 caractères parmi lettres, chiffres, `-` et `_` ; toute autre valeur revient à `demo`.              |
+| `workspaceId`   | `workspace-id`  | La salle partagée : 1 à 128 caractères parmi lettres, chiffres, `-` et `_` ; toute autre valeur revient à `demo`.              |
 | `userName`      | `user-name`     | Nom affiché.                                                                                                                   |
 | `userId`        | `user-id`       | Identifiant stable ; par défaut, un identifiant mémorisé dans ce navigateur.                                                   |
 | `locale`        | `locale`        | Langue d’affichage : une étiquette BCP 47 comme `de` ou `zh-CN`. Valeur inconnue ou vide : anglais.                            |

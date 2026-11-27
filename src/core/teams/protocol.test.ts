@@ -15,6 +15,8 @@ import {
 	chatIdOfRoom,
 	isChatRoomAlias,
 	isStrayChatCallRoom,
+	isWorkspaceId,
+	MAX_ROOM_ID_LENGTH,
 	protocolOfUrl,
 	protocolParams,
 } from './protocol';
@@ -22,6 +24,18 @@ import { createGroupChatId, isGroupChatIdOf, legacyDirectChatId } from './chats'
 import { endpointUrl } from './server-config';
 
 describe('protocol version and room names', () => {
+	it('accepts workspace ids up to the server room limit, as the server does', () => {
+		expect(MAX_ROOM_ID_LENGTH).toBe(128);
+		expect(isWorkspaceId('team_1-a')).toBe(true);
+		expect(isWorkspaceId('w'.repeat(128))).toBe(true);
+		expect(isWorkspaceId('w'.repeat(101))).toBe(true);
+		expect(isWorkspaceId('w'.repeat(129))).toBe(false);
+		expect(isWorkspaceId('')).toBe(false);
+		expect(isWorkspaceId('a b')).toBe(false);
+		expect(isWorkspaceId('a/b')).toBe(false);
+		expect(classifyRoom('w'.repeat(128))).toBe('workspace');
+	});
+
 	it('pins the protocol version and its query parameter', () => {
 		expect(PROTOCOL_VERSION).toBe(2);
 		expect(PROTOCOL_PARAM).toBe('proto');

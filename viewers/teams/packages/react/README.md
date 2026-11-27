@@ -62,7 +62,7 @@ mode, where tabs of one browser share the workspace over `BroadcastChannel`.
 
 | Prop          | Type                                                  | Notes                                                                                                                      |
 | ------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `workspaceId` | `string`                                              | The shared room: 1 to 100 letters, digits, `-` or `_`. Default `demo`.                                                     |
+| `workspaceId` | `string`                                              | The shared room: 1 to 128 letters, digits, `-` or `_`. Default `demo`.                                                     |
 | `userName`    | `string`                                              | Display name.                                                                                                              |
 | `userId`      | `string`                                              | Stable id for authorship; by default one remembered in this browser.                                                       |
 | `config`      | `TeamsServerConfig \| null`                           | `mode`, `syncUrl`, `signalingUrl`, `iceServers`; optional `iceTransportPolicy`, `token`, `sessionToken`. `null` clears it. |

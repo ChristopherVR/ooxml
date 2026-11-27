@@ -6,7 +6,7 @@ Todos los bindings envuelven el mismo elemento personalizado `<teams-app>`. Los 
 
 | Propiedad          | Atributo        | Descripción                                                                                                                 |
 | ------------------ | --------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `workspaceId`      | `workspace-id`  | La sala compartida: de 1 a 100 caracteres entre letras, dígitos, `-` y `_`; cualquier otro valor vuelve a `demo`.           |
+| `workspaceId`      | `workspace-id`  | La sala compartida: de 1 a 128 caracteres entre letras, dígitos, `-` y `_`; cualquier otro valor vuelve a `demo`.           |
 | `userName`         | `user-name`     | Nombre para mostrar.                                                                                                        |
 | `userId`           | `user-id`       | Id estable; por defecto usa uno recordado en este navegador.                                                                |
 | `locale`           | `locale`        | Idioma de la interfaz: una etiqueta BCP 47 como `de` o `zh-CN`. Un valor desconocido o vacío es inglés.                     |
