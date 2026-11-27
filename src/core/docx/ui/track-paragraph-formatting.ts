@@ -3,8 +3,8 @@ import type { EditorState, Transaction } from 'prosemirror-state';
 import { AttrStep, DocAttrStep, ReplaceAroundStep, type Step } from 'prosemirror-transform';
 import { PARAGRAPH_FORMAT_KEYS } from '../restore-paragraph-format';
 import { parsePropertiesSnapshot, propertiesSignature } from '../revision-properties';
-import { createParagraph } from '../write-paragraph';
-import { buildXml, children, first, makeW, parseXml, WORD_NS, type XmlElement } from '../xml';
+import { newParagraphProperties } from '../write-paragraph-mark';
+import { buildXml, children, parseXml, WORD_NS, type XmlElement } from '../xml';
 import { paragraphFromAttrs } from './paragraph-attributes';
 import { paragraphFormattingRevision } from './review-paragraph-formatting';
 
@@ -47,9 +47,7 @@ function properties(node: ProseMirrorNode): XmlElement {
 	delete paragraph.formatRevision;
 	delete paragraph.markRevision;
 	const doc = parseXml(`<w:p xmlns:w="${WORD_NS}"/>`);
-	return paragraphProperties(
-		first(createParagraph(doc, paragraph, undefined), 'pPr') ?? makeW(doc, 'pPr'),
-	);
+	return paragraphProperties(newParagraphProperties(doc, paragraph));
 }
 
 /** Record pure paragraph formatting through the shared writer and immutable prior snapshot. */

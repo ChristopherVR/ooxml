@@ -292,6 +292,23 @@ export function createRun(
 	const node = run.image
 		? createImageRun(doc, run.image, base?.image, old, allocator)
 		: (old ?? makeW(doc, 'r'));
+	writeRunPropertiesOf(doc, node, run, base, old);
+	if (run.image) return node;
+	return writeRunContent(doc, node, run);
+}
+
+/**
+ * Writes the `w:rPr` of `run` into `node`: its kept source or restored properties, then the
+ * model's formatting. Kept apart from `createRun` so a properties-only caller (the formatting
+ * revision snapshot) does not reach the drawing and body writers.
+ */
+export function writeRunPropertiesOf(
+	doc: XmlDocument,
+	node: XmlElement,
+	run: TextRun,
+	base?: TextRun,
+	old?: XmlElement,
+): void {
 	const propertiesXml = run.restoredRunPropertiesXml ?? run.sourceRunPropertiesXml;
 	if (
 		propertiesXml &&
@@ -306,7 +323,10 @@ export function createRun(
 		base = { text: run.text, ...parseDirectRunProperties(restored) };
 	}
 	setRunProperties(doc, node, run, base);
-	if (run.image) return node;
+}
+
+/** The run's content after its `w:rPr`: text, a break, a field character, a note mark. */
+function writeRunContent(doc: XmlDocument, node: XmlElement, run: TextRun): XmlElement {
 	// A form field's own data element, kept so an unchanged field is written back byte for byte.
 	const formData = run.formField ? first(first(node, 'fldChar'), 'ffData') : undefined;
 	for (const child of Array.from(node.childNodes))

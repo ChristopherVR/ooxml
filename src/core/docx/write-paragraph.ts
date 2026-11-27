@@ -1,43 +1,23 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Paragraph } from './model';
-import {
-	children,
-	first,
-	importElement,
-	makeW,
-	named,
-	WORD_NS,
-	type XmlDocument,
-	type XmlElement,
-} from './xml';
+import { makeW, named, type XmlDocument, type XmlElement } from './xml';
 import { opensRange, orderRangeEnds, placeMarkers } from './inline-markers';
 import { moveMarkers, runPositions } from './inline-marker-positions';
 import { restoreAnnotations } from './inline-annotations';
-import { writeParagraphProperties } from './write-paragraph-properties';
-import { orderParagraphProperties, writeTabStops } from './tab-stops';
 import { continuationKey } from './comment-spans';
 import type { CommentSpans } from './write-ranges';
 import { reconcileBookmarks } from './bookmarks';
 import { changedPermissionMarkers } from './permission-markers';
-import { writeNumberingProperties } from './numbering-write';
-import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './write-revisions';
-import { paragraphJustification } from './paragraph-alignment';
 import { buildInlineContent } from './write-inline';
 import { containerSources } from './inline-containers';
 import { followContainers } from './inline-container-markers';
 import { followFormFieldBookmarks } from './inline-form-field-bookmarks';
 import { collectInlineSlots, replaceableInlineChildren } from './inline-slots';
 import type { RelationshipAllocator } from './relationship-allocator';
-import { parseDirectParagraphProperties } from './paragraph-properties';
-import { parsePropertiesSnapshot } from './revision-properties';
 import { runsToWriteAnew } from './run-segmentation';
+import { writeParagraphMark } from './write-paragraph-mark';
 
-export function setAttribute(element: XmlElement, local: string, value: string): void {
-	element.setAttributeNS(WORD_NS, `w:${local}`, value);
-}
-function removeChildren(element: XmlElement, local: string): void {
-	for (const child of children(element, local)) element.removeChild(child);
-}
+export { setAttribute } from './write-paragraph-mark';
 
 export function writeParagraphImpl(
 	doc: XmlDocument,
@@ -60,57 +40,7 @@ export function writeParagraphImpl(
 		throw new Error(
 			`Cannot edit paragraph ${paragraph.id}: it contains inline OOXML that this editor cannot safely relocate. The original DOCX package remains unchanged.`,
 		);
-	let pPr = first(node, 'pPr');
-	let propertyBase = base;
-	const restoring =
-		paragraph.restoredParagraphPropertiesXml &&
-		(!base || paragraph.restoredParagraphPropertiesXml !== base.restoredParagraphPropertiesXml);
-	const propertiesXml =
-		paragraph.restoredParagraphPropertiesXml ?? paragraph.sourceParagraphPropertiesXml;
-	if (propertiesXml && (restoring || paragraph.sourceParagraphPropertiesXml || !base)) {
-		const restored = parsePropertiesSnapshot(propertiesXml, 'pPr');
-		if (pPr) node.removeChild(pPr);
-		pPr = importElement(doc, restored);
-		node.insertBefore(pPr, node.firstChild);
-		propertyBase = {
-			type: 'paragraph',
-			id: paragraph.id,
-			runs: paragraph.runs,
-			...parseDirectParagraphProperties(restored),
-		};
-	}
-	if (!pPr) {
-		pPr = makeW(doc, 'pPr');
-		node.insertBefore(pPr, node.firstChild);
-	}
-	if (
-		!propertyBase ||
-		paragraph.align !== propertyBase.align ||
-		paragraph.justification !== propertyBase.justification ||
-		paragraph.direction !== propertyBase.direction
-	) {
-		removeChildren(pPr, 'jc');
-		const jc = paragraphJustification(paragraph);
-		if (jc) {
-			const align = makeW(doc, 'jc');
-			setAttribute(align, 'val', jc);
-			pPr.appendChild(align);
-		}
-	}
-	if (!propertyBase || paragraph.style !== propertyBase.style) {
-		removeChildren(pPr, 'pStyle');
-		if (paragraph.style) {
-			const style = makeW(doc, 'pStyle');
-			setAttribute(style, 'val', paragraph.style);
-			pPr.appendChild(style);
-		}
-	}
-	writeParagraphProperties(doc, pPr, paragraph, propertyBase);
-	writeNumberingProperties(doc, pPr, paragraph, propertyBase);
-	writeParagraphMarkRevision(doc, pPr, paragraph, restoring ? undefined : base);
-	writeParagraphFormatRevision(doc, pPr, paragraph.formatRevision);
-	writeTabStops(doc, pPr, paragraph, propertyBase);
-	orderParagraphProperties(pPr);
+	const { pPr } = writeParagraphMark(doc, paragraph, node, base);
 	const { slots, markers } = layout;
 	const anew = runsToWriteAnew(paragraph, base, slots);
 	// Bookmarks, permissions and proofing marks keep their character positions (inline-markers.ts).

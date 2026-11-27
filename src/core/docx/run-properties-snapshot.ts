@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { TextRun } from './model';
-import { createRun } from './write-run';
+import { writeRunPropertiesOf } from './write-run';
 import { first, makeW, parseXml, WORD_NS, type XmlElement } from './xml';
 
 /**
@@ -16,5 +16,7 @@ export function runPropertiesElement(source: TextRun): XmlElement {
 	delete run.revision;
 	delete run.formatRevision;
 	const doc = parseXml(`<w:r xmlns:w="${WORD_NS}"/>`);
-	return first(createRun(doc, run), 'rPr') ?? makeW(doc, 'rPr');
+	const node = makeW(doc, 'r');
+	writeRunPropertiesOf(doc, node, run);
+	return first(node, 'rPr') ?? makeW(doc, 'rPr');
 }
