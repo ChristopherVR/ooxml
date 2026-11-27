@@ -22,7 +22,6 @@ import type {
 	PptxSmartArtNode,
 	SmartArtPptxElement,
 } from '../../types';
-import { regenerateSmartArtDrawingShapes } from '../smartart-relayout';
 import {
 	applyBuiltinSmartArtLayout,
 	findBuiltinSmartArtLayout,
@@ -74,12 +73,16 @@ function readingOrder(pictures: readonly PptxImageLikeElement[]): PptxImageLikeE
 	return [...pictures].sort((a, b) => a.y - b.y || a.x - b.x);
 }
 
-/** Convert `pictures` into a SmartArt element using the built-in layout `layoutId`. */
-export function pictureLayoutSmartArt(
+/**
+ * Convert `pictures` into a SmartArt element using the built-in layout `layoutId`. The layout
+ * engine that draws the pictures into their placeholders loads on first use, so this entry costs
+ * only the definitions until a conversion runs.
+ */
+export async function pictureLayoutSmartArt(
 	pictures: readonly PptxImageLikeElement[],
 	layoutId: string,
 	options: PictureLayoutOptions,
-): SmartArtPptxElement | PictureLayoutRefusal {
+): Promise<SmartArtPptxElement | PictureLayoutRefusal> {
 	if (pictures.length === 0) return 'noPictures';
 	if (!findBuiltinSmartArtLayout(layoutId)) return 'unknownLayout';
 	const ordered = readingOrder(pictures);
@@ -128,6 +131,7 @@ export function pictureLayoutSmartArt(
 		...(options.scheme && { pictureScheme: options.scheme }),
 		...(options.minorFont && { themeMinorFont: options.minorFont }),
 	};
+	const { regenerateSmartArtDrawingShapes } = await import('../smartart-relayout');
 	data.drawingShapes = regenerateSmartArtDrawingShapes(data, width, height);
 	return {
 		type: 'smartArt',

@@ -110,10 +110,11 @@ export async function choosePictureLayout(context: PictureDialogContext): Promis
 			if (url) imageUrls.set(target.id, url);
 		}
 		if (signal.aborted) return;
-		const diagram = library.pictureLayoutSmartArt(targets, layoutId, {
+		const diagram = await library.pictureLayoutSmartArt(targets, layoutId, {
 			id: generateElementId(),
 			imageUrls,
 		});
+		if (signal.aborted) return;
 		if (typeof diagram === 'string') {
 			dialog.fail();
 			return;

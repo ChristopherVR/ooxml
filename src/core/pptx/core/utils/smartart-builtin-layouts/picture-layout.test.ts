@@ -33,8 +33,8 @@ describe('Picture Layout', () => {
 		expect(titles).not.toContain('Basic Block List');
 	});
 
-	it('puts each picture, in reading order, into a node of the chosen layout', () => {
-		const result = pictureLayoutSmartArt(
+	it('puts each picture, in reading order, into a node of the chosen layout', async () => {
+		const result = await pictureLayoutSmartArt(
 			[picture('b', 300, 40), picture('a', 40, 40), picture('c', 40, 200)],
 			layoutId('Picture Grid'),
 			{ id: 'sa-1' },
@@ -50,25 +50,27 @@ describe('Picture Layout', () => {
 		expect(data.drawingShapes?.filter((shape) => shape.fillImageUrl === PNG)).toHaveLength(3);
 	});
 
-	it('refuses pictures it cannot read and layouts it does not know', () => {
+	it('refuses pictures it cannot read and layouts it does not know', async () => {
 		const unreadable = { ...picture('a', 0, 0), imageData: undefined } as PptxImageLikeElement;
-		expect(pictureLayoutSmartArt([unreadable], layoutId('Picture Grid'), { id: 's' })).toBe(
+		expect(await pictureLayoutSmartArt([unreadable], layoutId('Picture Grid'), { id: 's' })).toBe(
 			'pictureUnavailable',
 		);
-		expect(pictureLayoutSmartArt([picture('a', 0, 0)], 'urn:nope', { id: 's' })).toBe(
+		expect(await pictureLayoutSmartArt([picture('a', 0, 0)], 'urn:nope', { id: 's' })).toBe(
 			'unknownLayout',
 		);
-		expect(pictureLayoutSmartArt([], layoutId('Picture Grid'), { id: 's' })).toBe('noPictures');
+		expect(await pictureLayoutSmartArt([], layoutId('Picture Grid'), { id: 's' })).toBe(
+			'noPictures',
+		);
 	});
 
 	it('saves the built-in layout, the pictures as media and their relationships', async () => {
 		const { handler, createSlide } = await PptxHandler.create({ title: 'Pictures' });
 		const slide = createSlide('Blank').build();
-		const smartArt = pictureLayoutSmartArt(
+		const smartArt = (await pictureLayoutSmartArt(
 			[picture('a', 40, 40), picture('b', 300, 40)],
 			layoutId('Bending Picture Caption'),
 			{ id: 'sa-1' },
-		) as SmartArtPptxElement;
+		)) as SmartArtPptxElement;
 		slide.elements.push(smartArt);
 		const zip = await JSZip.loadAsync(await handler.save([slide]));
 		const names = Object.keys(zip.files);
