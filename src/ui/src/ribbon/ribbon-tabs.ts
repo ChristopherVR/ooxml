@@ -19,6 +19,8 @@ export interface OfficeRibbonTabItem {
 	/** Tints the tab as a contextual tab (`--office-ribbon-contextual`). */
 	readonly contextual?: boolean;
 	readonly keytip?: string;
+	/** A tab that opens a dialog can require explicit activation after moving focus. */
+	readonly activateOnFocus?: false;
 	/** The tab's tooltip (a ScreenTip); none when absent. */
 	readonly title?: string;
 }
@@ -283,7 +285,9 @@ export class OfficeUiRibbon extends OfficeElement {
 						: undefined;
 		if (!next) return;
 		event.preventDefault();
-		this.choose(next.dataset.tab!);
+		const id = next.dataset.tab!;
+		if (!this.items?.some((item) => item.id === id && item.activateOnFocus === false))
+			this.choose(id);
 		// A host that owns the selection (`items`) may apply it later: focus follows the key.
 		if (this.items) next.focus();
 		else this.focusTab();

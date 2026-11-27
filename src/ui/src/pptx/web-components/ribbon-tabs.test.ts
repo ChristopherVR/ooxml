@@ -151,4 +151,17 @@ describe('pptx-ui-ribbon-tabs', () => {
 		byId('file').dispatchEvent(new MouseEvent('dblclick', { bubbles: true, composed: true }));
 		expect(toggles).toBe(1);
 	});
+
+	it('moves focus to File without asking the binding to open it', () => {
+		const host = mount({ active: 'help' });
+		const selected = vi.fn();
+		host.addEventListener('tab-select', selected);
+		const [file] = host.tabButtons();
+		const help = host.tabButtons().at(-1);
+		help?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+		expect(host.shadowRoot?.activeElement).toBe(file);
+		expect(selected).not.toHaveBeenCalled();
+		file?.click();
+		expect(selected.mock.calls[0]?.[0].detail).toEqual({ tab: 'file', kind: 'file' });
+	});
 });

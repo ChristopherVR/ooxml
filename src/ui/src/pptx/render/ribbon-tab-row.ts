@@ -30,6 +30,7 @@ export interface RibbonTabRowItem {
 	readonly kind: RibbonTabRowKind;
 	/** Drawn in the contextual tint. */
 	readonly contextual?: boolean;
+	readonly activateOnFocus?: false;
 	/** The ScreenTip; absent while Options > General turns ScreenTips off. */
 	readonly title?: string;
 }
@@ -76,6 +77,7 @@ export function buildRibbonTabRow(input: RibbonTabRowInput): RibbonTabRowState {
 			label,
 			kind,
 			...(kind === 'contextual' ? { contextual: true } : {}),
+			...(kind === 'file' ? { activateOnFocus: false } : {}),
 			...(title ? { title } : {}),
 		};
 	};

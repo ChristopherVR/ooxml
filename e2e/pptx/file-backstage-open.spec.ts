@@ -93,6 +93,22 @@ async function realMouseClick(page: Page, locator: Locator): Promise<{ x: number
 }
 
 test.describe('File backstage Open pane', () => {
+	test('arrowing from the last ribbon tab focuses File until Enter opens it', async ({ page }) => {
+		await loadInitialDeck(page);
+		const tabs = page.locator('pptx-ui-ribbon-tabs').getByRole('tab');
+		const last = tabs.last();
+		const file = page
+			.locator('pptx-ui-ribbon-tabs')
+			.getByRole('tab', { name: 'File', exact: true });
+		await last.click();
+		await last.press('ArrowRight');
+		await expect(file).toBeFocused();
+		await expect(backstage(page)).toBeHidden();
+		await expect(last).toHaveAttribute('aria-selected', 'true');
+		await page.keyboard.press('Enter');
+		await expect(backstage(page)).toBeVisible();
+	});
+
 	test('the nav rail fills the window and bottom-pins its Account/Options group', async ({
 		page,
 	}) => {
