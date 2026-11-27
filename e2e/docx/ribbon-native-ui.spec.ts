@@ -11,6 +11,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(ribbon.getByRole('tab')).toHaveText([
 			'Home',
 			'Insert',
+			'Draw',
 			'Design',
 			'Layout',
 			'References',

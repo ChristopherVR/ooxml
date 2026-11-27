@@ -218,7 +218,7 @@ test('explains disabled pivot edits while the workbook is shared', async ({ page
 	await expect(rename).toBeDisabled();
 	await expect(rename).toHaveAccessibleDescription(reason);
 	await expect(tabs.locator('[data-command="pivot.refresh"]')).toBeDisabled();
-	await clickRibbonControl(page, tabs.locator('[data-label-key="Select"]'));
+	await clickRibbonControl(page, tabs.locator('[data-menu-commands="pivot.select"]'));
 	await expect(editor(page).getByRole('menuitem', { name: 'Entire PivotTable' })).toBeEnabled();
 	await page.keyboard.press('Escape');
 	await tabs.getByRole('tab', { name: 'PivotTable Design' }).click();
