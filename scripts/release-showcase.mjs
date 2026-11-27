@@ -2,12 +2,15 @@ import { highlight } from './release-highlight.mjs';
 import { escapeHtml } from './release-markdown.mjs';
 import { renderSecurityScene } from './release-security-scenes.mjs';
 
-export function renderReleaseIndex(sections) {
+/** The release a showcase belongs to; 2.0's configuration predates the field. */
+const versionOf = (config) => config?.version ?? '2.0';
+
+export function renderReleaseIndex(sections, version = '2.0') {
 	if (!sections) return '';
-	return `<nav class="release-index" aria-label="2.0 highlights">${sections.map(({ id, label }) => `<a href="#${escapeHtml(id)}">${escapeHtml(label)}</a>`).join('')}</nav>`;
+	return `<nav class="release-index" aria-label="${escapeHtml(version)} highlights">${sections.map(({ id, label }) => `<a href="#${escapeHtml(id)}">${escapeHtml(label)}</a>`).join('')}</nav>`;
 }
 
-function renderMetrics({ action, context, start, before, after }) {
+function renderMetrics({ action, context, start, before, after }, version) {
 	const max = Math.max(before.value ?? 0, after.value ?? 0);
 	const comparable = before.value !== undefined;
 	const reading = (version, metric) => {
@@ -23,7 +26,7 @@ function renderMetrics({ action, context, start, before, after }) {
 		<h3>${escapeHtml(action)}</h3>
 		<p>${escapeHtml(context)}</p>
 		<div class="benchmark-start"><span aria-hidden="true"></span>${escapeHtml(start)}</div>
-		<dl class="benchmark-readings">${reading('Before 2.0', before)}${reading('OOXML 2.0', after)}</dl>
+		<dl class="benchmark-readings">${reading(`Before ${version}`, before)}${reading(`OOXML ${version}`, after)}</dl>
 		${comparable ? '<p class="benchmark-note">Animation scaled to show relative time.</p>' : ''}
 	</div>`;
 }
@@ -73,7 +76,7 @@ function renderFeature(item, media) {
 }
 
 const labels = {
-	shell: 'Install OOXML 2.0',
+	shell: 'Install OOXML',
 	performance: 'Performance comparisons',
 	compatibility: 'Safari and iPadOS improvements',
 	security: 'Security improvements',
@@ -81,16 +84,21 @@ const labels = {
 	'new-features': 'New editor features',
 };
 
+/** Products whose tile a tab shows even when the showcase has no install tour. */
+const PRODUCT_TILES = new Set(['word', 'excel', 'powerpoint', 'visio', 'openteams']);
+
 /** A workspace, benchmark, feature capture or flow with direct selection. */
 export function renderShowcase(config, type, { media, tile, notes = [] }) {
 	const items = config?.[type];
 	if (!items?.length || !(type in labels)) return '';
-	const products = new Map(config.shell.map((product) => [product.product, product]));
+	const version = versionOf(config);
+	const label = type === 'shell' ? `${labels.shell} ${version}` : labels[type];
+	const products = new Map((config.shell ?? []).map((product) => [product.product, product]));
 	const panels = items.map((item, i) => {
 		const product = item.product ? ` data-product="${escapeHtml(item.product)}"` : '';
 		let content;
 		if (type === 'shell') content = renderShell(item, media, !i);
-		else if (type === 'performance') content = renderMetrics(item);
+		else if (type === 'performance') content = renderMetrics(item, version);
 		else if (type === 'new-features') content = renderFeature(item, media);
 		else if (type === 'security')
 			content = renderSecurityScene(item, (file, alt, after) =>
@@ -107,14 +115,15 @@ export function renderShowcase(config, type, { media, tile, notes = [] }) {
 	});
 	const choices = items.map((item, i) => {
 		const product = products.get(item.product);
-		const icon = product ? tile(item.product === 'teams' ? 'openteams' : item.product) : '';
+		const area = item.product === 'teams' ? 'openteams' : item.product;
+		const icon = product || PRODUCT_TILES.has(area) ? tile(area) : '';
 		return `<button type="button" data-slide title="Select to keep this tab open" aria-controls="showcase-${type}-stage" aria-pressed="${i === 0}">${icon}<span>${escapeHtml(item.label ?? product.label)}</span></button>`;
 	});
 	const id = type === 'shell' ? ' id="install"' : '';
 	const details = notes.length
 		? `<div class="showcase-notes">${notes.map((text, i) => `<div class="showcase-note" data-note="${i}"${i ? ' hidden' : ''}>${text}</div>`).join('')}</div>`
 		: '';
-	return `<div${id} class="showcase showcase-${type}" aria-label="${labels[type]}" role="region" data-showcase="${type}">
+	return `<div${id} class="showcase showcase-${type}" aria-label="${label}" role="region" data-showcase="${type}">
 		<div class="showcase-controls" hidden>${choices.join('')}</div>
 		<div class="showcase-stage" id="showcase-${type}-stage">${panels.join('')}</div>${details}
 	</div>`;

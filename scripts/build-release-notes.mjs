@@ -236,7 +236,19 @@ export function renderReleasePage(
 					)
 						end++;
 					const { notes, common } = chapterNotes(blocks.slice(i + 1, end), showcase[type]);
-					parts.push(show(type, notes.map(renderChapterBlocks)));
+					// A recording the scene already shows stays in the Markdown for GitHub only.
+					const shown = new Set(showcase[type].map((item) => item.image).filter(Boolean));
+					const own = (block) =>
+						!(
+							block.type === 'figure' &&
+							shown.has(basename(IMAGE_PARTS.exec(block.image)?.[2] ?? ''))
+						);
+					parts.push(
+						show(
+							type,
+							notes.map((note) => renderChapterBlocks(note.filter(own))),
+						),
+					);
 					if (common.length)
 						parts.push(`<div class="chapter-common">${renderChapterBlocks(common)}</div>`);
 					i = end - 1;
@@ -323,7 +335,7 @@ export function renderReleasePage(
 		meta: metaHtml,
 		eventClass: showcase?.sections ? ' release-event' : '',
 		heroIntro: heroIntro ? `<p class="release-intro">${renderInline(heroIntro.text, ctx)}</p>` : '',
-		releaseIndex: renderReleaseIndex(showcase?.sections),
+		releaseIndex: renderReleaseIndex(showcase?.sections, showcase?.version),
 		hero: show('shell') || (hero ? renderFigure(hero, true) : ''),
 		toc: tocHtml,
 		body,
