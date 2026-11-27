@@ -135,6 +135,11 @@ class OfficeUiAddInPane extends OfficeElement {
 		this.requestUpdate();
 	}
 
+	override connectedCallback() {
+		super.connectedCallback();
+		if (this.#options && !this.#stop) this.remove();
+	}
+
 	override disconnectedCallback() {
 		this.#sizeObserver?.disconnect();
 		this.#stop?.();

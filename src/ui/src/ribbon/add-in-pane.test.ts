@@ -126,3 +126,12 @@ it('closes the preceding channel when another pane replaces it or the pane is re
 	replacement.pane.remove();
 	expect(replacementConnection.close).toHaveBeenCalledOnce();
 });
+
+it('removes a disconnected pane when its host reconnects', () => {
+	const { host, pane, frame } = mount();
+	const { close } = connect(frame);
+	host.remove();
+	document.body.append(host);
+	expect(close).toHaveBeenCalledOnce();
+	expect(host.querySelector('office-ui-add-in-pane')).toBeNull();
+});
