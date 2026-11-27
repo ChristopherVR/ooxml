@@ -120,16 +120,7 @@ describe('content control tag shape in the editing view', () => {
 	});
 
 	it('keeps an exact line height once a paragraph is set to exact spacing', async () => {
-		// Set after the view is drawn, as the Paragraph dialog does, so the tags must be redrawn.
-		const exact = (view: EditorView) => {
-			let tr = view.state.tr;
-			view.state.doc.descendants((node, pos) => {
-				if (node.type.name !== 'paragraph') return;
-				tr = tr.setNodeAttribute(pos, 'lineSpacingRule', 'exact');
-				tr = tr.setNodeAttribute(pos, 'lineSpacingTwips', 240);
-			});
-			view.dispatch(tr);
-		};
+		const exact = setParagraphs({ lineSpacingRule: 'exact', lineSpacingTwips: 240 });
 		const all = [
 			...(await tags('measured-inline-content-control-tags', exact)),
 			...(await tags('block-content-control-tags', exact)),
@@ -142,4 +133,28 @@ describe('content control tag shape in the editing view', () => {
 			expect(below).toBeCloseTo(0, 2);
 		}
 	});
+
+	it('mirrors the tags of a right-to-left paragraph', async () => {
+		const rtl = setParagraphs({ direction: 'rtl' });
+		const all = [
+			...(await tags('measured-inline-content-control-tags', rtl)),
+			...(await tags('block-content-control-tags', rtl)),
+		];
+		expect(all.length).toBeGreaterThan(6);
+		for (const tag of all) expect(tag.dataset.tagDirection).toBe('rtl');
+		const ltr = await tags('measured-inline-content-control-tags');
+		for (const tag of ltr) expect(tag.dataset.tagDirection).toBeUndefined();
+	});
 });
+
+/** Sets attributes on every paragraph after the view is drawn, as the Paragraph dialog does. */
+function setParagraphs(attrs: Record<string, unknown>): (view: EditorView) => void {
+	return (view) => {
+		let tr = view.state.tr;
+		view.state.doc.descendants((node, pos) => {
+			if (node.type.name !== 'paragraph') return;
+			for (const [name, value] of Object.entries(attrs)) tr = tr.setNodeAttribute(pos, name, value);
+		});
+		view.dispatch(tr);
+	};
+}

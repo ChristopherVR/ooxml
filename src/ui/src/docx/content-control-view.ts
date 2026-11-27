@@ -94,7 +94,9 @@ const changesTagBoxes = (tr: Transaction) =>
 	tr.steps.some(
 		(step) =>
 			step instanceof AttrStep &&
-			(step.attr === 'lineSpacingRule' || step.attr === 'lineSpacingTwips'),
+			(step.attr === 'lineSpacingRule' ||
+				step.attr === 'lineSpacingTwips' ||
+				step.attr === 'direction'),
 	);
 
 interface TagState {

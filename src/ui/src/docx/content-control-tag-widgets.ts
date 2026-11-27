@@ -20,10 +20,16 @@ function paragraphEdge(doc: ProseMirrorNode, position: number, edge: TagEdge): n
 	return edge === 'start' ? start + 1 : start + node.nodeSize - 1;
 }
 
-/** Exact line spacing fixes the line's height, so a tag there must not stretch it. */
-function exactLineAt(doc: ProseMirrorNode, position: number): boolean {
+/**
+ * The paragraph settings a tag's box depends on: exact line spacing fixes the line's height, so
+ * a tag there must not stretch it, and a right-to-left paragraph mirrors the tag's outline.
+ */
+function tagParagraph(doc: ProseMirrorNode, position: number): { exact: boolean; rtl: boolean } {
 	const { attrs } = doc.resolve(position).parent;
-	return attrs.lineSpacingRule === 'exact' && Number.isSafeInteger(attrs.lineSpacingTwips);
+	return {
+		exact: attrs.lineSpacingRule === 'exact' && Number.isSafeInteger(attrs.lineSpacingTwips),
+		rtl: attrs.direction === 'rtl',
+	};
 }
 
 function tagWidget(
@@ -34,7 +40,7 @@ function tagWidget(
 	side: number,
 	inline: boolean,
 ): Decoration {
-	const exact = exactLineAt(doc, position);
+	const { exact, rtl } = tagParagraph(doc, position);
 	return Decoration.widget(
 		position,
 		(view) => {
@@ -43,6 +49,7 @@ function tagWidget(
 			tag.dataset.tagEdge = edge;
 			tag.dataset.tagTitle = title;
 			if (inline) tag.dataset.inlineTag = '';
+			if (rtl) tag.dataset.tagDirection = 'rtl';
 			tag.setAttribute('aria-hidden', 'true');
 			const metrics = contentControlTagMetrics;
 			Object.assign(tag.style, {
@@ -59,7 +66,7 @@ function tagWidget(
 			title,
 			inline,
 			marks: [],
-			key: JSON.stringify([edge, title, side, inline, exact]),
+			key: JSON.stringify([edge, title, side, inline, exact, rtl]),
 			ignoreSelection: true,
 		},
 	);

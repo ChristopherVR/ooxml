@@ -46,6 +46,18 @@
 .dve-sdt-tag-end[data-side='right'] {
 	right: 0;
 }
+/* A right-to-left paragraph puts the opening tag on the right: mirror its ends and marker. */
+.dve-sdt-tag[data-tag-direction='rtl'] .dve-sdt-tag-end {
+	transform: scaleX(-1);
+}
+.dve-sdt-tag[data-tag-direction='rtl'] .dve-sdt-tag-end[data-side='left'] {
+	right: 0;
+	left: auto;
+}
+.dve-sdt-tag[data-tag-direction='rtl'] .dve-sdt-tag-end[data-side='right'] {
+	right: auto;
+	left: 0;
+}
 .dve-sdt-tag-fill {
 	fill: var(--dve-sdt-tag-fill);
 }
