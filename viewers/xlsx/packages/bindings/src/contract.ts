@@ -17,6 +17,7 @@ import type {
 } from 'xlsx-web-component';
 import type { ImageProvider, Workbook } from '@christophervr/xlsx-core';
 import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
+import type { GoogleFontsOption } from 'ooxml-core/text';
 import {
 	contractOptions,
 	deferredHandle as kitDeferredHandle,
@@ -73,14 +74,20 @@ export interface EditorProps {
 	 * File > Open to `storage.open()` when it has one. `file-command` still fires first.
 	 */
 	storage?: DocumentStorage | null | undefined;
+	/** Host opt-in for IMAGE formulas. */
+	imageProvider?: ImageProvider | undefined;
 	/**
 	 * Cloud places (OneDrive, or a host's own `CloudFileProvider`) File > Open offers next to "This
 	 * device". A workbook opened from one saves back to that file; empty or omitted keeps Open as it
 	 * was. Forwarded when the array changes, so keep it stable.
 	 */
-	/** Host opt-in for IMAGE formulas. */
-	imageProvider?: ImageProvider | undefined;
 	fileProviders?: readonly CloudFileProvider[] | null | undefined;
+	/**
+	 * Webfont fallback for fonts the reader has neither installed nor embedded: `false` is off,
+	 * `{ baseUrl }` downloads them from that CSS2 endpoint. Unset (or `null`), the reader's File >
+	 * Options > Trust Center choice applies, which is off by default.
+	 */
+	googleFonts?: GoogleFontsOption | null | undefined;
 	/**
 	 * Host customisation (`ExcelCustomization`): `capabilities`, `backstage.extraPages` and
 	 * `contextMenu.extraCommands`. Forwarded when the object changes, so keep it stable (memoise
@@ -148,6 +155,7 @@ export const EDITOR_PROP_KEYS = [
 	'storage',
 	'fileProviders',
 	'imageProvider',
+	'googleFonts',
 	'customization',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
@@ -217,6 +225,18 @@ export interface EditorBinding extends EditorHandle {
 }
 
 /**
+ * A fresh `{ baseUrl }` literal per render is not a change; `false`, unset and a mirror differ.
+ * (`shallowEqual` would treat `false` and unset alike, both spreading to `{}`.)
+ */
+function sameGoogleFonts(
+	a: GoogleFontsOption | null | undefined,
+	b: GoogleFontsOption | null | undefined,
+): boolean {
+	if ((a ?? undefined) === (b ?? undefined)) return true;
+	return typeof a === 'object' && typeof b === 'object' && a?.baseUrl === b?.baseUrl;
+}
+
+/**
  * Props in forwarding order; each is written only when the prop itself changed since it was last
  * written, so a re-render never undoes what the user changed inside the editor. `fileName` and
  * collaboration precede the workbook, bytes and `src` (forwarded by `mountEditor`), so a workbook
@@ -256,6 +276,7 @@ export const EDITOR_CONTRACT: BindingContract<
 			forward: 'changed',
 			apply: (element, value) => (element.fileProviders = value ?? []),
 		},
+		googleFonts: { forward: 'changed', same: sameGoogleFonts },
 		themeColors: {
 			forward: 'changed',
 			same: shallowEqual,

@@ -1,6 +1,7 @@
 import type { PropType } from 'vue';
 import type { ImageProvider, Workbook } from '@christophervr/xlsx-core';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
+import type { GoogleFontsOption } from 'ooxml-core/text';
 import type {
 	EditorThemeMode,
 	RibbonAddInTab,
@@ -35,6 +36,9 @@ export const SpreadsheetEditor = defineVueBinding({
 		storage: Object as PropType<DocumentStorage | null>,
 		imageProvider: Object as PropType<ImageProvider>,
 		fileProviders: Array as PropType<readonly CloudFileProvider[] | null>,
+		// `false` or `{ baseUrl }`. No runtime type: Vue casts an absent Boolean prop to `false`,
+		// which would turn font downloads off instead of leaving the choice to the reader.
+		googleFonts: null as unknown as PropType<GoogleFontsOption | null>,
 		customization: Object as PropType<ExcelCustomization | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	contract: EDITOR_CONTRACT,

@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import type { ImageProvider, Workbook } from '@christophervr/xlsx-core';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
+import type { GoogleFontsOption } from 'ooxml-core/text';
 import type {
 	EditorThemeMode,
 	FileCommandDetail,
@@ -61,6 +62,7 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	@Input() storage?: DocumentStorage | null;
 	@Input() imageProvider?: ImageProvider;
 	@Input() fileProviders?: readonly CloudFileProvider[] | null;
+	@Input() googleFonts?: GoogleFontsOption | null;
 	@Input() customization?: ExcelCustomization | null;
 	@Output() workbookChange = new EventEmitter<Workbook>();
 	@Output() workbookError = new EventEmitter<Error>();
