@@ -153,15 +153,6 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 		.get('Table Layout')!
 		.append(
 			group(
-				'Properties',
-				tool(
-					'Table properties',
-					'table',
-					{ type: 'formatDialog', kind: 'tableProperties' },
-					{ large: true, caption: 'Properties', name: 'ribbon.name.tableProperties' },
-				),
-			),
-			group(
 				'Table',
 				stack(
 					tool(

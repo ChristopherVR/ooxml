@@ -266,7 +266,7 @@ test('table ribbon group labels have their own space at 1700 pixels', async ({ p
 		await editor.getByRole('tab', { name: tab, exact: true }).click();
 		const panel = editor.locator(`[data-panel="${tab}"]`);
 		await expect(panel.locator('.dve-table-group-caption:visible')).toHaveCount(
-			tab === 'Table Design' ? 3 : 7,
+			tab === 'Table Design' ? 3 : 6,
 		);
 		await expect(panel.locator('[data-collapsed]')).toHaveCount(0);
 		const overlap = await panel.locator('.dve-table-group-caption').evaluateAll((captions) =>

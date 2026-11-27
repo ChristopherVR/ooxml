@@ -2,14 +2,15 @@
 import { describe, expect, it } from 'vitest';
 import { labelNameMismatches } from '../test-support/label-in-name';
 import { EDITOR_LOCALES, findLocalizedControl } from './localization';
-import { createRibbon } from './ribbon';
+import { createRibbon, loadTablePanels } from './ribbon';
 
 describe('Word ribbon names (WCAG 2.5.3)', () => {
 	for (const locale of EDITOR_LOCALES)
-		it(`names every captioned command with its caption in ${locale}`, () => {
+		it(`names every captioned command with its caption in ${locale}`, async () => {
 			const ribbon = createRibbon(locale);
 			document.body.append(ribbon);
 			try {
+				await loadTablePanels(ribbon);
 				expect(labelNameMismatches(ribbon)).toEqual([]);
 			} finally {
 				ribbon.remove();
@@ -45,10 +46,12 @@ describe('Word ribbon captions stay as Word shows them', () => {
 			'Eigenschaften der Tabelle',
 			'Tabelleneigenschaften',
 		],
-	])('%s %s: caption, name and tooltip', (locale, id, caption, name, title) => {
+	])('%s %s: caption, name and tooltip', async (locale, id, caption, name, title) => {
 		const ribbon = createRibbon(locale);
 		document.body.append(ribbon);
 		try {
+			// Table properties sits in Table Layout's Table group, built when a table is first entered.
+			await loadTablePanels(ribbon);
 			expect(shown(ribbon, id)).toEqual({ caption, name, title });
 		} finally {
 			ribbon.remove();

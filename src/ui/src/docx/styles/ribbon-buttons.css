@@ -163,6 +163,11 @@
 .dve-table-ribbon-group::after {
 	content: none;
 }
+/* Draw Table and Eraser take their caption's width, which wraps only between words. */
+.dve-table-ribbon-group button.ribbon-large:not(.ribbon-overflow-button) {
+	width: min-content;
+	min-width: 56px;
+}
 .dve-table-group-caption {
 	position: absolute;
 	inset: auto 2px 2px;

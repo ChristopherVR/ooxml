@@ -32,9 +32,18 @@ export type TableTabAction = { type: 'tableTab' } & (
 	| { key: SimpleTableKey }
 );
 
-/** Border Painter (Table Design), and Draw Table and Eraser (Layout > Draw): pressed while on. */
-const draw = (label: string, value: 'paint' | 'draw' | 'erase', icon: RibbonIcon) => {
-	const control = tool(label, icon, { type: 'tableTab', key: 'draw', value }, { inline: true });
+/**
+ * Border Painter (Table Design), and Draw Table and Eraser (Layout > Draw): pressed while on. Word
+ * shows Layout's two as large buttons, a caption under the icon.
+ */
+const draw = (
+	label: string,
+	value: 'paint' | 'draw' | 'erase',
+	icon: RibbonIcon,
+	large = false,
+) => {
+	const action = { type: 'tableTab', key: 'draw', value } as const;
+	const control = tool(label, icon, action, large ? { large: true } : { inline: true });
 	control.dataset.tableCommand = 'draw';
 	control.dataset.drawMode = value;
 	control.setAttribute('aria-pressed', 'false');
@@ -192,6 +201,7 @@ function layout(panel: HTMLElement) {
 	const gridlines = command('View Gridlines', 'gridlines', 'gridlines');
 	gridlines.setAttribute('aria-pressed', 'false');
 	panel.prepend(
+		// Word's Table group stacks Select, View Gridlines and Properties.
 		group(
 			'Table',
 			stack(
@@ -209,9 +219,19 @@ function layout(panel: HTMLElement) {
 					true,
 				),
 				gridlines,
+				tool(
+					'Table properties',
+					'table',
+					{ type: 'formatDialog', kind: 'tableProperties' },
+					{ inline: true, caption: 'Properties', name: 'ribbon.name.tableProperties' },
+				),
 			),
 		),
-		group('Draw', draw('Draw Table', 'draw', 'drawTable'), draw('Eraser', 'erase', 'tableEraser')),
+		group(
+			'Draw',
+			draw('Draw Table', 'draw', 'drawTable', true),
+			draw('Eraser', 'erase', 'tableEraser', true),
+		),
 	);
 	panel.append(
 		group(

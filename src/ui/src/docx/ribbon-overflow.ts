@@ -36,7 +36,6 @@ export const GROUP_ICONS: Readonly<Record<string, RibbonIcon>> = {
 	Views: 'view',
 	Page: 'pageSize',
 	Table: 'table',
-	Properties: 'table',
 	'Cell Size': 'rowAbove',
 	'Cell Alignment': 'alignCenter',
 	'Table Data': 'table',
@@ -61,8 +60,8 @@ const overflow = createRibbonOverflow({
 	preferExpanded: (group, panel) =>
 		(group.dataset.label === 'Add-ins' && panel.dataset.panel === 'Insert') ||
 		(panel.clientWidth >= 1600 && group.dataset.label === 'Arrange'),
-	// Table Layout folds as Word's does: Data and Alignment first, then Cell Size and the row and
-	// column commands, and the Select group last.
+	// Table Layout folds as Word's does: Data and Alignment first, then Draw (Draw Table and
+	// Eraser), then Cell Size and the row and column commands, and the Select group last.
 	groupPriority: (group) => {
 		if (group.parentElement?.dataset.ribbonTab !== 'table-layout') return 0;
 		if (group.dataset.label === 'Cell Size') return 1;

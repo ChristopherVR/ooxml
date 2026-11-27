@@ -28,13 +28,15 @@
 }
 
 /* The Draw tab's commands size to their captions, which wrap between words and never clip
-   ("Mit Toucheingabe zeichnen" in German), as Excel's do. */
+   ("Mit Toucheingabe zeichnen" in German), as Excel's do. A caption wraps near 104 pixels, but
+   never narrower than its longest word ("Freihandwiedergabe"). */
 :is(.ribbon-group, .ribbon-overflow-panel) button.ribbon-large.dve-draw-command {
 	width: auto;
 	min-width: 52px;
-	max-width: 112px;
 }
 :is(.ribbon-group, .ribbon-overflow-panel) button.dve-draw-command > span {
+	min-width: min-content;
+	max-width: 104px;
 	overflow: visible;
 	text-overflow: clip;
 	overflow-wrap: normal;
