@@ -1,6 +1,8 @@
 import { expect, it } from 'vitest';
 import { ribbonIcon } from './ribbon-icons';
 import { GROUP_ICONS } from './ribbon-overflow';
+// The Draw tab registers its icons when it loads, before any of its groups can fold.
+import './draw-icons';
 
 it.each(Object.entries(GROUP_ICONS))(
 	'draws a path for the folded %s group (%s)',
