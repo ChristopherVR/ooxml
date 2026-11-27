@@ -15,3 +15,11 @@ export {
 	loadBuiltinSmartArtStyleDefinitionXml,
 } from '../core/utils/smartart-builtin-layouts';
 export type { BuiltinSmartArtLayoutEntry } from '../core/utils/smartart-builtin-layouts';
+// Picture Format > Picture Layout: pictures into a built-in picture SmartArt layout.
+export {
+	listPictureLayouts,
+	pictureLayoutSmartArt,
+	PENDING_PICTURE_LAYOUT_PART,
+	type PictureLayoutOptions,
+	type PictureLayoutRefusal,
+} from '../core/utils/smartart-builtin-layouts/picture-layout';

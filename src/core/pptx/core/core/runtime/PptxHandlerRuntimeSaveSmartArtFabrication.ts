@@ -35,6 +35,8 @@ import {
 	fabricatedColorsCategory,
 	fabricatedColorsUniqueId,
 } from './smartart-fabrication-styles';
+import { fabricatePictureLayoutParts } from './smartart-fabrication-pictures';
+import { resolveSmartArtSaveLayout } from './smartart-save-geometry';
 
 const DIAGRAM_GRAPHIC_DATA_URI = 'http://schemas.openxmlformats.org/drawingml/2006/diagram';
 const DIAGRAM_NS_DGM = 'http://schemas.openxmlformats.org/drawingml/2006/diagram';
@@ -142,12 +144,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			? ctx.slideRelationshipRegistry.nextRelationshipId()
 			: undefined;
 
+		// A built-in layout (Picture Layout, or a named layout picked before the first save) is
+		// written as its own definition rather than a fabricated family stand-in.
+		const builtinLayout =
+			data.builtinLayoutId && data.layoutDefinition?.rawXmlText
+				? resolveSmartArtSaveLayout(data)
+				: undefined;
 		const payloads: Record<(typeof DIAGRAM_PART_KINDS)[number]['prefix'], string> = {
 			data: buildFabricatedDiagramDataXml(
 				data,
 				{
-					layoutUniqueId: fabricatedLayoutUniqueId(family, layoutIdentity),
-					layoutCategory: fabricatedLayoutCategory(family),
+					layoutUniqueId:
+						builtinLayout?.uniqueId ?? fabricatedLayoutUniqueId(family, layoutIdentity),
+					layoutCategory: builtinLayout?.category ?? fabricatedLayoutCategory(family),
 					quickStyleUniqueId: FABRICATED_QUICKSTYLE_UNIQUE_ID,
 					colorsUniqueId: fabricatedColorsUniqueId(data.colorScheme),
 					colorsCategory: fabricatedColorsCategory(data.colorScheme),
@@ -160,10 +169,42 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					...(drawingRelId !== undefined && { drawingRelId }),
 				},
 			),
-			layout: buildFabricatedLayoutDefXml(family, layoutIdentity),
+			layout: builtinLayout?.xml ?? buildFabricatedLayoutDefXml(family, layoutIdentity),
 			quickStyle: buildFabricatedQuickStyleXml(data.style),
 			colors: buildFabricatedColorsXml(data.colorScheme),
 		};
+		const EMU = PptxHandlerRuntime.EMU_PER_PX;
+		const pictureParts = builtinLayout
+			? fabricatePictureLayoutParts({
+					data,
+					dataXml: payloads.data,
+					layoutXml: builtinLayout.xml,
+					dataPath: `ppt/diagrams/data${index}.xml`,
+					drawingPath: `ppt/diagrams/drawing${index}.xml`,
+					drawingRelId,
+					guidByNodeId,
+					extentEmu: {
+						width: Math.round(Math.max(el.width, 1) * EMU),
+						height: Math.round(Math.max(el.height, 1) * EMU),
+					},
+					createModelId: guid,
+					hasPart: (part) => Boolean(this.zip.file(part)),
+					storeDataUrl: (url) => {
+						const parsed = this.parseDataUrlToBytes(url);
+						if (!parsed) return undefined;
+						const media = ctx.saveSession.mediaPathForContent(parsed.bytes, parsed.extension);
+						if (!media.reused) this.zip.file(media.path, parsed.bytes);
+						return media.path;
+					},
+				})
+			: undefined;
+		if (pictureParts) {
+			payloads.data = pictureParts.dataXml;
+			if (pictureParts.dataRelsXml)
+				this.zip.file(`ppt/diagrams/_rels/data${index}.xml.rels`, pictureParts.dataRelsXml);
+			if (pictureParts.drawingRelsXml)
+				this.zip.file(`ppt/diagrams/_rels/drawing${index}.xml.rels`, pictureParts.drawingRelsXml);
+		}
 
 		const relIds: XmlObject = {
 			'@_xmlns:dgm': DIAGRAM_NS_DGM,
@@ -190,7 +231,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (drawingXml && drawingRelId) {
 			const drawingFile = `drawing${index}.xml`;
 			const drawingPath = `ppt/diagrams/${drawingFile}`;
-			this.zip.file(drawingPath, drawingXml);
+			this.zip.file(drawingPath, pictureParts?.drawingXml ?? drawingXml);
 			(this.pendingDiagramContentTypes ??= []).push({
 				partName: `/${drawingPath}`,
 				contentType: DIAGRAM_DRAWING_CONTENT_TYPE,
@@ -202,7 +243,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			});
 		}
 
-		const EMU = PptxHandlerRuntime.EMU_PER_PX;
 		return {
 			'p:nvGraphicFramePr': {
 				'p:cNvPr': { '@_id': '0', '@_name': el.name || 'SmartArt' },
