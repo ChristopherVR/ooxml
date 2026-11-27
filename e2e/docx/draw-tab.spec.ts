@@ -359,6 +359,12 @@ test('Draw: copy, cut and paste of Word ink keep its strokes and give it a part 
 	await caretAt('A small plan');
 	await page.keyboard.press('Control+v');
 	await expect(inkFloats(page)).toHaveCount(2);
+	// The copy is moved off the original a little, as it would cover it, and is selected.
+	const [first, second] = await inkFloats(page).evaluateAll((floats) =>
+		floats.map((float) => float.getBoundingClientRect().left),
+	);
+	expect(Math.abs(Math.abs(second! - first!) - 12)).toBeLessThanOrEqual(2);
+	await expect(editor(page).locator('.dve-print-float-frame')).toHaveCount(1);
 	for (const index of [0, 1])
 		await expect(inkFloats(page).nth(index).locator('path')).toHaveCount(paths);
 
@@ -413,4 +419,22 @@ test('Draw: a folded group shows whole German captions in the ribbon font', asyn
 		return [getComputedStyle(pens).fontFamily, getComputedStyle(button).fontFamily];
 	});
 	expect(fonts[0]).toBe(fonts[1]);
+});
+
+test('Draw: Undo on the title bar keeps the keyboard on the document while drawing', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await openSample(page);
+	const draw = await openDraw(page);
+	await draw.getByRole('button', { name: 'Pen: 0.5 mm, Black' }).click();
+	await drawOnPage(page, 150, 200, wave);
+	await page.waitForTimeout(2100);
+	await drawOnPage(page, 150, 500, wave);
+	await expect(inkFloats(page)).toHaveCount(2);
+	await editor(page).getByRole('button', { name: 'Undo', exact: true }).click();
+	await expect(inkFloats(page)).toHaveCount(1);
+	// Ctrl+Z goes on working without a click in the document first.
+	await page.keyboard.press('Control+z');
+	await expect(inkFloats(page)).toHaveCount(0);
 });

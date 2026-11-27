@@ -1,7 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
 import JSZip from 'jszip';
 import { openFixture } from './fixture-files';
-import { FRAMEWORKS, editor, goToCell, grid, nameBoxValue, ribbon } from './helpers';
+import {
+	FRAMEWORKS,
+	editor,
+	formulaBarValue,
+	goToCell,
+	grid,
+	nameBoxValue,
+	ribbon,
+	typeInActiveCell,
+} from './helpers';
 
 const inks = (page: Page) => grid(page).locator('.xg-obj[data-ink]');
 
@@ -170,4 +179,22 @@ test('Excel Draw: strokes drawn while the Draw surface still loads are kept, in 
 	await expect(inks(page)).toHaveCount(2);
 	await expect(inks(page).nth(1).locator('path')).toHaveCount(2);
 	expect(await nameBoxValue(page)).toBe('A1');
+});
+
+test('Excel: Undo and Redo on the title bar give focus back to the sheet', async ({ page }) => {
+	await page.setViewportSize({ width: 1280, height: 800 });
+	await openFixture(page, 'vanilla', 'excel-ink.xlsx');
+	await goToCell(page, 'C3');
+	await typeInActiveCell(page, '5');
+	await goToCell(page, 'C4');
+	await typeInActiveCell(page, '6');
+	await editor(page).getByRole('button', { name: 'Undo', exact: true }).click();
+	// Ctrl+Z goes on working without a click in the sheet first.
+	await page.keyboard.press('Control+z');
+	await goToCell(page, 'C3');
+	expect(await formulaBarValue(page)).toBe('');
+	await editor(page).getByRole('button', { name: 'Redo', exact: true }).click();
+	await page.keyboard.press('Control+y');
+	await goToCell(page, 'C4');
+	expect(await formulaBarValue(page)).toBe('6');
 });
