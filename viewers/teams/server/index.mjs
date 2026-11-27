@@ -1117,10 +1117,6 @@ export function createTeamsServer(options = {}) {
 					calls: signalRooms.size,
 					auth: Boolean(token),
 					accounts: authRequired,
-					/** Compact every room snapshot now (also runs at start-up per room and on a timer). */
-					compactRooms,
-					/** The Prometheus text the `/metrics` endpoint serves (for hosts with their own exporter). */
-					renderMetrics: () => metrics.render(),
 				}),
 			);
 		}

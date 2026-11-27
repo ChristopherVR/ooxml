@@ -70,7 +70,7 @@ const config = {
 | `GET /files/<scope>`                  | 列出某个范围的文件，格式为 `{ files: [{ name, size, modified, uploader }] }`。范围是工作空间 id 或私聊房间名（仅成员）。 |
 | `DELETE /files/<scope>/<name>`        | 删除文件（上传者或版主）。返回 `204`、`403` 或 `404`。                                                                   |
 | `GET /metrics`                        | Prometheus 文本，仅当以 `TEAMS_METRICS_TOKEN` 作为 Bearer 令牌时提供（未设置则 404）。                                   |
-| `GET /health`                         | `{ ok, rooms, calls, auth }`。                                                                                           |
+| `GET /health`                         | `{ ok, rooms, calls, auth, accounts }`。                                                                                 |
 | `POST /auth/session`                  | 为 `{ user, credential }` 签发会话（有速率限制）。参见服务器 README 中的 "Accounts and sessions"。                       |
 | `POST /auth/check`, `/auth/signout`   | 检查 `{ session }`（204 或 401）；登出，会撤销该用户的会话。                                                             |
 | `POST /auth/revoke`                   | 运营者使用 `TEAMS_ADMIN_TOKEN` 撤销 `{ user }`；没有管理员令牌时为 404。                                                 |

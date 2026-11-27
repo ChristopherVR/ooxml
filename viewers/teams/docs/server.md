@@ -79,7 +79,7 @@ const config = {
 | `GET /files/<scope>`                  | Lists a scope's files as `{ files: [{ name, size, modified, uploader }] }`. A scope is a workspace id or a private chat room name (members only). |
 | `DELETE /files/<scope>/<name>`        | Deletes a file (the uploader or a moderator). `204`, `403` or `404`.                                                                              |
 | `GET /metrics`                        | Prometheus text, only with `TEAMS_METRICS_TOKEN` as the Bearer token (404 when unset).                                                            |
-| `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                                     |
+| `GET /health`                         | `{ ok, rooms, calls, auth, accounts }`.                                                                                                           |
 | `POST /auth/session`                  | Signs a session for `{ user, credential }` (rate limited). See "Accounts and sessions" in the server's README.                                    |
 | `POST /auth/check`, `/auth/signout`   | Check a `{ session }` (204 or 401); sign out, which revokes the user's sessions.                                                                  |
 | `POST /auth/revoke`                   | Operator revocation of `{ user }` with `TEAMS_ADMIN_TOKEN`; a 404 without an admin token.                                                         |

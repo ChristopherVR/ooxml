@@ -137,6 +137,21 @@ describe('teams server', () => {
 		assert.equal((await fetch(`${base}/files/ws1/nope.docx`)).status, 404);
 		assert.equal((await fetch(`${base}/health`)).status, 200);
 	});
+
+	it('reports counts on /health and keeps maintenance on the server object', async () => {
+		const health = await fetch(`http://127.0.0.1:${port}/health`);
+		assert.equal(health.status, 200);
+		// Unauthenticated: counts and flags only, never the token-gated metrics text.
+		assert.deepEqual(Object.keys(await health.json()).sort(), [
+			'accounts',
+			'auth',
+			'calls',
+			'ok',
+			'rooms',
+		]);
+		assert.equal(typeof server.compactRooms, 'function');
+		assert.equal(typeof server.renderMetrics(), 'string');
+	});
 });
 
 describe('teams server with a token and origin list', () => {
