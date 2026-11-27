@@ -12,8 +12,6 @@ export const OFFICE_SYMBOL_FONTS = [
 	'Webdings',
 ] as const;
 
-const SYMBOL_ENCODED = new Set<string>(OFFICE_SYMBOL_FONTS.map((font) => font.toLowerCase()));
-
 /** The first family of a CSS-like list, unquoted and in lower case. */
 export function normaliseFamily(family: string | undefined): string {
 	return (family ?? '')
@@ -25,21 +23,17 @@ export function normaliseFamily(family: string | undefined): string {
 
 /** Whether `family` is one of Office's symbol-encoded fonts (Symbol, Wingdings 1-3, Webdings). */
 export function isSymbolEncodedFont(family: string | undefined): boolean {
-	return SYMBOL_ENCODED.has(normaliseFamily(family));
+	return /^(symbol|wingdings( [23])?|webdings)$/.test(normaliseFamily(family));
 }
 
 /**
  * Whether `family` is probably symbol-encoded: one of Office's symbol fonts, or a font named like
  * the other common ones (Marlett, MT Extra, Monotype Sorts, MS Outlook, Bookshelf Symbol...).
- * Without the font file this is the best guess of how a code below U+0100 is meant.
+ * Without the font file this is the best guess of how a code below U+0100 is meant. Segoe UI
+ * Symbol and Noto Sans Symbols are Unicode fonts.
  */
 export function isLikelySymbolFont(family: string | undefined): boolean {
-	const name = normaliseFamily(family);
-	return (
-		SYMBOL_ENCODED.has(name) ||
-		// Not Segoe UI Symbol or Noto Sans Symbols, which are Unicode fonts.
-		/dings|^symbol|bookshelf symbol|sorts|^marlett$|^mt extra$|^ms outlook$|^ms reference specialty$/.test(
-			name,
-		)
+	return /dings|^symbol|bookshelf symbol|sorts|^(marlett|mt extra|ms outlook|ms reference specialty)$/.test(
+		normaliseFamily(family),
 	);
 }

@@ -5,7 +5,6 @@ import { isFieldLocked } from '../field-lock';
 import { dateFieldResult } from '../field-date';
 import type { LayoutPageBox } from './result';
 import { fieldResultSpans } from '../field-result-spans';
-import { mergeFieldColumn } from '../mail-merge/merge-field-column';
 
 export interface PageFieldContext {
 	page: string;
@@ -43,7 +42,9 @@ export function mergeFieldPlaceholders(runs: TextRun[]): TextRun[] {
 	let out = runs;
 	for (const span of fieldResultSpans(runs)) {
 		if (span.locked || span.removed || !span.runs.length) continue;
-		const name = mergeFieldColumn(span.instr);
+		// The field's name, quoted or not, as Word shows it.
+		const match = /^\s*MERGEFIELD\s+(?:"([^"]*)"|([^\s"\\]+))/i.exec(span.instr);
+		const name = match?.[1] ?? match?.[2];
 		if (name === undefined) continue;
 		if (out === runs) out = [...runs];
 		span.runs.forEach((at, index) => {

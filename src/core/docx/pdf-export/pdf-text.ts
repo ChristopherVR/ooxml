@@ -23,7 +23,7 @@ import {
 	pdfBaseFont,
 	pdfTextWidth,
 } from '../../pdf/write/pdf-fonts';
-import { isSymbolEncodedFont } from '../../text/symbol-font-names';
+import { isSymbolEncodedFont } from '../../text/index';
 
 /** The symbol-font conversions the text writer uses, loaded with the PDF export's glyph tables. */
 export type DocxPdfSymbolTables = Pick<
@@ -218,33 +218,23 @@ export class DocxPdfText {
 		const space = gapPx > 0 && !/\s$/.test(text);
 		const wordSpacing = (scale: number, spaceNatural: number) =>
 			(gapPx * 100) / scale - spaceNatural - spacing;
-		const symbols = this.symbols;
-		if (symbols && isSymbolEncodedFont(family) && !this.fonts.pick(family, bold, italic, text)) {
-			// Without the symbol font's file: Symbol's codes are the standard Symbol font's, and other
-			// symbol fonts' pictures are written as their Unicode equivalents where they have one.
-			// PDF/A takes a supplied font that draws the equivalent over the unembedded Symbol font.
-			const unicode = symbols.symbolTextToUnicode(family, text);
-			const bytes =
-				this.fonts.embedAll && unicode && this.fonts.pick(family, bold, italic, unicode)
-					? undefined
-					: symbols.symbolFontBytes(family, text);
-			if (bytes !== undefined) {
-				this.report.substituted(family, PDF_SYMBOL_FONT);
-				const scale = fit(pdfTextWidth(bytes, PDF_SYMBOL_FONT) * sizePx);
-				page.text(PDF_SYMBOL_FONT, sizePx, x, y, space ? `${bytes} ` : bytes, {
-					character: spacing,
-					scale,
-					...(space
-						? { word: wordSpacing(scale, pdfTextWidth(' ', PDF_SYMBOL_FONT) * sizePx) }
-						: {}),
-				});
-				return;
-			}
+		// Without the symbol font's file: Symbol's codes are the standard Symbol font's, and other
+		// symbol fonts' pictures are written as their Unicode equivalents where they have one. PDF/A
+		// takes a supplied font that draws the equivalent over the unembedded Symbol font.
+		let symbolBytes: string | undefined;
+		if (
+			this.symbols &&
+			isSymbolEncodedFont(family) &&
+			!this.fonts.pick(family, bold, italic, text)
+		) {
+			const unicode = this.symbols.symbolTextToUnicode(family, text);
+			if (!this.fonts.embedAll || !unicode || !this.fonts.pick(family, bold, italic, unicode))
+				symbolBytes = this.symbols.symbolFontBytes(family, text);
 			text = unicode ?? text;
 		}
-		const ascii = encodeWinAnsi(text);
+		const ascii = symbolBytes ?? encodeWinAnsi(text);
 		const embedded =
-			this.fonts.prefers(family) || ascii === undefined
+			symbolBytes === undefined && (this.fonts.prefers(family) || ascii === undefined)
 				? this.fonts.pick(family, bold, italic, text)
 				: undefined;
 		if (embedded) {
@@ -275,7 +265,8 @@ export class DocxPdfText {
 				: font.fallback?.generic === 'monospace'
 					? 'Courier New'
 					: family);
-		const base = pdfBaseFont(substitute, bold, italic);
+		const base =
+			symbolBytes === undefined ? pdfBaseFont(substitute, bold, italic) : PDF_SYMBOL_FONT;
 		// Reported by family (Helvetica, Times, Courier): the style follows the text.
 		this.report.substituted(family, base.replace(/-.*$/, ''));
 		const scale = fit(pdfTextWidth(written, base) * sizePx);

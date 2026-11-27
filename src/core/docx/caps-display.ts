@@ -5,32 +5,21 @@
  * typed as such keep theirs. Print Layout and the PDF export share this projection. DOM-free.
  */
 
-const COMBINING_MARKS = /\p{M}+/gu;
-const LOWERCASE = /\p{Ll}/u;
+const withoutAccents = (text: string): string =>
+	text
+		.normalize('NFD')
+		.replace(/\p{M}+/gu, '')
+		.normalize('NFC');
 
 /** Whether capitals made by caps formatting lose their accents in `language` (only fr-FR). */
-export function capsDropAccents(language: string | undefined): boolean {
-	return language?.toLowerCase() === 'fr-fr';
-}
-
-const withoutAccents = (text: string): string =>
-	text.normalize('NFD').replace(COMBINING_MARKS, '').normalize('NFC');
+const dropsAccents = (language: string | undefined) => language?.toLowerCase() === 'fr-fr';
 
 /** `text` in All caps for a run in `language`. */
 export function allCapsText(text: string, language: string | undefined): string {
-	if (!capsDropAccents(language)) return text.toUpperCase();
-	let out = '';
-	// Whether the last letter was capitalised by the formatting: its combining accents go too.
-	let made = false;
-	for (const char of text) {
-		if (/^\p{M}$/u.test(char)) {
-			if (!made) out += char;
-			continue;
-		}
-		made = LOWERCASE.test(char);
-		out += made ? withoutAccents(char.toUpperCase()) : char.toUpperCase();
-	}
-	return out;
+	// A lowercase letter, with any combining accents after it, loses them as it is capitalised.
+	return (
+		dropsAccents(language) ? text.replace(/\p{Ll}\p{M}*/gu, withoutAccents) : text
+	).toUpperCase();
 }
 
 /**
@@ -39,11 +28,10 @@ export function allCapsText(text: string, language: string | undefined): string 
  * one character for one, so source offsets are kept.
  */
 export function smallCapsText(text: string, language: string | undefined): string {
-	if (!capsDropAccents(language)) return text;
-	let out = '';
-	for (const char of text) {
-		const base = LOWERCASE.test(char) ? withoutAccents(char) : char;
-		out += base.length === char.length ? base : char;
-	}
-	return out;
+	return dropsAccents(language)
+		? text.replace(/\p{Ll}/gu, (char) => {
+				const base = withoutAccents(char);
+				return base.length === char.length ? base : char;
+			})
+		: text;
 }
