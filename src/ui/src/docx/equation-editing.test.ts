@@ -106,7 +106,7 @@ describe('the equation editor', () => {
 		box.input.dispatchEvent(space);
 		expect(space.defaultPrevented).toBe(true);
 		expect(box.input.value).toBe('x=α');
-		expect(equations(view)[0]).toContain('<m:t>α</m:t>');
+		expect(equations(view)[0]).toContain('<m:t>x=α</m:t>');
 	});
 
 	it('inserts a structure at the caret with its placeholders and selects the first', () => {
@@ -267,6 +267,51 @@ describe('the equation editor', () => {
 		expect(equations(view)[0]).toContain('<m:sSup>');
 		placeBuiltIn(view, 'area', undefined);
 		expect(equations(view)).toHaveLength(2);
+	});
+
+	it('refuses Linear in LaTeX input for an equation its UnicodeMath cannot hold', () => {
+		const { view, box } = editor();
+		const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
+		const hidden = `<m:oMathPara xmlns:m="${M}"><m:oMath><m:phant><m:phantPr><m:show m:val="0"/></m:phantPr><m:e><m:r><m:t>x</m:t></m:r></m:e></m:phant></m:oMath></m:oMathPara>`;
+		const pos = insertEquationXml(view, hidden, true)!;
+		box.sync(view, pos, true);
+		box.setFormat('latex');
+		expect(box.editable).toBe(true);
+		box.setLinear(true);
+		expect(equations(view)[0]).toBe(hidden);
+		expect(box.element.querySelector('[role="status"]')?.textContent).toContain('Linear');
+	});
+
+	it('builds up an input method composition once it ends', () => {
+		const { view, box } = editor();
+		box.sync(view, insertNewEquation(view)!, true);
+		box.input.value = 'x';
+		box.input.dispatchEvent(new InputEvent('input', { isComposing: true }));
+		expect(equations(view)[0]).not.toContain('<m:t>x</m:t>');
+		box.input.dispatchEvent(new CompositionEvent('compositionend'));
+		expect(equations(view)[0]).toContain('<m:t>x</m:t>');
+	});
+});
+
+describe('the Equation gallery over a read-only equation', () => {
+	it('adds the built-in equation after it instead of replacing it', async () => {
+		const toolbar = createRibbon('en');
+		document.body.append(toolbar);
+		const { view } = editor();
+		const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
+		const two = `<m:oMathPara xmlns:m="${M}"><m:oMath><m:r><m:t>a</m:t></m:r></m:oMath><m:oMath><m:r><m:t>b</m:t></m:r></m:oMath></m:oMathPara>`;
+		insertEquationXml(view, two, true);
+		const controller = new EquationController({
+			view: () => view,
+			toolbar: () => toolbar,
+			reportError: (error) => {
+				throw error;
+			},
+		});
+		controller.sync();
+		controller.handle({ type: 'equation', key: 'builtIn', value: 'area' });
+		await expect.poll(() => equations(view).length).toBe(2);
+		expect(equations(view)[0]).toBe(two);
 	});
 });
 

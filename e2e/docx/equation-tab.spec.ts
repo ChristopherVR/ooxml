@@ -58,7 +58,8 @@ for (const framework of FRAMEWORKS) {
 		const { xml, bytes } = await savedDocument(page, `ui-equation-tab-${framework}.docx`);
 		expect(xml).toContain('<m:oMathPara');
 		expect(xml).toMatch(/<m:f><m:num><m:r><m:t>1<\/m:t>/);
-		expect(xml).toContain('<m:t>α</m:t>');
+		// Runs are saved as Word saves them: one run per stretch of text.
+		expect(xml).toContain('<m:t>x=α+</m:t>');
 		expect((await JSZip.loadAsync(bytes)).file('word/document.xml')).not.toBeNull();
 
 		// Leaving the equation hides the tab.

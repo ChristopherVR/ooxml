@@ -32,6 +32,8 @@ export function equationStyle(): HTMLStyleElement {
 	return style;
 }
 
+const NO_LINEAR: LocalizationKey =
+	'This equation cannot be shown in Linear without changing it, so it is kept as it is.';
 const READ_ONLY: LocalizationKey =
 	'This equation has content its linear text cannot hold, so it is kept as it is.';
 /** Status messages wait for typing to pause, so a screen reader is not interrupted per key. */
@@ -67,7 +69,11 @@ export class EquationEditingBox {
 		this.status.className = 'dve-equation-editor-status';
 		this.status.setAttribute('role', 'status');
 		this.element.append(equationStyle(), this.input, this.status);
-		this.input.addEventListener('input', () => this.commit());
+		// An input method's text is built up once its composition ends, not at each update.
+		this.input.addEventListener('input', (event) => {
+			if (!(event as InputEvent).isComposing) this.commit();
+		});
+		this.input.addEventListener('compositionend', () => this.commit());
 		this.input.addEventListener('keydown', (event) => this.keydown(event));
 		this.input.addEventListener('select', () => host.refresh());
 		this.input.addEventListener('keyup', () => host.refresh());
@@ -153,6 +159,7 @@ export class EquationEditingBox {
 		this.input.value = this.edit?.text ?? kit().linearizeEquation(omml, this.host.format()) ?? '';
 		this.committed = omml;
 		this.setStatus(this.edit ? undefined : READ_ONLY, true);
+		this.input.readOnly = !this.edit || !this.host.view()?.editable;
 	}
 
 	/** The equation on screen: in Draft its typeset maths, in Print Layout the page selection. */
@@ -201,10 +208,10 @@ export class EquationEditingBox {
 	}
 
 	/** Builds the box's text up (or keeps it linear) and writes it to the equation. */
-	commit(): void {
+	commit(): boolean {
 		const view = this.host.view();
 		const node = this.pos === undefined ? null : view?.state.doc.nodeAt(this.pos);
-		if (!view || !node || this.pos === undefined || !this.edit || this.input.readOnly) return;
+		if (!view || !node || this.pos === undefined || !this.edit || this.input.readOnly) return false;
 		const format = this.host.format();
 		const omml = kit().writeEditedEquation({
 			text: this.input.value,
@@ -220,10 +227,11 @@ export class EquationEditingBox {
 					? 'This LaTeX could not be converted to an equation.'
 					: 'This equation is nested too deeply to build up.',
 		);
-		if (!omml) return;
+		if (!omml) return false;
 		this.committed = omml;
 		setEquationXml(view, this.pos, omml);
 		this.reposition();
+		return true;
 	}
 
 	/** Replaces the box's selection with `text` and selects its first placeholder. */
@@ -286,8 +294,14 @@ export class EquationEditingBox {
 	/** Professional or Linear display for this equation. */
 	setLinear(linear: boolean): void {
 		if (!this.edit || this.pos === undefined || linear === this.edit.linear) return;
+		// Linear is UnicodeMath: an equation its text cannot hold exactly stays as it is.
+		if (linear && !this.edit.canLinear) return this.setStatus(NO_LINEAR, true);
+		const previous = this.edit;
 		this.edit = { ...this.edit, linear };
-		this.commit();
+		if (!this.commit()) {
+			this.edit = previous;
+			this.setStatus(NO_LINEAR, true);
+		}
 		this.input.focus({ preventScroll: true });
 	}
 

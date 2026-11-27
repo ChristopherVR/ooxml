@@ -117,7 +117,9 @@ export class EquationSession {
 			if (insertNewEquation(view) !== undefined) this.sync(true);
 		} else if (key === 'builtIn') {
 			// An empty equation takes the built-in one; otherwise it is a new equation.
-			const empty = attached && box.input.value.trim() === '' ? box.attachedAt : undefined;
+			// Only an editable equation that holds nothing is filled; a read-only one is never replaced.
+			const empty =
+				attached && box.editable && box.input.value.trim() === '' ? box.attachedAt : undefined;
 			placeBuiltIn(view, value, empty);
 			focusView(view);
 			this.sync(true);

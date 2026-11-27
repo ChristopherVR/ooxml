@@ -171,13 +171,19 @@ describe('convertOmmlToLatex: constructs the forward renderer supports', () => {
 		expect(convertOmmlToLatex(oMath({ 'm:box': { 'm:e': r('x') } }))).toBe('x');
 	});
 
-	it('phantom variants round-trip', () => {
-		expect(expectOmmlRoundTrip({ 'm:phant': { 'm:e': r('x') } })).toBe('\\phantom{x}');
+	it('phantom variants round-trip; LaTeX phantoms are hidden (m:show off)', () => {
+		const hide = { 'm:show': v('0') };
+		expect(expectOmmlRoundTrip({ 'm:phant': { 'm:phantPr': hide, 'm:e': r('x') } })).toBe(
+			'\\phantom{x}',
+		);
 		const h = {
-			'm:phant': { 'm:phantPr': { 'm:zeroAsc': v('1'), 'm:zeroDesc': v('1') }, 'm:e': r('x') },
+			'm:phant': {
+				'm:phantPr': { ...hide, 'm:zeroAsc': v('1'), 'm:zeroDesc': v('1') },
+				'm:e': r('x'),
+			},
 		};
 		expect(expectOmmlRoundTrip(h)).toBe('\\hphantom{x}');
-		const vp = { 'm:phant': { 'm:phantPr': { 'm:zeroWid': v('1') }, 'm:e': r('x') } };
+		const vp = { 'm:phant': { 'm:phantPr': { ...hide, 'm:zeroWid': v('1') }, 'm:e': r('x') } };
 		expect(expectOmmlRoundTrip(vp)).toBe('\\vphantom{x}');
 	});
 
@@ -222,8 +228,11 @@ describe('convertOmmlToLatex: constructs the forward renderer supports', () => {
 	});
 
 	it('delimiters: several m:e arguments are separated with \\middle, so they read back', () => {
-		const pair = { 'm:d': { 'm:dPr': { 'm:sepChr': v(',') }, 'm:e': [r('a'), r('b')] } };
-		expect(convertOmmlToLatex(oMath(pair))).toBe('\\left(a\\middle,b\\right)');
+		const pair = { 'm:d': { 'm:dPr': { 'm:sepChr': v('|') }, 'm:e': [r('a'), r('b')] } };
+		expect(convertOmmlToLatex(oMath(pair))).toBe('\\left(a\\middle|b\\right)');
+		// A separator TeX has no delimiter for stays text rather than an invalid \middle.
+		const comma = { 'm:d': { 'm:dPr': { 'm:sepChr': v(',') }, 'm:e': [r('a'), r('b')] } };
+		expect(convertOmmlToLatex(oMath(comma))).toBe('\\left(a,b\\right)');
 	});
 
 	it('nary: limLoc undOvr survives as \\limits', () => {
