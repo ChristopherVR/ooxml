@@ -300,6 +300,7 @@ test.describe('cross-binding AI deck changes', () => {
 					const before = await slidesRecoloured(page);
 					await assistant.exchange('zztheme');
 					await assistant.applyFirst();
+					await expect.poll(() => slidesRecoloured(page)).toBe(true);
 					const recoloured = await slidesRecoloured(page);
 					const read = await assistant.read();
 					const undoAll = async (): Promise<number> => {
@@ -312,10 +313,11 @@ test.describe('cross-binding AI deck changes', () => {
 						return steps;
 					};
 					const steps = await undoAll();
+					await expect.poll(() => slidesRecoloured(page)).toBe(false);
 					const undone = await slidesRecoloured(page);
 					const readUndone = await assistant.read();
 					await page.evaluate(() => window.__pptxViewer.redo());
-					await page.waitForTimeout(500);
+					await expect.poll(() => slidesRecoloured(page)).toBe(true);
 					const redone = await slidesRecoloured(page);
 					const save = await saved(page);
 					await undoAll();
