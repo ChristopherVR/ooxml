@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Block, DocumentModel, Paragraph, SectionProperties } from './model';
-import { copySourceBlock, type BlockCopies } from './block-copies';
+import { cloneSourceElement, copySourceBlock, type BlockCopies } from './block-copies';
 import { cellSourceBlocks } from './cell-blocks';
 import { flatBlocks } from './parse-content-control';
 import { placeBlocksById, wrapNewBlockControls } from './write-block-placement';
@@ -115,21 +115,29 @@ export function applyBlocks(
 	const bases = baseMap(original);
 	const copied = new Map<string, ReturnType<typeof copySourceBlock>>();
 	const bookmarks = new Map<string, string>();
+	const bookmarkId = (key: string) => {
+		const known = bookmarks.get(key);
+		if (known) return known;
+		const value = nextId();
+		bookmarks.set(key, value);
+		return value;
+	};
 	for (const [id, copy] of copies ?? []) {
 		const source = oldById.get(copy.sourceId);
 		const base = bases.get(copy.sourceId);
 		if (!source || !base) continue;
-		copied.set(
-			id,
-			copySourceBlock(source, base, copy, allocator, (key) => {
-				const known = bookmarks.get(key);
-				if (known) return known;
-				const value = nextId();
-				bookmarks.set(key, value);
-				return value;
-			}),
-		);
+		copied.set(id, copySourceBlock(source, base, copy, allocator, bookmarkId));
 	}
+	const rowCopies = copies && {
+		copies,
+		clone: (source: XmlElement, copyId: string) =>
+			cloneSourceElement(
+				source,
+				copies.get(copyId)?.rekey ?? ((id) => `${id}-${copyId}`),
+				allocator,
+				bookmarkId,
+			),
+	};
 	const output: XmlElement[] = [];
 	for (const block of blocks) {
 		const copy = copied.get(block.id);
@@ -150,6 +158,8 @@ export function applyBlocks(
 							old,
 							base?.type === 'table' ? base : undefined,
 							boundWriteParagraph,
+							false,
+							rowCopies,
 						)
 					: createTable(doc, block, allocator, contentWidthTwips, spans),
 			);

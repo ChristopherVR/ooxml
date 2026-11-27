@@ -30,6 +30,7 @@ type ParagraphWriter = (
 import { canEditTableStructure, canRestructureTable } from './table-structure-check';
 import { restructured, writeRestructuredTable } from './write-table-structure';
 import { tableGrid } from './table-grid';
+import { hasMergedRows, writeMergedRows, type RowCopies } from './write-table-rows';
 
 export { canEditTableStructure };
 
@@ -97,8 +98,11 @@ export function writeTable(
 	base: Table | undefined,
 	writeParagraph: ParagraphWriter,
 	nested = false,
+	rows?: RowCopies,
 ): XmlElement {
 	if (base && JSON.stringify(table) === JSON.stringify(base)) return node;
+	if (base && hasMergedRows(table, rows))
+		return writeMergedRows(doc, table, node, base, writeParagraph, rows);
 	// Merged tables, tables nested in a cell and edits that merge or split cells restructure
 	// through the merge-aware writer; plain rectangular tables keep the row and column writer below.
 	const baseGrid = base && tableGrid(base);

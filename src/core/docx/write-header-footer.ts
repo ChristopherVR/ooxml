@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes edited header and footer content back into its own package part. Only parts whose blocks
 // changed are rewritten; everything else in the package stays byte-identical.
+import type { BlockCopies } from './block-copies';
 import type JSZip from 'jszip';
 import type {
 	Block,
@@ -179,6 +180,7 @@ export async function applyHeaderFooterEdits(
 	pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
 	docPrIds?: DocPrIdAllocator,
 	preferred?: DocumentModel,
+	copies?: BlockCopies,
 ): Promise<void> {
 	const next = partContents(model.sections);
 	const better = preferred && partContents(preferred.sections);
@@ -217,7 +219,16 @@ export async function applyHeaderFooterEdits(
 			try {
 				const doc = parseXml(await file.async('string'));
 				const allocator = await allocatorForPart(zip, partName, doc, docPrIds);
-				applyBlocks(doc, doc.documentElement, content, original, allocator, contentWidthTwips);
+				applyBlocks(
+					doc,
+					doc.documentElement,
+					content,
+					original,
+					allocator,
+					contentWidthTwips,
+					null,
+					copies,
+				);
 				built = { doc, allocator };
 				break;
 			} catch (error) {

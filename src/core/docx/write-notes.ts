@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes edited footnote/endnote text back into word/footnotes.xml and word/endnotes.xml, one
 // note element at a time. Unedited notes and the separator notes stay byte-identical.
+import type { BlockCopies } from './block-copies';
 import type JSZip from 'jszip';
 import type { DocumentModel, Note, PendingMediaPart } from './model';
 import { allocatorForPart, writeNewRelationships } from './part-relationships';
@@ -41,6 +42,7 @@ export async function applyNoteEdits(
 	base: DocumentModel,
 	pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
 	docPrIds?: DocPrIdAllocator,
+	copies?: BlockCopies,
 ): Promise<void> {
 	const contentWidthTwips = Math.round(
 		(model.page.width - model.page.marginLeft - model.page.marginRight) * 15,
@@ -103,7 +105,16 @@ export async function applyNoteEdits(
 				element.setAttributeNS(WORD_NS, 'w:id', note.id);
 				doc.documentElement.appendChild(element);
 			}
-			applyBlocks(doc, element, note.blocks, original?.blocks ?? [], allocator, contentWidthTwips);
+			applyBlocks(
+				doc,
+				element,
+				note.blocks,
+				original?.blocks ?? [],
+				allocator,
+				contentWidthTwips,
+				null,
+				copies,
+			);
 		}
 		zip.file(part, buildXml(doc));
 		await writeNewRelationships(zip, part, allocator.newRelationships, pendingMedia);

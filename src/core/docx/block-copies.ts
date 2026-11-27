@@ -24,14 +24,19 @@ export function blockCopiesOf(model: DocumentModel): BlockCopies | undefined {
 
 const WORD_2010 = 'http://schemas.microsoft.com/office/word/2010/wordml';
 
-/** Prepares a repeated body block for the normal paragraph/table writer. */
-export function copySourceBlock(
+/** The key under which a table is marked as having rows repeated or removed by a merge. */
+export const rowEditKey = (tableId: string) => `rows:${tableId}`;
+
+/**
+ * A deep copy of `source` for a repeated block: paragraph identities removed, bookmark ids made
+ * new and drawing ids taken from the package allocator.
+ */
+export function cloneSourceElement(
 	source: XmlElement,
-	base: Block,
-	copy: BlockCopy,
+	rekey: (id: string) => string,
 	allocator: RelationshipAllocator | undefined,
 	bookmarkId: (id: string) => string,
-): { node: XmlElement; base: Block } {
+): XmlElement {
 	const node = importElement(source.ownerDocument, source);
 	for (const element of [node, ...Array.from(node.getElementsByTagName('*'))]) {
 		if (element.namespaceURI === WORD_NS) {
@@ -41,13 +46,25 @@ export function copySourceBlock(
 			}
 			if (element.localName === 'bookmarkStart' || element.localName === 'bookmarkEnd') {
 				const id = getW(element, 'id');
-				if (id) element.setAttributeNS(WORD_NS, 'w:id', bookmarkId(copy.rekey(id)));
+				if (id) element.setAttributeNS(WORD_NS, 'w:id', bookmarkId(rekey(id)));
 			}
 		} else if (element.namespaceURI === NS.wp && element.localName === 'docPr' && allocator) {
 			element.setAttribute('id', allocator.docPrIds.next());
 		}
 	}
+	return node;
+}
+
+/** Prepares a repeated body block for the normal paragraph/table writer. */
+export function copySourceBlock(
+	source: XmlElement,
+	base: Block,
+	copy: BlockCopy,
+	allocator: RelationshipAllocator | undefined,
+	bookmarkId: (id: string) => string,
+): { node: XmlElement; base: Block } {
 	const rekey = (id: string) => copy.rekey(id);
+	const node = cloneSourceElement(source, rekey, allocator, bookmarkId);
 	const [rekeyed] = mapStoryBlocks(
 		[base],
 		(paragraph) => ({ ...paragraph, id: rekey(paragraph.id) }),

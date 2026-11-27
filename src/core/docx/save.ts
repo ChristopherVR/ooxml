@@ -179,6 +179,7 @@ export async function saveDocx(
 		pendingMedia,
 		docPrIds,
 		headerFooterResults(model),
+		copies,
 	);
 	// A new document starts without notes, so every note is created along with its part.
 	await applyNoteEdits(
@@ -187,6 +188,7 @@ export async function saveDocx(
 		binding?.base ?? { ...model, footnotes: [], endnotes: [] },
 		pendingMedia,
 		docPrIds,
+		copies,
 	);
 	// Edited charts are written back with their workbooks; unedited chart parts are not touched.
 	await applyChartPartEdits(zip, model, binding?.base);
