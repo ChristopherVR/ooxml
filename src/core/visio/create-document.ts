@@ -1,3 +1,4 @@
+import { themeFontPair } from '../drawingml/office-theme-fonts';
 import { buildContentTypesXml } from '../opc/content-types';
 import { buildRelationshipsXml } from '../opc/relationships';
 import { buildXml, parseXml, NS } from '../xml/index';
@@ -17,6 +18,11 @@ export interface CreateVsdxOptions {
 	 * template opens. They are written as Stencil windows naming Visio's own stencil files.
 	 */
 	stencils?: readonly VisioBuiltInStencilId[];
+	/**
+	 * The theme's body font, the face a new drawing's Normal style names (Visio lists it in the
+	 * document's face table); by default `OFFICE_THEME_FONTS.minor` (drawingml).
+	 */
+	themeFonts?: { minor?: string | undefined };
 }
 
 function element(parent: Element, name: string, attributes: Record<string, string> = {}): Element {
@@ -35,7 +41,7 @@ function cells(parent: Element, values: Record<string, number>): void {
 }
 
 /** Explicit basic drawing defaults, independent of installed templates and themes. */
-function documentPart(): Element {
+function documentPart(font: string): Element {
 	const document = root('VisioDocument');
 	element(document, 'DocumentSettings', {
 		TopPage: '0',
@@ -45,8 +51,8 @@ function documentPart(): Element {
 	});
 	element(element(document, 'FaceNames'), 'FaceName', {
 		ID: '0',
-		Name: 'Calibri',
-		NameU: 'Calibri',
+		Name: font,
+		NameU: font,
 	});
 	const style = element(element(document, 'StyleSheets'), 'StyleSheet', {
 		ID: '0',
@@ -171,7 +177,7 @@ export async function createVisioPackage(
 	);
 	if (stencil) put('visio/masters/masters.xml', buildXml(root('Masters')));
 	else put('visio/pages/_rels/pages.xml.rels', relationships([['page', 'page1.xml']]));
-	put('visio/document.xml', buildXml(documentPart()));
+	put('visio/document.xml', buildXml(documentPart(themeFontPair(options.themeFonts).minor)));
 	const pages = root('Pages');
 	if (!stencil) {
 		const page = element(pages, 'Page', { ID: '0', Name: 'Page-1', NameU: 'Page-1' });

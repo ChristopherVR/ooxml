@@ -51,6 +51,8 @@ export async function editVsdxData(
 	maxOutput: number,
 	deadline: number,
 	check: () => void,
+	/** The refresh time stamped on the recordsets written; by default the time of the edit. */
+	at: Date = new Date(),
 ): Promise<EditVsdxResult> {
 	const documentPart = (await related(pkg, '', 'document'))!;
 	const store = new DataPackageParts(pkg, parts);
@@ -167,7 +169,7 @@ export async function editVsdxData(
 		dataElement(root!, name, attributes);
 	const columnsElement = (columns: readonly VisioDataColumn[]) =>
 		dataColumnsElement(root!, columns);
-	const now = new Date().toISOString().slice(0, 19);
+	const now = at.toISOString().slice(0, 19);
 	const writeData = (set: Recordset, columns: VisioDataColumn[], rows: string[][]) => {
 		set.columns = columns;
 		set.rows = rows;

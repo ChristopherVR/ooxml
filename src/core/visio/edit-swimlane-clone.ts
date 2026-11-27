@@ -1,8 +1,9 @@
+import { createOfficeGuid } from '../crypto/uuid';
 import { attribute, children, VISIO_NS } from './sheet';
 import { fail } from './package-common';
 import { shapeIdOf, topLevelShapes } from './edit-container-members';
 
-const guid = (): string => `{${crypto.randomUUID().toUpperCase()}}`;
+const guid = (): string => createOfficeGuid();
 
 /** The highest shape ID anywhere on the page, sub-shapes included. */
 function highestId(root: Element): number {

@@ -1,3 +1,4 @@
+import { OFFICE_ZIP_DATE } from '../opc/reproducible';
 import JSZip from 'jszip';
 import { elements } from '../xml/index';
 import { VisioPackage } from './package';
@@ -118,7 +119,8 @@ export function writeEditedPackage(
 	const zip = new JSZip();
 	for (const [path, bytes] of parts) {
 		check();
-		zip.file(path, bytes, { createFolders: false });
+		// One date for every entry, 1980-01-01 as Visio writes, so equal parts give equal bytes.
+		zip.file(path, bytes, { createFolders: false, date: OFFICE_ZIP_DATE });
 	}
 	return new Promise((resolve, reject) => {
 		const stream = zip.generateInternalStream({

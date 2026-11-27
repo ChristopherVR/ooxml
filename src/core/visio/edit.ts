@@ -1,3 +1,4 @@
+import type { ReproducibleSaveOptions } from '../opc/reproducible';
 import { DEFAULTS, fail, VisioPackageError, type VisioPackageLimits } from './package-common';
 import { operationStep, withOperationMemory } from './memory-budget';
 import { visioXml, related } from './parts';
@@ -154,7 +155,12 @@ export type {
 	VisioGuideEdit,
 } from './edit-commands';
 
-export interface EditVsdxOptions {
+/**
+ * `now` (`ReproducibleSaveOptions`, opc) fixes the time an edit stamps (a data recordset's
+ * `TimeRefreshed`); by default the time of the edit, as Visio stamps it. Every ZIP entry is dated
+ * 1980-01-01, as Visio writes.
+ */
+export interface EditVsdxOptions extends Pick<ReproducibleSaveOptions, 'now'> {
 	limits?: Partial<VisioPackageLimits>;
 	maxEdits?: number;
 	maxTextCharacters?: number;
@@ -498,6 +504,7 @@ async function runTransaction(
 			maxOutput,
 			deadline,
 			check,
+			options.now,
 		);
 	}
 	const layerFlags = allCommands.filter((command) => command.type === 'set-layer-properties');
