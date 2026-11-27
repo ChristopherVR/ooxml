@@ -237,7 +237,17 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 			await frame.getByRole('button', { name: 'Read selection' }).click();
 			await expect(frame.locator('#result')).toHaveText('Read: Slide selection');
 		}
-		await pane.getByRole('button', { name: 'Close', exact: true }).click();
+		if (host === 'Word' && file.name === 'app.zip') {
+			await editor.evaluate((node) => {
+				const parent = node.ownerDocument.createElement('div');
+				parent.style.display = 'contents';
+				node.before(parent);
+				parent.append(node);
+			});
+			await expect(editor.locator('office-ui-add-in-pane')).toHaveCount(0);
+		} else {
+			await pane.getByRole('button', { name: 'Close', exact: true }).click();
+		}
 		await openDialog();
 		await dialog.getByRole('button', { name: 'Remove Notes', exact: true }).click();
 		await expect(dialog).toBeHidden();
