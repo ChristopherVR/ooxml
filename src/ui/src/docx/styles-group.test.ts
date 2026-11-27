@@ -7,8 +7,12 @@ import { createRibbon } from './ribbon';
 import { schema } from './schema';
 import { recommendedCharacterStyles, recommendedStyles } from './style-gallery';
 import { resetStylePicker, syncStylePicker } from './styles-group';
+import { closeRibbonPopover } from './ribbon-popover';
 
-afterEach(() => (document.body.innerHTML = ''));
+afterEach(() => {
+	closeRibbonPopover();
+	document.body.replaceChildren();
+});
 
 function setup() {
 	const model = createDocument();
@@ -83,6 +87,22 @@ describe('Styles group', () => {
 		const { ribbon, view } = setup();
 		ribbon.querySelector<HTMLButtonElement>('.style-tile[data-style-id="Heading1"]')!.click();
 		expect(view.state.doc.firstChild!.attrs.style).toBe('Heading1');
+	});
+
+	it('updates and opens the gallery while the overflow panel holds its controls', () => {
+		const { ribbon, view, model } = setup();
+		const group = ribbon.querySelector('[data-styles-group]')!;
+		const overflow = ribbon.appendChild(document.createElement('div'));
+		overflow.append(...group.children);
+		view.dispatch(view.state.tr.setNodeAttribute(0, 'style', 'Heading1'));
+		syncStylePicker(ribbon, view, model, 'en');
+		expect(
+			overflow.querySelector('.style-tile[aria-pressed="true"]')?.getAttribute('data-style-id'),
+		).toBe('Heading1');
+		button(overflow, 'More styles').click();
+		const expanded = document.querySelector('.styles-popover')!;
+		button(expanded, 'Heading 2').click();
+		expect(view.state.doc.firstChild?.attrs.style).toBe('Heading2');
 	});
 
 	it('opens the expanded gallery with both kinds of style, then Clear Formatting and the pane', () => {

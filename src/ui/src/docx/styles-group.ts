@@ -25,6 +25,7 @@ interface Latest {
 }
 
 const openDialogs = new WeakMap<HTMLElement, HTMLElement>();
+const styleGroups = new WeakMap<HTMLElement, ReturnType<typeof build>>();
 
 /** Scrolls the gallery by roughly one tile and a half per press. */
 const TILE_STEP = 170;
@@ -40,7 +41,7 @@ function stripButton(label: string, icon: RibbonIcon): HTMLButtonElement {
 	return button;
 }
 
-function build(toolbar: HTMLElement, latest: Latest): HTMLElement {
+function build(toolbar: HTMLElement, latest: Latest) {
 	const { locale } = latest;
 	const group = document.createElement('div');
 	group.className = 'ribbon-group';
@@ -87,13 +88,14 @@ function build(toolbar: HTMLElement, latest: Latest): HTMLElement {
 	const paneLauncher = launcher(translate(locale, 'Styles pane'), { type: 'search' });
 	paneLauncher.removeAttribute('data-action');
 	paneLauncher.setAttribute('aria-pressed', 'false');
+	const showPane = () => {
+		pane.open();
+		paneLauncher.setAttribute('aria-pressed', 'true');
+		render();
+	};
 	paneLauncher.addEventListener('click', () => {
 		if (pane.isOpen) pane.close();
-		else {
-			pane.open();
-			paneLauncher.setAttribute('aria-pressed', 'true');
-			render();
-		}
+		else showPane();
 	});
 	toolbar.parentElement?.querySelector('.dve-body')?.append(pane.element);
 	group.append(row(gallery, strip), state, paneLauncher);
@@ -113,16 +115,16 @@ function build(toolbar: HTMLElement, latest: Latest): HTMLElement {
 	gallery.addEventListener('dve-choose-style', (event) =>
 		apply((event as CustomEvent<string>).detail),
 	);
-	const data = (): StylesData => currentData(group, latest, apply);
+	const data = (): StylesData => currentData(group, latest, apply, { select, pane, showPane });
 	function render() {
 		pane.render(data(), latest.locale);
 	}
-	Object.assign(group, { renderPane: render, stylesPane: pane as StylesPane });
 	more.addEventListener('click', () => {
 		if (more.getAttribute('aria-expanded') === 'true') return closeRibbonPopover();
 		openStylesGallery(more, data(), closeRibbonPopover);
 	});
-	return group;
+	// The overflow panel moves the live controls out of the group while it is open.
+	return { group, select, gallery, pane, latest, render };
 }
 
 /** The state the gallery, popover and pane draw from, for the current view and model. */
@@ -130,6 +132,7 @@ function currentData(
 	group: HTMLElement,
 	latest: Latest,
 	applyParagraph: (id: string) => void,
+	controls: { select: HTMLSelectElement; pane: StylesPane; showPane: () => void },
 ): StylesData {
 	const { view, model, locale } = latest;
 	const definitions = Object.values(model.paragraphStyles?.styles ?? {});
@@ -145,9 +148,7 @@ function currentData(
 			submit: (edit) =>
 				latest.view === view && latest.canAuthor && commitStyleEdit(view, latest.model, edit),
 		});
-		const host =
-			(group as HTMLElement & { stylesPane?: StylesPane }).stylesPane?.element.parentElement ??
-			group;
+		const host = controls.pane.element.parentElement ?? group;
 		openDialogs.set(group, dialog.element);
 		host.append(dialog.element);
 		dialog.open();
@@ -158,7 +159,6 @@ function currentData(
 			.filter((style) => !style.isDefault)
 			.map((style) => ({ id: style.id, name: style.name || style.id })),
 	];
-	const select = group.querySelector<HTMLSelectElement>('[data-paragraph-styles]')!;
 	const characters = Object.values(model.characterStyles?.styles ?? {})
 		.filter((style) => style.type === 'character')
 		.map((style) => ({ id: style.id, name: style.name || style.id }));
@@ -170,7 +170,7 @@ function currentData(
 		selectedParagraph: String(view.state.selection.$from.parent.attrs.style ?? ''),
 		selectedCharacter: characterStyleAtSelection(view),
 		model,
-		disabled: select.disabled,
+		disabled: controls.select.disabled,
 		canAuthor: latest.canAuthor && view.editable,
 		canModify:
 			definitions.length > 0 ||
@@ -180,11 +180,7 @@ function currentData(
 		chooseParagraph: applyParagraph,
 		chooseCharacter: (value) => emit(group, 'ribbon-action', { type: 'characterStyle', value }),
 		clearFormatting: () => emit(group, 'ribbon-action', { type: 'clear' }),
-		openPane: () => {
-			(group as HTMLElement & { stylesPane: StylesPane }).stylesPane.open();
-			group.querySelector('.ribbon-launcher')?.setAttribute('aria-pressed', 'true');
-			(group as HTMLElement & { renderPane(): void }).renderPane();
-		},
+		openPane: controls.showPane,
 	};
 }
 
@@ -197,15 +193,15 @@ export function syncStylePicker(
 	canAuthor = view.editable && !model.protection?.enforced,
 ): void {
 	const latest: Latest = { view, model, locale, canAuthor };
-	let group = toolbar.querySelector<HTMLElement & { latest?: Latest }>('[data-styles-group]');
-	if (!group) {
-		group = build(toolbar, latest) as HTMLElement & { latest?: Latest };
-		group.latest = latest;
+	let controls = styleGroups.get(toolbar);
+	if (!controls) {
+		controls = build(toolbar, latest);
+		styleGroups.set(toolbar, controls);
 		const home = toolbar.querySelector('#dve-panel-home');
-		home?.insertBefore(group, home.querySelector('.ribbon-group[data-label="Editing"]'));
+		home?.insertBefore(controls.group, home.querySelector('.ribbon-group[data-label="Editing"]'));
 	}
-	Object.assign(group.latest ?? {}, latest);
-	const select = group.querySelector<HTMLSelectElement>('[data-paragraph-styles]')!;
+	Object.assign(controls.latest, latest);
+	const { select, gallery, render } = controls;
 	select.setAttribute('aria-label', translate(locale, 'styles.label'));
 	const definitions = Object.values(model.paragraphStyles?.styles ?? {});
 	const selected = String(view.state.selection.$from.parent.attrs.style ?? '');
@@ -215,7 +211,6 @@ export function syncStylePicker(
 	select.replaceChildren(...options.map((style) => new Option(style.name || style.id, style.id)));
 	select.value = selected;
 	select.disabled = !view.editable || !definitions.length;
-	const gallery = group.querySelector<HTMLElement>('[data-style-gallery]')!;
 	const normal = definitions.find((style) => style.isDefault);
 	const tiles = recommendedStyles([
 		{ id: '', name: normal?.name || translate(locale, 'styles.inherit') },
@@ -234,15 +229,16 @@ export function syncStylePicker(
 		},
 		select.disabled,
 	);
-	(group as HTMLElement & { renderPane?(): void }).renderPane?.();
+	render();
 }
 
 /** Removes the Styles group and its pane, so a new document builds them afresh. */
 export function resetStylePicker(toolbar?: HTMLElement): void {
-	const group = toolbar?.querySelector<HTMLElement & { stylesPane?: StylesPane }>(
-		'[data-styles-group]',
-	);
-	if (group) openDialogs.get(group)?.remove();
-	group?.stylesPane?.element.remove();
-	group?.remove();
+	if (!toolbar) return;
+	const controls = styleGroups.get(toolbar);
+	if (!controls) return;
+	styleGroups.delete(toolbar);
+	openDialogs.get(controls.group)?.remove();
+	controls.pane.element.remove();
+	controls.group.remove();
 }
