@@ -182,16 +182,17 @@ function measureParagraph(
 		}
 		return expectDefined(boxes[lineIndex], 'line box');
 	};
+	/**
+	 * Where a line's text starts, from the column's left edge: the paragraph's indent (plus the
+	 * first-line offset) or the edge of a wrapped float, whichever is further in. The indent is
+	 * not added to the float's edge: Word measures it from the margin.
+	 */
+	const lineStart = (lineIndex: number) =>
+		Math.max(leftPx + (lineIndex === 0 ? firstLineExtraPx : 0), boxFor(lineIndex).leftInsetPx);
 	const availableWidth = (lineIndex: number) => {
 		const box = boxFor(lineIndex);
-		return Math.max(
-			1,
-			bodyWidth - (lineIndex === 0 ? firstLineExtraPx : 0) - box.leftInsetPx - box.rightInsetPx,
-		);
+		return Math.max(1, contentWidthPx - lineStart(lineIndex) - Math.max(rightPx, box.rightInsetPx));
 	};
-	/** Where a line's text starts, from the paragraph's text margin (indent plus first-line offset). */
-	const lineStart = (lineIndex: number) =>
-		leftPx + (lineIndex === 0 ? firstLineExtraPx : 0) + boxFor(lineIndex).leftInsetPx;
 	const tokenWidth = (token: BreakToken): number => {
 		const run = token.kind === 'word' ? paragraph.runs[token.runIndex] : undefined;
 		const font = fonts[token.runIndex];
