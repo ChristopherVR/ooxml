@@ -93,6 +93,8 @@ export const imageNodeSpec: NodeSpec = {
 		shape: { default: null },
 		/** Ink (`DocxInk`) as JSON; drawn as SVG and edited on the Draw tab. */
 		ink: { default: null },
+		/** Legacy VML ink (`LegacyVmlInk`) as JSON; drawn read only, never edited. */
+		legacyInk: { default: null },
 		/** A header watermark (`WatermarkSpec` or `PictureWatermarkSpec`) as JSON, kept through edits. */
 		watermark: { default: null },
 		pictureWatermark: { default: null },

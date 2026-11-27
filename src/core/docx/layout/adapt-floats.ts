@@ -33,7 +33,7 @@ export function paragraphFloats(
 			!image?.anchored ||
 			image.watermark ||
 			image.pictureWatermark ||
-			(!image.partName && !image.shape && !image.chart && !image.ink)
+			(!image.partName && !image.shape && !image.chart && !image.ink && !image.legacyInk)
 		)
 			continue;
 		const placement = image.placement;

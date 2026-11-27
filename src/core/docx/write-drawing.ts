@@ -91,7 +91,8 @@ export function findDrawingChild(run: XmlElement | undefined): XmlElement | unde
 
 function sameUnderlyingImage(a: InlineImage, b: InlineImage): boolean {
 	return (
-		Boolean(a.partName) &&
+		// Legacy VML ink has no part: it is the same drawing while both are that ink.
+		(Boolean(a.partName) || Boolean(a.legacyInk && b.legacyInk)) &&
 		a.relId === b.relId &&
 		a.partName === b.partName &&
 		a.payload?.kind === b.payload?.kind &&

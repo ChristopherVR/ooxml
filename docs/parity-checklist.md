@@ -496,8 +496,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       no visible text; a numbered paragraph with text still formats its number from its first run
       (`docx/layout/adapter.ts`, `src/ui/src/docx/list-marker-display.ts`).
 - [ ] **P1** Canvases (`wpc`), legacy VML text boxes (`v:textbox`)
-      and legacy VML WordArt, VML ink and gradient or picture fills are kept but not drawn.
-      DrawingML ink (`w14:contentPart`) is drawn and edited on the Draw tab (`docx/ink.test.ts`).
+      and legacy VML WordArt and gradient or picture fills are kept but not drawn.
+      DrawingML ink (`w14:contentPart`) is drawn and edited on the Draw tab (`docx/ink.test.ts`);
+      legacy VML ink (`o:ink`) is drawn read only from its shape path (its ISF strokes are not
+      decoded), cannot be edited on the Draw tab, and is saved as read, moved or resized through
+      its style when floating (`docx/vml-ink.test.ts`).
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical
       text (`tbRl`, `btLr`), `eastAsianLayout`, `fitText` and emphasis marks are not laid out.
 - [x] **P1** Picture bullets (`numPicBullet`): resolved (VML `imagedata` and `w:drawing`), drawn as

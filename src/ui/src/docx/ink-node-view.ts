@@ -1,7 +1,7 @@
 // How ink looks on the editing surface outside Print Layout: its strokes as SVG at the drawing's
 // size, placed where its wrapping puts it (a floating ink at its offsets, like a drawn shape).
 // Loaded with the first ink a document shows (`ink-view.ts`).
-import type { DocxInk, PicturePlacement } from 'ooxml-core/docx';
+import type { DocxInk, LegacyVmlInk, PicturePlacement } from 'ooxml-core/docx';
 import { inkPaint } from 'ooxml-core/docx/layout';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 
@@ -41,11 +41,20 @@ export function paintInk(dom: HTMLElement, node: ProseMirrorNode): void {
 	dom.setAttribute('aria-label', String(node.attrs.altText || node.attrs.drawingName || 'Ink'));
 	// An unchanged drawing at an unchanged size is not drawn again.
 	const host = dom as HTMLElement & { _ink?: unknown };
-	const key = `${width} ${height} ${node.attrs.ink}`;
+	const key = `${width} ${height} ${node.attrs.ink ?? node.attrs.legacyInk}`;
 	if (host._ink === key) return;
 	host._ink = key;
 	const ink = inkOf(node);
-	const markup = inkPaint({ ...(ink ? { ink } : {}), widthPx: width, heightPx: height }).chart?.svg;
+	// Legacy VML ink is drawn the same way, read only: the Draw tab finds only `ink`.
+	const legacyInk = ink ? undefined : parse<LegacyVmlInk>(node.attrs.legacyInk);
+	if (legacyInk) dom.dataset.legacyInk = '';
+	else delete dom.dataset.legacyInk;
+	const markup = inkPaint({
+		...(ink ? { ink } : {}),
+		...(legacyInk ? { legacyInk } : {}),
+		widthPx: width,
+		heightPx: height,
+	}).chart?.svg;
 	const svg = markup
 		? new DOMParser().parseFromString(markup, 'image/svg+xml').documentElement
 		: undefined;

@@ -105,6 +105,7 @@ export function runToInlineNodes(
 					payload: run.image.payload ? JSON.stringify(run.image.payload) : null,
 					shape: run.image.shape ? JSON.stringify(run.image.shape) : null,
 					ink: run.image.ink ? JSON.stringify(run.image.ink) : null,
+					legacyInk: run.image.legacyInk ? JSON.stringify(run.image.legacyInk) : null,
 					watermark: run.image.watermark ? JSON.stringify(run.image.watermark) : null,
 					pictureWatermark: run.image.pictureWatermark
 						? JSON.stringify(run.image.pictureWatermark)
@@ -233,6 +234,9 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 					: {}),
 				...(typeof child.attrs.shape === 'string' ? { shape: JSON.parse(child.attrs.shape) } : {}),
 				...(typeof child.attrs.ink === 'string' ? { ink: inkAttr(child.attrs.ink) } : {}),
+				...(typeof child.attrs.legacyInk === 'string'
+					? { legacyInk: JSON.parse(child.attrs.legacyInk) }
+					: {}),
 				...(typeof child.attrs.watermark === 'string'
 					? { watermark: JSON.parse(child.attrs.watermark) }
 					: {}),

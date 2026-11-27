@@ -27,7 +27,10 @@ export function inkNodeView(node: ProseMirrorNode): NodeView {
 	paint(node);
 	return {
 		dom,
-		update: (next) => next.type === node.type && Boolean(next.attrs.ink) && (paint(next), true),
+		update: (next) =>
+			next.type === node.type &&
+			Boolean(next.attrs.ink || next.attrs.legacyInk) &&
+			(paint(next), true),
 		selectNode: () => dom.classList.add('dve-ink-selected'),
 		deselectNode: () => dom.classList.remove('dve-ink-selected'),
 		ignoreMutation: () => true,

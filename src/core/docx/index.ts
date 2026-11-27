@@ -371,3 +371,4 @@ export {
 } from './header-footer-designs';
 export { docInfoFieldResult } from './doc-property-field';
 export { inksIn, WORD_INK_GRAPHIC_URI, type DocxInk } from './ink';
+export { type LegacyVmlInk } from './vml-ink';

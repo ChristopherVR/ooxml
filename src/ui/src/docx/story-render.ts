@@ -85,7 +85,7 @@ function storySerializer(
 			return omitted;
 		}
 		if (node.attrs.shape) return shapeElement(node, model, options.pictureUrl);
-		if (node.attrs.ink) return inkNodeView(node).dom as HTMLElement;
+		if (node.attrs.ink || node.attrs.legacyInk) return inkNodeView(node).dom as HTMLElement;
 		const content = DOMSerializer.renderSpec(document, image(node)).dom as HTMLElement;
 		if (content.tagName !== 'IMG' || !options.pictureUrl) return content;
 		const frame = document.createElement('span');

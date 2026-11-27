@@ -7,13 +7,14 @@ const painted = new WeakMap<object, Map<string, string>>();
 
 /**
  * Ink as the views paint it: its strokes as SVG, drawn like a shape (past its box, no backdrop),
- * stretched to the drawing's size, and marked `ink` for the Draw tab's tools. Nothing for a
- * drawing that is not ink.
+ * stretched to the drawing's size, and marked `ink` for the Draw tab's tools. Legacy VML ink is
+ * painted the same way but not marked, so the tools leave it alone. Nothing for a drawing that is
+ * not ink.
  */
 export function inkPaint(
-	image: Pick<InlineImage, 'ink' | 'widthPx' | 'heightPx'>,
+	image: Pick<InlineImage, 'ink' | 'legacyInk' | 'widthPx' | 'heightPx'>,
 ): Pick<LayoutObject, 'chart'> {
-	const ink = image.ink;
+	const ink = image.ink ?? image.legacyInk;
 	if (!ink) return {};
 	const sizes = painted.get(ink) ?? new Map<string, string>();
 	painted.set(ink, sizes);
@@ -24,5 +25,7 @@ export function inkPaint(
 		if (sizes.size >= 4) sizes.clear();
 		sizes.set(key, svg);
 	}
-	return { chart: { svg, label: 'Ink', shape: true, ink: true } };
+	return {
+		chart: { svg, label: 'Ink', shape: true, ...(image.ink ? { ink: true as const } : {}) },
+	};
 }

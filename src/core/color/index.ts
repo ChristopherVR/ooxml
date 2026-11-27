@@ -7,3 +7,4 @@ export * from './hex-rgb';
 export * from './theme-palette';
 export * from './straight-alpha-stops';
 export * from './office-gradient-stops';
+export * from './vml-color';

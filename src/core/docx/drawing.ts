@@ -18,6 +18,7 @@ import {
 import { definedProps } from './defined-props';
 import { parseWatermarkShape } from './watermark';
 import { parsePictureWatermarkShape } from './picture-watermark';
+import { parseVmlInk } from './vml-ink';
 import { vmlFloat, vmlPictureShape, VML_NS } from './vml-placement';
 import { parseSignatureLineShape } from './signature-line';
 import { parseWebVideo } from './web-video';
@@ -367,6 +368,8 @@ function parseVmlPicture(node: XmlElement, context: DrawingContext): InlineImage
 	const signatureLine = parseSignatureLineShape(shape ?? undefined);
 	if (picture)
 		return { ...picture, widthPx, heightPx, ...(signatureLine ? { signatureLine } : {}) };
+	const legacy = parseVmlLegacyInk(shape, widthPx, heightPx);
+	if (legacy) return legacy;
 	return {
 		relId: relId ?? '',
 		partName: '',
@@ -374,6 +377,33 @@ function parseVmlPicture(node: XmlElement, context: DrawingContext): InlineImage
 		widthPx,
 		heightPx,
 		unsupported: 'Legacy VML drawing',
+	};
+}
+
+/**
+ * Legacy VML ink (`o:ink`), drawn read only from its shape's path and kept as read on save. Key
+ * order is the run adapter's: an unchanged drawing is compared by JSON.
+ */
+function parseVmlLegacyInk(
+	shape: XmlElement | undefined,
+	widthPx: number,
+	heightPx: number,
+): InlineImage | undefined {
+	const float = shape && vmlFloat(shape, shape);
+	const width = float?.widthPx ?? widthPx;
+	const height = float?.heightPx ?? heightPx;
+	const legacyInk = parseVmlInk(shape, width, height);
+	if (!legacyInk) return undefined;
+	return {
+		relId: '',
+		partName: '',
+		contentType: 'application/octet-stream',
+		widthPx: width,
+		heightPx: height,
+		...(float ? { anchored: true as const, vmlFloat: true as const } : {}),
+		unsupported: 'Legacy ink',
+		legacyInk,
+		...(float?.placement ? { placement: float.placement } : {}),
 	};
 }
 

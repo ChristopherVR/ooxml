@@ -133,6 +133,7 @@ export function imageAndBookmarkWarnings(blocks: Block[]): string[] {
 	let hasOfficeObject = false;
 	const unsupportedKinds = new Set<string>();
 	let hasBookmarks = false;
+	let hasLegacyInk = false;
 	forEachParagraph(blocks, (paragraph) => {
 		if (paragraph.bookmarks?.length) hasBookmarks = true;
 		for (const run of paragraph.runs) {
@@ -142,12 +143,17 @@ export function imageAndBookmarkWarnings(blocks: Block[]): string[] {
 			if (run.image.unsupported) {
 				// A SmartArt shown from its cached drawing gets its own, more precise warning.
 				// Ink is drawn and edited on the Draw tab, so it is not a placeholder.
-				if (run.image.diagram?.rendering !== 'cached-drawing' && !run.image.ink)
+				if (run.image.legacyInk) hasLegacyInk = true;
+				else if (run.image.diagram?.rendering !== 'cached-drawing' && !run.image.ink)
 					unsupportedKinds.add(run.image.unsupported);
 			} else if (!run.image.payload) hasPicture = true;
 			if (run.image.anchored) hasAnchored = true;
 		}
 	});
+	if (hasLegacyInk)
+		warnings.push(
+			'Legacy ink (VML) is drawn from its outline and cannot be edited on the Draw tab; it is saved as it was read.',
+		);
 	if (hasPicture)
 		warnings.push(
 			'Inline pictures render from their original bytes and can be deleted or newly inserted; crop, artistic effects, and non-inline text wrapping are not reproduced.',

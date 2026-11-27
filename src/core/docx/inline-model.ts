@@ -95,6 +95,12 @@ export interface InlineImage {
 	payload?: InlineDrawingPayload;
 	/** Ink (`unsupported: "Ink"`): its strokes and InkML part; drawn and edited on the Draw tab. */
 	ink?: import('./ink').DocxInk;
+	/**
+	 * Legacy VML ink (`unsupported: "Legacy ink"`, an `o:ink` shape): drawn read only from the
+	 * shape's path; the Draw tab leaves it alone and the VML is saved as read (moved or resized
+	 * when floating, through its style).
+	 */
+	legacyInk?: import('./vml-ink').LegacyVmlInk;
 }
 /** A Word text watermark (`PowerPlusWaterMarkObject`), carried by an inline object run in a header. */
 export interface WatermarkSpec {
