@@ -105,7 +105,7 @@ test.describe('touch Draw controls', () => {
 });
 
 test('announces a failed Draw tools chunk without disabling the basic pen', async ({ page }) => {
-	await page.route(/ribbon-draw-advanced[^/]*\.(?:ts|mjs)(?:\?|$)/u, (route) => route.abort());
+	await page.route(/ribbon-draw-advanced[^/]*\.(?:ts|mjs|js)(?:\?|$)/u, (route) => route.abort());
 	await loadDeck(page);
 	await ribbonTab(page, 'Draw').click();
 	const draw = page.locator('pptx-ui-ribbon-draw');

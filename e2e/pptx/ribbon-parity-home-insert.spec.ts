@@ -390,6 +390,7 @@ test.describe('Draw', () => {
 	}) => {
 		await loadDeck(page);
 		await ribbonTab(page, 'Draw').click();
+		await expect(page.locator('[data-ribbon-group="draw.replay"]')).toBeVisible();
 		const { groups, controls } = await probe(page, 'draw.', [
 			'draw.tools.select',
 			'draw.tools.pen',
@@ -398,7 +399,14 @@ test.describe('Draw', () => {
 			'draw.tools.penColor',
 			'draw.tools.penWidth',
 		]);
-		expect(groups.map((group) => group.id)).toStrictEqual(['draw.tools']);
+		expect(groups.map((group) => group.id)).toStrictEqual([
+			'draw.tools',
+			'draw.selection',
+			'draw.pens',
+			'draw.convert',
+			'draw.guides',
+			'draw.replay',
+		]);
 		for (const id of ['select', 'pen', 'highlighter', 'eraser']) {
 			const tool = controls[`draw.tools.${id}`];
 			expect(tool, `${id} tool`).not.toBeNull();
