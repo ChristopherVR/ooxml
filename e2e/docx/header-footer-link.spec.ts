@@ -48,9 +48,13 @@ test('inherited headers edit together, unlink independently, relink and undo', a
 	await expect(editor.locator('.dve-header')).toContainText('Company');
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
 	const link = editor.getByRole('button', { name: 'Link to Previous', exact: true });
-	await reveal(editor, link);
-	await expect(link).toBeDisabled();
+	await expect(link).toBeHidden();
 	await editor.locator('.dve-header [data-slot=default]').dblclick();
+	await expect(editor.getByRole('tab', { name: 'Header & Footer', exact: true })).toHaveAttribute(
+		'aria-selected',
+		'true',
+	);
+	await reveal(editor, link);
 	await expect(link).toBeEnabled();
 	await expect(link).toHaveAttribute('aria-pressed', 'true');
 	await waitForEditorFocus(editor.locator('.dve-header .ProseMirror'));
@@ -78,6 +82,7 @@ test('inherited headers edit together, unlink independently, relink and undo', a
 	await editor.locator('.dve-header [data-slot=default]').dblclick();
 	await editor.locator('.dve-header .ProseMirror').press('Control+z');
 	await expect(editor.locator('.dve-header')).toContainText('separate');
+	await reveal(editor, link);
 	await expect(link).toHaveAttribute('aria-pressed', 'false');
 	await body.click();
 	const pending = page.waitForEvent('download');
