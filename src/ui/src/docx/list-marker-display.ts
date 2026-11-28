@@ -25,7 +25,8 @@ export function listMarkerDisplay(
 	if (!label || paragraph.direction === 'rtl')
 		return { css: '', attributes: { 'data-list-marker': '' } };
 	// Word formats the number with the paragraph mark, never with the first run of the text.
-	const format = resolveRunFormatting(paragraphMarkRun(paragraph), {
+	const mark = paragraphMarkRun(paragraph);
+	const format = resolveRunFormatting(mark, {
 		runCatalog: model.characterStyles,
 		paragraphCatalog: model.paragraphStyles,
 		paragraphStyleId: paragraph.style,
@@ -89,6 +90,6 @@ export function listMarkerDisplay(
 			'data-list-marker': text,
 			...(size ? { 'data-list-marker-picture': '' } : {}),
 		},
-		css: `${mark?.fontSize !== undefined ? 'font-size:var(--dve-marker-size);' : ''}${size && url ? `--dve-marker-image:url("${url.replace(/"/g, '%22')}");--dve-marker-pic-w:${(size.widthPt * 4) / 3}px;--dve-marker-pic-h:${(size.heightPt * 4) / 3}px;` : ''}position:relative;text-indent:${body - indent}px;--dve-marker-left:${anchor - width * factor - indent}px;--dve-marker-family:${cssFontStack(font.family)};--dve-marker-size:${font.sizePx}px;--dve-marker-weight:${font.bold ? 'bold' : 'normal'};--dve-marker-style:${font.italic ? 'italic' : 'normal'};--dve-marker-color:${safeColor}`,
+		css: `${!node.childCount && mark.fontSize !== undefined ? 'font-size:var(--dve-marker-size);' : ''}${size && url ? `--dve-marker-image:url("${url.replace(/"/g, '%22')}");--dve-marker-pic-w:${(size.widthPt * 4) / 3}px;--dve-marker-pic-h:${(size.heightPt * 4) / 3}px;` : ''}position:relative;text-indent:${body - indent}px;--dve-marker-left:${anchor - width * factor - indent}px;--dve-marker-family:${cssFontStack(font.family)};--dve-marker-size:${font.sizePx}px;--dve-marker-weight:${font.bold ? 'bold' : 'normal'};--dve-marker-style:${font.italic ? 'italic' : 'normal'};--dve-marker-color:${safeColor}`,
 	};
 }
