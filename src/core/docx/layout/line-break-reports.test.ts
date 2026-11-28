@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadDocx } from '../index';
-import { createEstimatedMeasurer } from '../pdf-export/font-measurer';
+import { createEstimatedMeasurer, createFontFileMeasurer } from '../pdf-export/font-measurer';
 import { layoutDocumentModel } from './index';
 import type { TextMeasurer } from './measure';
 
@@ -77,5 +78,50 @@ describe('a content control start tag after a word is no break opportunity (#410
 			expect(paragraph[0]?.endsWith('Name/Field')).toBe(true);
 			expect(paragraph[1]?.startsWith('Outer')).toBe(true);
 		}
+	});
+});
+
+describe('small caps draw spaces at the reduced size (#392)', () => {
+	const files = createFontFileMeasurer([
+		{
+			family: 'Liberation Serif',
+			data: new Uint8Array(
+				readFileSync(
+					new URL(
+						'../pdf-export/__fixtures__/fonts/LiberationSerif-Regular.subset.ttf',
+						import.meta.url,
+					),
+				),
+			),
+		},
+	]);
+	const spec = { family: 'Times New Roman', sizePx: (11 * 96) / 72 };
+
+	it('measures a space at 0.8 of the size, and capitals at full size', () => {
+		const plain = files.widthOf(' ', spec);
+		expect(files.widthOf(' ', { ...spec, smallCaps: true })).toBeCloseTo(plain * 0.8, 6);
+		expect(files.widthOf('AB', { ...spec, smallCaps: true })).toBe(files.widthOf('AB', spec));
+		expect(files.widthOf('AB AB', { ...spec, smallCaps: true })).toBeCloseTo(
+			files.widthOf('AB', spec) * 2 + plain * 0.8,
+			6,
+		);
+	});
+
+	it('puts 26 AB words on line 1, 25 without small caps, as Word does', async () => {
+		const small = await lines('issue-392-small-caps-spaces', files);
+		expect(
+			small[0]?.[0]
+				?.trimEnd()
+				.split(' ')
+				.filter((word) => word === 'AB'),
+		).toHaveLength(26);
+		expect(small[0]?.[1]?.trim()).toBe('NEXT LINE');
+		const control = await lines('issue-392-small-caps-spaces-control', files);
+		expect(
+			control[0]?.[0]
+				?.trimEnd()
+				.split(' ')
+				.filter((word) => word === 'AB'),
+		).toHaveLength(25);
 	});
 });

@@ -34,6 +34,7 @@ import { parseColor, type Rgba } from '../../pdf/write/pdf-svg-style';
 import type { PdfVectorPage } from '../../pdf/write/pdf-vector';
 import { paintContentControlTag } from './pdf-content-control-tag';
 import type { DocxPdfReportBuilder } from './pdf-report';
+import { SMALL_CAPS_SCALE, smallCapsParts } from '../caps-display';
 import { wordPdfPx } from './pdf-units';
 
 const DEFAULT_FAMILY = 'Calibri';
@@ -177,9 +178,8 @@ export class DocxPdfText {
 		fragment: LayoutFragment,
 		gapPx: number,
 	): void {
-		const parts = [...text.matchAll(/(?:\p{Ll}\p{M}*)+|[^\p{Ll}]+/gu)].map(([part]) => {
-			const upper = part.toUpperCase();
-			const face = upper === part ? font : { ...font, sizePx: font.sizePx * 0.8 };
+		const parts = smallCapsParts(text).map(({ text: upper, small }) => {
+			const face = small ? { ...font, sizePx: font.sizePx * SMALL_CAPS_SCALE } : font;
 			return { text: upper, face, width: this.measurer.widthOf(upper, face) };
 		});
 		const natural = parts.reduce((sum, part) => sum + part.width, 0);

@@ -35,3 +35,21 @@ export function smallCapsText(text: string, language: string | undefined): strin
 			})
 		: text;
 }
+
+/** Word draws small caps at 0.8 of the run's size (measured, Word 16). */
+export const SMALL_CAPS_SCALE = 0.8;
+
+/**
+ * Splits `text` for drawing in small caps: lowercase letters and the spaces among them are
+ * capitalised and drawn at {@link SMALL_CAPS_SCALE}; capitals and other characters keep the full
+ * size. Word draws a space like a lowercase letter, at the reduced size, even between capitals
+ * (a space is 2.23 pt in 11 pt Times New Roman bold small caps, 2.75 pt without).
+ */
+export function smallCapsParts(text: string): { text: string; small: boolean }[] {
+	return [...text.matchAll(/(?<small>(?:[\p{Ll} ]\p{M}*)+)|(?<full>[^\p{Ll} ]+)/gu)].map(
+		(match) => {
+			const small = match.groups?.small !== undefined;
+			return { text: match[0].toUpperCase(), small };
+		},
+	);
+}

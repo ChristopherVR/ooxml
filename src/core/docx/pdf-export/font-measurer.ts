@@ -12,6 +12,7 @@ import type { PdfFontFile } from '../../pdf/write/pdf-embedded-font';
 import { designTextWidthEm, officeFontVerticalMetrics } from '../../text/index';
 import type { PdfSymbolGlyph } from '../../pdf/write/pdf-embedded-font';
 import { pairKerning, type PairKerning } from '../../text/truetype/kerning';
+import { SMALL_CAPS_SCALE, smallCapsParts } from '../caps-display';
 import { DocxPdfFontFiles, type DocxPdfFontMatch, type FontFace } from './font-files';
 
 export interface FontFileMeasurer extends TextMeasurer {
@@ -89,8 +90,6 @@ function verticalEm(face: FontFace): { height: number; ascent: number } {
 	return { height: (win + leading) / em, ascent: (font.winAscent + leading) / em };
 }
 
-const SMALL_CAPS_SCALE = 0.8;
-
 /** See the module comment. */
 export function createFontFileMeasurer(
 	fonts: readonly PdfFontFile[] | DocxPdfFontFiles,
@@ -146,9 +145,8 @@ export function createFontFileMeasurer(
 		const kern = spec.kerning === 'normal';
 		if (!spec.smallCaps) return faceWidth(text, face, spec, kern) * spec.sizePx;
 		let width = 0;
-		for (const [part] of text.matchAll(/(?:\p{Ll}\p{M}*)+|[^\p{Ll}]+/gu)) {
-			const upper = part.toUpperCase();
-			const size = upper === part ? spec.sizePx : spec.sizePx * SMALL_CAPS_SCALE;
+		for (const { text: upper, small } of smallCapsParts(text)) {
+			const size = small ? spec.sizePx * SMALL_CAPS_SCALE : spec.sizePx;
 			width += faceWidth(upper, face, { ...spec, sizePx: size }, kern) * size;
 		}
 		return width;
