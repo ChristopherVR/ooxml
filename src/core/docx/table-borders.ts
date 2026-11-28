@@ -5,6 +5,7 @@ import { isStBorder, isStThemeColor } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
 import {
 	parseEighthPoints,
+	parseOnOff,
 	parseRgbColor,
 	parseTintShade,
 	parseUnsignedInteger,
@@ -79,6 +80,7 @@ export function parseParagraphBorders(pBdr: XmlElement | undefined): ParagraphBo
 		if (!value) continue;
 		const space = parseUnsignedInteger(getW(element, 'space'));
 		if (space !== undefined) value.spacePoints = space;
+		if (parseOnOff(getW(element, 'shadow'))) value.shadow = true;
 		result[side] = value;
 	}
 	return Object.keys(result).length ? result : undefined;

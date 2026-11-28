@@ -115,6 +115,10 @@ export interface LayoutParagraphFrame {
 	topPx?: number;
 	/** Paint height from the frame's top, including a gap to the next joined paragraph if needed. */
 	heightPx?: number;
+	/** Room above the box that its shadow takes (the box is drawn that far down). */
+	shadowTopPx?: number;
+	/** Room below the box for its shadow, which paragraph borders draw outside the frame. */
+	shadowBottomPx?: number;
 	widthPx: number;
 	borders?: import('./input').LayoutParagraphBorders;
 	shading?: string;
@@ -130,8 +134,13 @@ export function offsetParagraphFrame(
 
 /** Vertical paint bounds of paragraph borders and shading, in paragraph coordinates. */
 export function paragraphFrameBounds(frame: LayoutParagraphFrame, boxHeightPx: number) {
-	const topPx = frame.topPx ?? 0;
-	return { topPx, heightPx: frame.heightPx ?? Math.max(0, boxHeightPx - topPx) };
+	const leadPx = frame.topPx ?? 0;
+	const shadowTopPx = frame.shadowTopPx ?? 0;
+	const heightPx = frame.heightPx ?? Math.max(0, boxHeightPx - leadPx);
+	return {
+		topPx: leadPx + shadowTopPx,
+		heightPx: Math.max(0, heightPx - shadowTopPx - (frame.shadowBottomPx ?? 0)),
+	};
 }
 
 /** Where a cell sits in its row and how it is drawn (borders, shading, padding). */

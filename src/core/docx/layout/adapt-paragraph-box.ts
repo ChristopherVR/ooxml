@@ -53,6 +53,7 @@ export function paragraphBox(
 		const resolved = {
 			...line,
 			spacePx: pointsToPx(source?.spacePoints ?? 0),
+			...(source?.shadow ? { shadow: true as const } : {}),
 			...(compound ? { compound, widthPx: compound.reduce((sum, width) => sum + width, 0) } : {}),
 		};
 		if (side === 'between') betweenBorder = resolved;

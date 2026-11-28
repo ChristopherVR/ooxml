@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { loadDocx } from 'ooxml-core/docx';
 import { createFakeMeasurer, layoutDocumentModel, type LayoutResult } from 'ooxml-core/docx/layout';
@@ -250,6 +251,30 @@ describe('renderPrintLayout', () => {
 	it('returns null when the clicked element is not part of a rendered line', () => {
 		const handle = renderPrintLayout(sampleResult());
 		expect(handle.resolveClick(document.body, 0)).toBeNull();
+	});
+});
+
+describe('Print Layout paragraph border shadows', () => {
+	it('draws the right and bottom lines again outside the frame', async () => {
+		const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const side = (name: string) =>
+			`<w:${name} w:val="single" w:sz="12" w:space="1" w:color="auto" w:shadow="1"/>`;
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:p><w:pPr><w:pBdr>${['top', 'left', 'bottom', 'right'].map(side).join('')}</w:pBdr></w:pPr><w:r><w:t>Bordered</w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const { model } = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const { element } = renderPrintLayout(layoutDocumentModel(model, createFakeMeasurer()));
+		const frame = element.querySelector<HTMLElement>('.dve-print-paragraph-frame')!;
+		const shadows = [...frame.querySelectorAll<HTMLElement>('.dve-print-paragraph-shadow')];
+		expect(shadows).toHaveLength(2);
+		const line = (1.5 * 96) / 72;
+		// The frame starts a line width down, leaving room for its shadow.
+		expect(Number.parseFloat(frame.style.top)).toBeCloseTo(line, 5);
+		expect(Number.parseFloat(shadows[0]!.style.width)).toBeCloseTo(line, 5);
+		expect(Number.parseFloat(shadows[1]!.style.height)).toBeCloseTo(line, 5);
+		expect(shadows[0]!.style.backgroundColor).not.toBe('');
 	});
 });
 

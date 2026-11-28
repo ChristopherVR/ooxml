@@ -4,6 +4,7 @@ import {
 	ligatureCss,
 	paragraphBorderBands,
 	paragraphFrameBounds,
+	paragraphShadowRects,
 	DEFAULT_FONT_SIZE_PT,
 	type LayoutBlockBox,
 	type LayoutLine,
@@ -174,6 +175,12 @@ function renderLine(
 	return lineEl;
 }
 
+/** Width of a frame side drawn as an ordinary CSS border (compound sides use bands). */
+const cssEdge = (frame: LayoutParagraphFrame, side: 'top' | 'left') => {
+	const line = frame.borders?.[side];
+	return line && !line.compound ? line.widthPx : 0;
+};
+
 /** A paragraph's borders and shading, drawn behind its text across the box's height. */
 function paragraphFrame(frame: LayoutParagraphFrame, boxHeightPx: number): HTMLElement {
 	const el = document.createElement('div');
@@ -186,6 +193,19 @@ function paragraphFrame(frame: LayoutParagraphFrame, boxHeightPx: number): HTMLE
 		height: `${heightPx}px`,
 	});
 	if (frame.shading) el.style.background = frame.shading;
+	for (const rect of paragraphShadowRects(frame, heightPx)) {
+		const shadow = document.createElement('div');
+		shadow.className = 'dve-print-paragraph-shadow';
+		Object.assign(shadow.style, {
+			// Absolute children use the padding box, inside the frame's own CSS borders.
+			left: `${rect.xPx - cssEdge(frame, 'left')}px`,
+			top: `${rect.yPx - cssEdge(frame, 'top')}px`,
+			width: `${rect.widthPx}px`,
+			height: `${rect.heightPx}px`,
+			backgroundColor: rect.color,
+		});
+		el.append(shadow);
+	}
 	for (const side of ['top', 'right', 'bottom', 'left'] as const) {
 		const line = frame.borders?.[side];
 		if (!line) continue;

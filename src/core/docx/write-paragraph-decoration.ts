@@ -24,6 +24,7 @@ function borderElement(doc: XmlDocument, name: string, side: TableBorderSide): X
 		set('space', String(side.spacePoints ?? 1));
 		set('color', wordColor(side.color));
 		if (side.themeColor) set('themeColor', side.themeColor);
+		if (side.shadow) set('shadow', '1');
 	}
 	return element;
 }

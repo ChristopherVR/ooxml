@@ -2,6 +2,7 @@ import type { TextMeasurer } from './measure';
 import { gluedCarry, tokenPosition, type BreakToken, type TokenPosition } from './text-breaks';
 import { findHyphenSplit, lineUsedWidthPx } from './hyphenate-line';
 import { fittingWordPrefix } from './word-overflow';
+import { paragraphShadowInsets } from './paragraph-shadow';
 import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
 import type { LayoutParagraph } from './input';
 import { NO_TWIPS, ptToPx, twipsToPx } from './units';
@@ -633,8 +634,9 @@ function measureParagraph(
 	const borders = paragraph.borders;
 	const extent = (side: keyof NonNullable<typeof borders>) =>
 		borders?.[side] ? borders[side]!.widthPx + borders[side]!.spacePx : 0;
-	const insetTopPx = extent('top');
-	const insetBottomPx = extent('bottom');
+	const shadow = paragraphShadowInsets(borders);
+	const insetTopPx = extent('top') + shadow.topPx;
+	const insetBottomPx = extent('bottom') + shadow.bottomPx;
 	let y = insetTopPx;
 	for (const line of lines) {
 		y += line.gapBeforePx ?? 0;
@@ -649,6 +651,8 @@ function measureParagraph(
 					leftPx: leftPx - extent('left') + (rtl ? 0 : hanging),
 					widthPx: bodyWidth + extent('left') + extent('right') - hanging,
 					...(borders ? { borders } : {}),
+					...(shadow.topPx ? { shadowTopPx: shadow.topPx } : {}),
+					...(shadow.bottomPx ? { shadowBottomPx: shadow.bottomPx } : {}),
 					...(paragraph.shading ? { shading: paragraph.shading } : {}),
 				}
 			: undefined;

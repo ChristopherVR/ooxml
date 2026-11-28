@@ -15,6 +15,8 @@ export interface TableBorderSide {
 	themeColor?: ThemeColorToken;
 	/** Paragraph borders only: gap between the border and the text (`w:space`), in points. */
 	spacePoints?: number;
+	/** Paragraph borders only: the border casts a shadow to the right and below (`w:shadow`). */
+	shadow?: boolean;
 	/** Page borders only: a Word art border (`w:art`); drawn as a plain line. */
 	art?: string;
 }

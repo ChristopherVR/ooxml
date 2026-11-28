@@ -130,6 +130,8 @@ export interface LayoutParagraphBorder extends LayoutBorder {
 	spacePx: number;
 	/** Alternating stroke and gap widths, ordered from the outside of the frame in. */
 	compound?: readonly number[];
+	/** The border casts a shadow (`w:shadow`): drawn to the right and below, as wide as the line. */
+	shadow?: true;
 }
 export interface LayoutParagraphBorders {
 	top?: LayoutParagraphBorder;

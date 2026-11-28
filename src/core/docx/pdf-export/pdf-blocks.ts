@@ -8,6 +8,7 @@ import {
 	cellVerticalOffset,
 	paragraphBorderBands,
 	paragraphFrameBounds,
+	paragraphShadowRects,
 	type LayoutBlockBox,
 	type LayoutBorder,
 	type LayoutParagraphBox,
@@ -84,6 +85,15 @@ export function paragraphFrame(
 	}
 	const borders = frame.borders;
 	if (!borders) return;
+	for (const rect of paragraphShadowRects(frame, height))
+		drawBorder(
+			page,
+			{ widthPx: rect.heightPx, style: 'solid', color: rect.color },
+			left + rect.xPx,
+			y + rect.yPx,
+			rect.widthPx,
+			true,
+		);
 	for (const side of ['top', 'bottom', 'left', 'right'] as const) {
 		const line = borders[side];
 		if (!line) continue;
