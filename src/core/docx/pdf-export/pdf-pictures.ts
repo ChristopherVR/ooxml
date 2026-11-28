@@ -134,7 +134,9 @@ export class DocxPdfPictures {
 	/** Draws a picture into the box at (x, y), cropped as the document crops it. */
 	draw(page: PdfVectorPage, picture: DocxPdfPicture, x: number, y: number): void {
 		const { widthPx: width, heightPx: height } = picture;
-		if (!(width > 0 && height > 0)) return;
+		// A line or connector has a zero extent across it and is still stroked.
+		const line = !!picture.chart?.shape && width >= 0 && height >= 0 && width + height > 0;
+		if (!line && !(width > 0 && height > 0)) return;
 		if (picture.chart) {
 			if (this.drawings) this.drawings.draw(page, picture, x, y);
 			else

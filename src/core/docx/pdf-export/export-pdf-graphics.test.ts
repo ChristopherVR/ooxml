@@ -207,6 +207,16 @@ describe('exportDocxPdf graphics', () => {
 		expect([...inspect(bytes).images[0]!]).toEqual([204, 204, 204, 255, 255, 255]);
 	});
 
+	it('strokes a connector with a zero height, level', async () => {
+		const connector = `<w:r><w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="1" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="column"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="paragraph"><wp:posOffset>360000</wp:posOffset></wp:positionV><wp:extent cx="3600000" cy="0"/><wp:wrapNone/><wp:docPr id="1" name="Line 1"/><a:graphic><a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"><wps:wsp><wps:cNvCnPr/><wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="3600000" cy="0"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom><a:noFill/><a:ln w="19050"><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill></a:ln></wps:spPr><wps:bodyPr/></wps:wsp></a:graphicData></a:graphic></wp:anchor></w:drawing></w:r>`;
+		const { model } = await docx(`<w:p>${connector}<w:r><w:t>Below</w:t></w:r></w:p>`);
+		const { bytes, report } = await exportDocxPdf(model, { measurer });
+		const pdf = inspect(bytes);
+		// 3600000 EMU is 378 px; red, 2 px wide, and level (no rise across its length).
+		expect(pdf.content).toMatch(/1 0 0 RG\n2 w[^\n]*\n0 0 m\n378 0 l\nS/);
+		expect(report.omitted).toEqual([]);
+	});
+
 	it('draws a floating shape anchored in the header', async () => {
 		const shape = anchor(9, 'page:36', 'page:36', 'none', 1, { color: '0000FF' });
 		const { model } = await docx(para('Body'), {

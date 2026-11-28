@@ -132,6 +132,16 @@ export function drawingOuterShadow(
 		: undefined;
 }
 
+/** The preset's geometry at its true size, or at a pixel minimum when a zero extent breaks it. */
+function presetGeometry(spec: ShapeSpec, w: number, h: number) {
+	const exact = evaluatePresetShape(spec.preset, w, h, spec.adjustments);
+	if (!exact || (w >= 1 && h >= 1)) return exact;
+	const sound = exact.paths.every((path) => !/NaN|Infinity/.test(path.d));
+	return sound
+		? exact
+		: evaluatePresetShape(spec.preset, Math.max(1, w), Math.max(1, h), spec.adjustments);
+}
+
 function appendShapeContent(
 	parent: ReturnType<typeof createSvg>,
 	spec: ShapeSpec,
@@ -189,7 +199,7 @@ function appendShapeContent(
 				textRect: undefined,
 			}
 		: lookupPresetShape(spec.preset)
-			? evaluatePresetShape(spec.preset, w, h, spec.adjustments)
+			? presetGeometry(spec, w, h)
 			: undefined;
 	if (!geometry) return false;
 	const transform = [
@@ -256,13 +266,15 @@ export function shapeSvg(
 	theme?: ThemeCatalog,
 	idPrefix = 'shape',
 ): string | undefined {
-	const w = Math.max(1, widthPx);
-	const h = Math.max(1, heightPx);
+	// The drawing keeps its true extent (a line or connector may have none across it, and stays
+	// level); only the svg box is at least a pixel.
+	const w = Math.max(0, widthPx);
+	const h = Math.max(0, heightPx);
 	const svg = createSvg();
 	setSvgAttributes(svg, {
-		width: round(w),
-		height: round(h),
-		viewBox: `0 0 ${round(w)} ${round(h)}`,
+		width: round(Math.max(1, w)),
+		height: round(Math.max(1, h)),
+		viewBox: `0 0 ${round(Math.max(1, w))} ${round(Math.max(1, h))}`,
 		style: 'overflow:visible',
 		role: 'img',
 		'aria-label': spec.groupChildren?.length
