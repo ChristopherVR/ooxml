@@ -37,7 +37,7 @@ import { kerningMode } from '../layout/paragraph-tokens';
 import { paintContentControlTag } from './pdf-content-control-tag';
 import type { DocxPdfReportBuilder } from './pdf-report';
 import { SMALL_CAPS_SCALE, smallCapsParts } from '../caps-display';
-import { wordPdfPx } from './pdf-units';
+import { wordBaselinePx, wordPdfPx } from './pdf-units';
 
 const DEFAULT_FAMILY = 'Calibri';
 /** The slope Word shears a face with when the font family has no italic (measured from its PDF). */
@@ -127,7 +127,7 @@ export class DocxPdfText {
 	): void {
 		const font = this.#font(fragment);
 		// Word puts baselines on whole 1/600 inch steps of the space the text is drawn in.
-		const baseline = wordPdfPx(this.baseline(fragment, line, lineTop));
+		const baseline = this.#wordBaseline(fragment, line, lineTop);
 		const top = fragment.topPx !== undefined ? lineTop + fragment.topPx : lineTop;
 		if (fragment.contentControlTag) paintContentControlTag(page, fragment, x, top);
 		else if (fragment.background && fragment.widthPx > 0) {
@@ -163,6 +163,19 @@ export class DocxPdfText {
 		if (fragment.underline && !fragment.leader)
 			this.#rule(page, fragment, x, baseline + font.sizePx * 0.12, thickness);
 		if (fragment.strike) this.#rule(page, fragment, x, baseline - font.sizePx * 0.28, thickness);
+	}
+
+	/**
+	 * The baseline on Word's grid: Word's line rule (`wordBaselinePx`) for text on a single-spaced
+	 * line's baseline, moved by any raise or lowering, else the baseline rounded to a whole row.
+	 */
+	#wordBaseline(fragment: LayoutFragment, line: LayoutLine, lineTop: number): number {
+		const baseline = this.baseline(fragment, line, lineTop);
+		if (line.baselinePx === undefined || line.extraBelowPx || fragment.contentControlTag)
+			return wordPdfPx(baseline);
+		const shift = baseline - (lineTop + line.baselinePx);
+		const ruled = wordBaselinePx(lineTop, line.heightPx, line.baselinePx);
+		return Math.abs(shift) < 1e-6 ? ruled : wordPdfPx(ruled + shift);
 	}
 
 	#leaderText(fragment: LayoutFragment, font: LayoutFontSpec): string {

@@ -69,7 +69,7 @@ async function pageGlyphs(document: PdfDocument, index: number): Promise<Glyph[]
 	const glyphs: Glyph[] = [];
 	for (const bytes of await contentBytes(document, node.dict.get('Contents'))) {
 		const lexer = new PdfLexer(bytes);
-		const stack: Matrix[] = [];
+		const stack: { ctm: Matrix; charSpacing: number; wordSpacing: number; scale: number }[] = [];
 		let ctm: Matrix = [1, 0, 0, 1, 0, 0];
 		let tm: Matrix = [1, 0, 0, 1, 0, 0];
 		let line: Matrix = tm;
@@ -114,12 +114,15 @@ async function pageGlyphs(document: PdfDocument, index: number): Promise<Glyph[]
 			}
 			const n = operands.filter(isNumber);
 			switch (token.word) {
+				// The text state's spacing and scale are part of the graphics state that q and Q keep.
 				case 'q':
-					stack.push(ctm);
+					stack.push({ ctm, charSpacing, wordSpacing, scale });
 					break;
-				case 'Q':
-					ctm = stack.pop() ?? ctm;
+				case 'Q': {
+					const saved = stack.pop();
+					if (saved) ({ ctm, charSpacing, wordSpacing, scale } = saved);
 					break;
+				}
 				case 'cm':
 					ctm = multiply(n as Matrix, ctm);
 					break;

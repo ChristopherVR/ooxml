@@ -862,25 +862,33 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P2** Save as PDF matches Word's glyph positions to the pixel. Done: text is drawn at Word's
       size rounded to 1/600 inch (ties up, 11 pt at 11.04) on the line layout and advances of the
       nominal size (`TJ` offsets with embedded fonts, `Tz` with standard fonts), the page box is
-      rounded the same way (A4 595.32 x 841.92), baselines are whole 1/600 inch steps down from the
-      unrounded page height (841.9 pt, as Word measures) and a font's leading (the `hhea` gap its
-      Windows metrics leave out) goes above the ascent, as in Word (Times New Roman and Arial first
-      lines were up to 1.6 pt high). `export-pdf-word-glyphs.test.ts` compares every line's size,
-      baseline and glyph positions with Word's PDFs (`__fixtures__/word-sizes/word-glyphs.json`):
-      baselines within 0.22 pt (0.07 to 0.10 pt rms), glyphs 0.07 pt rms on short lines. Open, from
-      the issue's fixtures: (1) Word's advances. Its PDF steps each glyph by the 1/1000 em
-      `Widths` at the drawn size and adds a few `TJ` corrections per word toward page positions
-      near whole 1/600 inch, but those positions are no rounding of the nominal advances found:
-      plain advances 0.072 (Calibri), 0.074 (Times New Roman) and 0.075 pt (Arial) rms over the 8
-      to 72 pt lines; drawn-size advances, the integer widths, per-glyph or cumulative rounding to
-      1/600, 1/1200, 1/1440 or 1/2400 inch, integer device advances at 600 dpi, `hdmx`, word starts
-      rounded with drawn or device advances inside, snapping to the rounded nominal positions and
-      a rounded space all stay between 0.061 and 0.13 pt; long left-aligned lines end up to
-      0.12% shorter than the nominal advances, by an amount that differs from line to line.
-      (2) The pitch: Word's lines differ from the nominal height by one 1/600 inch unit on about a
-      third of the lines (Calibri 11: 112, 111, 112) in a way no rounding of the line height or
-      ascent in twips, 1/600 inch or 0.01 pt reproduces (at best two thirds of the pitches), and
-      its baselines carry a 0.025 pt step every three inches or so down the page (#382).
+      rounded the same way (A4 595.32 x 841.92), a font's leading (the `hhea` gap its Windows
+      metrics leave out) goes above the ascent, as in Word, and baselines follow Word's line rule
+      (`wordBaselinePx`): lines keep the exact nominal pitch, and a line whose height in 1/600 inch
+      rows has a fraction under one half hangs its baseline a whole number of rows below its top's
+      rounded row, any other line stands it a whole number of rows (its descent rounded) above its
+      rounded bottom, on rows counted from the unrounded page height (841.9 pt). Fitted on 75 Word
+      16 PDFs of single-spaced Calibri, Times New Roman and Arial at 8 to 20 pt, the line to line
+      pitch matches Word on 99.9% of the lines of 69 held-out ones (6.5 to 30 pt, other top margins;
+      63% before), 98.3% and 87.5% on the issue's two documents (60% and 73% before) and 95% on
+      paragraphs with space after (73% before). `export-pdf-word-glyphs.test.ts` compares every
+      line's size, baseline, pitch and glyph positions with Word's PDFs of the issue's documents and
+      of `line-pitch.docx` and `line-pitch-letter.docx`
+      (`__fixtures__/word-sizes/word-glyphs.json`): baselines 0.04 to 0.06 pt rms, within 0.2 pt.
+      Open: (1) Word puts the last line of a paragraph with space after one row lower than the rule
+      on about half of such lines (no rule found), its baselines carry a 0.025 pt step every 1.5 to
+      2.5 inches down the page that follows no fixed position or line count, and the ascent rows
+      above are fitted (a few lines at 36 pt and over are one row off). (2) Word's glyph advances.
+      Its PDF writer gets whole 1/600 inch glyph advances and writes each one as `Widths` at the
+      drawn size (or a shared `Tc` when one advance dominates a run) plus a `TJ` of `(int)(x + 0.5)`
+      thousandths, with no feedback, so every advance a row longer than the `Widths` comes out about
+      0.1 row short and long runs drift (59 Arial 11 pt "i" end 0.5 pt short of the layout, which
+      Word's `Range.Information` puts at the nominal advances to its 0.5 pt resolution). Those 1/600
+      inch advances are the rounded linear advances at the device ppem with a correction of one row
+      toward the layout now and then; no rounding, error threshold or quantization of the nominal
+      positions tried reproduces when the corrections fall, so the export keeps the plain nominal
+      advances (0.072 pt rms on the issue's short lines). Measuring scripts and data are kept
+      outside the repository (#382).
 - [x] **P1** Save as PDF writes charts and drawing shapes as vector paths with real text (through
       the shared SVG to PDF converter), text boxes with the lines the page engine laid out,
       watermarks (text turned and half transparent, pictures washed out), page borders and line
