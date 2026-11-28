@@ -32,7 +32,13 @@ export function borderSide(element: XmlElement | undefined): TableBorderSide | u
 	if (style) side.style = style;
 	if (size !== undefined) side.sizeEighthPoints = size;
 	if (color) side.color = color;
-	if (themeColor) side.themeColor = themeColor;
+	if (themeColor) {
+		side.themeColor = themeColor;
+		const tint = parseTintShade(getW(element, 'themeTint'));
+		const shade = parseTintShade(getW(element, 'themeShade'));
+		if (tint !== undefined) side.themeTint = tint;
+		if (shade !== undefined) side.themeShade = shade;
+	}
 	return side;
 }
 

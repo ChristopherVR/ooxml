@@ -72,7 +72,16 @@ export function resolveCellVisuals(
 			edgeFrom(styled.borders, side, boundary[side]) ??
 			NONE;
 		const color =
-			theme && border.themeColor && resolveThemeColorReference({ token: border.themeColor }, theme);
+			theme &&
+			border.themeColor &&
+			resolveThemeColorReference(
+				{
+					token: border.themeColor,
+					...(border.themeTint !== undefined ? { tint: border.themeTint } : {}),
+					...(border.themeShade !== undefined ? { shade: border.themeShade } : {}),
+				},
+				theme,
+			);
 		borders[side] = color ? { ...border, color } : border;
 	}
 	return { borders, ...(shadingFill ? { shadingFill } : {}) };

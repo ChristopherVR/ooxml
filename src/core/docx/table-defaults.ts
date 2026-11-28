@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Properties for tables created by the editor: Word requires `w:tblPr` and `w:tblGrid` on every
 // table, and "Insert Table" gives new tables single-line borders on every edge.
+import { fractionToThemeByte } from './theme-color';
 import type { Table } from './model';
 import type { StJcTable } from './generated/wml-simple-types';
 import type { TableBorderSide, TableBorders, TableCellMargins, TableLook } from './table-model';
@@ -58,7 +59,13 @@ export function buildBorders(
 		setW(edge, 'sz', String(value.sizeEighthPoints ?? 4));
 		setW(edge, 'space', '0');
 		setW(edge, 'color', value.color ? value.color.replace(/^#/, '').toUpperCase() : 'auto');
-		if (value.themeColor) setW(edge, 'themeColor', value.themeColor);
+		if (value.themeColor) {
+			setW(edge, 'themeColor', value.themeColor);
+			if (value.themeTint !== undefined)
+				setW(edge, 'themeTint', fractionToThemeByte(value.themeTint));
+			if (value.themeShade !== undefined)
+				setW(edge, 'themeShade', fractionToThemeByte(value.themeShade));
+		}
 		element.appendChild(edge);
 	}
 	return element;

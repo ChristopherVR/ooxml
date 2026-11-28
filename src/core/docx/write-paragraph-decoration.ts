@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes paragraph shading (`w:shd`) and borders (`w:pBdr`) when a paragraph's values changed.
 // Unchanged paragraphs keep their source elements untouched.
+import { fractionToThemeByte } from './theme-color';
 import type { Paragraph } from './model';
 import type { ParagraphBorders, TableBorderSide } from './table-model';
 import { children, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
@@ -23,7 +24,11 @@ function borderElement(doc: XmlDocument, name: string, side: TableBorderSide): X
 		set('sz', String(side.sizeEighthPoints ?? 4));
 		set('space', String(side.spacePoints ?? 1));
 		set('color', wordColor(side.color));
-		if (side.themeColor) set('themeColor', side.themeColor);
+		if (side.themeColor) {
+			set('themeColor', side.themeColor);
+			if (side.themeTint !== undefined) set('themeTint', fractionToThemeByte(side.themeTint));
+			if (side.themeShade !== undefined) set('themeShade', fractionToThemeByte(side.themeShade));
+		}
 		if (side.shadow) set('shadow', '1');
 	}
 	return element;

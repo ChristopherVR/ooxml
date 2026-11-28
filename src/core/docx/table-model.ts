@@ -13,6 +13,9 @@ export interface TableBorderSide {
 	sizeEighthPoints?: EighthPoints;
 	color?: string;
 	themeColor?: ThemeColorToken;
+	/** `w:themeTint` / `w:themeShade` of the theme colour, as 0..1 fractions of the byte. */
+	themeTint?: number;
+	themeShade?: number;
 	/** Paragraph borders only: gap between the border and the text (`w:space`), in points. */
 	spacePoints?: number;
 	/** Paragraph borders only: the border casts a shadow to the right and below (`w:shadow`). */

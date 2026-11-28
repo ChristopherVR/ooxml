@@ -48,7 +48,14 @@ export function border(
 				: 'solid';
 	const themed =
 		side.themeColor && theme
-			? resolveThemeColorReference({ token: side.themeColor }, theme)
+			? resolveThemeColorReference(
+					{
+						token: side.themeColor,
+						...(side.themeTint !== undefined ? { tint: side.themeTint } : {}),
+						...(side.themeShade !== undefined ? { shade: side.themeShade } : {}),
+					},
+					theme,
+				)
 			: undefined;
 	const hex = cssHex(side.color);
 	// `sz` is in eighths of a point; a double line needs room for both strokes.
