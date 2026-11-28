@@ -6,12 +6,10 @@ import {
 	type DocumentModel,
 	type Paragraph,
 	type ParagraphListLabel,
-	type TextRun,
 } from 'ooxml-core/docx';
 import { cssFontStack, legacyTextStartPx, type TextMeasurer } from 'ooxml-core/docx/layout';
 import { paragraphMarkRun } from 'ooxml-core/docx/ui';
 import type { Node } from 'prosemirror-model';
-import { appendInlineNode } from './run-adapter';
 import { themeFontOf } from './run-styles';
 import { resolvedTabStops } from './resolved-tab-stops';
 
@@ -26,10 +24,8 @@ export function listMarkerDisplay(
 ): { css: string; attributes: Record<string, string> } {
 	if (!label || paragraph.direction === 'rtl')
 		return { css: '', attributes: { 'data-list-marker': '' } };
-	const runs: TextRun[] = [];
-	if (node.firstChild) appendInlineNode(runs, node.firstChild);
-	const mark = node.childCount ? undefined : paragraphMarkRun(paragraph);
-	const format = resolveRunFormatting(mark ?? runs[0] ?? { text: '' }, {
+	// Word formats the number with the paragraph mark, never with the first run of the text.
+	const format = resolveRunFormatting(paragraphMarkRun(paragraph), {
 		runCatalog: model.characterStyles,
 		paragraphCatalog: model.paragraphStyles,
 		paragraphStyleId: paragraph.style,

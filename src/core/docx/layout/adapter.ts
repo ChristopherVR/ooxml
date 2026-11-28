@@ -437,16 +437,14 @@ export function adaptDocumentModel(
 		const { betweenBorder, ...box } = paragraphBox(resolved, model.theme);
 		const edges = blockTags.get(paragraph);
 		const taggedRuns = edges ? adaptBlockContentControlTags(runs, edges) : runs;
+		const markRun = () =>
+			adaptRun(paragraphMarkRun(paragraph), paragraph.style, undefined, tableStyleRun);
 		const mark = runs.some((run) => !run.hidden && (run.text || run.object))
 			? undefined
-			: adaptRun(paragraphMarkRun(paragraph), paragraph.style, undefined, tableStyleRun);
-		const marker = label
-			? labelRun(
-					label,
-					mark ??
-						adaptRun(paragraph.runs[0] ?? { text: '' }, paragraph.style, undefined, tableStyleRun),
-				)
-			: undefined;
+			: markRun();
+		// Word formats the number with the paragraph mark (`w:pPr/w:rPr`, the style, the defaults),
+		// never with the first run of the text.
+		const marker = label ? labelRun(label, mark ?? markRun()) : undefined;
 		const adapted: LayoutParagraph = {
 			kind: 'paragraph',
 			id: paragraph.id,
