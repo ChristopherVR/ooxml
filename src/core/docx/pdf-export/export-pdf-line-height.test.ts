@@ -35,3 +35,15 @@ describe('line height with two fonts (#391)', () => {
 		expect(control.length).toBe(50);
 	});
 });
+
+describe('a space in a larger run (#393)', () => {
+	it('keeps the line at the height of its text, as Word does', async () => {
+		const control = await firstPage('larger-space-run-control');
+		for (const name of ['larger-space-run', 'larger-space-run-mid-line']) {
+			const lines = await firstPage(name);
+			expect(lines[0]!.y).toBeCloseTo(control[0]!.y, 2);
+			expect(lines.length).toBe(control.length);
+			expect(pitch(lines)).toBeCloseTo(pitch(control), 2);
+		}
+	});
+});

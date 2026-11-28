@@ -139,3 +139,14 @@ it('takes the larger descent of a same-size list label and its text (#395)', () 
 	expect(lines[0]?.heightPx).toBeCloseTo(((11.06 + 2.95) * 4) / 3, 1);
 	expect(lines[0]?.baselinePx).toBeCloseTo((11.06 * 4) / 3, 1);
 });
+
+it('keeps a line at the height of its text when a space in a larger run joins it (#393)', () => {
+	const sized = (text: string, fontSizePt: number) => ({ text, fontSizePt });
+	const measured: TextMeasurer = { ...measurer, lineHeightOf: (font) => font.sizePx * 1.2 };
+	const height = (runs: LayoutParagraph['runs']) =>
+		layoutParagraph(paragraph(runs), 300, measured, () => {}).lines[0]?.heightPx;
+	const plain = height([sized('ab', 11), sized(' ', 11), sized('cd', 11)]);
+	expect(height([sized('ab', 11), sized(' ', 12), sized('cd', 11)])).toBe(plain);
+	// A line made only of that space still takes its size.
+	expect(height([sized(' ', 12)])).toBeGreaterThan(height([sized(' ', 11)])!);
+});

@@ -61,8 +61,15 @@ export function lineMetrics(
 	let objectDescent = 0;
 	let textSizePx = 0;
 	let marker: { above: number; below: number; sizePx: number } | undefined;
+	// A run that holds only spaces does not make a line taller than its other text (#393).
+	const spaceOnly = (token: BreakToken) =>
+		token.kind === 'space' && !paragraph.runs[token.runIndex]?.text.trim();
+	const hasText = placed.some(
+		({ token }) => !spaceOnly(token) && !paragraph.runs[token.runIndex]?.marker,
+	);
 	for (const { token } of placed) {
 		const run = paragraph.runs[token.runIndex];
+		if (hasText && spaceOnly(token)) continue;
 		const metrics = run?.object?.noteSeparator
 			? fontMetrics(measurer, fonts[token.runIndex] ?? fontOf(run))
 			: undefined;
