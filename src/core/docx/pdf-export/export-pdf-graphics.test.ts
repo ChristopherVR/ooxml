@@ -195,6 +195,20 @@ describe('exportDocxPdf graphics', () => {
 		expect(report.omitted).toEqual([]);
 	});
 
+	it('washes out any VML picture with gain and blacklevel, whatever its shape id', async () => {
+		const shape = (id: string) =>
+			`<w:r><w:pict><v:shape xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" id="${id}" o:spid="_x0000_s2049" type="#_x0000_t75" style="position:absolute;margin-left:0;margin-top:0;width:300pt;height:300pt;z-index:-251658752;mso-position-horizontal:center;mso-position-horizontal-relative:margin;mso-position-vertical:center;mso-position-vertical-relative:margin" o:allowincell="f"><v:imagedata r:id="rId5" o:title="mark" gain="19661f" blacklevel="22938f"/></v:shape></w:pict></w:r>`;
+		const exportImages = async (id: string) => {
+			const loaded = await docx(para('Body'), { header: `<w:p>${shape(id)}</w:p>` });
+			const { bytes } = await exportDocxPdf(loaded.model, { measurer, media: loaded.media! });
+			return inspect(bytes).images;
+		};
+		const control = await exportImages('WordPictureWatermark1');
+		const plain = await exportImages('_x0000_s2051');
+		expect([...control[0]!]).toEqual([204, 204, 204]);
+		expect([...plain[0]!]).toEqual([204, 204, 204]);
+	});
+
 	it('keeps white pixels white in a washed-out picture watermark', async () => {
 		const picture = `<w:r><w:pict><v:shape xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" id="WordPictureWatermark7" o:spid="_x0000_s2050" type="#_x0000_t75" style="position:absolute;width:100pt;height:50pt;mso-position-horizontal:center;mso-position-horizontal-relative:margin;mso-position-vertical:center;mso-position-vertical-relative:margin"><v:imagedata r:id="rId5" gain="19661f" blacklevel="22938f"/></v:shape></w:pict></w:r>`;
 		// One black and one white pixel.

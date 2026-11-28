@@ -6,31 +6,12 @@
  */
 import { fontMetrics, type LayoutPageBox, type TextMeasurer } from '../layout/index';
 import { watermarkSizePt, type PictureWatermarkSpec, type WatermarkSpec } from '../index';
-import { WASHOUT_INTERCEPT, WASHOUT_SLOPE } from '../picture-watermark';
-import type { PdfImageResource } from '../../pdf/write/pdf-vector';
+import { paintWashoutLayer, washedOutResource } from './pdf-pictures';
 import type { DocxPdfPainter } from './pdf-blocks';
 import type { DocxPdfStoryGraphics } from './pdf-story-graphics';
 
 const DEFAULT_FAMILY = 'Calibri';
 const DEFAULT_COLOR = '#c0c0c0';
-const washed = new WeakMap<PdfImageResource, PdfImageResource>();
-
-function washedOut(resource: PdfImageResource): PdfImageResource | undefined {
-	if (resource.filter) return undefined;
-	let result = washed.get(resource);
-	if (!result) {
-		const data = new Uint8Array(resource.data.length);
-		for (let index = 0; index < data.length; index++)
-			data[index] = Math.min(
-				255,
-				Math.round(resource.data[index]! * WASHOUT_SLOPE + WASHOUT_INTERCEPT * 255),
-			);
-		result = { ...resource, data };
-		washed.set(resource, result);
-	}
-	return result;
-}
-
 function paintText(
 	painter: DocxPdfPainter,
 	spec: WatermarkSpec,
@@ -92,7 +73,7 @@ function paintPicture(painter: DocxPdfPainter, spec: PictureWatermarkSpec, page:
 	const picture = { partName: spec.partName, contentType: spec.contentType, widthPx, heightPx };
 	const { pictures, page: pdf } = painter;
 	const resource = pictures.resource(spec.partName);
-	const light = spec.washout && resource ? washedOut(resource) : undefined;
+	const light = spec.washout && resource ? washedOutResource(resource) : undefined;
 	if (light) {
 		pdf.save();
 		pdf.concat([widthPx, 0, 0, -heightPx, x, y + heightPx]);
@@ -102,14 +83,7 @@ function paintPicture(painter: DocxPdfPainter, spec: PictureWatermarkSpec, page:
 	}
 	pictures.draw(pdf, picture, x, y);
 	if (!spec.washout || !resource) return;
-	// A JPEG is written as it is: a grey layer in Screen mode gives (1 - g) x + g, with g the
-	// intercept, so black rises to it and white stays white (slope 0.2 for Word's 0.3).
-	pdf.save();
-	pdf.alpha(1, 1, 'Screen');
-	pdf.fillColor(WASHOUT_INTERCEPT, WASHOUT_INTERCEPT, WASHOUT_INTERCEPT);
-	pdf.rect(x, y, widthPx, heightPx);
-	pdf.op('f');
-	pdf.restore();
+	paintWashoutLayer(pdf, x, y, widthPx, heightPx);
 }
 
 /** Draws the page's watermark, if its header has one. */
