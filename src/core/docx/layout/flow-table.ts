@@ -55,10 +55,11 @@ export function placeTable(
 		const width =
 			(table.widthPx ?? cursor.columnWidthPx) +
 			(activeBorders ? (profile!.leftPx + profile!.rightPx) / 2 : 0);
+		// A table wider than the text column still aligns: it overhangs the margins (#387).
 		return table.alignment === 'center'
-			? Math.max(0, (cursor.columnWidthPx - width) / 2)
+			? (cursor.columnWidthPx - width) / 2
 			: table.alignment === 'right'
-				? Math.max(0, cursor.columnWidthPx - width)
+				? cursor.columnWidthPx - width
 				: (table.indentPx ?? 0);
 	};
 
