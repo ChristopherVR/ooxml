@@ -337,18 +337,21 @@ export function placeTable(
 				remainingRow = layoutRow(row, cursor.columnWidthPx, measurer, note);
 				continue;
 			}
+			// A row that moves whole to the next page keeps its merge span (a split tail has none).
 			remainingRow =
-				after &&
-				(paragraphCuts || previousWidth !== cursor.columnWidthPx || nativeFragments.get(row))
-					? layoutRow(
-							{ ...row, heightPx: 0, heightRule: 'atLeast' },
-							cursor.columnWidthPx,
-							measurer,
-							note,
-							after.cells,
-							row,
-						)
-					: after;
+				!placedPart && !paragraphCuts && previousWidth === cursor.columnWidthPx
+					? remainingRow
+					: after &&
+						  (paragraphCuts || previousWidth !== cursor.columnWidthPx || nativeFragments.get(row))
+						? layoutRow(
+								{ ...row, heightPx: 0, heightRule: 'atLeast' },
+								cursor.columnWidthPx,
+								measurer,
+								note,
+								after.cells,
+								row,
+							)
+						: after;
 		}
 	}
 
