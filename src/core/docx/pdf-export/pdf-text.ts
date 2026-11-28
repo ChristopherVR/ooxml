@@ -52,8 +52,16 @@ const SYNTHETIC_ITALIC_SKEW = 1 / 3;
  * 0.31543, 0.456, 0.68571 and 1.3714 pt), and the glyphs keep the regular face's advances.
  */
 const SYNTHETIC_BOLD_EM = 1 / 35;
-/** Where Word's dot leaders stop short of their tab stop, measured on 10 pt Arial (issue #396). */
-const LEADER_END_GAP_EM = 0.122;
+/**
+ * Word draws a leader's characters on a grid of its advance anchored at the page's left edge (a
+ * character starts at a whole multiple of its advance), in the cells that lie wholly between the
+ * text before the tab and the text after it (issues #396 and #432, measured on Calibri 11 pt and
+ * Arial 10 pt, with 1417 and 1500 twip margins). A cell may overhang the text after it by
+ * this share of an advance, to absorb rounding.
+ */
+const LEADER_END_TOLERANCE = 0.01;
+/** A cell may start this share of an advance before the text before it ends (a tab stop's rounding). */
+const LEADER_START_TOLERANCE = 0.05;
 const LEADERS: Record<string, string> = { dot: '.', hyphen: '-', middleDot: '\u00b7' };
 
 /** Sets the fill colour from a CSS colour; returns false for a transparent one. */
@@ -143,9 +151,9 @@ export class DocxPdfText {
 		}
 		// A leader's characters keep their own advance and end where the leader does, so the dots
 		// of successive lines share one grid, as in Word.
-		const leader = fragment.leader ? this.#leader(fragment, font) : undefined;
+		const leader = fragment.leader ? this.#leader(fragment, font, x) : undefined;
 		if (leader) {
-			x += fragment.widthPx - leader.widthPx - font.sizePx * LEADER_END_GAP_EM;
+			x = leader.xPx;
 			fragment = { ...fragment, widthPx: leader.widthPx };
 		}
 		const text = fragment.leader ? (leader?.text ?? '') : fragment.text.replace(/[\t\n\r]/g, ' ');
@@ -187,20 +195,24 @@ export class DocxPdfText {
 		return Math.abs(shift) < 1e-6 ? ruled : wordPdfPx(ruled + shift);
 	}
 
-	/** The leader's characters at their own advance, as many as fit in the leader's width. */
+	/**
+	 * The leader's characters at their own advance, in the cells of the page-wide grid that fit
+	 * between `x` (where the text before the tab ends) and the end of the leader's width.
+	 */
 	#leader(
 		fragment: LayoutFragment,
 		font: LayoutFontSpec,
-	): { text: string; widthPx: number } | undefined {
+		x: number,
+	): { text: string; widthPx: number; xPx: number } | undefined {
 		const character = LEADERS[fragment.leader!];
 		if (!character) return undefined;
 		// Word spaces the characters on its 1/600 inch grid: a 10 pt Arial period is 2.76 pt.
 		const measured = wordPdfPx(this.measurer.widthOf(character, font));
 		const advance = measured > 0 ? measured : font.sizePx * 0.28;
-		// Word's last dot ends 1.2 pt (0.122 em at 10 pt Arial) before the stop it leads to.
-		const room = fragment.widthPx - font.sizePx * LEADER_END_GAP_EM;
-		const count = Math.max(0, Math.floor(room / advance + 0.05));
-		return { text: character.repeat(count), widthPx: count * advance };
+		const first = Math.ceil(x / advance - LEADER_START_TOLERANCE);
+		const last = Math.floor((x + fragment.widthPx) / advance + LEADER_END_TOLERANCE);
+		const count = Math.max(0, last - first);
+		return { text: character.repeat(count), widthPx: count * advance, xPx: first * advance };
 	}
 
 	#rule(
