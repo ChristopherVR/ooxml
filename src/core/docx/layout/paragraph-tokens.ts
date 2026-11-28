@@ -121,6 +121,27 @@ function glueAcrossRuns(paragraph: LayoutParagraph, tokens: BreakToken[], start:
 		token.glue = 'kinsoku';
 }
 
+const NO_BREAK_SPACE = ' ';
+
+/**
+ * A space that touches a non-breaking space is no line break opportunity in Word (compatibility
+ * mode 15): the space and the word after it stay with the word before. Glued tokens move down
+ * together when the last of them does not fit (`gluedCarry`).
+ */
+function glueSpacesNextToNbsp(tokens: BreakToken[]): void {
+	for (const [index, token] of tokens.entries()) {
+		if (token.kind !== 'space' || token.text !== ' ' || token.glue) continue;
+		const before = tokens[index - 1];
+		const after = tokens[index + 1];
+		const touches =
+			(before?.kind === 'word' && before.text.endsWith(NO_BREAK_SPACE)) ||
+			(after?.kind === 'word' && after.text.startsWith(NO_BREAK_SPACE));
+		if (!touches || before?.kind !== 'word' || after?.kind !== 'word') continue;
+		token.glue = 'nbsp';
+		if (!after.glue) after.glue = 'nbsp';
+	}
+}
+
 /** Keep each tag with its adjacent text or inline object, including intervening spaces. */
 function glueControlTags(tokens: BreakToken[], paragraph: LayoutParagraph): void {
 	const canJoin = (token: BreakToken | undefined) =>
@@ -220,6 +241,7 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 			for (const token of tokens) if (token.runIndex === runIndex) token.sourceStart = 0;
 		} else cursor += sourceLengthOf(run);
 	});
+	glueSpacesNextToNbsp(tokens);
 	if (hasTags) glueControlTags(tokens, paragraph);
 	applyAutoSpace(paragraph, tokens);
 	return { tokens, runOffsets };

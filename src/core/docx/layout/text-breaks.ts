@@ -13,9 +13,10 @@ export { isEastAsianChar };
 
 /**
  * Why a token may not start a line on its own: `kinsoku` (a prohibited character at the
- * boundary), `word` (a word split between formatted runs), or `controlTag` (a tag and its content).
+ * boundary), `word` (a word split between formatted runs), `controlTag` (a tag and its content), or `nbsp` (a space that touches a non-breaking space,
+ * and the word after it).
  */
-export type TokenGlue = 'kinsoku' | 'word' | 'controlTag';
+export type TokenGlue = 'kinsoku' | 'word' | 'controlTag' | 'nbsp';
 
 /** Resume at a token boundary, or within a word split across lines. */
 export type TokenPosition = number | { index: number; offset: number };
