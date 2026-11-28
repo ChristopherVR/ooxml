@@ -1,4 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
+import { splitBreakRun } from './breaks';
 import { expectDefined } from './expect-defined';
 import type { Revision, TextRun } from './model';
 import {
@@ -161,11 +162,14 @@ export function collectParagraphRuns(
 	};
 	for (const item of Array.from(node.childNodes).filter(isElement)) {
 		if (named(item, 'r')) {
-			if (!isCommentReferenceRun(item)) push(parseRun(item));
+			if (!isCommentReferenceRun(item))
+				for (const piece of splitBreakRun(item)) push(parseRun(piece));
 		} else if (named(item, 'hyperlink')) {
 			const link = resolveLink?.(item);
 			for (const child of Array.from(item.childNodes).filter(isElement)) {
-				for (const parsed of named(child, 'r') ? [parseRun(child)] : (parseOther?.(child) ?? [])) {
+				for (const parsed of named(child, 'r')
+					? splitBreakRun(child).map((piece) => parseRun(piece))
+					: (parseOther?.(child) ?? [])) {
 					if (link) parsed.link = link;
 					push(parsed);
 				}
@@ -184,7 +188,7 @@ export function collectParagraphRuns(
 			if (range) revision.move = { name: range.name, rangeId: range.id };
 			for (const child of Array.from(item.childNodes).filter(isElement)) {
 				for (const parsed of named(child, 'r')
-					? [parseRun(child, revision)]
+					? splitBreakRun(child).map((piece) => parseRun(piece, revision))
 					: (parseOther?.(child) ?? [])) {
 					parsed.revision = revision;
 					push(parsed);
