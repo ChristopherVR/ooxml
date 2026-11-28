@@ -63,4 +63,22 @@ describe('exportDocxPdf without markup: deleted structure', () => {
 		const marked = shown((await exportDocxPdf(model, { measurer, markup: 'all' })).bytes).join('');
 		expect(marked).toContain('gone');
 	});
+
+	it('removes rows deleted with tracking', async () => {
+		const cell = (id: number, text: string) =>
+			`<w:tc>${deletedMark(id, `<w:del w:id="${id + 10}" ${stamp}><w:r><w:delText>${text}</w:delText></w:r></w:del>`)}</w:tc>`;
+		const plain = (text: string) => `<w:tc>${p(text)}</w:tc>`;
+		const model = await docx(
+			`<w:tbl><w:tblGrid><w:gridCol w:w="4000"/><w:gridCol w:w="4000"/></w:tblGrid>` +
+				`<w:tr>${plain('Row1A')}${plain('Row1B')}</w:tr>` +
+				`<w:tr><w:trPr><w:del w:id="1" ${stamp}/></w:trPr>${cell(2, 'DeadA')}${cell(3, 'DeadB')}</w:tr>` +
+				`<w:tr>${plain('Row3A')}${plain('Row3B')}</w:tr></w:tbl>${p('After.')}`,
+		);
+		const table = finalReviewStructure(model).blocks[0]!;
+		expect(table.type === 'table' && table.rows).toHaveLength(2);
+		expect(table.type === 'table' && table.rowProperties).toHaveLength(2);
+		const text = shown((await exportDocxPdf(model, { measurer })).bytes).join('');
+		expect(text).toContain('Row3A');
+		expect(text).not.toContain('Dead');
+	});
 });

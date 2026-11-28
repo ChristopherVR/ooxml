@@ -496,7 +496,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `trPrChange`, `tcPrChange`) are not modelled and block structure edits; `tblGridChange` and
       `numberingChange` have no code. Tracked row insertions and deletions (`w:trPr/w:ins`,
       `w:del`) are modelled, accepted and rejected (`docx/table-row-revisions.test.ts`) but not yet
-      exercised through the editor.
+      exercised through the editor. PDF export without markup drops deleted rows and joins
+      deleted paragraph marks (`docx/review-final-structure.ts`); the editor's No Markup view
+      keeps the source structure so offsets map back.
 - [ ] **P1** Fields computed today: PAGE, NUMPAGES, SECTIONPAGES, DATE, TIME, TOC, SEQ, REF,
       PAGEREF, STYLEREF, DOCPROPERTY, AUTHOR, TITLE, SUBJECT, KEYWORDS, COMMENTS, LASTSAVEDBY,
       REVNUM, CREATEDATE, SAVEDATE, PRINTDATE, IF, `=` (scalar/list arithmetic & functions; table

@@ -11,7 +11,8 @@ function hasFinalStructure(model: DocumentModel): boolean {
 		blocks.some((block) =>
 			block.type === 'paragraph'
 				? markDeleted(block)
-				: block.rows.some((row) => row.some((cell) => found(cell.paragraphs))),
+				: block.rowProperties?.some((row) => row.revision?.kind === 'delete') ||
+					block.rows.some((row) => row.some((cell) => found(cell.paragraphs))),
 		);
 	return documentBlockLists(model).some(found);
 }
@@ -27,14 +28,21 @@ function joinDeletedMarks(blocks: Block[]): Block[] {
 		if (block.type === 'table') {
 			if (carried && !isEmptyParagraph(carried)) result.push(carried);
 			carried = undefined;
+			const kept = block.rows.flatMap((row, rowIndex) =>
+				block.rowProperties?.[rowIndex]?.revision?.kind === 'delete' ? [] : [{ row, rowIndex }],
+			);
+			if (!kept.length) continue;
 			result.push({
 				...block,
-				rows: block.rows.map((row) =>
+				rows: kept.map(({ row }) =>
 					row.map((cell) => ({
 						...cell,
 						paragraphs: joinDeletedMarks(cell.paragraphs) as Paragraph[],
 					})),
 				),
+				...(block.rowProperties
+					? { rowProperties: kept.flatMap(({ rowIndex }) => block.rowProperties![rowIndex] ?? []) }
+					: {}),
 			});
 			continue;
 		}
