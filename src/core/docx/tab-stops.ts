@@ -19,6 +19,24 @@ export function parseTabStops(tabs: XmlElement | undefined): TabStop[] {
 	return stops;
 }
 
+/**
+ * The tab stops a paragraph ends up with: the inherited ones (a style, its ancestors, the document
+ * defaults) with the own `w:tabs` on top (ECMA-376 §17.3.1.38). An own stop at an inherited stop's
+ * position replaces it, and `clear` removes it, so no `clear` stop is left in the result.
+ */
+export function mergeTabStops(
+	inherited: readonly TabStop[] | undefined,
+	own: readonly TabStop[] | undefined,
+): TabStop[] | undefined {
+	if (!own?.length) return inherited?.length ? [...inherited] : undefined;
+	const positions = new Set(own.map((stop) => stop.posTwips));
+	const merged = [
+		...(inherited ?? []).filter((stop) => !positions.has(stop.posTwips)),
+		...own.filter((stop) => stop.align !== 'clear'),
+	].sort((a, b) => a.posTwips - b.posTwips);
+	return merged.length ? merged : undefined;
+}
+
 /** Rewrites `w:tabs` when the paragraph's tab stops changed. */
 export function writeTabStops(
 	doc: XmlDocument,

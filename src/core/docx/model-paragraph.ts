@@ -183,6 +183,7 @@ export type ParagraphFormatting = Pick<
 	| 'borders'
 	| 'shadingFill'
 	| 'percentageShading'
+	| 'tabStops'
 >;
 export interface ParagraphStyleDefinition extends StyleMetadata {
 	next?: string;

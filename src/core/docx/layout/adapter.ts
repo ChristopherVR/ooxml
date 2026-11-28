@@ -458,10 +458,10 @@ export function adaptDocumentModel(
 			runs: (marker ? [marker, ...taggedRuns] : taggedRuns).map(withFontFallback),
 			...(footnotes.length ? { footnotes } : {}),
 			...box,
-			...(paragraph.tabStops?.length || label?.tabStopTwips !== undefined
+			...(resolved.tabStops?.length || label?.tabStopTwips !== undefined
 				? {
 						tabStops: [
-							...(paragraph.tabStops ?? []).map((stop) => ({
+							...(resolved.tabStops ?? []).map((stop) => ({
 								posPx: twipsToPx(stop.posTwips),
 								align: stop.align,
 								...(stop.leader ? { leader: stop.leader } : {}),

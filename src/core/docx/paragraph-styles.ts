@@ -23,6 +23,7 @@ import {
 	inheritanceCycleEntries,
 	mergeDefined,
 } from './style-inheritance';
+import { mergeTabStops, parseTabStops } from './tab-stops';
 import { parseParagraphBorders, parseShadingFill } from './table-borders';
 import { alignFromJustification, parseJustification } from './paragraph-alignment';
 import {
@@ -123,6 +124,8 @@ export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormattin
 	const pattern = parsePercentageShading(shadingElement);
 	if (pattern) result.percentageShading = pattern;
 	if (shading) result.shadingFill = shading;
+	const tabStops = parseTabStops(first(pPr, 'tabs'));
+	if (tabStops.length) result.tabStops = tabStops;
 	const spacing = first(pPr, 'spacing');
 	const before = twipValue(getW(spacing, 'before'));
 	const after = twipValue(getW(spacing, 'after'));
@@ -219,6 +222,9 @@ function styleFormatting(
 				const merged = Object.assign({}, resolved, formatting);
 				if (resolved.frame && formatting.frame)
 					merged.frame = { ...resolved.frame, ...formatting.frame };
+				const tabStops = mergeTabStops(resolved.tabStops, formatting.tabStops);
+				if (tabStops) merged.tabStops = tabStops;
+				else delete merged.tabStops;
 				return merged;
 			},
 			{},
@@ -253,7 +259,10 @@ export function resolveParagraphFormatting(
 			ignoreDefaultLeft,
 		);
 		const inheritedFrame = result.frame;
+		const defaultTabs = result.tabStops;
 		Object.assign(result, style);
+		const tabStops = mergeTabStops(defaultTabs, style?.tabStops);
+		if (tabStops) result.tabStops = tabStops;
 		if (tableParagraph && inheritedFrame && style?.frame)
 			result.frame = { ...inheritedFrame, ...style.frame };
 	}
@@ -289,7 +298,11 @@ export function resolveParagraphFormatting(
 		if (value !== undefined) Object.assign(direct, { [key]: value });
 	}
 	const inheritedFrame = result.frame;
+	const inheritedTabs = result.tabStops;
 	Object.assign(result, direct);
+	const tabStops = mergeTabStops(inheritedTabs, paragraph.tabStops);
+	if (tabStops) result.tabStops = tabStops;
+	else delete result.tabStops;
 	if (inheritedFrame && direct.frame) result.frame = { ...inheritedFrame, ...direct.frame };
 	// A direct alignment without its own `w:jc` value supersedes any inherited exact value.
 	if (paragraph.align !== undefined && paragraph.justification === undefined)
