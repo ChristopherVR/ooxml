@@ -15,6 +15,17 @@ function firstLineBottom(note: LayoutFootnoteBox | undefined): number {
 		: (note?.heightPx ?? 0);
 }
 
+/**
+ * Bottom of the second line of a note, or of its only line: Word keeps a reference line on the
+ * page only while at least two lines of its note fit below it (#423).
+ */
+function minimumBottom(note: LayoutFootnoteBox | undefined): number {
+	const bottoms = (note?.paragraphs ?? []).flatMap((paragraph) =>
+		paragraph.lines.map((line) => paragraph.yPx + line.yPx + line.heightPx),
+	);
+	return bottoms[Math.min(2, bottoms.length) - 1] ?? firstLineBottom(note);
+}
+
 /** Space for the short rule above a page's footnotes. */
 export const FOOTNOTE_SEPARATOR_PX = 12;
 
@@ -83,14 +94,11 @@ export class FootnoteFlow {
 		}
 		const total = this.pending.notes.reduce((sum, note) => sum + note.heightPx, 0);
 		const separator = page.footnotes?.length ? 0 : this.separatorHeight(page);
-		// Short notes retain the existing keep-with-reference behavior. A note larger than a fresh
-		// page must share that page with at least the reference's first line, then continue.
-		if (total + this.separatorHeight(page) + this.pending.freshBodyMinimum <= capacity)
-			return total + separator;
-		return Math.max(
-			firstLineBottom(this.pending.notes[0]) + separator,
-			capacity - bodyUsed - this.reserved(page) - this.pending.bodyMinimum,
-		);
+		const available = capacity - bodyUsed - this.reserved(page) - this.pending.bodyMinimum;
+		// A note that fits stays whole with its reference line. One that does not fit is split at a
+		// line boundary: the reference line stays while two note lines fit below it (#423).
+		if (total + separator <= available) return total + separator;
+		return Math.max(minimumBottom(this.pending.notes[0]) + separator, available);
 	}
 
 	/** A later column cannot grow the page-wide note area into body content already placed. */
@@ -101,11 +109,7 @@ export class FootnoteFlow {
 				bodyBottom + this.reserved(page) + this.pendingHeight(page, capacity, bodyBottom) > capacity
 			);
 		const total = this.pending.notes.reduce((sum, note) => sum + note.heightPx, 0);
-		const minimum = firstLineBottom(this.pending.notes[0]);
-		const needed =
-			total + this.separatorHeight(page) + this.pending.freshBodyMinimum <= capacity
-				? total
-				: minimum;
+		const needed = Math.min(total, minimumBottom(this.pending.notes[0]));
 		return (
 			bodyBottom +
 				this.reserved(page) +
