@@ -743,7 +743,11 @@ function measureParagraph(
 	}
 	// A cell's terminal paragraph with no content consists solely of its end mark.
 	const hiddenCellMark = paragraph.hideCellEndMark && tokens.length === 0;
-	if (!hiddenCellMark) flushLine(lines.length === 0, undefined);
+	// Measured in Word 16: a text-wrapping break that ends the paragraph ends its line and the
+	// paragraph mark takes one more, empty, line (a page or column break does not). A hidden cell
+	// end mark takes none (Word COM, cell-end-marker fixture).
+	const endsWithLineBreak = tokens.at(-1)?.kind === 'lineBreak' && !paragraph.hideCellEndMark;
+	if (!hiddenCellMark) flushLine(lines.length === 0 || endsWithLineBreak, undefined);
 
 	const lastIndex = lines.length - 1;
 	for (const [index, line] of lines.entries()) {

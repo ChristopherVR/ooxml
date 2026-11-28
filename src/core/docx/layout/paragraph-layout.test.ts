@@ -94,6 +94,8 @@ describe('layoutParagraph alignment', () => {
 			'',
 			'cc dd',
 			'ee ff',
+			// The paragraph mark after a terminal break takes an empty line of its own (#429).
+			'',
 		]);
 		expect(
 			result.lines.flatMap((line) =>
