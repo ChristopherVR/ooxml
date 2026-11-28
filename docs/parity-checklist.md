@@ -699,6 +699,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Layout and rendering
 
+- [ ] **P3** Compound paragraph borders at `w:sz="3"`: Word 16 draws the thick band 0.24 pt
+      wide where the measured rule (`floor(sz * 25 / 24)` units of 1/600 inch, #388) gives
+      0.36 pt. Sizes 1, 2 and 4 to 48 follow the rule; the other compound styles, band order and
+      gaps match Word within 0.03 pt (`issue-388-compound-border-thickness.test.ts`). Compound
+      table borders are not measured.
 - [x] **P1** Hyphenation: `autoHyphenation`, `hyphenationZone`, `consecutiveHyphenLimit`,
       `doNotHyphenateCaps`, paragraph/style `suppressAutoHyphens` and explicit soft hyphens
       (`\u00AD`) are applied by `src/core/docx/layout` using the offline English/Latin hyphenator
