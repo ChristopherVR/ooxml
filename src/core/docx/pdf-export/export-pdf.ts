@@ -48,6 +48,7 @@ import {
 	type DocxPdfStoryGraphics,
 } from './pdf-story-graphics';
 import { DocxPdfText } from './pdf-text';
+import { wordPdfPt } from './pdf-units';
 
 export type {
 	DocxPdfFontMeasurement,
@@ -179,7 +180,7 @@ function paintPage(
 	{ marks, graphics, measurer, watermark }: PageExtras,
 ): void {
 	const pdf = painter.page;
-	pdf.concat([PT_PER_PX, 0, 0, -PT_PER_PX, 0, page.heightPx * PT_PER_PX]);
+	pdf.concat([PT_PER_PX, 0, 0, -PT_PER_PX, 0, wordPdfPt(page.heightPx * PT_PER_PX)]);
 	const hooks = painter.hooks;
 	hooks?.startPage(pdf, page);
 	// Page borders, line numbers, watermarks and floats behind the header and footer are
@@ -316,7 +317,11 @@ export async function exportDocxPdf(
 		signal?.throwIfAborted();
 		const page = layout.pages[index]!;
 		report.page = index + 1;
-		const pdf = new PdfVectorPage(page.widthPx * PT_PER_PX, page.heightPx * PT_PER_PX);
+		// Word writes the page box in whole 1/600 inch: A4 is 595.32 x 841.92 pt.
+		const pdf = new PdfVectorPage(
+			wordPdfPt(page.widthPx * PT_PER_PX),
+			wordPdfPt(page.heightPx * PT_PER_PX),
+		);
 		const shrink = hooks.options.balloons?.frame(page);
 		if (shrink) pdf.concat(shrink.matrix);
 		paintPage(

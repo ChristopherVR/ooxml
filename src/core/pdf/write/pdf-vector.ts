@@ -71,6 +71,32 @@ export interface PdfTextSpacing {
 	invisible?: boolean;
 	/** Horizontal shear of the text matrix (a synthetic oblique): the glyphs lean right by this slope. */
 	skew?: number;
+	/**
+	 * Embedded text only: the size written in `Tf` when the glyphs are drawn at another size than
+	 * the one they advance by. Each glyph keeps its advance at the run's size, through `TJ` offsets
+	 * in whole thousandths of an em that never let the error add up (Word's PDFs draw text this way).
+	 */
+	drawSize?: number;
+}
+
+/**
+ * The `TJ` offset after each glyph of advance `widths` (in 1/1000 em) that keeps it on its advance
+ * at `size` while it is drawn at `drawSize`: whole numbers, each rounding the error still left.
+ */
+export function sizeCorrections(
+	widths: readonly number[],
+	size: number,
+	drawSize: number,
+): number[] {
+	const ratio = size / drawSize - 1;
+	let wanted = 0;
+	let applied = 0;
+	return widths.map((width) => {
+		wanted += width * ratio;
+		const step = Math.round(wanted - applied);
+		applied += step;
+		return step === 0 ? 0 : -step;
+	});
 }
 
 /** The `Tz` and `Tr` operators a run needs, with a leading space; empty for the defaults. */
@@ -204,15 +230,29 @@ export class PdfVectorPage {
 			name = `E${this.embeddedFonts.size}`;
 			this.embeddedFonts.set(name, font);
 		}
-		const word = spacing.word ? -(spacing.word * 1000) / size : 0;
+		const drawSize = spacing.drawSize ?? size;
+		const word = spacing.word ? -(spacing.word * 1000) / drawSize : 0;
+		const chars = [...text];
+		const corrections =
+			drawSize === size
+				? undefined
+				: sizeCorrections(
+						chars.map((char) => Math.round(font.width(char) * 1000)),
+						size,
+						drawSize,
+					);
 		const parts: string[] = [];
-		for (const piece of text.split(/( )/)) {
-			if (!piece) continue;
-			parts.push(`<${font.encode(piece)}>`);
-			if (piece === ' ' && word) parts.push(num(word));
-		}
+		let run = '';
+		chars.forEach((char, index) => {
+			run += font.encode(char);
+			const offset = (corrections?.[index] ?? 0) + (char === ' ' ? word : 0);
+			if (!offset) return;
+			parts.push(`<${run}>`, num(offset));
+			run = '';
+		});
+		if (run) parts.push(`<${run}>`);
 		this.op(
-			`BT /${name} ${num(size)} Tf 1 0 ${num(spacing.skew ?? 0)} -1 ${num(x)} ${num(y)} Tm ${num(
+			`BT /${name} ${num(drawSize)} Tf 1 0 ${num(spacing.skew ?? 0)} -1 ${num(x)} ${num(y)} Tm ${num(
 				spacing.character ?? 0,
 			)} Tc${textState(spacing)} [${parts.join(' ')}] TJ ET${textReset(spacing)}`,
 		);

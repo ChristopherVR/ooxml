@@ -39,8 +39,8 @@ describe('PDF export of italic text in a family without an italic face', () => {
 		const matrices = [...content.matchAll(/1 0 ([\d.]+) -1 [\d.]+ [\d.]+ Tm/g)].map((m) => m[1]);
 		// Regular text stays upright; italic and bold italic lean by Word's slope.
 		expect(matrices).toEqual(['0', '0.333333', '0.333333']);
-		// The text itself is unchanged.
-		expect(content.match(/<00010002>/g)).toHaveLength(3);
+		// The text itself is unchanged (once the TJ offsets of the rounded size are left out).
+		expect(content.replace(/> -?\d+ </g, '').match(/<00010002>/g)).toHaveLength(3);
 	});
 
 	it('does not shear a font that is italic itself, whether or not the host flagged it', async () => {

@@ -34,6 +34,7 @@ import { parseColor, type Rgba } from '../../pdf/write/pdf-svg-style';
 import type { PdfVectorPage } from '../../pdf/write/pdf-vector';
 import { paintContentControlTag } from './pdf-content-control-tag';
 import type { DocxPdfReportBuilder } from './pdf-report';
+import { wordPdfPx } from './pdf-units';
 
 const DEFAULT_FAMILY = 'Calibri';
 /** The slope Word shears a face with when the font family has no italic (measured from its PDF). */
@@ -110,7 +111,8 @@ export class DocxPdfText {
 		gapPx = 0,
 	): void {
 		const font = this.#font(fragment);
-		const baseline = this.baseline(fragment, line, lineTop);
+		// Word puts baselines on whole 1/600 inch steps of the space the text is drawn in.
+		const baseline = wordPdfPx(this.baseline(fragment, line, lineTop));
 		const top = fragment.topPx !== undefined ? lineTop + fragment.topPx : lineTop;
 		if (fragment.contentControlTag) paintContentControlTag(page, fragment, x, top);
 		else if (fragment.background && fragment.widthPx > 0) {
@@ -207,6 +209,8 @@ export class DocxPdfText {
 		gapPx: number,
 	): void {
 		const { family, sizePx } = font;
+		// Word draws the glyphs at the size rounded to 1/600 inch, on the advances of the nominal one.
+		const drawPx = wordPdfPx(sizePx);
 		const bold = !!font.bold;
 		const italic = !!font.italic;
 		const spacing = fragment.characterSpacingPx ?? 0;
@@ -249,6 +253,7 @@ export class DocxPdfText {
 				scale,
 				// The family has no italic face: slant the regular one, as Word does.
 				...(italic && !embedded.italic ? { skew: SYNTHETIC_ITALIC_SKEW } : {}),
+				...(drawPx !== sizePx ? { drawSize: drawPx } : {}),
 				...(space ? { word: wordSpacing(scale, embedded.width(' ') * sizePx) } : {}),
 			});
 			return;
@@ -273,11 +278,13 @@ export class DocxPdfText {
 			symbolBytes === undefined ? pdfBaseFont(substitute, bold, italic) : PDF_SYMBOL_FONT;
 		// Reported by family (Helvetica, Times, Courier): the style follows the text.
 		this.report.substituted(family, base.replace(/-.*$/, ''));
-		const scale = fit(pdfTextWidth(written, base) * sizePx);
-		page.text(base, sizePx, x, y, space ? `${written} ` : written, {
+		// A standard font is fitted to the layout's width with `Tz` anyway, so it is drawn at the
+		// rounded size directly (its `Tj` has no per-glyph offsets).
+		const scale = fit(pdfTextWidth(written, base) * drawPx);
+		page.text(base, drawPx, x, y, space ? `${written} ` : written, {
 			character: spacing,
 			scale,
-			...(space ? { word: wordSpacing(scale, pdfTextWidth(' ', base) * sizePx) } : {}),
+			...(space ? { word: wordSpacing(scale, pdfTextWidth(' ', base) * drawPx) } : {}),
 		});
 	}
 }

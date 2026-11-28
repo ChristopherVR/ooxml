@@ -859,6 +859,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       reference set (letter, three-page table with a repeated header row, header and footer with
       page numbers, footnotes, a landscape section) the page counts and every line break match
       Word's Save as PDF; layouts outside that set are not claimed (#362).
+- [ ] **P2** Save as PDF matches Word's glyph positions to the pixel. Done: text is drawn at Word's
+      size rounded to 1/600 inch (ties up, 11 pt at 11.04) on the line layout and advances of the
+      nominal size (`TJ` offsets with embedded fonts, `Tz` with standard fonts), the page box is
+      rounded the same way (A4 595.32 x 841.92) and each baseline is snapped to a whole 1/600 inch
+      (`src/core/docx/pdf-export/pdf-units.ts`). Open: Word's glyph advances are not the plain
+      unrounded advances (0.075 pt rms apart, and no rounding model tried fits better), and its
+      line pitch varies by one unit around the nominal height in a way the snapping only
+      approximates (#382).
 - [x] **P1** Save as PDF writes charts and drawing shapes as vector paths with real text (through
       the shared SVG to PDF converter), text boxes with the lines the page engine laid out,
       watermarks (text turned and half transparent, pictures washed out), page borders and line

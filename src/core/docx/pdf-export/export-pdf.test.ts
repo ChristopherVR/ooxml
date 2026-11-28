@@ -102,9 +102,12 @@ describe('exportDocxPdf', () => {
 		expect(pdf.raw).toContain('/Subtype /Type0');
 		expect(pdf.raw).toContain('/FontFile2');
 		expect(pdf.raw).toContain('/ToUnicode');
-		// AB  then BA: the glyphs get CIDs in first use, the space stretched by kerning.
-		expect(pdf.content).toMatch(/\[<00010002> <0003> -?[\d.]+\] TJ/);
-		expect(pdf.content).toMatch(/\[<00020001>\] TJ/);
+		// AB  then BA: the glyphs get CIDs in first use, the space stretched by kerning. Drawn at
+		// 9.96 pt (Word's 1/600 inch size for 10 pt), each glyph is moved back onto its 10 pt
+		// advance with a whole TJ offset.
+		expect(pdf.content).toContain('/E0 13.28 Tf');
+		expect(pdf.content).toMatch(/\[<0001> -\d+ <0002> -\d+ <0003> -?[\d.]+\] TJ/);
+		expect(pdf.content).toMatch(/\[<0002> -\d+ <0001> -\d+\] TJ/);
 		expect(report.embeddedFonts).toEqual(['Synth']);
 		expect(report.substitutedFonts).toEqual([]);
 	});

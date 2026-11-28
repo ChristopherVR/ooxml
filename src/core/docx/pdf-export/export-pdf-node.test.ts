@@ -42,7 +42,8 @@ describe('exportDocxPdf without a DOM', () => {
 		const tagged = await exported('content-control-tags');
 		const control = await exported('content-control-tags-control');
 		expect(tagged.text.match(/\bCondition\b/g)).toHaveLength(40);
-		expect(tagged.content.match(/ 10\.666667 Tf [^\n]*\(Condition\) Tj/g)).toHaveLength(40);
+		// 8 pt tag titles, drawn at Word's 8.04 pt (10.72 px).
+		expect(tagged.content.match(/ 10\.72 Tf [^\n]*\(Condition\) Tj/g)).toHaveLength(40);
 		expect(
 			tagged.content.match(/0\.92549 0\.94902 0\.968627 rg\n0\.627451 0\.745098 0\.843137 RG\n/g) ??
 				[],
