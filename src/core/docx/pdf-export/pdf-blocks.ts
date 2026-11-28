@@ -154,6 +154,45 @@ export function paintParagraph(
 	hooks?.endParagraph();
 }
 
+type TableRow = LayoutTableBox['rows'][number];
+
+function cellGeometry(box: LayoutTableBox, row: TableRow, cellIndex: number) {
+	return (
+		row.geometry?.[cellIndex] ?? {
+			xPx: (cellIndex * (box.widthPx ?? 0)) / Math.max(1, row.cells.length),
+			widthPx: (box.widthPx ?? 0) / Math.max(1, row.cells.length),
+			paddingLeftPx: 0,
+			paddingRightPx: 0,
+			contentHeightPx: 0,
+		}
+	);
+}
+
+/**
+ * Every cell's shading, before any row's text: a vertically merged cell draws its text down over
+ * the rows it spans, and a later row's shading painted after it would cover that text.
+ */
+function paintCellShading(
+	painter: DocxPdfPainter,
+	box: LayoutTableBox,
+	tableX: number,
+	tableY: number,
+): void {
+	const { page, hooks } = painter;
+	let started = false;
+	for (const row of box.rows) {
+		row.cells.forEach((_cell, cellIndex) => {
+			const geometry = cellGeometry(box, row, cellIndex);
+			if (!geometry.shading || !fillWith(page, geometry.shading, 'transparent')) return;
+			if (!started) hooks?.decoration();
+			started = true;
+			page.rect(tableX + geometry.xPx, tableY + row.yPx, geometry.widthPx, row.heightPx);
+			page.op('f');
+		});
+	}
+	if (started) hooks?.close();
+}
+
 export function paintTable(
 	painter: DocxPdfPainter,
 	box: LayoutTableBox,
@@ -165,6 +204,7 @@ export function paintTable(
 	const tableX = originX + (box.xPx ?? 0);
 	const tableY = originY + box.yPx;
 	hooks?.beginTable(box.blockId, withText, tableX, tableY, box.heightPx);
+	paintCellShading(painter, box, tableX, tableY);
 	box.rows.forEach((row, rowIndex) => {
 		const rowY = tableY + row.yPx;
 		const lastRow = rowIndex === box.rows.length - 1;
@@ -172,20 +212,10 @@ export function paintTable(
 		row.cells.forEach((paragraphs, cellIndex) => {
 			hooks?.beginCell(cellIndex, tableX, rowY, row.heightPx);
 			hooks?.decoration();
-			const geometry = row.geometry?.[cellIndex] ?? {
-				xPx: (cellIndex * (box.widthPx ?? 0)) / Math.max(1, row.cells.length),
-				widthPx: (box.widthPx ?? 0) / Math.max(1, row.cells.length),
-				paddingLeftPx: 0,
-				paddingRightPx: 0,
-				contentHeightPx: 0,
-			};
+			const geometry = cellGeometry(box, row, cellIndex);
 			const x = tableX + geometry.xPx;
 			const width = geometry.widthPx;
 			const height = row.heightPx;
-			if (geometry.shading && fillWith(page, geometry.shading, 'transparent')) {
-				page.rect(x, rowY, width, height);
-				page.op('f');
-			}
 			const borders = geometry.borders;
 			const lastCell = cellIndex === row.cells.length - 1;
 			drawBorder(page, borders?.top, x, rowY, width, true);
