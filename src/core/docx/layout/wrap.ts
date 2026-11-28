@@ -25,12 +25,17 @@ export function wrapsText(float: Pick<LayoutFloatBox, 'wrap'>): boolean {
 
 /** The area a wrapped floating object takes from the text, with Word's default side distance. */
 export function floatExclusion(
-	float: Pick<LayoutFloatBox, 'xPx' | 'yPx' | 'widthPx' | 'heightPx' | 'wrap' | 'wrapText'>,
+	float: Pick<
+		LayoutFloatBox,
+		'xPx' | 'yPx' | 'widthPx' | 'heightPx' | 'wrap' | 'wrapText' | 'wrapSidesPx'
+	>,
 ): Exclusion {
+	const left = float.wrapSidesPx?.left ?? SIDE_DISTANCE_PX;
+	const right = float.wrapSidesPx?.right ?? SIDE_DISTANCE_PX;
 	return {
-		xPx: float.xPx - SIDE_DISTANCE_PX,
+		xPx: float.xPx - left,
 		yPx: float.yPx,
-		widthPx: float.widthPx + SIDE_DISTANCE_PX * 2,
+		widthPx: float.widthPx + left + right,
 		heightPx: float.heightPx,
 		topAndBottom: float.wrap === 'topAndBottom',
 		...(float.wrapText === 'bothSides' ? { bothSides: true } : {}),

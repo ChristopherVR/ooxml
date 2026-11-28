@@ -37,9 +37,13 @@ import { parseInkGraphic, WORD_INK_GRAPHIC_URI } from './ink';
 
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+const MC_NS = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
+const WP14_NS = 'http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing';
 const WPS_NS = 'http://schemas.microsoft.com/office/word/2010/wordprocessingShape';
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const PICTURE_GRAPHIC_URI = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
+/** Word's default `distL`/`distR`, 1/8 in. */
+const DEFAULT_WRAP_DISTANCE_PX = 12;
 /** 914400 EMU per inch, 96 CSS px per inch. */
 export { EMU_PER_PIXEL } from './units';
 import { EMU_PER_PIXEL } from './units';
@@ -62,6 +66,33 @@ function firstNS(
 		if (isElement(child) && child.namespaceURI === ns && child.localName === local) return child;
 	return undefined;
 }
+/**
+ * A child of `wp:anchor` by name, looking inside `mc:AlternateContent` when it is not a direct
+ * child: the `wp14` choice Word 2010+ reads first, then the fallback.
+ */
+function anchorChild(anchor: XmlElement, local: string): XmlElement | undefined {
+	const direct = firstNS(anchor, WP_NS, local);
+	if (direct) return direct;
+	for (const content of Array.from(anchor.childNodes))
+		if (
+			isElement(content) &&
+			content.namespaceURI === MC_NS &&
+			content.localName === 'AlternateContent'
+		)
+			for (const branch of ['Choice', 'Fallback']) {
+				const holder = firstNS(content, MC_NS, branch);
+				const found = holder && firstNS(holder, WP_NS, local);
+				if (found) return found;
+			}
+	return undefined;
+}
+
+/** `wp14:pctPos*Offset` (thousandths of a percent) as a percentage. */
+function percentOffset(position: XmlElement | undefined, local: string): number | undefined {
+	const text = firstNS(position, WP14_NS, local)?.textContent?.trim();
+	return text && /^-?\d+$/.test(text) ? Number(text) / 1000 : undefined;
+}
+
 function descendantNS(
 	parent: XmlElement | undefined,
 	ns: string,
@@ -306,7 +337,7 @@ function parsePlacement(anchor: XmlElement): PicturePlacement {
 	if (/^(1|true|on)$/.test(anchor.getAttribute('behindDoc') ?? '')) placement.behindText = true;
 	if (/^(0|false|off)$/.test(anchor.getAttribute('layoutInCell') ?? ''))
 		placement.layoutInCell = false;
-	const positionH = firstNS(anchor, WP_NS, 'positionH');
+	const positionH = anchorChild(anchor, 'positionH');
 	const relativeFrom = enumValue(
 		isStRelFromH,
 		positionH?.getAttribute('relativeFrom'),
@@ -324,7 +355,9 @@ function parsePlacement(anchor: XmlElement): PicturePlacement {
 		placement.align = align;
 	const offset = firstNS(positionH, WP_NS, 'posOffset')?.textContent?.trim();
 	if (offset && /^-?\d+$/.test(offset)) placement.offsetXPx = emuToPx(offset);
-	const positionV = firstNS(anchor, WP_NS, 'positionV');
+	const percentX = percentOffset(positionH, 'pctPosHOffset');
+	if (percentX !== undefined) placement.offsetXPercent = percentX;
+	const positionV = anchorChild(anchor, 'positionV');
 	const relativeFromV = enumValue(
 		isStRelFromV,
 		positionV?.getAttribute('relativeFrom'),
@@ -342,6 +375,25 @@ function parsePlacement(anchor: XmlElement): PicturePlacement {
 		placement.alignV = alignV;
 	const offsetV = firstNS(positionV, WP_NS, 'posOffset')?.textContent?.trim();
 	if (offsetV && /^-?\d+$/.test(offsetV)) placement.offsetYPx = emuToPx(offsetV);
+	const percentY = percentOffset(positionV, 'pctPosVOffset');
+	if (percentY !== undefined) placement.offsetYPercent = percentY;
+	// Text keeps `distL`/`distR` plus the `wp:effectExtent` margins clear of a wrapping object.
+	if (wrap !== 'none' && wrap !== 'topAndBottom') {
+		const extent = firstNS(anchor, WP_NS, 'effectExtent');
+		const side = (element: XmlElement | undefined, name: string) => {
+			const value = element?.getAttribute(name);
+			return value && /^\d+$/.test(value) ? emuToPx(value) : undefined;
+		};
+		const left = side(anchor, 'distL');
+		const right = side(anchor, 'distR');
+		const effectLeft = side(extent, 'l') ?? 0;
+		const effectRight = side(extent, 'r') ?? 0;
+		if (left !== undefined || right !== undefined || effectLeft || effectRight)
+			placement.wrapSidesPx = {
+				left: (left ?? DEFAULT_WRAP_DISTANCE_PX) + effectLeft,
+				right: (right ?? DEFAULT_WRAP_DISTANCE_PX) + effectRight,
+			};
+	}
 	return placement;
 }
 

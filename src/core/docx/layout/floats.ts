@@ -16,6 +16,8 @@ export type FloatFrame = Pick<
 	| 'relativeFromV'
 	| 'alignV'
 	| 'offsetYPx'
+	| 'offsetXPercent'
+	| 'offsetYPercent'
 >;
 
 export interface Span {
@@ -134,11 +136,13 @@ function place(
 	size: number,
 	align: string | undefined,
 	offset: number | undefined,
+	percent?: number,
 ): number {
 	if (align === 'center') return area.start + (area.size - size) / 2;
 	if (align === 'right' || align === 'bottom' || align === 'outside')
 		return area.start + area.size - size;
 	if (align) return area.start;
+	if (percent !== undefined) return area.start + (area.size * percent) / 100;
 	return area.start + (offset ?? 0);
 }
 
@@ -150,8 +154,8 @@ export function placeInFrames(
 	const h = horizontalSpan(float, frames);
 	const v = verticalSpan(float, frames);
 	return {
-		xPx: place(h, float.widthPx, float.alignH, float.offsetXPx),
-		yPx: place(v, float.heightPx, float.alignV, float.offsetYPx),
+		xPx: place(h, float.widthPx, float.alignH, float.offsetXPx, float.offsetXPercent),
+		yPx: place(v, float.heightPx, float.alignV, float.offsetYPx, float.offsetYPercent),
 		originXPx: h.start,
 		originYPx: v.start,
 	};
@@ -259,6 +263,7 @@ export function floatBox(
 		behindText: Boolean(float.behindText),
 		...(float.wrap ? { wrap: float.wrap } : {}),
 		...(float.wrapText ? { wrapText: float.wrapText } : {}),
+		...(float.wrapSidesPx ? { wrapSidesPx: float.wrapSidesPx } : {}),
 		...(inCell ? { inCell: true } : {}),
 	};
 }

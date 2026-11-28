@@ -109,6 +109,11 @@ export interface LayoutFloat extends LayoutObject {
 	relativeFromV?: string;
 	alignV?: 'top' | 'center' | 'bottom' | 'inside' | 'outside';
 	offsetYPx?: number;
+	/** `wp14:pctPosHOffset` / `pctPosVOffset`: the offset as a percentage of its frame. */
+	offsetXPercent?: number;
+	offsetYPercent?: number;
+	/** Clear space left and right of a wrapping object (`distL`/`distR` plus `effectExtent`). */
+	wrapSidesPx?: { left: number; right: number };
 	behindText?: boolean;
 	wrap?: string;
 	/** `wrapText` of a square, tight or through wrap (bothSides, left, right, largest). */

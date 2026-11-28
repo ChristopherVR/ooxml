@@ -20,6 +20,8 @@ export function drawingPosition(image: InlineImage, position: DrawingPosition): 
 	const {
 		offsetXPx: _x,
 		offsetYPx: _y,
+		offsetXPercent: _px,
+		offsetYPercent: _py,
 		...placement
 	} = placementForWrap(image.anchored ? image.placement : undefined, 'square');
 	return {
@@ -53,10 +55,10 @@ export function alignDrawingToPage(
 	alignment: DrawingAlignment,
 ): PicturePlacement {
 	if (alignment === 'left' || alignment === 'center' || alignment === 'right') {
-		const { offsetXPx: _offset, ...rest } = placement;
+		const { offsetXPx: _offset, offsetXPercent: _percent, ...rest } = placement;
 		return { ...rest, relativeFrom: target, align: alignment };
 	}
-	const { offsetYPx: _offset, ...rest } = placement;
+	const { offsetYPx: _offset, offsetYPercent: _percent, ...rest } = placement;
 	return { ...rest, relativeFromV: target, alignV: alignment === 'middle' ? 'center' : alignment };
 }
 
@@ -125,11 +127,13 @@ export function placeDrawingBox(
 	const next = { ...placement };
 	if (!origins || origins.x !== undefined) {
 		delete next.align;
+		delete next.offsetXPercent;
 		if (!origins) next.relativeFrom = 'page';
 		next.offsetXPx = box.x - (origins?.x ?? 0);
 	}
 	if (!origins || origins.y !== undefined) {
 		delete next.alignV;
+		delete next.offsetYPercent;
 		if (!origins) next.relativeFromV = 'page';
 		next.offsetYPx = box.y - (origins?.y ?? 0);
 	}

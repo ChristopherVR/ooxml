@@ -155,6 +155,15 @@ export interface PicturePlacement {
 	offsetYPx?: number;
 	/** `wp:positionV/@relativeFrom`, e.g. `paragraph`, `page` or `margin`. */
 	relativeFromV?: StRelFromV;
+	/** `wp14:pctPosHOffset`: the horizontal offset as a percentage of the `relativeFrom` area. */
+	offsetXPercent?: number;
+	/** `wp14:pctPosVOffset`: the vertical offset as a percentage of the `relativeFromV` area. */
+	offsetYPercent?: number;
+	/**
+	 * Clear space in CSS pixels between a wrapping object and text at its left and right: `distL` and
+	 * `distR` (1/8 in when absent) plus the `wp:effectExtent` margin on that side.
+	 */
+	wrapSidesPx?: { left: number; right: number };
 	/**
 	 * `layoutInCell="0"`: an object anchored in a table cell is positioned on the page instead of in
 	 * the cell. Word honours it only before compatibility mode 15; absent means the default, `1`.

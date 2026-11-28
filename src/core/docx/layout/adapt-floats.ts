@@ -63,6 +63,13 @@ export function paragraphFloats(
 			...(placement?.align ? { alignH: placement.align } : {}),
 			...(placement?.offsetXPx !== undefined ? { offsetXPx: placement.offsetXPx } : {}),
 			...(placement?.relativeFromV ? { relativeFromV: placement.relativeFromV } : {}),
+			...(placement?.offsetXPercent !== undefined
+				? { offsetXPercent: placement.offsetXPercent }
+				: {}),
+			...(placement?.offsetYPercent !== undefined
+				? { offsetYPercent: placement.offsetYPercent }
+				: {}),
+			...(placement?.wrapSidesPx ? { wrapSidesPx: placement.wrapSidesPx } : {}),
 			...(placement?.alignV ? { alignV: placement.alignV } : {}),
 			...(placement?.offsetYPx !== undefined ? { offsetYPx: placement.offsetYPx } : {}),
 			...(placement?.behindText ? { behindText: true } : {}),

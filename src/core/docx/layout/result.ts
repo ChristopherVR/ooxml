@@ -295,6 +295,8 @@ export interface LayoutFloatBox {
 	wrap?: string;
 	/** `wrapText`: which sides of the picture text may use (bothSides, left, right, largest). */
 	wrapText?: string;
+	/** Clear space left and right of the object for wrapping text, from `distL`/`distR` and `effectExtent`. */
+	wrapSidesPx?: { left: number; right: number };
 	/** Laid out in its table cell: the cell's text wraps around it, the page's other text does not. */
 	inCell?: true;
 }
