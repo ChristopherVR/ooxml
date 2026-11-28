@@ -102,6 +102,13 @@ export function paragraphMarkRevision(
 	return undefined;
 }
 
+/** The insertion of a paragraph mark that also holds a deletion (inserted, then deleted). */
+export function paragraphMarkInsertion(pPr: XmlElement | undefined): Revision | undefined {
+	const rPr = first(pPr, 'rPr');
+	const ins = first(rPr, 'ins');
+	return ins && first(rPr, 'del') ? revisionFrom(ins, 'insert') : undefined;
+}
+
 /** Whole-row insertion/deletion, recorded as `w:trPr/w:ins|w:del`. */
 export function rowRevision(trPr: XmlElement | undefined): Revision | undefined {
 	const ins = first(trPr, 'ins');

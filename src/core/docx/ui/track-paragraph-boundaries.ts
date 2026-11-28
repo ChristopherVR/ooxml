@@ -50,6 +50,7 @@ function sameProperties(first: Node, second: Node): boolean {
 		(key) =>
 			key === 'id' ||
 			key === 'markRevision' ||
+			key === 'markInsertion' ||
 			(key === 'sourceParagraphPropertiesXml'
 				? sourceProperties(first.attrs[key]) === sourceProperties(second.attrs[key])
 				: JSON.stringify(first.attrs[key]) === JSON.stringify(second.attrs[key])),

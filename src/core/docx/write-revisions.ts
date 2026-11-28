@@ -139,7 +139,12 @@ export function writeParagraphMarkRevision(
 	paragraph: Paragraph,
 	base?: Paragraph,
 ): void {
-	if (base && JSON.stringify(paragraph.markRevision) === JSON.stringify(base.markRevision)) return;
+	if (
+		base &&
+		JSON.stringify([paragraph.markRevision, paragraph.markInsertion]) ===
+			JSON.stringify([base.markRevision, base.markInsertion])
+	)
+		return;
 	let rPr = first(pPr, 'rPr');
 	if (rPr) for (const name of REVISION_WRAPPER_NAMES) removeChildren(rPr, name);
 	if (!paragraph.markRevision) {
@@ -154,4 +159,10 @@ export function writeParagraphMarkRevision(
 	const element = makeW(doc, revisionTag(revision.kind));
 	writeRevisionMetadata(element, revision);
 	rPr.insertBefore(element, rPr.firstChild);
+	// Inserted, then deleted: both are written, the insertion first.
+	if (paragraph.markInsertion && revision.kind === 'delete') {
+		const insertion = makeW(doc, 'ins');
+		writeRevisionMetadata(insertion, paragraph.markInsertion);
+		rPr.insertBefore(insertion, rPr.firstChild);
+	}
 }

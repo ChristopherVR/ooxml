@@ -91,6 +91,7 @@ function emptied(blocks: Block[], id: string): Block[] {
 	if (!first) return [{ type: 'paragraph', id, runs: [{ text: '' }] }];
 	const {
 		markRevision: _mark,
+		markInsertion: _insertion,
 		formatRevision: _format,
 		bookmarks: _bookmarks,
 		permissions: _permissions,

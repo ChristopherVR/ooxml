@@ -104,6 +104,7 @@ export function createContext(options: ContextOptions): CompareContext {
 			const paragraph: Paragraph = { ...source, runs: [] };
 			for (const key of [
 				'markRevision',
+				'markInsertion',
 				'formatRevision',
 				'contentControl',
 				'bookmarks',

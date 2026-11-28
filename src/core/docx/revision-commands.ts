@@ -111,6 +111,14 @@ function updateRuns(
 	throw new Error(`No run revision with id ${id} was found.`);
 }
 
+/** Keeps the break: a mark inserted and then deleted is left as the insertion, else untracked. */
+function keepMark(paragraph: Paragraph): void {
+	if (paragraph.markRevision?.kind === 'delete' && paragraph.markInsertion)
+		paragraph.markRevision = paragraph.markInsertion;
+	else delete paragraph.markRevision;
+	delete paragraph.markInsertion;
+}
+
 /** Resolve a paragraph boundary using the following paragraph's formatting when merging. */
 export function resolveParagraphMark(
 	model: DocumentModel,
@@ -121,7 +129,7 @@ export function resolveParagraphMark(
 	const paragraph = documentParagraphs(next).find((p) => p.markRevision?.id === id);
 	if (!paragraph) throw new Error(`No paragraph mark revision with id ${id} was found.`);
 	if (keepBreak) {
-		delete paragraph.markRevision;
+		keepMark(paragraph);
 		return next;
 	}
 	for (const blocks of documentBlockLists(next)) {
@@ -137,7 +145,7 @@ export function resolveParagraphMark(
 			if (!list.includes(paragraph)) continue;
 			// A cell's last mark ends the cell: Word never merges it away, so the break stays.
 			if (index > 0 && list.at(-1) === paragraph) {
-				delete paragraph.markRevision;
+				keepMark(paragraph);
 				return next;
 			}
 			const merged = mergeIntoNext(list, paragraph.id);

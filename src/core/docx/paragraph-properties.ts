@@ -24,6 +24,7 @@ export type DirectParagraphProperties = Omit<
 	| 'id'
 	| 'runs'
 	| 'markRevision'
+	| 'markInsertion'
 	| 'formatRevision'
 	| 'bookmarks'
 	| 'restoredParagraphPropertiesXml'

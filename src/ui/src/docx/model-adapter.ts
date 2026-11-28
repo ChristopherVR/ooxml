@@ -226,6 +226,7 @@ export function docToModel(
 			(previous.restoredParagraphPropertiesXml ?? null) ===
 				(node.attrs.restoredParagraphPropertiesXml ?? null) &&
 			sameJson(previous.markRevision ?? null, node.attrs.markRevision ?? null) &&
+			sameJson(previous.markInsertion ?? null, node.attrs.markInsertion ?? null) &&
 			sameJson(previous.formatRevision ?? null, node.attrs.formatRevision ?? null) &&
 			sameRuns(previous.runs, runs) &&
 			previous.align === (node.attrs.align ?? undefined) &&

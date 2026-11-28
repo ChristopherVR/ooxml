@@ -62,6 +62,7 @@ const OWN = [
 	'bookmarks',
 	'permissions',
 	'markRevision',
+	'markInsertion',
 	'formatRevision',
 	'sourceParagraphPropertiesXml',
 	'restoredParagraphPropertiesXml',

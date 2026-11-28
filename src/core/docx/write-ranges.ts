@@ -41,6 +41,7 @@ export function annotationIdAllocator(doc: XmlDocument, blocks: Block[]): () => 
 			};
 			forEachParagraph(blocks, (paragraph) => {
 				reserve(paragraph.markRevision?.id);
+				reserve(paragraph.markInsertion?.id);
 				for (const run of paragraph.runs) reserve(run.revision?.id);
 			});
 			for (const element of Array.from(doc.getElementsByTagNameNS(WORD_NS, '*')))

@@ -28,6 +28,7 @@ import {
 	collectParagraphRuns,
 	type OpenMoves,
 	paragraphFormatRevision,
+	paragraphMarkInsertion,
 	paragraphMarkRevision,
 	runFormatRevision,
 } from './parse-revisions';
@@ -261,6 +262,8 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 	readParagraphPermissionMarkers(node, paragraph);
 	const markRevision = paragraphMarkRevision(props, runs, openMoves);
 	if (markRevision) paragraph.markRevision = markRevision;
+	const markInsertion = paragraphMarkInsertion(props);
+	if (markInsertion) paragraph.markInsertion = markInsertion;
 	const formatRevision = paragraphFormatRevision(props);
 	if (formatRevision) paragraph.formatRevision = formatRevision;
 	Object.assign(paragraph, parseDirectParagraphProperties(props));

@@ -137,6 +137,7 @@ export const schema = new Schema({
 			group: 'block',
 			attrs: {
 				markRevision: { default: null },
+				markInsertion: { default: null },
 				formatRevision: { default: null },
 				restoredParagraphPropertiesXml: { default: null },
 				sourceParagraphPropertiesXml: { default: null },

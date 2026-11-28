@@ -175,5 +175,6 @@ export function validateParagraph(c: Checker, paragraph: Paragraph): void {
 	}
 	paragraph.tabStops?.forEach((stop, index) => validateTabStop(c.at(`.tabStops[${index}]`), stop));
 	validateRevision(c, 'markRevision', paragraph.markRevision);
+	validateRevision(c, 'markInsertion', paragraph.markInsertion);
 	paragraph.runs.forEach((run, index) => validateRun(c.at(`.runs[${index}]`), run));
 }

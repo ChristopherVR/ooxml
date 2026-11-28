@@ -20,6 +20,7 @@ export function numberRevisionIds(model: DocumentModel, reservedMax = -1): Docum
 	for (const blocks of documentBlockLists(model))
 		mapBlockParagraphs(blocks, (paragraph) => {
 			collect(paragraph.markRevision);
+			collect(paragraph.markInsertion);
 			collect(paragraph.formatRevision);
 			for (const run of paragraph.runs) {
 				collect(run.revision);
@@ -45,6 +46,7 @@ export function numberRevisionIds(model: DocumentModel, reservedMax = -1): Docum
 	const paragraph = (block: Paragraph): Paragraph => ({
 		...block,
 		...(block.markRevision ? { markRevision: rename(block.markRevision) } : {}),
+		...(block.markInsertion ? { markInsertion: rename(block.markInsertion) } : {}),
 		...(block.formatRevision ? { formatRevision: rename(block.formatRevision) } : {}),
 		runs: block.runs.map((run) => ({
 			...run,

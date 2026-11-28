@@ -77,6 +77,12 @@ export interface Paragraph {
 	pageBreakBefore?: boolean;
 	/** Tracked insertion/deletion of the paragraph mark itself (the paragraph break). */
 	markRevision?: Revision;
+	/**
+	 * The insertion of a paragraph mark that was then deleted with tracking (`w:ins` and `w:del`
+	 * together): `markRevision` is the deletion, this is the insertion kept for saving, and for
+	 * rejecting the deletion.
+	 */
+	markInsertion?: Revision;
 	/** Tracked paragraph formatting, including the prior `w:pPr` XML snapshot. */
 	formatRevision?: Revision;
 	/** Custom tab stops (`w:tabs`), in document order. */
