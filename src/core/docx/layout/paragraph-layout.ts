@@ -25,10 +25,26 @@ import { cachedParagraphLayout } from './paragraph-cache';
 
 // Word 16 mode 15 probes in Courier New, Times New Roman, Arial and Arial Narrow.
 // The line can give up a quarter of its spaces, with a smaller budget for a short next word.
-// Word 16 sweeps in Century Gothic (issue #369) keep "a" and "at" at 0.364 of word plus space and
-// drop them by 0.383, so the word part sits between those.
+// Word 16 sweeps (issues #369 and #381, six fonts, 2 to 26 spaces) put the word part at
+// (0.3325 + 0.25 / N) of the word plus its preceding space, N the spaces on the line before the
+// word (that one included): 0.374 with 6 spaces, 0.345 with 20, whatever the font or size.
 const SPACE_SHRINK = 0.25;
-const WORD_SHRINK = 0.375;
+const WORD_SHRINK = 0.3325;
+const WORD_SHRINK_PER_SPACE = 0.25;
+
+/**
+ * How far a justified line holding `spaceCount` spaces `spacePx` wide may squeeze them to keep a
+ * word `wordPx` wide (with the space before it) at its end.
+ */
+export function justifiedSqueezeBudgetPx(
+	spacePx: number,
+	spaceCount: number,
+	wordPx: number,
+): number {
+	if (spacePx <= 0) return 0;
+	const wordShrink = WORD_SHRINK + WORD_SHRINK_PER_SPACE / Math.max(1, spaceCount);
+	return Math.min(spacePx * SPACE_SHRINK, wordPx * wordShrink);
+}
 
 export interface ParagraphLayoutResult {
 	/** Lines with `yPx` relative to the paragraph box's own top (0 for the first line). */
@@ -142,6 +158,7 @@ function measureParagraph(
 	let lineWidthPx = 0;
 	// Width of the spaces on the current line: justified text may squeeze them to fit one more word.
 	let lineSpacePx = 0;
+	let lineSpaceCount = 0;
 	// Where the current line continues past a picture, and how far its later fragments move for it.
 	let jump: { index: number; shiftPx: number } | undefined;
 	// How far a line holding a positional tab relative to the margins may reach: to the margin.
@@ -327,6 +344,7 @@ function measureParagraph(
 		placed = [];
 		lineWidthPx = 0;
 		lineSpacePx = 0;
+		lineSpaceCount = 0;
 		keepLeadingSpaces = false;
 		jump = undefined;
 		marginReachPx = 0;
@@ -492,9 +510,8 @@ function measureParagraph(
 		const squeezePx =
 			effectiveAlign === 'justify' &&
 			paragraph.squeezeJustifiedSpaces !== false &&
-			token.kind === 'word' &&
-			lineSpacePx > 0
-				? Math.min(lineSpacePx * SPACE_SHRINK, wholeWordPx(tokenIndex, advance) * WORD_SHRINK)
+			token.kind === 'word'
+				? justifiedSqueezeBudgetPx(lineSpacePx, lineSpaceCount, wholeWordPx(tokenIndex, advance))
 				: 0;
 		// A nearly fitting final line of a justified text box should not turn into
 		// a stretched nonfinal line. Leave normal word-break decisions alone.
@@ -613,7 +630,10 @@ function measureParagraph(
 		if (fits && squeezePx > wordTolerance && lineWidthPx + advance > limit + wordTolerance)
 			squeezedLines.add(lineIndex);
 		lineWidthPx += token.kind === 'tab' ? width : advance + spacePx;
-		if (token.kind === 'space') lineSpacePx += advance;
+		if (token.kind === 'space') {
+			lineSpacePx += advance;
+			lineSpaceCount++;
+		}
 	}
 	// A cell's terminal paragraph with no content consists solely of its end mark.
 	const hiddenCellMark = paragraph.hideCellEndMark && tokens.length === 0;

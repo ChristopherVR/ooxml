@@ -163,8 +163,9 @@ describe('Word line break references', () => {
 	])(
 		'keeps a short last word $word squeezed by $shrinkPt pt: $fits',
 		({ word, shrinkPt, fits }) => {
-			// Word 16 keeps "a" and "at" at 0.364 of word plus space and drops them by 0.383 (issue #369).
-			const prefix = '0000 aa aa aa aa aa aa aa aa aa';
+			// Word 16 keeps "a" and "at" at 0.364 of word plus space and drops them by 0.383 on a line of
+			// 7 spaces (issue #369); the factor falls as the line holds more spaces (issue #381).
+			const prefix = '0000 aa aa aa aa aa aa';
 			const first = `${prefix} ${word}`;
 			expect(wraps(`${first} extra`, first.length * 7.2 - shrinkPt, { align: 'justify' })[0]).toBe(
 				fits ? first : prefix,
