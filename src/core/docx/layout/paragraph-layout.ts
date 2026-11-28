@@ -464,10 +464,7 @@ function measureParagraph(
 			// The text after a legacy marker starts at its legacy indent, not at a tab stop.
 			const legacy = expectDefined(paragraph.runs[token.runIndex]?.marker?.legacy, 'legacy');
 			const here = lineStart(lines.length) + lineWidthPx;
-			width = Math.max(
-				0,
-				legacyTextStartPx(lineStart(lines.length), here, legacy) - here,
-			);
+			width = Math.max(0, legacyTextStartPx(lineStart(lines.length), here, legacy) - here);
 		} else if (token.kind === 'tab') {
 			const { followingPx, beforeDecimalPx } = segmentAfter(tokenIndex);
 			const tab = placeTab(

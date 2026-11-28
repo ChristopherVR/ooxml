@@ -47,7 +47,11 @@ it('measures the legacy indent from the number start, not the margin', async () 
 it('leaves at least legacySpace between the number and the text', async () => {
 	const model = await load();
 	const level = at(Object.values(model.numberingCatalog?.abstractNums['0']?.levels ?? {}), 0);
-	level.legacy = { enabled: true, indentTwips: level.legacy?.indentTwips ?? 0, spaceTwips: 600 } as never;
+	level.legacy = {
+		enabled: true,
+		indentTwips: level.legacy?.indentTwips ?? 0,
+		spaceTwips: 600,
+	} as never;
 	// The bullet's own width plus 600 twips (40px) is further than the 283 twip indent.
 	expect(textX(model)).toBeGreaterThan(40);
 });

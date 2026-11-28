@@ -82,7 +82,9 @@ export function parseNumberingLevel(lvl: XmlElement): NumberingLevelDefinition {
 		const indent = parseTwips(getW(legacy, 'legacyIndent'));
 		const space = parseTwips(getW(legacy, 'legacySpace'));
 		result.legacy = {
-			...(['1', 'true', 'on'].includes(getW(legacy, 'legacy') ?? '') ? { enabled: true as const } : {}),
+			...(['1', 'true', 'on'].includes(getW(legacy, 'legacy') ?? '')
+				? { enabled: true as const }
+				: {}),
 			...(indent !== undefined ? { indentTwips: indent } : {}),
 			...(space !== undefined ? { spaceTwips: space } : {}),
 		};
