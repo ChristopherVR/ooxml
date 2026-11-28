@@ -67,6 +67,8 @@ export interface PdfTextSpacing {
 	character?: number;
 	/** Horizontal scaling in percent (`Tz`), so a run can be fitted to a measured width. */
 	scale?: number;
+	/** Embedded text only: the glyph to write for a one-character text (a colour layer). */
+	glyph?: number;
 	/** Invisible text (render mode 3): selectable and searchable over a picture of it. */
 	invisible?: boolean;
 	/** Horizontal shear of the text matrix (a synthetic oblique): the glyphs lean right by this slope. */
@@ -261,7 +263,8 @@ export class PdfVectorPage {
 		const parts: string[] = [];
 		let run = '';
 		chars.forEach((char, index) => {
-			run += font.encode(char);
+			run +=
+				spacing.glyph === undefined ? font.encode(char) : font.encodeGlyph!(spacing.glyph, char);
 			const offset =
 				(corrections?.[index] ?? 0) + (kerning?.[index] ?? 0) + (char === ' ' ? word : 0);
 			if (!offset) return;

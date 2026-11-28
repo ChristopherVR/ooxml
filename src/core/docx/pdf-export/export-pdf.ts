@@ -306,7 +306,11 @@ export async function exportDocxPdf(
 		measurer,
 		report,
 		symbols,
+		await import('./pdf-missing-glyph-boxes'),
 	);
+	// Colour glyphs (emoji) load only with a supplied font that has colour layers.
+	if (text.fonts.fonts.some((face) => face.font.tables.has('COLR')))
+		text.colour = await import('./pdf-colour-glyphs');
 	const pictures = new DocxPdfPictures(options.media, options.decodePicture, report);
 	pictures.drawings = new DocxPdfDrawings(pictures, text, report);
 	for (const index of indices) {

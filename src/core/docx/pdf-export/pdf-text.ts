@@ -26,7 +26,6 @@ import {
 	pdfTextWidth,
 } from '../../pdf/write/pdf-fonts';
 import { isSymbolEncodedFont } from '../../text/index';
-import type { SymbolMissingGlyph } from '../../text/symbol-fonts';
 
 /** The symbol-font conversions the text writer uses, loaded with the PDF export's glyph tables. */
 export type DocxPdfSymbolTables = Pick<
@@ -89,6 +88,8 @@ function pairAdjustments(font: PdfCidFont, text: string): number[] | undefined {
 }
 
 export class DocxPdfText {
+	/** Colour glyph drawing, set when a supplied font has `COLR` and `CPAL` tables. */
+	colour: typeof import('./pdf-colour-glyphs') | undefined;
 	/** Off while a watermark is drawn: Word draws those as outlines of the face, never emboldened. */
 	emboldenMissingBold = true;
 	constructor(
@@ -96,6 +97,8 @@ export class DocxPdfText {
 		readonly measurer: TextMeasurer,
 		readonly report: DocxPdfReportBuilder,
 		readonly symbols?: DocxPdfSymbolTables,
+		/** The missing-glyph box drawing, loaded with the symbol tables. */
+		readonly boxes?: typeof import('./pdf-missing-glyph-boxes'),
 	) {}
 
 	/** The font a fragment is drawn in, at its drawn size (scripts are smaller). */
@@ -260,62 +263,6 @@ export class DocxPdfText {
 	}
 
 	/**
-	 * Text in the standard Symbol font that has codes with no glyph: each of those is drawn as the
-	 * font's missing-glyph box (an outlined rectangle), the rest as usual, all fitted to the width
-	 * the layout gave the fragment.
-	 */
-	#withMissingGlyphs(
-		page: PdfVectorPage,
-		text: string,
-		font: LayoutFontSpec,
-		x: number,
-		y: number,
-		fragment: LayoutFragment,
-		gapPx: number,
-	): void {
-		const missingOf = this.symbols!.symbolMissingGlyph;
-		const parts: { text: string; missing: SymbolMissingGlyph | undefined; width: number }[] = [];
-		for (const char of text) {
-			const missing = missingOf(font.family, char);
-			const last = parts[parts.length - 1];
-			if (last && last.missing === missing) last.text += char;
-			else parts.push({ text: char, missing, width: 0 });
-		}
-		for (const part of parts) {
-			part.width = part.missing
-				? [...part.text].length * font.sizePx * part.missing.advance
-				: this.measurer.widthOf(part.text, font);
-		}
-		const natural = parts.reduce((sum, part) => sum + part.width, 0);
-		if (natural <= 0) return;
-		let left = x;
-		for (const [index, part] of parts.entries()) {
-			const widthPx = (fragment.widthPx * part.width) / natural;
-			if (part.missing) {
-				const count = [...part.text].length;
-				for (let at = 0; at < count; at++) {
-					const shape = part.missing;
-					// The font's own proportions, stretched with the fragment to the width it was given.
-					const stretch = widthPx / count / (shape.advance * font.sizePx);
-					const em = font.sizePx;
-					const boxLeft = left + at * (widthPx / count) + shape.left * em * stretch;
-					const boxWidth = shape.width * em * stretch;
-					const height = shape.height * em;
-					const wall = shape.wall * em;
-					const wallX = wall * stretch;
-					page.rect(boxLeft, y - height, boxWidth, height);
-					page.rect(boxLeft + wallX, y - height + wall, boxWidth - 2 * wallX, height - 2 * wall);
-					page.op('f*');
-				}
-			} else {
-				const last = index === parts.length - 1;
-				this.#text(page, part.text, font, left, y, { ...fragment, widthPx }, last ? gapPx : 0);
-			}
-			left += widthPx;
-		}
-	}
-
-	/**
 	 * The run's own font for text with private-use characters it has no glyph for: Word draws such
 	 * a character with the font's missing-glyph glyph (glyph 0) and keeps the rest of the word in
 	 * the font (#430), where no font covering all of `text` would write it all as `?` in a standard
@@ -376,7 +323,19 @@ export class DocxPdfText {
 			[...text].some((char) => this.symbols!.symbolMissingGlyph(family, char)) &&
 			!this.fonts.pick(family, bold, italic, text)
 		) {
-			this.#withMissingGlyphs(page, text, font, x, y, fragment, gapPx);
+			this.boxes!.drawWithMissingGlyphs(
+				page,
+				text,
+				font,
+				x,
+				y,
+				fragment,
+				gapPx,
+				this.symbols.symbolMissingGlyph,
+				this.measurer,
+				(piece, left, widthPx, gap) =>
+					this.#text(page, piece, font, left, y, { ...fragment, widthPx }, gap),
+			);
 			return;
 		}
 		const ascii = symbolBytes ?? encodeWinAnsi(text);
@@ -401,7 +360,7 @@ export class DocxPdfText {
 				if (pen) page.strokeColor(pen.r, pen.g, pen.b);
 				page.lineStyle(drawPx * SYNTHETIC_BOLD_EM, 0, 0);
 			}
-			page.embeddedText(embedded, sizePx, x, y, space ? `${text} ` : text, {
+			const options = {
 				...(embolden ? { emboldened: true } : {}),
 				character: spacing,
 				...(kerning?.some(Boolean) ? { kerning } : {}),
@@ -410,7 +369,14 @@ export class DocxPdfText {
 				...(italic && !embedded.italic ? { skew: SYNTHETIC_ITALIC_SKEW } : {}),
 				...(drawPx !== sizePx ? { drawSize: drawPx } : {}),
 				...(space ? { word: wordSpacing(scale, embedded.width(' ') * sizePx) } : {}),
-			});
+			};
+			const shown = space ? `${text} ` : text;
+			// A colour glyph (COLR/CPAL) is drawn as its coloured layers, never as the base outline.
+			// A colour glyph (COLR/CPAL) is drawn as its coloured layers, never as the base outline.
+			if (
+				!this.colour?.drawColourText(page, embedded, sizePx, x, y, shown, options, fragment.color)
+			)
+				page.embeddedText(embedded, sizePx, x, y, shown, options);
 			if (embolden) page.restore();
 			return;
 		}

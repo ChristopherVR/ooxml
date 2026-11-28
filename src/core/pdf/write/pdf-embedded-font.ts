@@ -121,18 +121,19 @@ export class PdfEmbeddedFont implements PdfCidFont {
 	/** `text` as the hex digits of 2-byte CIDs (no angle brackets); marks the glyphs as used. */
 	encode(text: string): string {
 		let out = '';
-		for (const char of text) {
-			const glyph = this.#glyph(char);
-			let cid = this.#cids.get(glyph);
-			if (cid === undefined) {
-				cid = this.#used.length + 1;
-				this.#cids.set(glyph, cid);
-				this.#used.push(glyph);
-				this.#codes.push(char === ' ' ? 32 : char.codePointAt(0)!);
-			}
-			out += cid.toString(16).padStart(4, '0');
-		}
+		for (const char of text) out += this.encodeGlyph(this.#glyph(char), char);
 		return out;
+	}
+	/** One glyph as the hex digits of a CID, standing for `char` in the ToUnicode map. */
+	encodeGlyph(glyph: number, char: string): string {
+		let cid = this.#cids.get(glyph);
+		if (cid === undefined) {
+			cid = this.#used.length + 1;
+			this.#cids.set(glyph, cid);
+			this.#used.push(glyph);
+			this.#codes.push(char === ' ' ? 32 : char.codePointAt(0)!);
+		}
+		return cid.toString(16).padStart(4, '0');
 	}
 	get used(): boolean {
 		return this.#used.length > 0;

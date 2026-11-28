@@ -15,6 +15,8 @@ export interface PdfCidFont {
 	kern?(left: string, right: string): number;
 	/** `text` as the hex digits of 2-byte CIDs (no angle brackets); marks the glyphs as used. */
 	encode(text: string): string;
+	/** One glyph as the hex digits of a CID, standing for `char` in the ToUnicode map. */
+	encodeGlyph?(glyph: number, char: string): string;
 	/** Everything the PDF needs to write the font objects. */
 	build(): PdfFontParts;
 }
