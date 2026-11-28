@@ -10,6 +10,7 @@ import {
 	contentControlTagStyle,
 	contentControlTagTitleOffset,
 	fontMetrics,
+	kerningMode,
 	ptToPx,
 	type LayoutFontSpec,
 	type LayoutFragment,
@@ -32,13 +33,14 @@ export type DocxPdfSymbolTables = Pick<
 	typeof import('../../text/symbol-fonts'),
 	'symbolFontBytes' | 'symbolTextToUnicode' | 'symbolMissingGlyph'
 >;
-import { parseColor, type Rgba } from '../../pdf/write/pdf-svg-style';
+import { cssRgba } from './pdf-css-color';
 import type { PdfVectorPage } from '../../pdf/write/pdf-vector';
-import { kerningMode } from '../layout/paragraph-tokens';
 import { paintContentControlTag } from './pdf-content-control-tag';
 import type { DocxPdfReportBuilder } from './pdf-report';
 import { SMALL_CAPS_SCALE, smallCapsParts } from '../caps-display';
 import { wordBaselinePx, wordPdfPx } from './pdf-units';
+
+export { cssRgba };
 
 const DEFAULT_FAMILY = 'Calibri';
 /** The slope Word shears a face with when the font family has no italic (measured from its PDF). */
@@ -53,16 +55,6 @@ const SYNTHETIC_BOLD_EM = 1 / 35;
 /** Where Word's dot leaders stop short of their tab stop, measured on 10 pt Arial (issue #396). */
 const LEADER_END_GAP_EM = 0.122;
 const LEADERS: Record<string, string> = { dot: '.', hyphen: '-', middleDot: '\u00b7' };
-
-/** A CSS colour (or bare `RRGGBB`) as 0..1 channels; `null` for transparent or unknown. */
-export function cssRgba(color: string | undefined): Rgba | null {
-	if (!color) return null;
-	try {
-		return parseColor(/^[\da-f]{6}$/i.test(color) ? `#${color}` : color);
-	} catch {
-		return null;
-	}
-}
 
 /** Sets the fill colour from a CSS colour; returns false for a transparent one. */
 export function fillWith(

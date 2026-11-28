@@ -6,7 +6,7 @@
  */
 import { fontMetrics, type LayoutPageBox, type TextMeasurer } from '../layout/index';
 import { watermarkSizePt, type PictureWatermarkSpec, type WatermarkSpec } from '../index';
-import { paintWashoutLayer, washedOutResource } from './pdf-pictures';
+import { paintWashoutLayer, washedOutResource } from './pdf-washout';
 import type { DocxPdfPainter } from './pdf-blocks';
 import type { DocxPdfStoryGraphics } from './pdf-story-graphics';
 

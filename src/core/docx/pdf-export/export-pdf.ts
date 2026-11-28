@@ -49,6 +49,7 @@ import {
 } from './pdf-story-graphics';
 import { DocxPdfText } from './pdf-text';
 import { wordPdfPt } from './pdf-units';
+import { pairKerning } from '../../text/truetype/kerning';
 
 export type {
 	DocxPdfFontMeasurement,
@@ -300,6 +301,7 @@ export async function exportDocxPdf(
 			embedAll: !!(options.pdfA || options.pdfUa),
 			substitute: (family) => files.match(family)?.family,
 			symbolGlyph,
+			pairKerning,
 		}),
 		measurer,
 		report,

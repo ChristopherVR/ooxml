@@ -11,7 +11,7 @@ import { parsePath, type PathSegment } from '../../pdf/write/pdf-path';
 import { pathSampler, type PathPoint } from '../../pdf/write/pdf-path-sampler';
 import { pathBounds } from '../../pdf/write/pdf-svg-gradient';
 import type { PdfVectorPage } from '../../pdf/write/pdf-vector';
-import { cssRgba } from './pdf-text';
+import { cssRgba } from './pdf-css-color';
 
 /** Arial's line box, for the gradient's bounding box when no font file gives it. */
 export const ASCENT = 0.905;

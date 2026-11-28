@@ -97,22 +97,18 @@ export function sizeCorrections(
 	drawSize: number,
 ): number[] {
 	const ratio = size / drawSize - 1;
-	let wanted = 0;
-	let applied = 0;
-	return widths.map((width) => {
-		wanted += width * ratio;
-		const step = Math.round(wanted - applied);
-		applied += step;
-		return step === 0 ? 0 : -step;
-	});
+	return wholeOffsets(widths.map((width) => width * ratio));
 }
 
-/** `TJ` offsets (whole thousandths, positive moves the next glyph left) for kerning `adjustments`. */
-function kerningOffsets(adjustments: readonly number[]): number[] {
+/**
+ * `TJ` offsets (whole thousandths, positive moves the next glyph left) for `shifts` in 1/1000 em
+ * after each glyph (positive moves the next one right), each rounding the error still left.
+ */
+function wholeOffsets(shifts: readonly number[]): number[] {
 	let wanted = 0;
 	let applied = 0;
-	return adjustments.map((adjustment) => {
-		wanted += adjustment;
+	return shifts.map((shift) => {
+		wanted += shift;
 		const step = Math.round(wanted - applied);
 		applied += step;
 		return step === 0 ? 0 : -step;
@@ -261,7 +257,7 @@ export class PdfVectorPage {
 						size,
 						drawSize,
 					);
-		const kerning = spacing.kerning ? kerningOffsets(spacing.kerning) : undefined;
+		const kerning = spacing.kerning ? wholeOffsets(spacing.kerning) : undefined;
 		const parts: string[] = [];
 		let run = '';
 		chars.forEach((char, index) => {

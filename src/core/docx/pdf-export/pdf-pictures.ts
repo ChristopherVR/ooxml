@@ -7,12 +7,13 @@
 import { decodePng, jpegComponents, inspectRasterImage } from '../../drawingml/index';
 import type { LayoutObject } from '../layout/index';
 import { drawBlurredSilhouette } from '../../pdf/write/pdf-blur-mask';
-import { WASHOUT_INTERCEPT, WASHOUT_LUMINANCE, WASHOUT_SLOPE } from '../picture-watermark';
+import { WASHOUT_LUMINANCE } from '../picture-watermark';
 import { parsePath } from '../../pdf/write/pdf-path';
 import type { PdfImageResource, PdfVectorPage } from '../../pdf/write/pdf-vector';
 import type { DocxPdfDrawings } from './pdf-drawings';
 import type { DocxPdfReportBuilder } from './pdf-report';
 import { cssRgba } from './pdf-text';
+import { paintWashoutLayer, washedOutResource } from './pdf-washout';
 
 /** RGBA pixels a host decoder returns for a picture format the export cannot read itself. */
 export interface DecodedPicture {
@@ -44,44 +45,6 @@ export type DocxPdfPicture = Pick<
 	| 'textBox'
 	| 'textBoxLayout'
 >;
-
-const washed = new WeakMap<PdfImageResource, PdfImageResource>();
-
-/** The picture with Word's washout applied to its samples, or undefined for an encoded (JPEG) one. */
-export function washedOutResource(resource: PdfImageResource): PdfImageResource | undefined {
-	if (resource.filter) return undefined;
-	let result = washed.get(resource);
-	if (!result) {
-		const data = new Uint8Array(resource.data.length);
-		for (let index = 0; index < data.length; index++)
-			data[index] = Math.min(
-				255,
-				Math.round(resource.data[index]! * WASHOUT_SLOPE + WASHOUT_INTERCEPT * 255),
-			);
-		result = { ...resource, data };
-		washed.set(resource, result);
-	}
-	return result;
-}
-
-/**
- * Washes out an encoded picture already drawn into the box: a grey layer in Screen mode gives
- * (1 - g) x + g, with g the intercept, so black rises to it and white stays white.
- */
-export function paintWashoutLayer(
-	page: PdfVectorPage,
-	x: number,
-	y: number,
-	width: number,
-	height: number,
-): void {
-	page.save();
-	page.alpha(1, 1, 'Screen');
-	page.fillColor(WASHOUT_INTERCEPT, WASHOUT_INTERCEPT, WASHOUT_INTERCEPT);
-	page.rect(x, y, width, height);
-	page.op('f');
-	page.restore();
-}
 
 /** True for the luminance effect a VML picture's washout (`gain`, `blacklevel`) becomes. */
 function isWashout(fill: DocxPdfPicture['pictureFill']): boolean {

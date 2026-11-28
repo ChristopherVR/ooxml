@@ -33,7 +33,6 @@ import {
 	paintTextReflection,
 	paintTextShadow,
 } from './pdf-text-effects';
-import { isDrawnAsWordArt, paintWordArt } from './pdf-word-art';
 
 interface PreparedSvg {
 	svg: Element;
@@ -74,6 +73,8 @@ export function withTextColor(blocks: readonly LayoutBlockBox[], color: string |
 export class DocxPdfDrawings {
 	/** Parsed SVG by its markup, or why it cannot be written as vectors. */
 	readonly #svgs = new Map<string, PreparedSvg | string>();
+	/** The WordArt painter, loaded by `prepare` for the first shape whose text box has WordArt. */
+	#wordArt: typeof import('./pdf-word-art') | undefined;
 	/** Set by `exportDocxPdf` so text boxes tag lists and make links clickable. */
 	hooks: DocxPdfHooks | undefined;
 	constructor(
@@ -86,6 +87,8 @@ export class DocxPdfDrawings {
 	async prepare(object: DocxPdfPicture): Promise<void> {
 		const markup = object.chart?.svg;
 		if (markup && !this.#svgs.has(markup)) this.#svgs.set(markup, await this.#parse(markup));
+		if (markup && object.chart?.shape && object.textBox?.wordArt)
+			this.#wordArt ??= await import('./pdf-word-art');
 		if (object.textBoxLayout)
 			await this.pictures.prepare(blockPictures(object.textBoxLayout.blocks));
 	}
@@ -139,8 +142,18 @@ export class DocxPdfDrawings {
 		else this.#paintSvg(page, prepared, object, x, y, !!chart.shape);
 		// Print Layout draws warped and gradient WordArt in place of the laid-out lines.
 		const box = object.textBox;
-		if (chart.svg && chart.shape && box && isDrawnAsWordArt(box))
-			paintWordArt(page, this.text, this.report, box, x, y, object.widthPx, object.heightPx);
+		const wordArt = this.#wordArt;
+		if (chart.svg && chart.shape && box && wordArt?.isDrawnAsWordArt(box))
+			wordArt.paintWordArt(
+				page,
+				this.text,
+				this.report,
+				box,
+				x,
+				y,
+				object.widthPx,
+				object.heightPx,
+			);
 		else if (object.textBoxLayout) this.#paintTextBox(page, object, x, y);
 		else if (object.textBox)
 			this.report.omitted('textBox', 'A text box the page engine did not lay out was left out.');

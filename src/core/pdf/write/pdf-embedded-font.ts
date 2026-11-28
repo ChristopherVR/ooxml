@@ -12,7 +12,7 @@ import {
 	type TrueTypeFont,
 	type TrueTypeSubset,
 } from '../../text/index';
-import { pairKerning, type PairKerning } from '../../text/truetype/kerning';
+import type { PairKerning } from '../../text/truetype/kerning';
 import { toUnicodeCMap, type PdfCidFont, type PdfFontParts } from './pdf-cid-font';
 import { PdfTextLayerFont } from './pdf-text-layer-font';
 
@@ -28,6 +28,12 @@ export type PdfSymbolGlyph = (
 	family: string,
 	code: number,
 ) => number;
+
+/**
+ * The pair kerning table of a font (`pairKerning` of `text/truetype/kerning`, passed in so the
+ * table reader loads only with a writer that kerns).
+ */
+export type PdfPairKerning = (font: TrueTypeFont) => PairKerning | undefined;
 
 /** A font file the host supplies for embedding. */
 export interface PdfFontFile {
@@ -50,6 +56,7 @@ export class PdfEmbeddedFont implements PdfCidFont {
 		file: PdfFontFile,
 		readonly font: TrueTypeFont,
 		readonly symbolGlyph?: PdfSymbolGlyph,
+		readonly pairKerning?: PdfPairKerning,
 	) {
 		this.family = file.family;
 		// The host's flag, or the font's own weight (a bold face the host did not flag).
@@ -58,12 +65,16 @@ export class PdfEmbeddedFont implements PdfCidFont {
 		this.italic = !!file.italic || font.italicAngle !== 0;
 	}
 	/** `undefined` when the bytes are not TrueType or the font's licence forbids embedding. */
-	static create(file: PdfFontFile, symbolGlyph?: PdfSymbolGlyph): PdfEmbeddedFont | undefined {
+	static create(
+		file: PdfFontFile,
+		symbolGlyph?: PdfSymbolGlyph,
+		pairKerning?: PdfPairKerning,
+	): PdfEmbeddedFont | undefined {
 		const font = parseTrueType(file.data);
 		// A PDF carries a subset of the outlines: restricted, no-subsetting and bitmap-only faces
 		// may not be embedded that way.
 		if (!font || !mayEmbedFontSubset(embeddingPermission(font.embeddingFlags))) return undefined;
-		return new PdfEmbeddedFont(file, font, symbolGlyph);
+		return new PdfEmbeddedFont(file, font, symbolGlyph, pairKerning);
 	}
 	/** Whether the font has a glyph for every character of `text` (controls excepted). */
 	covers(text: string): boolean {
@@ -86,9 +97,12 @@ export class PdfEmbeddedFont implements PdfCidFont {
 		return total;
 	}
 	#pairs: PairKerning | undefined | null = null;
-	/** The pair adjustment between two characters in em units (negative pulls them together). */
+	/**
+	 * The pair adjustment between two characters in em units (negative pulls them together); zero
+	 * without the `pairKerning` reader.
+	 */
 	kern(left: string, right: string): number {
-		if (this.#pairs === null) this.#pairs = pairKerning(this.font);
+		if (this.#pairs === null) this.#pairs = this.pairKerning?.(this.font);
 		const first = this.#glyph(left);
 		const second = this.#glyph(right);
 		if (!this.#pairs || !first || !second) return 0;
@@ -172,12 +186,14 @@ export class PdfFontSet {
 			embedAll?: boolean;
 			substitute?: (family: string) => string | undefined;
 			symbolGlyph?: PdfSymbolGlyph;
+			/** Reads each font's pair kerning for `kern` (without it, fonts do not kern). */
+			pairKerning?: PdfPairKerning;
 		} = {},
 	) {
 		this.embedAll = !!options.embedAll;
 		this.#substitute = options.substitute;
 		this.fonts = files.flatMap((file) => {
-			const font = PdfEmbeddedFont.create(file, options.symbolGlyph);
+			const font = PdfEmbeddedFont.create(file, options.symbolGlyph, options.pairKerning);
 			return font ? [font] : [];
 		});
 	}

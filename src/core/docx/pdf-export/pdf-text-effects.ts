@@ -19,10 +19,10 @@ import { PdfVectorPage, type PdfTextSpacing } from '../../pdf/write/pdf-vector';
 import { paintBlock } from './pdf-blocks';
 import type { DocxPdfPictures } from './pdf-pictures';
 import { cssRgba, DocxPdfText } from './pdf-text';
+import { wordArtSoftCopies } from './pdf-soft-copies';
 
 const SHADOW_NOTE =
 	'Text shadows in a standard PDF font are drawn as faint offset copies, since the font has no outlines to blur; supply the font file for a blurred shadow.';
-const COPIES = 8;
 
 type RecordedRun =
 	| {
@@ -70,32 +70,6 @@ class TextRecorder extends PdfVectorPage {
 	): void {
 		this.runs.push({ kind: 'embedded', font, size, x, y, text, spacing });
 	}
-}
-
-/**
- * Draws `paint(dx, dy)` as a ring of faint copies around the shadow offset, together about as
- * dark as the shadow in the middle and fading over the blur: a soft shadow for text that cannot
- * be blurred. The copies carry an empty `ActualText`, so they never extract as text.
- */
-export function wordArtSoftCopies(
-	page: PdfVectorPage,
-	shadow: WordArtShadowGeometry,
-	paint: (dx: number, dy: number) => void,
-): void {
-	const sigma = shadow.blur / 2;
-	const offsets: [number, number][] = [[shadow.dx, shadow.dy]];
-	if (sigma > 0)
-		for (let index = 0; index < COPIES; index++) {
-			const angle = (index / COPIES) * 2 * Math.PI;
-			offsets.push([shadow.dx + Math.cos(angle) * sigma, shadow.dy + Math.sin(angle) * sigma]);
-		}
-	const each = 1 - Math.pow(1 - Math.min(0.999, shadow.opacity), 1 / offsets.length);
-	page.op('/Span <</ActualText ()>> BDC');
-	page.save();
-	page.alpha(each);
-	for (const [dx, dy] of offsets) paint(dx, dy);
-	page.restore();
-	page.endMarked();
 }
 
 /**

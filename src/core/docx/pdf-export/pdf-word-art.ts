@@ -34,7 +34,7 @@ import {
 	type LinePlacement,
 	type Slot,
 } from './pdf-word-art-geometry';
-import { wordArtSoftCopies } from './pdf-text-effects';
+import { wordArtSoftCopies } from './pdf-soft-copies';
 
 const STANDARD_NOTE =
 	'WordArt without an embedded font is written in a standard PDF font: each letter is placed and turned along the warp rather than bent, and its shadow is drawn as soft offset copies.';

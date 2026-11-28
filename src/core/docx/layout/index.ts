@@ -32,6 +32,7 @@ export { floatPosition, floatOrigin, FLOAT_WRAP_NOTE } from './floats';
 export { positionFloats } from './position-floats';
 export { paragraphBorderBands } from './adapt-paragraph-box';
 export { paragraphShadowRects, type ParagraphShadowRect } from './paragraph-shadow';
+export { kerningMode } from './paragraph-tokens';
 export { cssFontStack } from './fonts';
 export { legacyTextStartPx } from './legacy-marker';
 export { createPageStories, type PlacedStory } from './story-flow';
