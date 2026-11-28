@@ -100,6 +100,28 @@ describe('exportDocxPdf without markup: deleted structure', () => {
 		expect(marked.map((line) => line.text).join('|')).toContain('gone');
 	});
 
+	it('joins a paragraph whose mark was inserted and then deleted (w:ins + w:del)', async () => {
+		const bothMark = (content: string) =>
+			`<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr><w:rPr><w:ins w:id="4" ${stamp}/><w:del w:id="5" ${stamp}/></w:rPr></w:pPr>${content}</w:p>`;
+		const model = await docx(
+			deletedMark(1, '<w:r><w:t xml:space="preserve">Second item, </w:t></w:r>', true) +
+				bothMark(
+					`<w:ins w:id="6" ${stamp}><w:del w:id="7" ${stamp}><w:r><w:delText>xxxxxxxxx xx</w:delText></w:r></w:del></w:ins>`,
+				) +
+				p('joined to this one.', true),
+		);
+		const control = await docx(
+			deletedMark(1, '<w:r><w:t xml:space="preserve">Second item, </w:t></w:r>', true) +
+				deletedMark(5, deletedRun(7, 'xxxxxxxxx xx'), true) +
+				p('joined to this one.', true),
+		);
+		const exported = lines((await exportDocxPdf(model, { measurer })).bytes);
+		expect(exported.map((line) => line.text.replaceAll(' ', ''))).toEqual([
+			'1.Seconditem,joinedtothisone.',
+		]);
+		expect(exported).toEqual(lines((await exportDocxPdf(control, { measurer })).bytes));
+	});
+
 	it('removes rows deleted with tracking', async () => {
 		const plain = (text: string) => `<w:tc>${p(text)}</w:tc>`;
 		const dead = (id: number, text: string) =>

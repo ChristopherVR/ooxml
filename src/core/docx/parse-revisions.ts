@@ -81,10 +81,12 @@ export function paragraphMarkRevision(
 	moves?: OpenMoves,
 ): Revision | undefined {
 	const rPr = first(pPr, 'rPr');
+	const del = first(rPr, 'del');
+	// A mark inserted and then deleted holds both; Word treats it as deleted (it is gone in the
+	// final view), so the deletion wins over the insertion.
+	if (del) return revisionFrom(del, 'delete');
 	const ins = first(rPr, 'ins');
 	if (ins) return revisionFrom(ins, 'insert');
-	const del = first(rPr, 'del');
-	if (del) return revisionFrom(del, 'delete');
 	for (const kind of ['moveFrom', 'moveTo'] as const) {
 		const element = first(rPr, kind);
 		if (!element) continue;
