@@ -193,9 +193,13 @@ export function placeParagraph(
 			const budget = cursor.remainingHeightPx() - (firstSegment ? spacingBeforePx : 0);
 			// A line that does not fit waits for the next column, unless the column is empty. Multiple
 			// spacing's extra space below the text may run past the bottom margin (#360).
-			const overhang = lineHeight(line, i) ? (line.extraBelowPx ?? 0) : 0;
+			// The borders around the paragraph, with their `w:space`, must fit above the bottom
+			// margin too: unlike the space after, they cannot run past it (#389).
+			const insetTop = firstSegment ? layout.insetTopPx : 0;
+			const insetBottom = i === layout.lines.length - 1 ? layout.insetBottomPx : 0;
+			const overhang = lineHeight(line, i) && !insetBottom ? (line.extraBelowPx ?? 0) : 0;
 			if (
-				cumulative + height - overhang > budget + 1e-6 &&
+				cumulative + height + insetTop + insetBottom - overhang > budget + 1e-6 &&
 				(end > lineCursor || !cursor.atColumnTop)
 			)
 				break;
