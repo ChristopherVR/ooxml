@@ -457,6 +457,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and preservation
 
+- [ ] **P2** `w:shadow` on table cell borders and page borders is not modeled, drawn or written
+      back when those borders are rewritten; only paragraph borders keep it (issue 377).
 - [ ] **P2** Linked pictures (`a:blip r:link` to a web address) are not drawn: Word downloads
       them on open, the Word packages never do
       ([powerpoint-external-content.md](powerpoint-external-content.md), observed 2026-11-19).

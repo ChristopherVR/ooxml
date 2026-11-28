@@ -24,20 +24,22 @@ export interface ParagraphShadowRect {
 
 /**
  * The shadow of a paragraph frame `heightPx` tall: the box moved right and down by the width of
- * its right and bottom lines, drawn outside the box, as Word draws `w:shadow` on those lines.
+ * its right and bottom lines (the right strip starts one line below a top line that has a shadow), drawn outside the box, as Word draws `w:shadow` on those lines.
  */
 export function paragraphShadowRects(
-	frame: Pick<LayoutParagraphFrame, 'widthPx' | 'borders'>,
+	frame: Pick<LayoutParagraphFrame, 'widthPx' | 'borders' | 'shadowTopPx'>,
 	heightPx: number,
 ): ParagraphShadowRect[] {
 	const { right, bottom } = frame.borders ?? {};
 	const rects: ParagraphShadowRect[] = [];
-	if (right?.shadow && heightPx > right.widthPx)
+	// Only the first paragraph of a border group has a top line the shadow starts below.
+	const startPx = frame.shadowTopPx ? (right?.widthPx ?? 0) : 0;
+	if (right?.shadow && heightPx > startPx)
 		rects.push({
 			xPx: frame.widthPx,
-			yPx: right.widthPx,
+			yPx: startPx,
 			widthPx: right.widthPx,
-			heightPx: heightPx - right.widthPx,
+			heightPx: heightPx - startPx,
 			color: right.color,
 		});
 	if (bottom?.shadow)

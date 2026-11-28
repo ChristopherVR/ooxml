@@ -316,10 +316,6 @@ a.dve-link[data-anchor^='_Toc'] {
 	position: absolute;
 }
 
-.dve-print-paragraph-shadow {
-	position: absolute;
-}
-
 /* View > Multiple Pages: Print Layout's sheets sit side by side and wrap, instead of one column. */
 .dve-canvas[data-multipage] .dve-print-pages {
 	flex-direction: row;

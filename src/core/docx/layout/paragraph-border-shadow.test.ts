@@ -65,3 +65,25 @@ it('draws the right and bottom shadow outside the box, one line wide', async () 
 	expect(bottom!.xPx + bottom!.widthPx).toBeCloseTo(frame.widthPx + line, 5);
 	expect(paragraphShadowRects(at((await boxes(false)).blocks, 1).frame!, heightPx)).toEqual([]);
 });
+
+it('starts the right shadow at the top only for the first paragraph of a border group', async () => {
+	const zip = new JSZip();
+	const grouped = (text: string) =>
+		`<w:p><w:pPr>${box(true)}<w:spacing w:after="0"/></w:pPr><w:r><w:t>${text}</w:t></w:r></w:p>`;
+	zip.file(
+		'word/document.xml',
+		`<w:document xmlns:w="${W}"><w:body>${grouped('One')}${grouped('Two')}${grouped('Three')}<w:sectPr/></w:body></w:document>`,
+	);
+	const { model } = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+	const { pages } = layoutDocumentModel(model, createFakeMeasurer());
+	const blocks = at(at(pages, 0).columns, 0).blocks as LayoutParagraphBox[];
+	const line = (1.5 * 96) / 72;
+	const strips = blocks.map((block) => {
+		const { heightPx } = paragraphFrameBounds(block.frame!, block.heightPx);
+		return paragraphShadowRects(block.frame!, heightPx);
+	});
+	// The right strip: below the top line of the first paragraph, flush with the top of the rest.
+	expect(strips.map((rects) => rects[0]!.yPx)).toEqual([line, 0, 0]);
+	// Only the last paragraph has a bottom line, so only it has a bottom strip.
+	expect(strips.map((rects) => rects.length)).toEqual([1, 1, 2]);
+});
