@@ -28,11 +28,13 @@ export function symbolBullets(font: string | undefined): Map<number, string> | u
  * pictures (U+F0xx, or a byte); without those fonts they render as missing glyphs, so each is
  * shown as its Unicode equivalent in `font`: Symbol F02D is a minus sign, F0AE an arrow,
  * Wingdings F0FC a check mark. A private-use bullet in another font is read as Word's bullet
- * library has it (Wingdings, then Symbol), else shown as `•`.
+ * library has it (Wingdings, then Symbol), else shown as `•`. A soft hyphen that is the whole text
+ * of a label is a bullet that Word draws as a hyphen (#433), not an optional break point.
  */
 export function displayListLabel(text: string, font?: string): string {
 	const own = symbolBullets(font);
 	let out = '';
+	const soleSoftHyphen = text === '­';
 	for (const char of text) {
 		const code = char.charCodeAt(0);
 		const privateUse = code >= 0xf000 && code <= 0xf0ff;
@@ -41,7 +43,9 @@ export function displayListLabel(text: string, font?: string): string {
 			own?.get(byte) ??
 			(privateUse
 				? (symbolBullets('Wingdings')!.get(byte) ?? symbolBullets('Symbol')!.get(byte) ?? '\u2022')
-				: char);
+				: soleSoftHyphen
+					? '-'
+					: char);
 	}
 	return out;
 }

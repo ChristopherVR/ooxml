@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { symbolCharToUnicode } from '../text/symbol-fonts';
-import { symbolBullets } from './symbol-bullets';
+import { displayListLabel, symbolBullets } from './symbol-bullets';
 
 describe('symbol bullet tables', () => {
 	it.each(['Symbol', 'Wingdings'])('agree with the shared %s glyph table', (font) => {
@@ -12,5 +12,12 @@ describe('symbol bullet tables', () => {
 			if (font === 'Wingdings' && byte === 0xfc) expect(shared).toBe('✔');
 			else expect([byte, picture]).toEqual([byte, shared]);
 		}
+	});
+});
+
+describe('displayListLabel', () => {
+	it('draws a label that is only a soft hyphen as a hyphen (#433)', () => {
+		expect(displayListLabel('­', 'Courier New')).toBe('-');
+		expect(displayListLabel('a­b', 'Courier New')).toBe('a­b');
 	});
 });
