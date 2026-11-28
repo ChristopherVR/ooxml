@@ -60,6 +60,7 @@ export function applyMarkFormatting(run: TextRun, child: ProseMirrorNode): void 
 	if (commentIds.length) run.commentIds = commentIds;
 	const control = propertyOfMark(child, 'contentControl');
 	if (control?.attrs.data) run.contentControl = JSON.parse(String(control.attrs.data));
+	if (control?.attrs.outer) run.outerContentControls = JSON.parse(String(control.attrs.outer));
 	const field = propertyOfMark(child, 'field');
 	if (field)
 		run.field = {

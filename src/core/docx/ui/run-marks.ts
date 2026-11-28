@@ -54,6 +54,7 @@ export function marksForRun(run: TextRun, schema: Schema): Mark[] {
 		marks.push(
 			expectDefined(schema.marks.contentControl, 'contentControl mark').create({
 				data: JSON.stringify(run.contentControl),
+				outer: run.outerContentControls ? JSON.stringify(run.outerContentControls) : '',
 			}),
 		);
 	if (run.field)

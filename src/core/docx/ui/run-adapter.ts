@@ -307,6 +307,7 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 		previous.fieldCode === undefined &&
 		JSON.stringify(previous.field) === JSON.stringify(run.field) &&
 		JSON.stringify(previous.contentControl) === JSON.stringify(run.contentControl) &&
+		JSON.stringify(previous.outerContentControls) === JSON.stringify(run.outerContentControls) &&
 		sameRevision &&
 		sameComments &&
 		sameExtra &&

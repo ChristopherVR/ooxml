@@ -206,7 +206,7 @@ export const markSpecs = {
 	},
 	/** Inline content control (`w:sdt`): the whole control as JSON, drawn with Word's outline and title tab. */
 	contentControl: {
-		attrs: { data: { default: '' } },
+		attrs: { data: { default: '' }, outer: { default: '' } },
 		parseDOM: [
 			{
 				tag: 'span[data-sdt]',
