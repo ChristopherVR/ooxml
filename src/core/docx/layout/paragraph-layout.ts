@@ -88,9 +88,6 @@ export type LineBoxFn = (
 	hole?: { startPx: number; endPx: number };
 };
 
-/** Rounding room for text that ends at its right, centre or decimal tab stop. */
-const ALIGNED_TAB_TOLERANCE_PX = 0.2;
-
 export function layoutParagraph(
 	paragraph: LayoutParagraph,
 	contentWidthPx: number,
@@ -169,8 +166,8 @@ function measureParagraph(
 	let jump: { index: number; shiftPx: number } | undefined;
 	// How far a line holding a positional tab relative to the margins may reach: to the margin.
 	let marginReachPx = 0;
-	// A right, centre or decimal tab is on the line: the text after it ends at its stop.
-	let alignedTab = false;
+	// Where the text after the line's last right, centre or decimal tab ends (see `TabPlacement`).
+	let alignedEndPx: number | undefined;
 	let consecutiveHyphens = 0;
 	let tokenCursor: TokenPosition = startToken;
 	let firstToken: TokenPosition = startToken;
@@ -391,7 +388,7 @@ function measureParagraph(
 		keepLeadingSpaces = false;
 		jump = undefined;
 		marginReachPx = 0;
-		alignedTab = false;
+		alignedEndPx = undefined;
 		consecutiveHyphens = endedWithAutoHyphen ? consecutiveHyphens + 1 : 0;
 	}
 
@@ -525,7 +522,7 @@ function measureParagraph(
 			}
 			width = tab?.widthPx ?? 0;
 			leader = tab?.leader === 'none' ? undefined : tab?.leader;
-			if (tab?.aligned) alignedTab = true;
+			alignedEndPx = tab?.endPx;
 			if (positional.relativeTo === 'margin')
 				marginReachPx = contentWidthPx - lineStart(lines.length);
 		} else if (token.kind === 'tab' && paragraph.runs[token.runIndex]?.marker?.legacy) {
@@ -533,6 +530,7 @@ function measureParagraph(
 			const legacy = expectDefined(paragraph.runs[token.runIndex]?.marker?.legacy, 'legacy');
 			const here = lineStart(lines.length) + lineWidthPx;
 			width = Math.max(0, legacyTextStartPx(lineStart(lines.length), here, legacy) - here);
+			alignedEndPx = undefined;
 		} else if (token.kind === 'tab') {
 			const { followingPx, beforeDecimalPx } = segmentAfter(tokenIndex);
 			const tab = placeTab(
@@ -544,7 +542,7 @@ function measureParagraph(
 				paragraph.defaultTabStopPx,
 				contentWidthPx - lineEnd(lines.length),
 			);
-			if (tab.aligned) alignedTab = true;
+			alignedEndPx = tab.endPx;
 			width = tab.widthPx;
 			leader = tab.leader === 'none' ? undefined : tab.leader;
 		}
@@ -568,7 +566,13 @@ function measureParagraph(
 			tokenBeforeWord(tokenIndex)?.token.kind === 'space'
 				? justifiedSqueezeBudgetPx(lineSpacePx, lineSpaceCount, wholeWordPx(tokenIndex, advance))
 				: 0;
-		const fits = lineWidthPx + (token.kind === 'tab' ? width : advance) <= limit + squeezePx;
+		// The tab sized the text after it to end at its stop, so that text fits when the stop does:
+		// summing its widths again would differ from the stop by floating point noise.
+		const fits =
+			(alignedEndPx !== undefined &&
+				token.kind !== 'tab' &&
+				alignedEndPx - lineStart(lineIndex) <= limit) ||
+			lineWidthPx + (token.kind === 'tab' ? width : advance) <= limit + squeezePx;
 		const wouldFit =
 			fits || placed.every((placed) => paragraph.runs[placed.token.runIndex]?.synthetic);
 		// A word that no longer fits before a picture continues after it, on the same line.

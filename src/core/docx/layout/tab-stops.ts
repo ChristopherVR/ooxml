@@ -3,8 +3,12 @@ import { DEFAULT_TAB_STOP_PX } from './units';
 
 export interface TabPlacement {
 	widthPx: number;
-	/** The text after the tab is placed relative to the stop (right, centre or decimal). */
-	aligned?: true;
+	/**
+	 * Where the text after a right, centre or decimal tab ends, from the line's text margin: known
+	 * from the stop itself, so a segment that ends exactly at the margin needs no sum of widths.
+	 * Absent when the text is too wide for the room the stop leaves.
+	 */
+	endPx?: number;
 	leader?: LayoutTabStop['leader'];
 }
 
@@ -44,11 +48,15 @@ export function placeTab(
 				: custom.align === 'decimal'
 					? beforeDecimalPx
 					: 0;
+		const endPx =
+			custom.align === 'center'
+				? stopPx + followingPx / 2
+				: custom.align === 'decimal'
+					? stopPx + followingPx - beforeDecimalPx
+					: stopPx;
 		return {
 			widthPx: Math.max(0, distance - shift),
-			...(rightAligned || custom.align === 'center' || custom.align === 'decimal'
-				? { aligned: true as const }
-				: {}),
+			...(shift > 0 && distance >= shift ? { endPx } : {}),
 			...(custom.leader && custom.leader !== 'none' ? { leader: custom.leader } : {}),
 		};
 	}
@@ -78,7 +86,9 @@ export function placePositionalTab(
 		tab.alignment === 'right' ? followingPx : tab.alignment === 'center' ? followingPx / 2 : 0;
 	return {
 		widthPx: Math.max(0, target - shift - positionPx),
-		...(tab.alignment === 'left' ? {} : { aligned: true as const }),
+		...(tab.alignment !== 'left' && target - shift >= positionPx
+			? { endPx: tab.alignment === 'center' ? target + followingPx / 2 : target }
+			: {}),
 		...(tab.leader && tab.leader !== 'none' ? { leader: tab.leader } : {}),
 	};
 }

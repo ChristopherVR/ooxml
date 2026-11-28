@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { loadDocx } from '../index';
 import { layoutDocumentModel } from './layout';
+import { layoutParagraph } from './paragraph-layout';
 import type { TextMeasurer } from './measure';
 
 // Half an em per character, so every width is exact and no font file is needed.
@@ -63,25 +64,33 @@ describe('a right tab stop past the right margin (#385)', () => {
 });
 
 describe('text after a right tab that ends at the right margin (#404)', () => {
-	// Kerning-like rounding: a whole text measures a little under the sum of its pieces.
-	const rounded: TextMeasurer = {
-		widthOf: (text, font) => text.length * font.sizePx * 0.5 - 0.01 * text.length ** 2,
-		lineHeightOf: (font) => font.sizePx * 1.15,
-	};
-	async function laidOut(name: string) {
-		const { model } = await loadDocx(
-			await readFile(new URL(`./fixtures/word-layout-reports/${name}.docx`, import.meta.url)),
-		);
-		return layoutDocumentModel(model, rounded).pages.flatMap((page) =>
-			page.columns.flatMap((column) =>
-				column.blocks.flatMap((block) => (block.kind === 'paragraph' ? block.lines : [])),
-			),
-		);
-	}
-
 	it('keeps every tabbed and positional-tab paragraph on one line', async () => {
-		expect(await laidOut('issue-404-tab-stop-one-twip-inside')).toHaveLength(5);
+		// The widths are exact here: the stop and the summed words differ only in the last bits.
+		expect(await lines('issue-404-tab-stop-one-twip-inside')).toHaveLength(5);
 		// Five paragraphs with a tab stop at 9072 twips and five with a right `w:ptab`.
-		expect(await laidOut('issue-404-tab-stop-at-margin')).toHaveLength(10);
+		expect(await lines('issue-404-tab-stop-at-margin')).toHaveLength(10);
+	});
+
+	// 10 px per character, 'W' 1 pt (1.333 px) wider.
+	const wide: TextMeasurer = {
+		widthOf: (text) => [...text].reduce((sum, c) => sum + (c === 'W' ? 11.333333 : 10), 0),
+		lineHeightOf: () => 20,
+	};
+	const tabbed = (value: string, align: 'right' | 'center' = 'right') =>
+		layoutParagraph(
+			{
+				kind: 'paragraph',
+				id: 'p',
+				runs: [{ text: `a	${value}` }],
+				tabStops: [{ posPx: 200, align }],
+			},
+			200,
+			wide,
+			() => {},
+		).lines.map((line) => line.fragments.map((f) => f.text).join(''));
+
+	it('still wraps text that overflows the margin by 1 pt', () => {
+		expect(tabbed('b'.repeat(18) + 'W')).toHaveLength(2);
+		expect(tabbed('b'.repeat(19))).toEqual(['a' + 'b'.repeat(19)]);
 	});
 });
