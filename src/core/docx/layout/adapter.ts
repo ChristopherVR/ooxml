@@ -1,3 +1,4 @@
+import { withAutoTextColor } from './auto-text-color';
 import { themeLatinFont } from '../default-theme';
 import { scriptLayoutRuns } from './script-fonts';
 import type {
@@ -543,8 +544,9 @@ export function adaptDocumentModel(
 				? { textFrame: adaptTextFrame(resolved.frame) }
 				: {}),
 		};
-		if (betweenBorder) betweenBorders.set(adapted, betweenBorder);
-		return adapted;
+		const coloured = withAutoTextColor(adapted, adapted.shading);
+		if (betweenBorder) betweenBorders.set(coloured, betweenBorder);
+		return coloured;
 	}
 	function adaptBlock(block: Block): LayoutBlock {
 		if (block.type === 'paragraph') return adaptParagraph(block);

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { contrastRatio, parseHexColor, readableTextColor, relativeLuminance } from './contrast';
+import {
+	automaticTextColor,
+	contrastRatio,
+	parseHexColor,
+	readableTextColor,
+	relativeLuminance,
+} from './contrast';
 
 describe('contrastRatio', () => {
 	it('follows the WCAG definition', () => {
@@ -40,5 +46,16 @@ describe('parseHexColor and relativeLuminance', () => {
 		expect(parseHexColor('#0f6cbd80')).toBeNull();
 		expect(relativeLuminance(255, 255, 255)).toBeCloseTo(1, 10);
 		expect(relativeLuminance(0, 0, 0)).toBe(0);
+	});
+});
+
+describe('automaticTextColor', () => {
+	// Word 16 switches to white below a Rec. 601 luma of 59.5 (measured on grey, red and green ramps).
+	it('is white on 3B3B3B, C60000 and 006500 and black on 3C3C3C, C80000 and 006600', () => {
+		for (const fill of ['3B3B3B', 'C60000', '006500', '000000', '371127', '0000FF'])
+			expect(automaticTextColor(fill), fill).toBe('#ffffff');
+		for (const fill of ['3C3C3C', 'C80000', '006600', '4472C4', 'FFFFFF', '404040'])
+			expect(automaticTextColor(fill), fill).toBe('#000000');
+		expect(automaticTextColor('auto')).toBeUndefined();
 	});
 });

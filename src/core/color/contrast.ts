@@ -98,3 +98,17 @@ export function contrastTextColor(fill: string): string {
 	const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 	return lum > 0.6 ? '#1a1a1a' : '#ffffff';
 }
+
+/**
+ * The text colour Word draws for the automatic colour on a shaded background: white on a dark
+ * fill, black otherwise. Measured with Word 16 on grey, red and green ramps and 30 hues: the
+ * switch is at a Rec. 601 luma (0.299 R + 0.587 G + 0.114 B) of 59.5 out of 255, so `3B3B3B`,
+ * `C60000` and `006500` stay white text and `3C3C3C`, `C80000` and `006600` turn black.
+ * Returns `undefined` when `fill` is not a hex colour.
+ */
+export function automaticTextColor(fill: string): '#ffffff' | '#000000' | undefined {
+	const rgb = parseHexColor(fill);
+	if (!rgb) return undefined;
+	const [r, g, b] = rgb;
+	return 0.299 * r + 0.587 * g + 0.114 * b < 59.5 ? '#ffffff' : '#000000';
+}

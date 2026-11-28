@@ -12,6 +12,7 @@ import {
 import { expectDefined } from '../expect-defined';
 import { autofitOverhangsCellMargins, compatibilityProfile } from '../compatibility';
 import { floatingFrame } from './adapt-table-floating';
+import { withAutoTextColor } from './auto-text-color';
 import { resolveTableCellMargins } from '../table-margins';
 import { cellSourceBlocks } from '../cell-blocks';
 import type { TableStyleConditionalFormatting } from '../table-model';
@@ -194,7 +195,8 @@ export function adaptTable(
 					columnCount,
 				);
 				const adaptCellParagraph = (paragraph: Paragraph): LayoutParagraph => {
-					const adapted = adaptParagraph(paragraph, undefined, tableStyle);
+					const laidOut = adaptParagraph(paragraph, undefined, tableStyle);
+					const adapted = withAutoTextColor(laidOut, laidOut.shading ?? fill);
 					return cell.hideMark && last?.id === paragraph.id
 						? { ...adapted, hideCellEndMark: true }
 						: adapted;
