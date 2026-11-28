@@ -43,6 +43,7 @@ export class MergedRowPlan {
 		const covered = this.rows.slice(index, index + longest);
 		const natural = covered.map((row) => layout(this.apply(row)));
 		const heights = natural.map((item) => item.heightPx);
+		let grows = false;
 		spans.forEach((span, cell) => {
 			if (span < 2) return;
 			const count = Math.min(span, covered.length);
@@ -51,9 +52,14 @@ export class MergedRowPlan {
 				(natural[0]?.geometry[cell]?.contentHeightPx ?? 0) +
 				(natural[count - 1]?.borderBottomPx ?? 0);
 			const have = heights.slice(0, count).reduce((sum, h) => sum + h, 0);
-			if (need > have) heights[count - 1] = (heights[count - 1] ?? 0) + need - have;
+			if (need > have) {
+				heights[count - 1] = (heights[count - 1] ?? 0) + need - have;
+				grows = true;
+			}
 		});
-		if (heights.reduce((sum, h) => sum + h, 0) > availablePx) {
+		// A merge whose text already fits the rows it covers changes no row, so a last row that
+		// breaks across pages leaves the first row at its natural height, as in Word.
+		if (grows && heights.reduce((sum, h) => sum + h, 0) > availablePx) {
 			this.legacy.add(start);
 			return;
 		}
