@@ -13,6 +13,7 @@ import { paragraphMarkRun } from 'ooxml-core/docx/ui';
 import type { Node } from 'prosemirror-model';
 import { appendInlineNode } from './run-adapter';
 import { themeFontOf } from './run-styles';
+import { resolvedTabStops } from './resolved-tab-stops';
 
 /** Position the generated marker separately from editable text; no synthetic characters enter the document. */
 export function listMarkerDisplay(
@@ -72,7 +73,7 @@ export function listMarkerDisplay(
 		});
 	} else if (label.suffix === 'tab') {
 		const custom = [
-			...(paragraph.tabStops ?? []),
+			...resolvedTabStops(paragraph, model),
 			...(label.tabStopTwips !== undefined
 				? [{ posTwips: label.tabStopTwips, align: 'left' as const }]
 				: []),

@@ -97,7 +97,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		positionalTabInputPlugin(),
 		autoCorrectPlugin(() => host.model()),
 		reviewRunMarksPlugin(() => host.reviewDisplayMode()),
-		tabStopsPlugin(),
+		tabStopsPlugin(() => host.model()),
 		keymap({
 			'Mod-Alt-f': () => (host.insertNote('footnote'), true),
 			'Mod-Alt-d': () => (host.insertNote('endnote'), true),

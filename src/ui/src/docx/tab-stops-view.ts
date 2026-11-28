@@ -1,7 +1,8 @@
-import type { TabStop } from 'ooxml-core/docx';
+import type { DocumentModel } from 'ooxml-core/docx';
 import { placeTab, type LayoutTabStop } from 'ooxml-core/docx/layout';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { Plugin, PluginKey, type EditorState } from 'prosemirror-state';
+import { resolvedNodeTabStops } from './resolved-tab-stops';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 
 const key = new PluginKey<DecorationSet>('dve-tab-stops');
@@ -14,8 +15,9 @@ interface TabBox {
 	leader?: string;
 }
 
-const stopsOf = (paragraph: ProseMirrorNode): LayoutTabStop[] =>
-	((paragraph.attrs.tabStops as TabStop[] | null) ?? []).map((stop) => ({
+/** The paragraph's own stops and those of its style, as the layout takes them. */
+const stopsOf = (paragraph: ProseMirrorNode, model?: DocumentModel): LayoutTabStop[] =>
+	resolvedNodeTabStops(paragraph.attrs, model).map((stop) => ({
 		posPx: stop.posTwips / 15,
 		align: stop.align,
 		...(stop.leader ? { leader: stop.leader } : {}),
@@ -30,7 +32,7 @@ function textMargin(view: EditorView, paragraph: HTMLElement, scale: number): nu
 }
 
 /** Measures every tab in the document and where Word's tab stops would end it, in CSS pixels. */
-function measureTabs(view: EditorView): TabBox[] {
+function measureTabs(view: EditorView, model?: DocumentModel): TabBox[] {
 	const boxes: TabBox[] = [];
 	const rect = view.dom.getBoundingClientRect();
 	const scale = view.dom.offsetWidth ? rect.width / view.dom.offsetWidth : 1;
@@ -40,7 +42,7 @@ function measureTabs(view: EditorView): TabBox[] {
 		const dom = view.nodeDOM(pos);
 		if (!(dom instanceof HTMLElement)) return false;
 		const margin = textMargin(view, dom, scale);
-		const stops = stopsOf(node);
+		const stops = stopsOf(node, model);
 		const tabs: number[] = [];
 		node.forEach((child, offset) => {
 			if (!child.isText) return;
@@ -111,7 +113,7 @@ function sameBoxes(set: DecorationSet, boxes: TabBox[], state: EditorState): boo
  * with leaders, then default half-inch stops) by measuring the rendered text, since CSS tab sizes
  * cannot follow per-paragraph stops. Display only: nothing enters the document or its history.
  */
-export function tabStopsPlugin(): Plugin<DecorationSet> {
+export function tabStopsPlugin(model?: () => DocumentModel): Plugin<DecorationSet> {
 	return new Plugin<DecorationSet>({
 		key,
 		state: {
@@ -127,7 +129,7 @@ export function tabStopsPlugin(): Plugin<DecorationSet> {
 				if (!view.dom.isConnected || passes >= MAX_PASSES) return;
 				let boxes: TabBox[];
 				try {
-					boxes = measureTabs(view);
+					boxes = measureTabs(view, model?.());
 				} catch {
 					return; // No layout (e.g. a detached or headless DOM).
 				}
