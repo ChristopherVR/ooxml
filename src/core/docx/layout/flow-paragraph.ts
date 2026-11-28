@@ -17,6 +17,8 @@ export interface ParagraphPlacement {
 	spacingBeforePx: number;
 	/** Compatibility modes before 15 keep the space before of a paragraph that starts a page by `pageBreakBefore`. */
 	keepSpaceBeforePageBreak?: boolean;
+	/** The last block of the document: a page break after its last line starts no page (#438). */
+	endsDocument?: true;
 	keepWrappingFloatsAboveBottomMargin?: true;
 	/** Spacing-after in px when it differs from the paragraph's own (contextual spacing). */
 	spacingAfterPx?: number;
@@ -273,8 +275,10 @@ export function placeParagraph(
 				? placement.spacingBeforePx
 				: 0;
 		firstSegment = false;
-		if (forced === 'page') cursor.newPage();
-		else if (forced === 'column') cursor.newColumn();
+		// Word keeps the paragraph mark on the page of the break: nothing follows it to fill a new page.
+		if (forced === 'page') {
+			if (!(placement.endsDocument && isFinal)) cursor.newPage();
+		} else if (forced === 'column') cursor.newColumn();
 		else if (lineCursor < layout.lines.length) cursor.newColumn();
 	}
 }

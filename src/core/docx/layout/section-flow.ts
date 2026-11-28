@@ -386,6 +386,9 @@ export class SectionFlow {
 					footnotes,
 					spacingBeforePx,
 					...(this.section.keepSpaceBeforePageBreak ? { keepSpaceBeforePageBreak: true } : {}),
+					...(this.section.endsDocument && index === this.blocks.length - 1
+						? { endsDocument: true as const }
+						: {}),
 					...(this.section.keepWrappingFloatsAboveBottomMargin
 						? { keepWrappingFloatsAboveBottomMargin: true }
 						: {}),

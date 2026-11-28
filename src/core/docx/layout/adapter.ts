@@ -608,6 +608,7 @@ export function adaptDocumentModel(
 					...(footnoteSeparators ? { footnoteSeparators } : {}),
 					...(addParagraphSpacing ? { addParagraphSpacing: true } : {}),
 					...(keepSpaceBeforePageBreak ? { keepSpaceBeforePageBreak: true } : {}),
+					endsDocument: true as const,
 					...(keepWrappingFloatsAboveBottomMargin
 						? { keepWrappingFloatsAboveBottomMargin: true }
 						: {}),
@@ -713,6 +714,7 @@ export function adaptDocumentModel(
 				: {}),
 			...(addParagraphSpacing ? { addParagraphSpacing: true } : {}),
 			...(keepSpaceBeforePageBreak ? { keepSpaceBeforePageBreak: true } : {}),
+			...(!nextSection ? { endsDocument: true as const } : {}),
 			...(keepWrappingFloatsAboveBottomMargin ? { keepWrappingFloatsAboveBottomMargin: true } : {}),
 			...(sectionStart && { break: sectionStart }),
 			...(section.verticalAlign ? { verticalAlign: section.verticalAlign } : {}),

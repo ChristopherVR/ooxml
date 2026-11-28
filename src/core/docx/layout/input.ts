@@ -401,6 +401,8 @@ export interface LayoutSection {
 	addParagraphSpacing?: boolean;
 	/** Compatibility mode before 15: `pageBreakBefore` keeps the space before at the page top. */
 	keepSpaceBeforePageBreak?: boolean;
+	/** The last section of the document: a page break ending its last paragraph starts no page (#438). */
+	endsDocument?: true;
 	/** Mode 15 limits paragraph-relative wrapping floats to the body text area. */
 	keepWrappingFloatsAboveBottomMargin?: true;
 	/** Space after (px) of the previous section's last paragraph, which collapses with this one's first. */
