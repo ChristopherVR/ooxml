@@ -249,7 +249,13 @@ export async function exportDocxPdf(
 			: createFontFileMeasurer(files, { symbolGlyph });
 	const measurer = options.measurer ?? fileMeasurer ?? createFakeMeasurer();
 	const report = new DocxPdfReportBuilder();
-	const projected = reviewDocumentFormatting(refreshComputedFields(model), mode);
+	const computed = refreshComputedFields(model);
+	const projected = reviewDocumentFormatting(
+		mode === 'final'
+			? (await import('../review-final-structure')).finalReviewStructure(computed)
+			: computed,
+		mode,
+	);
 	const balloonMode = options.markupBalloons ?? 'commentsAndFormatting';
 	// Deletions shown in balloons leave the text, as Word's "Show revisions in balloons" does.
 	const layout = layoutDocumentModel(projected.model, measurer, {
