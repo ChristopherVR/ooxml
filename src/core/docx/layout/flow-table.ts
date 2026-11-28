@@ -151,6 +151,9 @@ export function placeTable(
 			fragmentRows.push(toRowBox(layoutRow(header, cursor.columnWidthPx, measurer, note), true));
 	}
 
+	const topBorder = (layout: RowLayout) =>
+		Math.max(0, ...layout.geometry.map((cell) => cell.borders?.top?.widthPx ?? 0));
+
 	function placeRow(row: LayoutTableRow, initial: RowLayout, cantSplit: boolean, isHeader = false) {
 		const canSplitOversized = oversizedCantSplitRow !== 'clip' && !isHeader;
 		let remainingRow: RowLayout | null = initial;
@@ -297,6 +300,20 @@ export function placeTable(
 				}
 				fragmentRows.push(toRowBox(remainingRow, false));
 				remainingRow = null;
+				continue;
+			}
+			// Word does not split a row whose minimum height, with its horizontal borders, does not fit
+			// in the space left: the whole row moves to the next page (#424).
+			if (
+				remainingRow === initial &&
+				row.heightPx &&
+				row.heightRule !== 'exact' &&
+				!(cursor.atColumnTop && fragmentRows.every((item) => item.repeated)) &&
+				row.heightPx + (activeBorders ? topBorder(initial) : 0) + (initial.borderBottomPx ?? 0) >
+					remaining + 1e-6
+			) {
+				startNewFragment();
+				remainingRow = layoutRow(row, cursor.columnWidthPx, measurer, note);
 				continue;
 			}
 			const paragraphCuts = keeps?.cuts(
