@@ -7,11 +7,13 @@ const be32 = (v: number) => [(v >>> 24) & 255, (v >> 16) & 255, (v >> 8) & 255, 
 
 /**
  * `extra` maps more characters (code point, glyph 1 to 3; in the BMP) to the glyphs. `encoding` is
- * the Windows cmap encoding: 1 (Unicode BMP), or 0 for a symbol font's cmap.
+ * the Windows cmap encoding: 1 (Unicode BMP), or 0 for a symbol font's cmap. A non-zero
+ * `italicAngle` (whole degrees, negative leans right) adds a `post` table that says so.
  */
 export function syntheticTrueType(
 	extra: readonly (readonly [number, number])[] = [],
 	encoding: 0 | 1 = 1,
+	italicAngle = 0,
 ): Uint8Array {
 	const simple = [...be16(1), ...be16(0), ...be16(0), ...be16(100), ...be16(100), 0, 0, 0, 0, 0, 0];
 	const pad = (b: number[]) => (b.length % 4 ? [...b, ...Array(4 - (b.length % 4)).fill(0)] : b);
@@ -69,6 +71,19 @@ export function syntheticTrueType(
 		{ name: 'hmtx', bytes: hmtx },
 		{ name: 'loca', bytes: loca },
 		{ name: 'maxp', bytes: maxp },
+		...(italicAngle
+			? [
+					{
+						name: 'post',
+						bytes: [
+							...be32(0x00030000),
+							...be16(italicAngle & 0xffff),
+							...be16(0),
+							...Array(24).fill(0),
+						],
+					},
+				]
+			: []),
 	];
 	const header = [...be32(0x00010000), ...be16(tables.length), ...Array(6).fill(0)];
 	let offset = 12 + tables.length * 16;

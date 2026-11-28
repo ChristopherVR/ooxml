@@ -30,6 +30,16 @@ describe('glyph outlines', () => {
 		expect(runOutlines(font, 10, 0, 0, 'B').filter((s) => s.t === 'C')).toHaveLength(4);
 	});
 
+	it('shears a synthetic oblique like the text matrix: up leans right, the baseline stays', () => {
+		const slanted = runOutlines(font, 10, 100, 50, 'A', { skew: 0.5 });
+		expect(slanted.slice(0, 4)).toEqual([
+			{ t: 'M', x: 100, y: 50 },
+			{ t: 'L', x: 103.5, y: 43 },
+			{ t: 'L', x: 109.5, y: 43 },
+			{ t: 'L', x: 106, y: 50 },
+		]);
+	});
+
 	it('bends an outline along a curved map, cutting its straight edges', () => {
 		const arc = pathSampler(parsePath('M 0 100 A 100 100 0 0 1 200 100')!)!;
 		const map = (u: number, v: number) => {

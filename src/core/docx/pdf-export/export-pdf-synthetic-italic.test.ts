@@ -8,7 +8,7 @@ import { exportDocxPdf } from './export-pdf';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
-async function pdfContent(body: string): Promise<string> {
+async function pdfContent(body: string, data = syntheticTrueType()): Promise<string> {
 	const zip = new JSZip();
 	zip.file(
 		'word/document.xml',
@@ -17,7 +17,7 @@ async function pdfContent(body: string): Promise<string> {
 	const { model } = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
 	const { bytes } = await exportDocxPdf(model, {
 		measurer: createFakeMeasurer(),
-		fonts: [{ family: 'Synth', data: syntheticTrueType() }],
+		fonts: [{ family: 'Synth', data }],
 	});
 	const raw = Buffer.from(bytes).toString('latin1');
 	const streams: string[] = [];
@@ -41,5 +41,12 @@ describe('PDF export of italic text in a family without an italic face', () => {
 		expect(matrices).toEqual(['0', '0.333333', '0.333333']);
 		// The text itself is unchanged.
 		expect(content.match(/<00010002>/g)).toHaveLength(3);
+	});
+
+	it('does not shear a font that is italic itself, whether or not the host flagged it', async () => {
+		// An italic angle in the font's own post table, and no `italic: true` from the host.
+		const content = await pdfContent(run('<w:i/>'), syntheticTrueType([], 1, -12));
+		expect(content).toMatch(/1 0 0 -1 [\d.]+ [\d.]+ Tm/);
+		expect(content).not.toMatch(/1 0 0\.\d+ -1/);
 	});
 });

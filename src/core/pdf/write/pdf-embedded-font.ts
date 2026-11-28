@@ -52,7 +52,8 @@ export class PdfEmbeddedFont implements PdfCidFont {
 	) {
 		this.family = file.family;
 		this.bold = !!file.bold;
-		this.italic = !!file.italic;
+		// The host's flag, or the font's own slant (a non-zero italic angle in its `post` table).
+		this.italic = !!file.italic || font.italicAngle !== 0;
 	}
 	/** `undefined` when the bytes are not TrueType or the font's licence forbids embedding. */
 	static create(file: PdfFontFile, symbolGlyph?: PdfSymbolGlyph): PdfEmbeddedFont | undefined {

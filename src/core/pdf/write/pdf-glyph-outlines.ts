@@ -123,7 +123,11 @@ export function runOutlines(
 	spacing: PdfTextSpacing = {},
 ): PathSegment[] {
 	const scale = (spacing.scale ?? 100) / 100;
+	// The shear of a synthetic oblique, as the text matrix writes it: up (negative v) leans right.
+	const skew = spacing.skew ?? 0;
 	return placeGlyphs(font, size, text, spacing).flatMap((placed) =>
-		glyphSegments(font, placed.glyph, size, placed.x, (u, v) => [x + u, y + v], { scale }),
+		glyphSegments(font, placed.glyph, size, placed.x, (u, v) => [x + u - skew * v, y + v], {
+			scale,
+		}),
 	);
 }
