@@ -282,11 +282,16 @@ export class SectionFlow {
 		if (block.textFrame) return 0;
 		const layout = this.paragraphLayout(index);
 		const before = this.spacingBeforeFor(index);
+		// A paragraph kept with the next one brings its space after into the chain whether or not
+		// its lines are kept together (#390).
+		const spacingAfterPx = this.spacingAfterSuppressed(index) ? 0 : layout.spacingAfterPx;
 		const own =
 			before +
 			(block.keepLines
 				? layout.contentHeightPx + layout.spacingAfterPx
-				: (layout.lines[0]?.heightPx ?? 0));
+				: layout.insetTopPx +
+					(layout.lines[0]?.heightPx ?? 0) +
+					(block.keepNext ? spacingAfterPx : 0));
 		return block.keepNext ? own + this.requiredKeepHeight(index + 1, depth + 1) : own;
 	}
 
