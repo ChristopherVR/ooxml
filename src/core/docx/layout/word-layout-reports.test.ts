@@ -125,12 +125,22 @@ it('produces triple and thin/thick border bands in their native order (#334)', a
 		const line = paragraph.frame?.borders?.top;
 		return line?.compound ? [paragraphBorderBands(line, false).map((band) => band.widthPx)] : [];
 	});
-	expect(bands).toEqual([
+	// A double border has two bands; the thin band is 0.72 pt (0.96 px) and `w:sz` is the thick
+	// band (#388).
+	const expected = [
+		[2 / 3, 2 / 3],
 		[2 / 3, 2 / 3, 2 / 3],
-		[2 / 3, 1],
-		[1, 2 / 3],
-		[2 / 3, 1, 2 / 3],
-	]);
+		[0.96, 2 / 3],
+		[2 / 3, 0.96],
+		[0.96, 2 / 3, 0.96],
+	];
+	expect(bands).toHaveLength(expected.length);
+	bands.forEach((band, index) => {
+		expect(band).toHaveLength(expected[index]?.length ?? -1);
+		band.forEach((width, bandIndex) =>
+			expect(width).toBeCloseTo(expected[index]?.[bandIndex] ?? NaN, 6),
+		);
+	});
 });
 
 it('does not move an inline picture above its line at three-quarter spacing (#335)', async () => {

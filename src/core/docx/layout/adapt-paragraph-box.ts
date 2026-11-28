@@ -10,18 +10,33 @@ import type {
 
 const pointsToPx = (points: number) => (points * 96) / 72;
 
-/** Stroke/gap widths for the compound line styles, in multiples of the nominal stroke. */
+/** Word's thin band and its small gap: 0.72 pt, whatever the border's `w:sz` (#388). */
+const THIN_POINTS = 0.72;
+
+/**
+ * Band and gap widths of the compound line styles, outermost first, alternating band and gap.
+ * In Word `w:sz` is the width of the thick band of the thin-thick styles: the thin band and the
+ * small gap stay at 0.72 pt (a `w:sz` 24 `thinThickSmallGap` is 3.00 + 0.72 + 0.72 pt). A `double`
+ * draws two bands of `w:sz` around a gap of `w:sz`. The medium gap widens with `w:sz` (measured
+ * at `w:sz` 12 and 24) and the large gap is 1.44 pt.
+ */
 function compoundBorder(style: string | undefined, stroke: number): number[] | undefined {
 	if (style === 'triple') return [stroke, stroke, stroke, stroke, stroke];
+	if (style === 'double') return [stroke, stroke, stroke];
 	const match = /^(thinThickThin|thinThick|thickThin)(Small|Medium|Large)Gap$/.exec(style ?? '');
 	if (!match) return undefined;
-	const thick = stroke * 1.5;
-	const gap = stroke * (match[2] === 'Small' ? 1.5 : match[2] === 'Medium' ? 2 : 3);
+	const thin = pointsToPx(THIN_POINTS);
+	const gap =
+		match[2] === 'Small'
+			? thin
+			: match[2] === 'Medium'
+				? Math.max(thin, stroke * 0.96 - thin)
+				: thin * 2;
 	return match[1] === 'thinThickThin'
-		? [stroke, gap, thick, gap, stroke]
+		? [thin, gap, stroke, gap, thin]
 		: match[1] === 'thinThick'
-			? [stroke, gap, thick]
-			: [thick, gap, stroke];
+			? [thin, gap, stroke]
+			: [stroke, gap, thin];
 }
 
 /** Visible bands measured from the outside or the inside edge of a compound border. */
@@ -49,7 +64,7 @@ export function paragraphBox(
 		const source = formatting.borders?.[side];
 		const line = border(source, theme, true);
 		if (!line) continue;
-		const compound = compoundBorder(source?.style, line.widthPx);
+		const compound = compoundBorder(source?.style, pointsToPx((source?.sizeEighthPoints ?? 4) / 8));
 		const resolved = {
 			...line,
 			spacePx: pointsToPx(source?.spacePoints ?? 0),
