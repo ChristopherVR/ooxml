@@ -38,6 +38,11 @@ export interface LayoutRun {
 	synthetic?: boolean;
 	/** A visible `w15:appearance="tags"` boundary, measured without consuming source text. */
 	contentControlTag?: 'start' | 'end';
+	/**
+	 * A tag that directly follows the end of an untagged inline content control: Word leaves it
+	 * out of the width it checks when it breaks the line, then draws the line compressed (#415).
+	 */
+	contentControlTagUncounted?: true;
 	/** A paragraph, row or cell tag. Its closing edge has the same label slot as its opening edge. */
 	blockContentControlTag?: true;
 	/** Generated list marker; the remaining characters in this run are its separator. */

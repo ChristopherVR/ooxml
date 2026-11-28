@@ -20,6 +20,7 @@ import {
 	type PlacedToken,
 } from './paragraph-tokens';
 import { lineMetrics, tokenExtent } from './line-metrics';
+import { compressTagLine } from './tag-line-compress';
 import { alignFragments, buildFragments } from './paragraph-fragments';
 import { expectDefined } from '../expect-defined';
 import { effectiveTextScalePercent } from '../simple-types';
@@ -162,6 +163,9 @@ function measureParagraph(
 	// Width of the spaces on the current line: justified text may squeeze them to fit one more word.
 	let lineSpacePx = 0;
 	let lineSpaceCount = 0;
+	// Width of the tags on the line that Word does not count when it breaks it (#415).
+	let lineUncountedPx = 0;
+	const compressedLines = new Set<number>();
 	// Where the current line continues past a picture, and how far its later fragments move for it.
 	let jump: { index: number; shiftPx: number } | undefined;
 	// How far a line holding a positional tab relative to the margins may reach: to the margin.
@@ -385,6 +389,7 @@ function measureParagraph(
 		lineWidthPx = 0;
 		lineSpacePx = 0;
 		lineSpaceCount = 0;
+		lineUncountedPx = 0;
 		keepLeadingSpaces = false;
 		jump = undefined;
 		marginReachPx = 0;
@@ -566,13 +571,16 @@ function measureParagraph(
 			tokenBeforeWord(tokenIndex)?.token.kind === 'space'
 				? justifiedSqueezeBudgetPx(lineSpacePx, lineSpaceCount, wholeWordPx(tokenIndex, advance))
 				: 0;
+		const uncounted = paragraph.runs[token.runIndex]?.contentControlTagUncounted === true;
+		const countedWidthPx = lineWidthPx - lineUncountedPx;
 		// The tab sized the text after it to end at its stop, so that text fits when the stop does:
 		// summing its widths again would differ from the stop by floating point noise.
 		const fits =
 			(alignedEndPx !== undefined &&
 				token.kind !== 'tab' &&
 				alignedEndPx - lineStart(lineIndex) <= limit) ||
-			lineWidthPx + (token.kind === 'tab' ? width : advance) <= limit + squeezePx;
+			countedWidthPx + (token.kind === 'tab' ? width : uncounted ? 0 : advance) <=
+				limit + squeezePx;
 		const wouldFit =
 			fits || placed.every((placed) => paragraph.runs[placed.token.runIndex]?.synthetic);
 		// A word that no longer fits before a picture continues after it, on the same line.
@@ -692,6 +700,10 @@ function measureParagraph(
 		});
 		if (fits && squeezePx > 0 && lineWidthPx + advance > limit) squeezedLines.add(lineIndex);
 		lineWidthPx += token.kind === 'tab' ? width : advance + spacePx;
+		if (uncounted) {
+			lineUncountedPx += advance;
+			compressedLines.add(lines.length);
+		}
 		if (token.kind === 'space') {
 			lineSpacePx += advance;
 			lineSpaceCount++;
@@ -707,10 +719,12 @@ function measureParagraph(
 		const width = hole
 			? Math.min(availableWidth(index), hole.startPx - lineStart(index))
 			: availableWidth(index);
+		const compress = compressedLines.has(index);
+		const compressed = compress ? compressTagLine(line.fragments, width) : line.fragments;
 		lines[index] = {
 			...line,
 			fragments: alignFragments(
-				line.fragments,
+				compressed,
 				width + (hangingPx.get(index) ?? 0),
 				// Measured in Word 16: a line ending in a page or column break keeps its natural
 				// width with or without doNotExpandShiftReturn.
@@ -718,7 +732,7 @@ function measureParagraph(
 					softBreakLines?.has(index) === true ||
 					pageBreakAfterLine.has(index) ||
 					columnBreakAfterLine.has(index),
-				boxes[index]?.split ? 'left' : effectiveAlign,
+				boxes[index]?.split || compressed !== line.fragments ? 'left' : effectiveAlign,
 				squeezedLines.has(index),
 			).map((fragment) => ({ ...fragment, xPx: fragment.xPx + lineStart(index) })),
 		};
