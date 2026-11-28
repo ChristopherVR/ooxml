@@ -89,6 +89,9 @@ export function lineMetrics(
 		: fontMetrics(measurer, paragraph.emptyLineFont ?? fonts[0] ?? fontOf({ text: '' }));
 	let above = empty?.ascent ?? 0;
 	let below = empty?.descent ?? 0;
+	// Tags Word does not count when it breaks a line (#415) keep their place above the baseline but
+	// add nothing to the line's height (#427): the next line moves up by what they would add.
+	let countedAbove = above;
 	let objectAscent = 0;
 	let objectDescent = 0;
 	let textSizePx = 0;
@@ -121,7 +124,9 @@ export function lineMetrics(
 		}
 		above = Math.max(above, extent.above);
 		below = Math.max(below, extent.below);
+		if (!run?.contentControlTagUncounted) countedAbove = Math.max(countedAbove, extent.above);
 	}
+	countedAbove = Math.min(countedAbove, above);
 	// A list label that raises the baseline keeps the text's descent when that is deeper (#395:
 	// Word takes the larger descent of the label and the text at the same size), and an
 	// oversized label adds room above the text without increasing its descent.
@@ -130,14 +135,17 @@ export function lineMetrics(
 			textSizePx && marker.sizePx > textSizePx ? below : Math.max(marker.below, below);
 		below = Math.max(markerDescent, objectDescent, above + below - marker.above);
 		above = marker.above;
+		countedAbove = Math.max(countedAbove, above);
 	}
+	const lift = above - countedAbove;
+	above = countedAbove;
 	const natural = above + below;
 	const rule = paragraph.lineSpacingRule ?? 'auto';
 	const spacingTwips = paragraph.lineSpacingTwips;
 	if (rule !== 'exact' && rule !== 'atLeast') {
 		const heightPx = Math.max(objectAscent + below, natural * ((spacingTwips ?? 240) / 240));
 		const extraBelowPx = Math.max(0, heightPx - natural);
-		return { heightPx, baselinePx: heightPx - below - extraBelowPx, extraBelowPx };
+		return { heightPx, baselinePx: heightPx - below - extraBelowPx + lift, extraBelowPx };
 	}
 	if (rule === 'exact' && spacingTwips != null) {
 		// Word puts the baseline of an exact line at 80 % of its height, whatever the font (#419).
@@ -148,5 +156,5 @@ export function lineMetrics(
 		rule === 'exact'
 			? natural
 			: Math.max(natural, spacingTwips != null ? twipsToPx(spacingTwips) : 0);
-	return { heightPx, baselinePx: heightPx - below, extraBelowPx: 0 };
+	return { heightPx, baselinePx: heightPx - below + lift, extraBelowPx: 0 };
 }

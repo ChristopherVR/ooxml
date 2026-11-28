@@ -44,3 +44,17 @@ describe('tags after an untagged content control (#415)', async () => {
 			expect(Math.abs(mine.x.at(-1)! - theirs.x.at(-1)!)).toBeLessThanOrEqual(1.5);
 	});
 });
+
+describe.each([
+	['bug', 'issue-427-tags-wrap-in-untagged-control', 'issue-427-bug'],
+	['control', 'issue-427-tags-wrap-in-tagged-control', 'issue-427-control'],
+] as const)('last line of a tagged control, %s (#427)', async (_label, docx, key) => {
+	const ours = await exported(docx);
+	const word = WORD[key];
+
+	it('puts the lines and the next paragraph on the same baselines as Word', () => {
+		expect(ours.map((line) => line.text)).toEqual(word.map((line) => line.text));
+		const errors = word.map((line, index) => Math.abs(ours[index]!.y - line.y));
+		expect(Math.max(...errors)).toBeLessThanOrEqual(0.25);
+	});
+});
