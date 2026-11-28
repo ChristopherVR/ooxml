@@ -42,6 +42,12 @@ import { wordBaselinePx, wordPdfPx } from './pdf-units';
 const DEFAULT_FAMILY = 'Calibri';
 /** The slope Word shears a face with when the font family has no italic (measured from its PDF). */
 const SYNTHETIC_ITALIC_SKEW = 1 / 3;
+/**
+ * The stroke width, in em, that emboldens a face the family has no bold of (render mode 2 with the
+ * text colour as the pen). It adds this much to every stem, about 0.7 pt at 16 pt, as Word's
+ * synthetic bold does; the advances stay those of the regular face.
+ */
+const SYNTHETIC_BOLD_EM = 1 / 24;
 /** Where Word's dot leaders stop short of their tab stop, measured on 10 pt Arial (issue #396). */
 const LEADER_END_GAP_EM = 0.122;
 const LEADERS: Record<string, string> = { dot: '.', hyphen: '-', middleDot: '\u00b7' };
@@ -296,7 +302,16 @@ export class DocxPdfText {
 			const kerning = font.kerning === 'normal' ? pairAdjustments(embedded, text) : undefined;
 			const kerned = kerning ? kerning.reduce((sum, value) => sum + value, 0) / 1000 : 0;
 			const scale = fit((embedded.width(text) + kerned) * sizePx);
+			// The family has no bold face: thicken the regular one, as Word does.
+			const embolden = bold && !embedded.bold;
+			if (embolden) {
+				const pen = cssRgba(fragment.color) ?? cssRgba('#000000');
+				page.save();
+				if (pen) page.strokeColor(pen.r, pen.g, pen.b);
+				page.lineStyle(sizePx * SYNTHETIC_BOLD_EM, 0, 1);
+			}
 			page.embeddedText(embedded, sizePx, x, y, space ? `${text} ` : text, {
+				...(embolden ? { emboldened: true } : {}),
 				character: spacing,
 				...(kerning?.some(Boolean) ? { kerning } : {}),
 				scale,
@@ -305,6 +320,7 @@ export class DocxPdfText {
 				...(drawPx !== sizePx ? { drawSize: drawPx } : {}),
 				...(space ? { word: wordSpacing(scale, embedded.width(' ') * sizePx) } : {}),
 			});
+			if (embolden) page.restore();
 			return;
 		}
 		let written = ascii;

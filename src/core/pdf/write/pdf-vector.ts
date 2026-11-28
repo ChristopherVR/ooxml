@@ -71,6 +71,8 @@ export interface PdfTextSpacing {
 	invisible?: boolean;
 	/** Horizontal shear of the text matrix (a synthetic oblique): the glyphs lean right by this slope. */
 	skew?: number;
+	/** Fill and stroke the glyphs (render mode 2) with the pen the caller set: a synthetic bold. */
+	emboldened?: boolean;
 	/**
 	 * Embedded text only: the size written in `Tf` when the glyphs are drawn at another size than
 	 * the one they advance by. Each glyph keeps its advance at the run's size, through `TJ` offsets
@@ -119,12 +121,12 @@ function kerningOffsets(adjustments: readonly number[]): number[] {
 
 /** The `Tz` and `Tr` operators a run needs, with a leading space; empty for the defaults. */
 const textState = (spacing: PdfTextSpacing): string =>
-	`${scaled(spacing) ? ` ${num(spacing.scale!)} Tz` : ''}${spacing.invisible ? ' 3 Tr' : ''}`;
+	`${scaled(spacing) ? ` ${num(spacing.scale!)} Tz` : ''}${spacing.invisible ? ' 3 Tr' : ''}${spacing.emboldened ? ' 2 Tr' : ''}`;
 const scaled = (spacing: PdfTextSpacing): boolean =>
 	spacing.scale !== undefined && Math.abs(spacing.scale - 100) > 1e-6;
 /** Text state outlives `ET`, so a run that changed it puts the defaults back. */
 const textReset = (spacing: PdfTextSpacing): string =>
-	`${scaled(spacing) ? ' 100 Tz' : ''}${spacing.invisible ? ' 0 Tr' : ''}`;
+	`${scaled(spacing) ? ' 100 Tz' : ''}${spacing.invisible || spacing.emboldened ? ' 0 Tr' : ''}`;
 
 /** One page under construction: append operators, then hand it to `buildVectorPdf`. */
 export class PdfVectorPage {

@@ -52,7 +52,8 @@ export class PdfEmbeddedFont implements PdfCidFont {
 		readonly symbolGlyph?: PdfSymbolGlyph,
 	) {
 		this.family = file.family;
-		this.bold = !!file.bold;
+		// The host's flag, or the font's own weight (a bold face the host did not flag).
+		this.bold = !!file.bold || (font.weightClass ?? 400) >= 600;
 		// The host's flag, or the font's own slant (a non-zero italic angle in its `post` table).
 		this.italic = !!file.italic || font.italicAngle !== 0;
 	}

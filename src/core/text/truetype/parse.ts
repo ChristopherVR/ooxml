@@ -29,6 +29,8 @@ export interface TrueTypeFont {
 	readonly italicAngle: number;
 	/** Cap height in font units, when the `OS/2` table has it. */
 	readonly capHeight: number | undefined;
+	/** `OS/2` `usWeightClass` (400 regular, 700 bold), when the font has an `OS/2` table. */
+	readonly weightClass: number | undefined;
 	/** `OS/2` `fsType`: embedding permissions (0 = installable). */
 	readonly embeddingFlags: number;
 	/** 0 short, 1 long `loca` offsets. */
@@ -204,6 +206,7 @@ export function parseTrueType(data: Uint8Array): TrueTypeFont | undefined {
 		],
 		italicAngle: post ? i16(view, post.offset + 4) + u16(view, post.offset + 6) / 65536 : 0,
 		capHeight: os2 && os2.length >= 90 ? i16(view, os2.offset + 88) || undefined : undefined,
+		weightClass: os2 && os2.length >= 6 ? u16(view, os2.offset + 4) : undefined,
 		embeddingFlags: os2 ? u16(view, os2.offset + 8) : 0,
 		locaFormat,
 		symbolEncoded: map.symbol,

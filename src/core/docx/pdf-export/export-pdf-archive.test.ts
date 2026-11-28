@@ -103,7 +103,7 @@ describe('exportDocxPdf PDF/A', () => {
 		const tagged = inspect((await exportDocxPdf(model, { measurer, fonts, pdfA: true })).bytes);
 		// PDF/UA 7.1: every content item is tagged or an artifact; the watermark was neither.
 		expect(tagged.content).toMatch(
-			/^[^\n]* cm\n\/Artifact <<\/Type \/Pagination>> BDC\nq\n\/GS\d gs\n[^]*?\] TJ ET[^\n]*\nQ\nEMC\n/,
+			/^[^\n]* cm\n\/Artifact <<\/Type \/Pagination>> BDC\nq\n\/GS\d gs\n[^]*?\] TJ ET[^\n]*\n(?:Q\n)?Q\nEMC\n/,
 		);
 		const untagged = inspect(
 			(await exportDocxPdf(model, { measurer, fonts, taggedPdf: false })).bytes,
