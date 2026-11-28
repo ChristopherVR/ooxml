@@ -3,6 +3,13 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@2.1.0) - 2026-11-28
+
+### Features
+
+- **docx:** Export headless merge field filling from the docx entry ([ed49c54](https://github.com/ChristopherVR/ooxml/commit/ed49c541168e6e03e8b2cd6cbd3d7a13af5006ee))
+- **docx:** Fill content control templates headlessly ([b1fdc6d](https://github.com/ChristopherVR/ooxml/commit/b1fdc6d77953f85b39caf5c3a1e631e8a5ee800a))
+
 ## [2.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@2.0.1) - 2026-11-27
 
 ### Documentation

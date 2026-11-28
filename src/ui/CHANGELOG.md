@@ -3,6 +3,22 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.5.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.5.1) - 2026-11-28
+
+### Bug Fixes
+
+- **docx:** Map symbol font list bullets to their glyphs ([18fb1d9](https://github.com/ChristopherVR/ooxml/commit/18fb1d93e7ba6ecb5a1df2656ebe2b6e90d7cf04))
+- **docx:** Keep outer content controls the model does not track ([b21c428](https://github.com/ChristopherVR/ooxml/commit/b21c4286a8cab13b44d38abef9d336875f3fde18))
+- **docx:** Draw paragraph border shadows and reserve their room ([406b0c1](https://github.com/ChristopherVR/ooxml/commit/406b0c1ca5283f8293f252d79f17c7848fc9a6bb))
+- **docx:** Keep the outer content controls of a run through editor edits ([666c0dc](https://github.com/ChristopherVR/ooxml/commit/666c0dcc36a8cff35384e401cc9a6712707ae1b0))
+- **docx:** Start the right border shadow at the top only for a group's first paragraph ([c6674df](https://github.com/ChristopherVR/ooxml/commit/c6674df7b0c99b1c886d66743209cbc5399c9011))
+- **docx:** Share Word's washout map across the PDF, canvas and Print Layout ([b0698b9](https://github.com/ChristopherVR/ooxml/commit/b0698b9ee8b277553af2abdc25db4ebba9dfd119))
+- **docx:** Keep negative indents and share the legacy marker rule ([21ddfe4](https://github.com/ChristopherVR/ooxml/commit/21ddfe4cde9470ce7ba6cce0a8a49acd67c588a1))
+
+### Documentation
+
+- Show the products in use in animated readme pictures ([9e5ec7c](https://github.com/ChristopherVR/ooxml/commit/9e5ec7c78d005042d2c3c23f24cccb912d036e3b))
+
 ## [2.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.5.0) - 2026-11-27
 
 <!-- release-notes: 2.5 -->

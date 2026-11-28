@@ -3,6 +3,12 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@2.1.1) - 2026-11-28
+
+### Documentation
+
+- Show the products in use in animated readme pictures ([9e5ec7c](https://github.com/ChristopherVR/ooxml/commit/9e5ec7c78d005042d2c3c23f24cccb912d036e3b))
+
 ## [2.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@2.1.0) - 2026-11-27
 
 ### Features

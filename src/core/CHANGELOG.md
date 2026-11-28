@@ -3,6 +3,71 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.6.0) - 2026-11-28
+
+### Features
+
+- **docx:** Export headless merge field filling from the docx entry ([ed49c54](https://github.com/ChristopherVR/ooxml/commit/ed49c541168e6e03e8b2cd6cbd3d7a13af5006ee))
+- **docx:** Fill content control templates headlessly ([b1fdc6d](https://github.com/ChristopherVR/ooxml/commit/b1fdc6d77953f85b39caf5c3a1e631e8a5ee800a))
+
+### Bug Fixes
+
+- **drawingml:** Escape inkml svg attributes ([6e19859](https://github.com/ChristopherVR/ooxml/commit/6e1985955b4936e9652e2d7a67a4232092576abc))
+- **xlsx:** Keep shape svg ids to name characters ([664c2dd](https://github.com/ChristopherVR/ooxml/commit/664c2dda60c5f9b3504f25926cb4e8801b3b104f))
+- **docx:** Parse table cell numbers without ambiguous spaces ([5431891](https://github.com/ChristopherVR/ooxml/commit/5431891c41061c255405e7ec018d1a1ff27ef0dc))
+- **docx:** Trim html merge trailing spaces with a scan ([afa7993](https://github.com/ChristopherVR/ooxml/commit/afa7993dd7427ec04de12135f4fa0649db7f86dd))
+- **pdf:** Read svg transform lists with a linear scanner ([94b78c2](https://github.com/ChristopherVR/ooxml/commit/94b78c26a97fd5680dd1e8dca3ae04b8774fea1b))
+- **visio:** Match page name fields without ambiguous spaces ([472d6f4](https://github.com/ChristopherVR/ooxml/commit/472d6f47bad78024c6e0a3b0be965d17e7bb0e0d))
+- **math:** Escape backslashes in linear normal text ([2814400](https://github.com/ChristopherVR/ooxml/commit/2814400a85edec7e44e218b32b7a5fd891e6e71b))
+- **docx:** Decide bibliography parts by the parsed root namespace ([433feae](https://github.com/ChristopherVR/ooxml/commit/433feaecb0b499990860e48c5eb20e8fb88e9037))
+- **visio:** Prove master independence without rebuilding each master ([021faef](https://github.com/ChristopherVR/ooxml/commit/021faef34d6c7c1ba8c2bda88d687b97c11a7383))
+- **docx:** Share merge and save state between entry bundles ([357e8a6](https://github.com/ChristopherVR/ooxml/commit/357e8a6494a8d63ec8f7d6de3c429e67f99e81c0))
+- **docx:** Give each unsupported merge field its own reason ([1aced85](https://github.com/ChristopherVR/ooxml/commit/1aced8546c9effc06947151c50f0853e432acbeb))
+- **docx:** Squeeze justified lines for a word split across runs ([f586c65](https://github.com/ChristopherVR/ooxml/commit/f586c65602ad53a78a38b71da969db3fde869525))
+- **docx:** Draw symbol characters and symbol fonts in the pdf export ([ad17f8e](https://github.com/ChristopherVR/ooxml/commit/ad17f8edf96b102fe16b4bdaf79222c7174c795a))
+- **docx:** Map symbol font list bullets to their glyphs ([18fb1d9](https://github.com/ChristopherVR/ooxml/commit/18fb1d93e7ba6ecb5a1df2656ebe2b6e90d7cf04))
+- **docx:** Drop accents from french caps as word prints them ([59243c4](https://github.com/ChristopherVR/ooxml/commit/59243c49b281e5996f80ca50a0435e6ec2640c45))
+- **docx:** Show merge field names in headers outside a mail merge ([db1df75](https://github.com/ChristopherVR/ooxml/commit/db1df759a9439e184d6b98c673156d3b84690eb9))
+- **docx:** Keep paragraphs with text-font symbols editable ([d5dce39](https://github.com/ChristopherVR/ooxml/commit/d5dce3996bc34a1734f3b77f80fe8b56da355f2c))
+- **docx:** Fill header and footer merge fields as text ([d888d2c](https://github.com/ChristopherVR/ooxml/commit/d888d2c13a0cc5e400318b8712382834474aa6ec))
+- **docx:** Keep outer content controls the model does not track ([b21c428](https://github.com/ChristopherVR/ooxml/commit/b21c4286a8cab13b44d38abef9d336875f3fde18))
+- **docx:** Let a short last word take the full squeeze Word allows ([c935363](https://github.com/ChristopherVR/ooxml/commit/c93536391ae1b7cc52979779b0e93606d25cc998))
+- **docx:** Slant italic text in a PDF when the family has no italic face ([c8ce91a](https://github.com/ChristopherVR/ooxml/commit/c8ce91af7fbb8b6cbac622ac674ff9bdc3bb97cf))
+- **docx:** Paint table cell shading before cell text in the PDF export ([ad7e622](https://github.com/ChristopherVR/ooxml/commit/ad7e6222f958837b719cdfd943cc68bc318c4872))
+- **docx:** Shear text shadow outlines and detect italic fonts in PDF export ([8ba9d52](https://github.com/ChristopherVR/ooxml/commit/8ba9d525fbb5805ed1d938f99160a7fd4c1f2ee5))
+- **docx:** Join deleted paragraph marks in PDF export without markup ([1586a1e](https://github.com/ChristopherVR/ooxml/commit/1586a1e4c64bce17b69145c05577dd88198597b1))
+- **docx:** Drop deleted table rows in PDF export without markup ([8e3486a](https://github.com/ChristopherVR/ooxml/commit/8e3486a805fb805105860ed25b5364e935a2870f))
+- **docx:** Keep sections, vertical merges and nested cells in the final view ([1e07255](https://github.com/ChristopherVR/ooxml/commit/1e07255f199e559bc0fcaac649c264cf2e12622a))
+- **docx:** Draw a tag for every nesting level of tagged content controls ([0652144](https://github.com/ChristopherVR/ooxml/commit/06521445b8f507d7e1fa6bf19020cd2399534c32))
+- **docx:** Draw paragraph border shadows and reserve their room ([406b0c1](https://github.com/ChristopherVR/ooxml/commit/406b0c1ca5283f8293f252d79f17c7848fc9a6bb))
+- **docx:** Keep the outer content controls of a run through editor edits ([666c0dc](https://github.com/ChristopherVR/ooxml/commit/666c0dcc36a8cff35384e401cc9a6712707ae1b0))
+- **docx:** Start the right border shadow at the top only for a group's first paragraph ([c6674df](https://github.com/ChristopherVR/ooxml/commit/c6674df7b0c99b1c886d66743209cbc5399c9011))
+- **docx:** Keep white white in washed-out picture watermarks in the PDF ([94675a7](https://github.com/ChristopherVR/ooxml/commit/94675a72d7f265ac5f77d67a542b2a84693a3a61))
+- **docx:** Stroke zero-extent lines and connectors in the PDF export ([9b2dcce](https://github.com/ChristopherVR/ooxml/commit/9b2dcce6829ec1088ae8ef844f430fbb33ae43ab))
+- **docx:** Keep shadow and glow on level lines in the shape svg ([8fbc043](https://github.com/ChristopherVR/ooxml/commit/8fbc043519f8e4981dfc3d7ebf74c418c3a8fc21))
+- **docx:** Share Word's washout map across the PDF, canvas and Print Layout ([b0698b9](https://github.com/ChristopherVR/ooxml/commit/b0698b9ee8b277553af2abdc25db4ebba9dfd119))
+- **docx:** Measure paragraph indents from the margin beside a float ([06cc875](https://github.com/ChristopherVR/ooxml/commit/06cc875c7f7c323e3468d08429d9159dd970bfa2))
+- **docx:** Start text after a legacy list marker at the legacy indent ([65cbc34](https://github.com/ChristopherVR/ooxml/commit/65cbc34e690d1e57f0c18e0ced7d9b3dc74b3cf6))
+- **docx:** Keep negative indents and share the legacy marker rule ([21ddfe4](https://github.com/ChristopherVR/ooxml/commit/21ddfe4cde9470ce7ba6cce0a8a49acd67c588a1))
+
+### Performance
+
+- **docx:** Load the symbol font tables only for pdf export ([5e51504](https://github.com/ChristopherVR/ooxml/commit/5e51504f6ea424bd8030f090dc36f68f1ea915b8))
+- **docx:** Measure split words once when squeezing justified lines ([a7f809c](https://github.com/ChristopherVR/ooxml/commit/a7f809c080a049a8f6d556c874a8b1d5571b8d4e))
+- **docx:** Trim the symbol and caps helpers in the layout bundle ([d3c1290](https://github.com/ChristopherVR/ooxml/commit/d3c129025fc83e0687198fafeba3bb5582f8ad39))
+- **docx:** Share the chart renderer between docx/layout and chart ([2a2979f](https://github.com/ChristopherVR/ooxml/commit/2a2979fb833698adb19fb7ab12ba9ee20bbd11a3))
+- **docx:** Load the pdf watermark painter only for pages with a watermark ([569e093](https://github.com/ChristopherVR/ooxml/commit/569e093e19051f304d016cdcb56b71a72faf5f22))
+
+### Testing
+
+- **xlsx:** Give the shape id prefix cases a complete text body ([c49d3ae](https://github.com/ChristopherVR/ooxml/commit/c49d3ae7d3dcd32c60d7e4088e2f1c22faef63c3))
+- **docx:** Open saved content control templates with the guarded zip reader ([789a77d](https://github.com/ChristopherVR/ooxml/commit/789a77d881af78a2e9fdc65683783d2bcbe2b4f5))
+- **docx:** Assert painted lines for the final-view PDF export ([e3a2ecb](https://github.com/ChristopherVR/ooxml/commit/e3a2ecba7366f51cb4ff3d0c8aa8c4566673f85d))
+
+### Styling
+
+- **docx:** Format the legacy numbering and float indent changes ([062dff8](https://github.com/ChristopherVR/ooxml/commit/062dff8428f57af2ce392a638ef0556aa44e87df))
+
 ## [2.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.5.0) - 2026-11-27
 
 <!-- release-notes: 2.5 -->

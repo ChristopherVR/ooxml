@@ -4,6 +4,19 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
+## 2026-11-28
+
+_Releases: docx-core@2.1.0, docx-react-viewer@2.1.1, docx-vue-viewer@2.1.1, docx-angular-viewer@2.1.1, docx-svelte-viewer@2.1.1, docx-solid-viewer@2.1.1, docx-vanilla-viewer@2.1.1_
+
+### Features
+
+- **docx:** Export headless merge field filling from the docx entry ([ed49c54](https://github.com/ChristopherVR/ooxml/commit/ed49c541168e6e03e8b2cd6cbd3d7a13af5006ee))
+- **docx:** Fill content control templates headlessly ([b1fdc6d](https://github.com/ChristopherVR/ooxml/commit/b1fdc6d77953f85b39caf5c3a1e631e8a5ee800a))
+
+### Documentation
+
+- Show the products in use in animated readme pictures ([9e5ec7c](https://github.com/ChristopherVR/ooxml/commit/9e5ec7c78d005042d2c3c23f24cccb912d036e3b))
+
 ## 2026-11-27
 
 <!-- release-notes: 2.5 -->

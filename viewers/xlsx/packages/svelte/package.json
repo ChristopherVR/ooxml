@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-svelte-viewer",
-	"version": "2.1.0",
+	"version": "2.1.1",
 	"description": "Svelte 5 component for the Excel spreadsheet editor. Self-contained: includes the editor, the formula engine and the legacy .xls reader.",
 	"keywords": [
 		"editor",

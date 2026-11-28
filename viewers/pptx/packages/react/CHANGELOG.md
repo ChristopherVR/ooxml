@@ -3,6 +3,21 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [5.2.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@5.2.1) - 2026-11-28
+
+### Bug Fixes
+
+- **drawingml:** Escape inkml svg attributes ([6e19859](https://github.com/ChristopherVR/ooxml/commit/6e1985955b4936e9652e2d7a67a4232092576abc))
+- **math:** Escape backslashes in linear normal text ([2814400](https://github.com/ChristopherVR/ooxml/commit/2814400a85edec7e44e218b32b7a5fd891e6e71b))
+- **docx:** Draw symbol characters and symbol fonts in the pdf export ([ad17f8e](https://github.com/ChristopherVR/ooxml/commit/ad17f8edf96b102fe16b4bdaf79222c7174c795a))
+- **docx:** Map symbol font list bullets to their glyphs ([18fb1d9](https://github.com/ChristopherVR/ooxml/commit/18fb1d93e7ba6ecb5a1df2656ebe2b6e90d7cf04))
+- **docx:** Keep paragraphs with text-font symbols editable ([d5dce39](https://github.com/ChristopherVR/ooxml/commit/d5dce3996bc34a1734f3b77f80fe8b56da355f2c))
+- **docx:** Shear text shadow outlines and detect italic fonts in PDF export ([8ba9d52](https://github.com/ChristopherVR/ooxml/commit/8ba9d525fbb5805ed1d938f99160a7fd4c1f2ee5))
+
+### Performance
+
+- **docx:** Trim the symbol and caps helpers in the layout bundle ([d3c1290](https://github.com/ChristopherVR/ooxml/commit/d3c129025fc83e0687198fafeba3bb5582f8ad39))
+
 ## [5.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@5.2.0) - 2026-11-27
 
 ### Features

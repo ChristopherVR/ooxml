@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-vanilla-viewer",
-	"version": "2.1.0",
+	"version": "2.1.1",
 	"description": "Framework-free <xlsx-editor> web component and mount helper for the Excel spreadsheet editor. Self-contained: includes the editor, the formula engine and the legacy .xls reader.",
 	"keywords": [
 		"editor",

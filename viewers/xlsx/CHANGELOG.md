@@ -4,6 +4,14 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
+## 2026-11-28
+
+_Releases: @christophervr/xlsx-react-viewer@2.1.1, xlsx-vue-viewer@2.1.1, xlsx-angular-viewer@2.1.1, xlsx-svelte-viewer@2.1.1, xlsx-solid-viewer@2.1.1, xlsx-vanilla-viewer@2.1.1_
+
+### Documentation
+
+- Show the products in use in animated readme pictures ([9e5ec7c](https://github.com/ChristopherVR/ooxml/commit/9e5ec7c78d005042d2c3c23f24cccb912d036e3b))
+
 ## 2026-11-27
 
 <!-- release-notes: 2.5 -->
