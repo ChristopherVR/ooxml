@@ -64,7 +64,8 @@ export function createEstimatedMeasurer(): TextMeasurer {
  * font sets `USE_TYPO_METRICS`, else `usWinAscent + usWinDescent` plus the part of the `hhea` line
  * gap they leave out, as Windows gives them to Word (measured: Noto Serif, which sets the flag,
  * advances 1.362 em per line in Word; Carlito and Liberation Serif, which do not, 1.221 and 1.15).
- * The leading is split above and below the text, as the canvas measurer places it.
+ * Without the flag the leading goes above the text, as Word's Save as PDF places it; with it the
+ * typographic gap is split above and below, as the canvas measurer places it.
  */
 function verticalEm(face: FontFace): { height: number; ascent: number } {
 	const { font } = face;
@@ -84,7 +85,8 @@ function verticalEm(face: FontFace): { height: number; ascent: number } {
 	}
 	const win = font.winAscent + font.winDescent;
 	const leading = Math.max(0, font.lineGap - (win - hhea));
-	return { height: (win + leading) / em, ascent: (font.winAscent + leading / 2) / em };
+	// Word puts all of that leading above the ascent (#382: Times New Roman and Arial, 8 to 72 pt).
+	return { height: (win + leading) / em, ascent: (font.winAscent + leading) / em };
 }
 
 const SMALL_CAPS_SCALE = 0.8;

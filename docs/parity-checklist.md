@@ -862,11 +862,25 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P2** Save as PDF matches Word's glyph positions to the pixel. Done: text is drawn at Word's
       size rounded to 1/600 inch (ties up, 11 pt at 11.04) on the line layout and advances of the
       nominal size (`TJ` offsets with embedded fonts, `Tz` with standard fonts), the page box is
-      rounded the same way (A4 595.32 x 841.92) and each baseline is snapped to a whole 1/600 inch
-      (`src/core/docx/pdf-export/pdf-units.ts`). Open: Word's glyph advances are not the plain
-      unrounded advances (0.075 pt rms apart, and no rounding model tried fits better), and its
-      line pitch varies by one unit around the nominal height in a way the snapping only
-      approximates (#382).
+      rounded the same way (A4 595.32 x 841.92), baselines are whole 1/600 inch steps down from the
+      unrounded page height (841.9 pt, as Word measures) and a font's leading (the `hhea` gap its
+      Windows metrics leave out) goes above the ascent, as in Word (Times New Roman and Arial first
+      lines were up to 1.6 pt high). `export-pdf-word-glyphs.test.ts` compares every line's size,
+      baseline and glyph positions with Word's PDFs (`__fixtures__/word-sizes/word-glyphs.json`):
+      baselines within 0.22 pt (0.07 to 0.10 pt rms), glyphs 0.07 pt rms on short lines. Open, from
+      the issue's fixtures: (1) Word's advances. Its PDF steps each glyph by the 1/1000 em
+      `Widths` at the drawn size and adds a few `TJ` corrections per word toward page positions
+      near whole 1/600 inch, but those positions are no rounding of the nominal advances found:
+      plain advances 0.072 (Calibri), 0.074 (Times New Roman) and 0.075 pt (Arial) rms over the 8
+      to 72 pt lines; drawn-size advances, the integer widths, per-glyph or cumulative rounding to
+      1/600, 1/1200, 1/1440 or 1/2400 inch, integer device advances at 600 dpi, `hdmx`, word starts
+      rounded with drawn or device advances inside, snapping to the rounded nominal positions and
+      a rounded space all stay between 0.061 and 0.13 pt; long left-aligned lines end up to
+      0.12% shorter than the nominal advances, by an amount that differs from line to line.
+      (2) The pitch: Word's lines differ from the nominal height by one 1/600 inch unit on about a
+      third of the lines (Calibri 11: 112, 111, 112) in a way no rounding of the line height or
+      ascent in twips, 1/600 inch or 0.01 pt reproduces (at best two thirds of the pitches), and
+      its baselines carry a 0.025 pt step every three inches or so down the page (#382).
 - [x] **P1** Save as PDF writes charts and drawing shapes as vector paths with real text (through
       the shared SVG to PDF converter), text boxes with the lines the page engine laid out,
       watermarks (text turned and half transparent, pictures washed out), page borders and line

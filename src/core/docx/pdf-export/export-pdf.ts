@@ -180,7 +180,9 @@ function paintPage(
 	{ marks, graphics, measurer, watermark }: PageExtras,
 ): void {
 	const pdf = painter.page;
-	pdf.concat([PT_PER_PX, 0, 0, -PT_PER_PX, 0, wordPdfPt(page.heightPx * PT_PER_PX)]);
+	// Word measures down from the page's own height (16838 twips is 841.9 pt), not from the page box
+	// it rounds up to 1/600 inch: its baselines are 841.9 pt less whole 1/600 inch steps (#382).
+	pdf.concat([PT_PER_PX, 0, 0, -PT_PER_PX, 0, page.heightPx * PT_PER_PX]);
 	const hooks = painter.hooks;
 	hooks?.startPage(pdf, page);
 	// Page borders, line numbers, watermarks and floats behind the header and footer are
