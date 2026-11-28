@@ -42,6 +42,15 @@ export function tokenExtent(
 ): { above: number; below: number; ascent: number; descent: number } {
 	const run = paragraph.runs[token.runIndex];
 	if (token.kind === 'object' && run?.object) {
+		// A horizontal line's room ends at the line's bottom, which is at least the run's own line.
+		if (run.object.rule) {
+			const { ascent, descent } = fontMetrics(
+				measurer,
+				fonts[token.runIndex] ?? fontOf({ text: '' }),
+			);
+			const above = Math.max(ascent, run.object.heightPx - descent);
+			return { above, below: descent, ascent: above, descent };
+		}
 		const below = Math.min(run.object.descentPx ?? 0, run.object.heightPx);
 		const above = run.object.heightPx - below;
 		return { above, below, ascent: above, descent: below };

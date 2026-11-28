@@ -36,6 +36,18 @@ export interface TextBoxContent extends Pick<
 	link?: { id: number; seq: number };
 }
 
+/** A Word horizontal line: a filled rule of `heightPx` across `fraction` of the text column. */
+export interface HorizontalRule {
+	heightPx: number;
+	/** `#rrggbb`, or any CSS colour the file named. */
+	color: string;
+	/** Share of the column the line covers (`o:hrpct` in tenths of a percent; 1 by default). */
+	fraction: number;
+	align: 'left' | 'center' | 'right';
+	/** Without `o:hrnoshade`, Word bevels the rule's edges. */
+	shaded: boolean;
+}
+
 /** An inline drawing (`w:drawing` or legacy `w:pict`) modeled at run granularity. */
 export interface InlineImage {
 	/** Relationship id in `word/_rels/document.xml.rels` pointing at the media part. */
@@ -68,6 +80,8 @@ export interface InlineImage {
 	vmlFloat?: true;
 	/** Floating wrapping, position and stacking order. */
 	placement?: PicturePlacement;
+	/** A Word horizontal line (`v:rect` with `o:hr="t"`): drawn as a rule across the text column. */
+	horizontalRule?: HorizontalRule;
 	/** Set for non-picture drawings (chart, SmartArt, shape, unresolved legacy VML): rendered as a labeled placeholder with no editable bytes. */
 	unsupported?: string;
 	/** For a text box (`wps:txbx`): its paragraphs' text, shown read-only; the box XML is preserved on save. */

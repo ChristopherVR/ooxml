@@ -111,6 +111,8 @@ const implicitRunStyles = {
 } satisfies NonNullable<DocumentModel['characterStyles']>;
 
 const twipsToPx = twipsToPixels;
+/** The room a horizontal line takes above and below its rule: 2.5 pt each side (measured in Word 16). */
+const HORIZONTAL_RULE_ROOM_PX = 5 * (4 / 3);
 /** Word gives `beforeAutospacing` and `afterAutospacing` 14 pt (measured in spacing-probe.json). */
 const HTML_AUTO_SPACING_TWIPS = twips(280);
 
@@ -255,8 +257,23 @@ export function adaptDocumentModel(
 		const image = run.image;
 		// A text box is drawn through its frame; one whose geometry cannot be drawn is not.
 		if (image?.unsupported === 'Text box' && !image.shape) reportOnce(TEXT_BOX_NOTE);
+		const rule = image?.horizontalRule;
 		const object =
 			equation ??
+			(rule
+				? {
+						partName: '',
+						contentType: '',
+						widthPx: 0,
+						heightPx: rule.heightPx + HORIZONTAL_RULE_ROOM_PX,
+						rule: {
+							heightPx: rule.heightPx,
+							color: rule.color,
+							fraction: rule.fraction,
+							shaded: rule.shaded,
+						},
+					}
+				: undefined) ??
 			(run.noteSeparator
 				? {
 						partName: '',
@@ -479,7 +496,10 @@ export function adaptDocumentModel(
 					? twipsToPx(model.defaultTabStopTwips)
 					: undefined,
 				emptyLineFont: !marker && mark ? fontOf(withFontFallback(mark)) : undefined,
-				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
+				align:
+					paragraph.runs.find((run) => run.image?.horizontalRule)?.image?.horizontalRule?.align ??
+					resolved.align ??
+					(isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,
 				spacingBeforeTwips: autoSpaced(resolved.spacingBeforeAuto, resolved.spacingBeforeTwips),
 				spacingAfterTwips: autoSpaced(resolved.spacingAfterAuto, resolved.spacingAfterTwips),

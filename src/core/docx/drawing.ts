@@ -8,6 +8,7 @@ import { imageContentType as guessContentType } from '../drawingml/image-content
 // picture parsing); reimplemented here against @xmldom/xmldom instead of that package's DOM layer.
 import { readDrawingTransform } from './drawing-transform';
 import type { Block, InlineImage, PicturePlacement, TextBoxContent } from './model';
+import type { HorizontalRule } from './inline-model';
 import { parseDrawingBodyProperties } from '../drawingml/read-text-body';
 import {
 	contentTypeForPart,
@@ -397,8 +398,42 @@ function parsePlacement(anchor: XmlElement): PicturePlacement {
 	return placement;
 }
 
+const O_NS = 'urn:schemas-microsoft-com:office:office';
+
+/** A VML `v:rect` that Word's Horizontal Line command writes (`o:hr="t"`). */
+function parseHorizontalRule(node: XmlElement): HorizontalRule | undefined {
+	const rect = node.getElementsByTagNameNS(VML_NS, 'rect')[0];
+	if (!rect || rect.getAttributeNS(O_NS, 'hr') !== 't') return undefined;
+	const style = rect.getAttribute('style') ?? '';
+	const height = /height:\s*([\d.]+)(pt|px|in|cm|mm)?/i.exec(style);
+	const unit = { pt: 4 / 3, px: 1, in: 96, cm: 96 / 2.54, mm: 96 / 25.4 };
+	const heightPx = height
+		? Number(height[1]) * unit[(height[2]?.toLowerCase() ?? 'pt') as keyof typeof unit]
+		: 2;
+	const percent = Number(rect.getAttributeNS(O_NS, 'hrpct'));
+	const align = rect.getAttributeNS(O_NS, 'hralign');
+	return {
+		heightPx,
+		color: rect.getAttribute('fillcolor')?.split(/\s/)[0] || '#ffffff',
+		fraction: percent > 0 ? Math.min(1, percent / 1000) : 1,
+		align: align === 'left' || align === 'right' ? align : 'center',
+		shaded: rect.getAttributeNS(O_NS, 'hrnoshade') !== 't',
+	};
+}
+
 /** Best-effort parse of a legacy VML `w:pict` picture (`v:shape/v:imagedata`). */
 function parseVmlPicture(node: XmlElement, context: DrawingContext): InlineImage {
+	const horizontalRule = parseHorizontalRule(node);
+	if (horizontalRule)
+		return {
+			relId: '',
+			partName: '',
+			contentType: 'application/octet-stream',
+			widthPx: 0,
+			heightPx: horizontalRule.heightPx,
+			horizontalRule,
+			unsupported: 'Horizontal line',
+		};
 	const shape = vmlPictureShape(node);
 	const shapeImage = firstNS(shape, VML_NS, 'imagedata');
 	const imagedata = shapeImage ?? descendantNS(node, VML_NS, 'imagedata');

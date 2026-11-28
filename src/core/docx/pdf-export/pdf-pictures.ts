@@ -13,6 +13,7 @@ import type { PdfImageResource, PdfVectorPage } from '../../pdf/write/pdf-vector
 import type { DocxPdfDrawings } from './pdf-drawings';
 import type { DocxPdfReportBuilder } from './pdf-report';
 import { cssRgba } from './pdf-text';
+import { paintHorizontalRule } from './pdf-horizontal-rule';
 import { paintWashoutLayer, washedOutResource } from './pdf-washout';
 
 /** RGBA pixels a host decoder returns for a picture format the export cannot read itself. */
@@ -44,6 +45,7 @@ export type DocxPdfPicture = Pick<
 	| 'chart'
 	| 'textBox'
 	| 'textBoxLayout'
+	| 'rule'
 >;
 
 /** True for the luminance effect a VML picture's washout (`gain`, `blacklevel`) becomes. */
@@ -146,6 +148,10 @@ export class DocxPdfPictures {
 	/** Draws a picture into the box at (x, y), cropped as the document crops it. */
 	draw(page: PdfVectorPage, picture: DocxPdfPicture, x: number, y: number): void {
 		const { widthPx: width, heightPx: height } = picture;
+		if (picture.rule) {
+			paintHorizontalRule(page, picture, x, y);
+			return;
+		}
 		// A line or connector has a zero extent across it and is still stroked.
 		const line = !!picture.chart?.shape && width >= 0 && height >= 0 && width + height > 0;
 		if (!line && !(width > 0 && height > 0)) return;

@@ -4,7 +4,7 @@ import { findHyphenSplit, lineUsedWidthPx } from './hyphenate-line';
 import { fittingWordPrefix } from './word-overflow';
 import { paragraphShadowInsets } from './paragraph-shadow';
 import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
-import type { LayoutParagraph } from './input';
+import type { LayoutObject, LayoutParagraph } from './input';
 import { NO_TWIPS, ptToPx, twipsToPx } from './units';
 import { legacyTextStartPx } from './legacy-marker';
 import { contentControlTagMetrics } from './content-control-tag-metrics';
@@ -35,6 +35,11 @@ import { cachedParagraphLayout } from './paragraph-cache';
 const SPACE_SHRINK = 0.25;
 const WORD_SHRINK = 0.3325;
 const WORD_SHRINK_PER_SPACE = 0.25;
+
+/** An inline object's width; a horizontal line spans a share of the paragraph's body width. */
+function objectWidth(object: LayoutObject | undefined, bodyWidth: number): number {
+	return object?.rule ? bodyWidth * object.rule.fraction : (object?.widthPx ?? 0);
+}
 
 /**
  * How far a justified line holding `spaceCount` spaces `spacePx` wide may squeeze them to keep a
@@ -270,7 +275,7 @@ function measureParagraph(
 					font,
 				)
 			: token.kind === 'object'
-				? (paragraph.runs[token.runIndex]?.object?.widthPx ?? 0)
+				? objectWidth(paragraph.runs[token.runIndex]?.object, bodyWidth)
 				: 0;
 	};
 	/**
@@ -388,6 +393,9 @@ function measureParagraph(
 			);
 			fragment.topPx = baselinePx - (fragment.contentControlTag ? extent.ascent : extent.above);
 			if (token.kind !== 'object') fragment.boxHeightPx = extent.ascent + extent.descent;
+			// A horizontal line's box runs from the top of its line to the line's bottom.
+			else if (fragment.object?.rule)
+				fragment.object = { ...fragment.object, heightPx: extent.above + extent.below };
 		});
 		if (jump) {
 			boxFor(lineIndex).split = true;

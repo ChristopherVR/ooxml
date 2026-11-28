@@ -50,7 +50,9 @@ export function buildFragments(
 			...(run?.mergeField ? { mergeField: true } : {}),
 			...(run?.underline ? { underline: true } : {}),
 			...(run?.strike ? { strike: true } : {}),
-			...(token.kind === 'object' && run?.object ? { object: run.object } : {}),
+			...(token.kind === 'object' && run?.object
+				? { object: run.object.rule ? { ...run.object, widthPx } : run.object }
+				: {}),
 		});
 		x += advancePx ?? widthPx;
 	}

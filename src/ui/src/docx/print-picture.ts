@@ -98,6 +98,7 @@ export function pictureElement(
 		textBox?: TextBoxContent;
 		textBoxLayout?: TextBoxLayout;
 		noteSeparator?: 'separator' | 'continuationSeparator';
+		rule?: { heightPx: number; color: string; fraction: number; shaded: boolean };
 	},
 	pictureUrl: PictureUrl | undefined,
 	/** The document, whose styles a text box's paragraphs are drawn with. */
@@ -105,6 +106,27 @@ export function pictureElement(
 	/** Draws `textBoxLayout`; without it, or without a layout, the paragraphs are flowed by CSS. */
 	textBoxLayer?: TextBoxLayer,
 ): HTMLElement {
+	if (object.rule) {
+		// A Word horizontal line: the rule sits 2.5 pt above the bottom of the room it is given.
+		const box = document.createElement('div');
+		box.className = 'dve-print-horizontal-rule';
+		Object.assign(box.style, { position: 'absolute', width: `${object.widthPx}px` });
+		box.style.height = `${object.heightPx}px`;
+		const rule = document.createElement('span');
+		Object.assign(rule.style, {
+			position: 'absolute',
+			left: '0',
+			width: '100%',
+			bottom: `${2.52 * (4 / 3)}px`,
+			height: `${object.rule.heightPx}px`,
+			background: object.rule.color,
+			...(object.rule.shaded
+				? { boxShadow: 'inset 0.32px 0.32px 0 #a0a0a0, inset -0.32px -0.32px 0 #e3e3e3' }
+				: {}),
+		});
+		box.append(rule);
+		return box;
+	}
 	if (object.noteSeparator) {
 		const rule = document.createElement('span');
 		rule.className = 'dve-print-note-rule';

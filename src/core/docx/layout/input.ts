@@ -99,6 +99,16 @@ export interface LayoutObject {
 	textBoxLayout?: import('./text-box-layout').TextBoxLayout;
 	/** Native note separator rule, drawn without loading a media part. */
 	noteSeparator?: 'separator' | 'continuationSeparator';
+	/**
+	 * A horizontal line (`v:rect` with `o:hr`): `heightPx` of this object is the line's room, the
+	 * rule is `rule.heightPx` thick, `fraction` of the column wide (the layout sets `widthPx`).
+	 */
+	rule?: {
+		heightPx: number;
+		color: string;
+		fraction: number;
+		shaded: boolean;
+	};
 }
 
 /** A floating picture anchored to a paragraph (`wp:anchor`), positioned on the page. */

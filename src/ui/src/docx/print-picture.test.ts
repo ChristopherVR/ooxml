@@ -68,3 +68,23 @@ describe('pictureElement drawing shapes', () => {
 		);
 	});
 });
+
+describe('pictureElement horizontal line', () => {
+	it('draws the rule 2.5 pt above the bottom of its room, in the line colour', () => {
+		const element = pictureElement(
+			{
+				partName: '',
+				contentType: '',
+				widthPx: 600,
+				heightPx: 20,
+				rule: { heightPx: 2, color: '#a0a0a0', fraction: 1, shaded: false },
+			},
+			undefined,
+		);
+		const rule = element.querySelector('span')!;
+		expect(element.style.width).toBe('600px');
+		expect(rule.style.height).toBe('2px');
+		expect(rule.style.bottom).toBe(`${2.52 * (4 / 3)}px`);
+		expect(rule.style.background).toBe('rgb(160, 160, 160)');
+	});
+});
