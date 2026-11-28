@@ -43,11 +43,12 @@ const DEFAULT_FAMILY = 'Calibri';
 /** The slope Word shears a face with when the font family has no italic (measured from its PDF). */
 const SYNTHETIC_ITALIC_SKEW = 1 / 3;
 /**
- * The stroke width, in em, that emboldens a face the family has no bold of (render mode 2 with the
- * text colour as the pen). It adds this much to every stem, about 0.7 pt at 16 pt, as Word's
- * synthetic bold does; the advances stay those of the regular face.
+ * The pen width, in em of the drawn size, that emboldens a face the family has no bold of (render
+ * mode 2 with the text colour as the pen). Measured on Word 16's PDFs of Sylfaen and Ink Free at
+ * 8, 11, 16, 24 and 48 pt in two colours: the width is always the drawn size / 35 (0.22971,
+ * 0.31543, 0.456, 0.68571 and 1.3714 pt), and the glyphs keep the regular face's advances.
  */
-const SYNTHETIC_BOLD_EM = 1 / 24;
+const SYNTHETIC_BOLD_EM = 1 / 35;
 /** The Symbol font's missing-glyph box: 1229/2048 em advance, drawn as an outline this tall and thick. */
 const MISSING_GLYPH_ADVANCE_EM = 1229 / 2048;
 const MISSING_GLYPH_HEIGHT_EM = 0.7;
@@ -89,6 +90,8 @@ function pairAdjustments(font: PdfCidFont, text: string): number[] | undefined {
 }
 
 export class DocxPdfText {
+	/** Off while a watermark is drawn: Word draws those as outlines of the face, never emboldened. */
+	emboldenMissingBold = true;
 	constructor(
 		readonly fonts: PdfFontSet,
 		readonly measurer: TextMeasurer,
@@ -365,12 +368,12 @@ export class DocxPdfText {
 			const kerned = kerning ? kerning.reduce((sum, value) => sum + value, 0) / 1000 : 0;
 			const scale = fit((embedded.width(text) + kerned) * sizePx);
 			// The family has no bold face: thicken the regular one, as Word does.
-			const embolden = bold && !embedded.bold;
+			const embolden = this.emboldenMissingBold && bold && !embedded.bold;
 			if (embolden) {
 				const pen = cssRgba(fragment.color) ?? cssRgba('#000000');
 				page.save();
 				if (pen) page.strokeColor(pen.r, pen.g, pen.b);
-				page.lineStyle(sizePx * SYNTHETIC_BOLD_EM, 0, 1);
+				page.lineStyle(drawPx * SYNTHETIC_BOLD_EM, 0, 0);
 			}
 			page.embeddedText(embedded, sizePx, x, y, space ? `${text} ` : text, {
 				...(embolden ? { emboldened: true } : {}),

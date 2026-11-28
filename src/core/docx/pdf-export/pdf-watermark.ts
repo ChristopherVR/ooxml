@@ -59,7 +59,12 @@ function paintText(
 		sourceStart: 0,
 		sourceEnd: 0,
 	};
-	painter.text.draw(pdf, fragment, -widthPx / 2, line, -heightPx / 2);
+	painter.text.emboldenMissingBold = false;
+	try {
+		painter.text.draw(pdf, fragment, -widthPx / 2, line, -heightPx / 2);
+	} finally {
+		painter.text.emboldenMissingBold = true;
+	}
 	pdf.restore();
 }
 
