@@ -36,3 +36,16 @@ it('#387 control: tables narrower than the text area keep their positions', asyn
 	expect(pt(centred!.xPx!)).toBeCloseTo(1.8, 1);
 	expect(pt(right!.xPx!)).toBeCloseTo(53.6, 1);
 });
+
+it.each([
+	['row-height-at-least-with-borders-sz6', 50.78],
+	['row-height-at-least-with-borders-sz24', 53.04],
+	['row-height-at-least-no-borders', 50],
+])('#405: %s steps %s pt per row', async (name, pitch) => {
+	const [table] = tables(await layout(name));
+	for (let index = 1; index < table!.rows.length; index++)
+		expect(
+			pt(table!.rows[index]!.yPx - table!.rows[index - 1]!.yPx),
+			name + ' row ' + index,
+		).toBeCloseTo(pitch, 0);
+});

@@ -146,12 +146,16 @@ export function layoutRow(
 			(row.cells[index]?.rowSpan ?? 1) > 1 && !row.mergedTextInRow ? 0 : cell.heightPx,
 		),
 	);
+	// Word's minimum height is the space between the horizontal borders: the top border adds to it.
+	const topBorder = frameBorders
+		? Math.max(0, ...row.cells.map((cell) => cell.borders?.top?.widthPx ?? 0))
+		: 0;
 	const heightPx =
 		row.heightPx === undefined
 			? content
 			: row.heightRule === 'exact'
 				? row.heightPx
-				: Math.max(content, row.heightPx);
+				: Math.max(content, row.heightPx + topBorder);
 	if (frameBorders) for (const cell of geometry) cell.alignmentHeightPx = heightPx;
 	const trailing = laidOut.map((cell) => cell.trailingPx);
 	return {
