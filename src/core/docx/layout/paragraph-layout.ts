@@ -419,10 +419,14 @@ function measureParagraph(
 		const start = wordStart[index] ?? index;
 		const own = pieceWidths[index] ?? 0;
 		const total = (wordWidth.get(start) ?? 0) - (Number.isFinite(own) ? own : 0) + advance;
-		// The pieces before this one are the last ones placed when the word started on this line.
-		const back = index - start;
-		const before = back < placed.length ? placed[placed.length - back - 1] : undefined;
+		const before = tokenBeforeWord(index);
 		return total + (before?.token.kind === 'space' ? before.widthPx : 0);
+	}
+	/** The placed token before the word `tokens[index]` belongs to, when that word began on this line. */
+	function tokenBeforeWord(index: number): PlacedToken | undefined {
+		// The pieces before this one are the last ones placed when the word started on this line.
+		const back = index - (wordStart[index] ?? index);
+		return back < placed.length ? placed[placed.length - back - 1] : undefined;
 	}
 
 	for (let tokenIndex = startIndex; tokenIndex < tokens.length; tokenIndex++) {
@@ -507,24 +511,16 @@ function measureParagraph(
 		// internal (i.e. this token fits after it); a trailing space at an actual
 		// wrap point is trimmed in flushLine instead, so it must not be
 		// pre-subtracted here.
+		// Word squeezes a line to keep a word that follows a space (measured, #386: a word after a
+		// hyphen, with no space before it, stays on the next line at 0.14 pt over).
 		const squeezePx =
 			effectiveAlign === 'justify' &&
 			paragraph.squeezeJustifiedSpaces !== false &&
-			token.kind === 'word'
+			token.kind === 'word' &&
+			tokenBeforeWord(tokenIndex)?.token.kind === 'space'
 				? justifiedSqueezeBudgetPx(lineSpacePx, lineSpaceCount, wholeWordPx(tokenIndex, advance))
 				: 0;
-		// A nearly fitting final line of a justified text box should not turn into
-		// a stretched nonfinal line. Leave normal word-break decisions alone.
-		const wordTolerance =
-			effectiveAlign === 'justify' &&
-			token.kind === 'word' &&
-			!hole &&
-			tokenIndex === tokens.length - 1
-				? (paragraph.wordFitTolerancePx ?? 0)
-				: 0;
-		const fits =
-			lineWidthPx + (token.kind === 'tab' ? width : advance) <=
-			limit + Math.max(squeezePx, wordTolerance);
+		const fits = lineWidthPx + (token.kind === 'tab' ? width : advance) <= limit + squeezePx;
 		const wouldFit =
 			fits || placed.every((placed) => paragraph.runs[placed.token.runIndex]?.synthetic);
 		// A word that no longer fits before a picture continues after it, on the same line.
@@ -596,17 +592,14 @@ function measureParagraph(
 				? availableWidth(lineIndex) - jump.shiftPx - lineWidthPx
 				: limit - lineWidthPx;
 			if (
-				width > available + wordTolerance &&
+				width > available &&
 				placed.every(({ token }) => paragraph.runs[token.runIndex]?.synthetic)
 			) {
-				if (
-					!jump &&
-					tryHyphenate(tokenIndex, token, available + wordTolerance, available + wordTolerance)
-				) {
+				if (!jump && tryHyphenate(tokenIndex, token, available, available)) {
 					tokenIndex--;
 					continue;
 				}
-				const prefix = fittingWordPrefix(token.text, available + wordTolerance, (text) =>
+				const prefix = fittingWordPrefix(token.text, available, (text) =>
 					tokenWidth({ ...token, text }),
 				);
 				if (prefix.length < token.text.length) {
@@ -627,8 +620,7 @@ function measureParagraph(
 			...(markerFactor ? { xOffsetPx: -width * markerFactor } : {}),
 			...(markerFactor || spacePx ? { advancePx: advance + spacePx } : {}),
 		});
-		if (fits && squeezePx > wordTolerance && lineWidthPx + advance > limit + wordTolerance)
-			squeezedLines.add(lineIndex);
+		if (fits && squeezePx > 0 && lineWidthPx + advance > limit) squeezedLines.add(lineIndex);
 		lineWidthPx += token.kind === 'tab' ? width : advance + spacePx;
 		if (token.kind === 'space') {
 			lineSpacePx += advance;

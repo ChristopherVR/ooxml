@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { loadDocx, type DocumentModel, type InlineImage } from '../index';
 import { createFakeMeasurer, layoutDocumentModel } from './index';
+import { createEstimatedMeasurer } from '../pdf-export/font-measurer';
 import type { LayoutFontSpec, TextMeasurer } from './measure';
 import type { LayoutFloatBox, LayoutParagraphBox } from './result';
 import { layoutTextBoxChain, type TextBoxLayout } from './text-box-layout';
@@ -53,7 +54,9 @@ const box = (name: string) =>
 	);
 
 describe('text box layout by the page engine', () => {
-	it('keeps a fractionally oversized justified line together without stretching its spaces', () => {
+	// #314 and #386: Word keeps the last word of this Verdana line (0.51 pt over, #314) by squeezing
+	// the two spaces before it, and moves a word with no space before it down at 0.14 pt over.
+	it('keeps a fractionally oversized justified line together by squeezing its spaces', () => {
 		const label = 'SIRET : 123.456.789.000.12';
 		const shape = {
 			heightPx: 50,
@@ -70,7 +73,8 @@ describe('text box layout by the page engine', () => {
 						[{ ...shape, widthPx }],
 						[{ kind: 'paragraph', id: 'siret', align: 'justify', runs: [{ text: label }] }],
 						{
-							widthOf: (text) => (text === ' ' ? 1 : text.length * (192.14 / (label.length - 2))),
+							widthOf: (text) =>
+								text === ' ' ? 4.69 : text.length * ((194.14 - 2 * 4.69) / (label.length - 2)),
 							lineHeightOf: () => 16,
 						},
 					)[0],
@@ -78,8 +82,8 @@ describe('text box layout by the page engine', () => {
 			);
 		const withinTolerance = layoutAtWidth(193.47);
 		expect(withinTolerance.map((line) => line.text)).toEqual([label]);
-		expect(withinTolerance[0]?.right).toBeCloseTo(194.14);
-		expect(layoutAtWidth(193).map((line) => line.text)).toEqual(['SIRET :', '123.456.789.000.12']);
+		expect(withinTolerance[0]?.right).toBeCloseTo(193.47);
+		expect(layoutAtWidth(190).map((line) => line.text)).toEqual(['SIRET :', '123.456.789.000.12']);
 	});
 
 	it('reads the wps:bodyPr settings and the chain each box belongs to', async () => {
@@ -374,5 +378,44 @@ describe('the Word-saved text boxes, against Word 16’s PDF of them', () => {
 			(await JSZip.loadAsync(data)).file('word/document.xml')!.async('string');
 		expect(await xml(saved)).toBe(await xml(bytes));
 		expect(drawings(loaded.model)[7]?.textBoxContent?.link).toEqual({ id: 7, seq: 1 });
+	});
+});
+
+describe('a justified paragraph in a text box moves a word that does not fit (#386)', () => {
+	// Word 16: the header box of the report is 158.25 pt wide with 7.2 pt insets and no outline; its
+	// Calibri 10 pt paragraph has an 8.55 pt right indent, 135.30 pt of room for a 135.44 pt line.
+	const widthInches = 2009775 / 914400;
+	const run = (text: string, align: string, indent: string) =>
+		`<w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/>${indent}<w:jc w:val="${align}"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`;
+	async function boxLines(text: string, align: string, indent = ''): Promise<string[]> {
+		const boxes: FixtureBox[] = [
+			{
+				id: 1,
+				name: 'Box',
+				x: 1,
+				y: 1,
+				width: widthInches,
+				height: 1,
+				outline: 0,
+				content: run(text, align, indent),
+			},
+		];
+		const { model } = await loadDocx(await textBoxLayoutFixture(boxes));
+		const placed = layoutDocumentModel(model, createEstimatedMeasurer()).pages.flatMap(
+			(page) => page.floats ?? [],
+		);
+		return lines(layoutOf(placed[0])).map((line) => line.text.trim());
+	}
+
+	it('breaks after the hyphen at 0.14 pt over, justified or left, as Word does', async () => {
+		const indent = '<w:ind w:right="171"/>';
+		const text = 'Ref :samplemargin-bordermargin';
+		expect(await boxLines(text, 'left', indent)).toEqual(['Ref :samplemargin-', 'bordermargin']);
+		expect(await boxLines(text, 'both', indent)).toEqual(['Ref :samplemargin-', 'bordermargin']);
+	});
+
+	it('breaks after the hyphen at 0.24 pt over without an indent', async () => {
+		const text = 'Ref :sampleexample-margincolumn';
+		expect(await boxLines(text, 'both')).toEqual(['Ref :sampleexample-', 'margincolumn']);
 	});
 });

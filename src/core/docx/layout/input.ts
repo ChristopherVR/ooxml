@@ -186,8 +186,6 @@ export interface LayoutTextFrame {
 }
 
 export interface LayoutParagraph {
-	/** Tolerance for differences between browser and Word advance widths in DrawingML text boxes. */
-	wordFitTolerancePx?: number;
 	/** Older Word compatibility modes wrap before tightening justified spaces. */
 	squeezeJustifiedSpaces?: false;
 	/** Soft line breaks leave justified lines at their natural width. */
