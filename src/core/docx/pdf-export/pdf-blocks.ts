@@ -106,7 +106,7 @@ export function paragraphFrame(
 			drawBorder(page, line, horizontal ? left : start, horizontal ? start : y, length, horizontal);
 			continue;
 		}
-		for (const { offsetPx, widthPx } of paragraphBorderBands(line, reverse)) {
+		for (const { offsetPx, widthPx } of paragraphBorderBands(line)) {
 			const offset = start + offsetPx;
 			drawBorder(
 				page,

@@ -123,16 +123,17 @@ it('produces triple and thin/thick border bands in their native order (#334)', a
 	const { paragraphs } = await layout('k2-border-compound');
 	const bands = paragraphs.flatMap((paragraph) => {
 		const line = paragraph.frame?.borders?.top;
-		return line?.compound ? [paragraphBorderBands(line, false).map((band) => band.widthPx)] : [];
+		return line?.compound ? [paragraphBorderBands(line).map((band) => band.widthPx)] : [];
 	});
-	// A double border has two bands; the thin band is 0.72 pt (0.96 px) and `w:sz` is the thick
-	// band (#388).
+	// Word's bands at `w:sz` 4: 0.48 pt (0.64 px) wide, the thin band 0.72 pt (0.96 px), and the
+	// wide band of a thin-thick style first (#388).
+	const w = 0.64;
 	const expected = [
-		[2 / 3, 2 / 3],
-		[2 / 3, 2 / 3, 2 / 3],
-		[0.96, 2 / 3],
-		[2 / 3, 0.96],
-		[0.96, 2 / 3, 0.96],
+		[w, w],
+		[w, w, w],
+		[w, 0.96],
+		[0.96, w],
+		[0.96, w, 0.96],
 	];
 	expect(bands).toHaveLength(expected.length);
 	bands.forEach((band, index) => {

@@ -10,42 +10,51 @@ import type {
 
 const pointsToPx = (points: number) => (points * 96) / 72;
 
-/** Word's thin band and its small gap: 0.72 pt, whatever the border's `w:sz` (#388). */
-const THIN_POINTS = 0.72;
+/** Word draws compound borders in steps of 0.12 pt (1/600 in), in px. */
+const UNIT_PX = (0.12 * 96) / 72;
 
 /**
- * Band and gap widths of the compound line styles, outermost first, alternating band and gap.
- * In Word `w:sz` is the width of the thick band of the thin-thick styles: the thin band and the
- * small gap stay at 0.72 pt (a `w:sz` 24 `thinThickSmallGap` is 3.00 + 0.72 + 0.72 pt). A `double`
- * draws two bands of `w:sz` around a gap of `w:sz`. The medium gap widens with `w:sz` (measured
- * at `w:sz` 12 and 24) and the large gap is 1.44 pt.
+ * Band and gap widths of the compound line styles, from the top (left) edge of the border to its
+ * inner side, alternating band and gap, in px. The same order is drawn for all four sides: Word
+ * does not mirror a bottom or right border. Fitted to Word's own PDF export at `w:sz` 1 to 48
+ * (#388, `issue-388-word-compound-bands.json`):
+ *
+ * - `w` = floor(sz x 25 / 24) steps of 0.12 pt (the nominal sz / 8 pt, floored to the step).
+ * - `double` and `triple`: bands and gaps of `w`.
+ * - small gap: a 0.72 pt thin band and gap, one `w` band.
+ * - medium gap: the thin band and the gap are half of `w` (floor(sz x 25 / 48) steps).
+ * - large gap: a 1.44 pt band, a 0.72 pt thin band, and a gap of `w`.
+ * - the thin-thick styles put the `w`-wide (or 1.44 pt) band first, the thick-thin styles last.
  */
-function compoundBorder(style: string | undefined, stroke: number): number[] | undefined {
-	if (style === 'triple') return [stroke, stroke, stroke, stroke, stroke];
-	if (style === 'double') return [stroke, stroke, stroke];
+function compoundBorder(style: string | undefined, sizeEighthPoints: number): number[] | undefined {
+	const steps = (count: number) => Math.max(1, Math.floor(count)) * UNIT_PX;
+	const w = steps((sizeEighthPoints * 25) / 24);
+	if (style === 'triple') return [w, w, w, w, w];
+	if (style === 'double') return [w, w, w];
 	const match = /^(thinThickThin|thinThick|thickThin)(Small|Medium|Large)Gap$/.exec(style ?? '');
 	if (!match) return undefined;
-	const thin = pointsToPx(THIN_POINTS);
-	const gap =
+	const small = steps(6);
+	const half = steps((sizeEighthPoints * 25) / 48);
+	const [big, thin, gap] =
 		match[2] === 'Small'
-			? thin
+			? [w, small, small]
 			: match[2] === 'Medium'
-				? Math.max(thin, stroke * 0.96 - thin)
-				: thin * 2;
-	return match[1] === 'thinThickThin'
-		? [thin, gap, stroke, gap, thin]
-		: match[1] === 'thinThick'
-			? [thin, gap, stroke]
-			: [stroke, gap, thin];
+				? [w, half, half]
+				: [steps(12), small, w];
+	// Word's "thin thick" lists the wide band first; "thick thin" lists it last.
+	if (match[1] === 'thinThickThin') {
+		const outer = match[2] === 'Medium' ? half : thin;
+		return [outer, gap, match[2] === 'Large' ? steps(12) : big, gap, outer];
+	}
+	return match[1] === 'thinThick' ? [big, gap, thin] : [thin, gap, big];
 }
 
-/** Visible bands measured from the outside or the inside edge of a compound border. */
-export function paragraphBorderBands(line: LayoutParagraphBorder, reverse: boolean) {
+/** Bands of a compound border, measured from its top (left) edge, in the order Word draws them. */
+export function paragraphBorderBands(line: LayoutParagraphBorder) {
 	let offsetPx = 0;
 	const bands: { offsetPx: number; widthPx: number }[] = [];
 	line.compound?.forEach((widthPx, index) => {
-		if (index % 2 === 0)
-			bands.push({ offsetPx: reverse ? line.widthPx - offsetPx - widthPx : offsetPx, widthPx });
+		if (index % 2 === 0) bands.push({ offsetPx, widthPx });
 		offsetPx += widthPx;
 	});
 	return bands;
@@ -64,7 +73,7 @@ export function paragraphBox(
 		const source = formatting.borders?.[side];
 		const line = border(source, theme, true);
 		if (!line) continue;
-		const compound = compoundBorder(source?.style, pointsToPx((source?.sizeEighthPoints ?? 4) / 8));
+		const compound = compoundBorder(source?.style, source?.sizeEighthPoints ?? 4);
 		const resolved = {
 			...line,
 			spacePx: pointsToPx(source?.spacePoints ?? 0),

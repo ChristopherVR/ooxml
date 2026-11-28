@@ -240,13 +240,15 @@ function paragraphFrame(frame: LayoutParagraphFrame, boxHeightPx: number): HTMLE
 			continue;
 		}
 		const horizontal = side === 'top' || side === 'bottom';
-		for (const band of paragraphBorderBands(line, false)) {
+		for (const band of paragraphBorderBands(line)) {
 			// Absolute children use the padding box; compensate for ordinary cross-side borders.
 			const stroke = document.createElement('div');
 			stroke.className = 'dve-print-paragraph-border-band';
 			stroke.style.position = 'absolute';
 			stroke.style.backgroundColor = line.color;
-			stroke.style[side] = `${band.offsetPx}px`;
+			// Word draws the same band order on every side, so the far sides count from their own edge.
+			const far = side === 'bottom' || side === 'right';
+			stroke.style[side] = `${far ? line.widthPx - band.offsetPx - band.widthPx : band.offsetPx}px`;
 			stroke.style[horizontal ? 'height' : 'width'] = `${band.widthPx}px`;
 			for (const edge of horizontal ? (['left', 'right'] as const) : (['top', 'bottom'] as const)) {
 				const adjacent = frame.borders?.[edge];
