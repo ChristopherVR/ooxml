@@ -731,7 +731,7 @@ function measureParagraph(
 		borders?.[side] ? borders[side]!.widthPx + borders[side]!.spacePx : 0;
 	const shadow = paragraphShadowInsets(borders);
 	const insetTopPx = extent('top') + shadow.topPx;
-	const insetBottomPx = extent('bottom') + shadow.bottomPx;
+	const insetBottomPx = extent('bottom') + shadow.bottomPx + (paragraph.borderGapBelowPx ?? 0);
 	let y = insetTopPx;
 	for (const line of lines) {
 		y += line.gapBeforePx ?? 0;

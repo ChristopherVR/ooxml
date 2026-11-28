@@ -236,6 +236,8 @@ export interface LayoutParagraph {
 	/** Border lines around the paragraph, with each side's gap to the text. */
 	borders?: LayoutParagraphBorders;
 	borderJoinNext?: boolean;
+	/** The `w:space` of a `between` border kept under a paragraph that joins the next one. */
+	borderGapBelowPx?: number;
 	/** `#rrggbb` shading behind the paragraph. */
 	shading?: string;
 	/** `w:kinsoku w:val="0"`: no line-start or line-end prohibition (on when absent). */

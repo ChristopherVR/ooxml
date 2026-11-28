@@ -92,25 +92,32 @@ export function groupParagraphBorders(
 	blocks: LayoutBlock[],
 	between: Map<LayoutParagraph, LayoutParagraphBorders['top']>,
 ): void {
-	// Keys come from the original borders, before any paragraph in the group is adjusted.
-	const keys = blocks.map((block) =>
-		block.kind === 'paragraph' && block.borders ? JSON.stringify(block.borders) : undefined,
-	);
+	// Keys come from the original borders, before any paragraph in the group is adjusted. A
+	// paragraph with only a `between` line is grouped too (#417).
+	const keys = blocks.map((block) => {
+		if (block.kind !== 'paragraph') return undefined;
+		const line = between.get(block);
+		return block.borders || line ? JSON.stringify([block.borders ?? {}, line ?? null]) : undefined;
+	});
 	blocks.forEach((block, index) => {
-		if (block.kind !== 'paragraph' || !block.borders) return;
+		if (block.kind !== 'paragraph' || keys[index] === undefined) return;
 		const sameAsPrevious = keys[index - 1] === keys[index];
 		const sameAsNext = keys[index + 1] === keys[index];
 		if (!sameAsPrevious && !sameAsNext) return;
 		const borders = { ...block.borders };
+		const line = between.get(block);
 		if (sameAsNext) {
 			delete borders.bottom;
 			block.borderJoinNext = true;
+			// Word leaves the `w:space` of the between line under this paragraph; the line and its
+			// second gap open the next one, so only the first gap counts at a page's end.
+			if (line) block.borderGapBelowPx = line.spacePx;
 		}
 		if (sameAsPrevious) {
-			const line = between.get(block);
 			if (line) borders.top = line;
 			else delete borders.top;
 		}
-		block.borders = borders;
+		if (Object.keys(borders).length) block.borders = borders;
+		else delete block.borders;
 	});
 }
