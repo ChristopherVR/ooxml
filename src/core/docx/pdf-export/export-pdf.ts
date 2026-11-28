@@ -48,7 +48,6 @@ import {
 	type DocxPdfStoryGraphics,
 } from './pdf-story-graphics';
 import { DocxPdfText } from './pdf-text';
-import { paintWatermark } from './pdf-watermark';
 
 export type {
 	DocxPdfFontMeasurement,
@@ -166,6 +165,8 @@ interface PageExtras {
 	marks: DocxPdfPageMarks | undefined;
 	graphics: DocxPdfStoryGraphics | undefined;
 	measurer: TextMeasurer;
+	/** The watermark painter, loaded only when a page has a watermark. */
+	watermark: typeof import('./pdf-watermark').paintWatermark | undefined;
 }
 
 /** Paints one laid-out page. */
@@ -175,7 +176,7 @@ function paintPage(
 	stories: readonly PlacedStory[],
 	model: DocumentModel,
 	report: DocxPdfReportBuilder,
-	{ marks, graphics, measurer }: PageExtras,
+	{ marks, graphics, measurer, watermark }: PageExtras,
 ): void {
 	const pdf = painter.page;
 	pdf.concat([PT_PER_PX, 0, 0, -PT_PER_PX, 0, page.heightPx * PT_PER_PX]);
@@ -193,7 +194,7 @@ function paintPage(
 	)
 		decoration(() => {
 			paintPageMarks(painter, page, marks, 'back', model, measurer, report);
-			paintWatermark(painter, graphics, page, measurer);
+			watermark?.(painter, graphics, page, measurer);
 			paintStoryFloats(painter, graphics, 'header', true);
 			paintStoryFloats(painter, graphics, 'footer', true);
 		});
@@ -299,6 +300,9 @@ export async function exportDocxPdf(
 		for (const story of stories[index] ?? []) await pictures.prepare(blockPictures(story.blocks));
 		if (graphics[index]) await pictures.prepare(storyGraphicPictures(graphics[index]));
 	}
+	const watermark = graphics.some((entry) => entry?.watermark || entry?.pictureWatermark)
+		? (await import('./pdf-watermark')).paintWatermark
+		: undefined;
 	const tagged = options.taggedPdf !== false;
 	const hooks = new DocxPdfHooks(projected.model, {
 		tagged,
@@ -325,6 +329,7 @@ export async function exportDocxPdf(
 				marks: marks[index],
 				graphics: graphics[index],
 				measurer,
+				watermark,
 			},
 		);
 		pages.push(pdf);
