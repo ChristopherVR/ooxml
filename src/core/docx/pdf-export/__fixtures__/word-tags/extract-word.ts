@@ -1,5 +1,5 @@
 // Reads Word 16's Save as PDF of the issue #415 and #427 documents into `word-tags.json`: every
-// line's baseline, size, text and glyph positions. `bun extract-word.ts` reads the PDFs (issue-415-word.pdf, issue-427-bug-word.pdf, issue-427-control-word.pdf) from next to it; they are not committed.
+// line's baseline, size, text and glyph positions. `bun extract-word.ts` reads the PDFs (issue-415-word.pdf, issue-427-bug-word.pdf, issue-427-control-word.pdf, issue-434-*-word.pdf) from next to it; they are not committed.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pdfGlyphLines } from '../word-sizes/pdf-glyphs';
 
@@ -8,6 +8,9 @@ const files = {
 	'issue-415': 'issue-415-word.pdf',
 	'issue-427-bug': 'issue-427-bug-word.pdf',
 	'issue-427-control': 'issue-427-control-word.pdf',
+	'issue-434-bug': 'issue-434-bug-word.pdf',
+	'issue-434-control': 'issue-434-control-word.pdf',
+	'issue-434-two': 'issue-434-two-word.pdf',
 };
 const result: Record<string, unknown[]> = {};
 for (const [name, file] of Object.entries(files)) {

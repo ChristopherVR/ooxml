@@ -58,3 +58,18 @@ describe.each([
 		expect(Math.max(...errors)).toBeLessThanOrEqual(0.25);
 	});
 });
+
+describe.each([
+	['end tag mid-paragraph', 'issue-434-end-tag-mid-paragraph', 'issue-434-bug'],
+	['inner control tagged', 'issue-434-end-tag-mid-paragraph-inner-tagged', 'issue-434-control'],
+	['two lines with an end tag', 'issue-434-two-tag-lines', 'issue-434-two'],
+] as const)('lines after the end tag of a tagged control, %s (#434)', async (_label, docx, key) => {
+	const ours = await exported(docx);
+	const word = WORD[key];
+
+	it('keeps the lines of the paragraph apart and takes the reduction off its last line', () => {
+		expect(ours.map((line) => line.text)).toEqual(word.map((line) => line.text));
+		const errors = word.map((line, index) => Math.abs(ours[index]!.y - line.y));
+		expect(Math.max(...errors)).toBeLessThanOrEqual(0.25);
+	});
+});

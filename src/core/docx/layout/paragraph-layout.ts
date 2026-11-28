@@ -209,6 +209,8 @@ function measureParagraph(
 		hole?: { startPx: number; endPx: number };
 	}[] = [];
 	let runningY = 0;
+	// What the lines' tags raise them by without adding to their height (#427, #434).
+	let tagLiftPx = 0;
 	const guessHeight = measurer.lineHeightOf(fonts[0] ?? fontOf({ text: '' }));
 	const boxFor = (lineIndex: number) => {
 		if (!boxes[lineIndex]) {
@@ -368,7 +370,13 @@ function measureParagraph(
 			? globalOffset(last, last.kind === 'word' || last.kind === 'space' ? last.text.length : 1)
 			: start;
 		const gapBeforePx = boxFor(lineIndex).gapBeforePx;
-		const { heightPx, baselinePx, extraBelowPx } = lineMetrics(placed, fonts, paragraph, measurer);
+		const { heightPx, baselinePx, extraBelowPx, uncountedPx } = lineMetrics(
+			placed,
+			fonts,
+			paragraph,
+			measurer,
+		);
+		tagLiftPx += uncountedPx;
 		// Each fragment's box is placed so its baseline sits on the line's.
 		rendered.forEach(({ token }, index) => {
 			const extent = tokenExtent(token, paragraph, fonts, measurer);
@@ -770,6 +778,10 @@ function measureParagraph(
 	const shadow = paragraphShadowInsets(borders);
 	const insetTopPx = extent('top') + shadow.topPx;
 	const insetBottomPx = extent('bottom') + shadow.bottomPx + (paragraph.borderGapBelowPx ?? 0);
+	// Word takes what uncounted tags raise a line by off the paragraph's last line, wherever the
+	// tags are (#434).
+	const lastLine = lines.at(-1);
+	if (lastLine && tagLiftPx) lastLine.heightPx = Math.max(0, lastLine.heightPx - tagLiftPx);
 	let y = insetTopPx;
 	for (const line of lines) {
 		y += line.gapBeforePx ?? 0;

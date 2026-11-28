@@ -83,14 +83,15 @@ export function lineMetrics(
 	fonts: LayoutFontSpec[],
 	paragraph: LayoutParagraph,
 	measurer: TextMeasurer,
-): { heightPx: number; baselinePx: number; extraBelowPx: number } {
+): { heightPx: number; baselinePx: number; extraBelowPx: number; uncountedPx: number } {
 	const empty = placed.length
 		? undefined
 		: fontMetrics(measurer, paragraph.emptyLineFont ?? fonts[0] ?? fontOf({ text: '' }));
 	let above = empty?.ascent ?? 0;
 	let below = empty?.descent ?? 0;
 	// Tags Word does not count when it breaks a line (#415) keep their place above the baseline but
-	// add nothing to the line's height (#427): the next line moves up by what they would add.
+	// add nothing to the paragraph's height (#427): the lift is returned as `uncountedPx`, and the
+	// paragraph takes it off its last line, not off the line that holds the tag (#434).
 	let countedAbove = above;
 	let objectAscent = 0;
 	let objectDescent = 0;
@@ -145,16 +146,31 @@ export function lineMetrics(
 	if (rule !== 'exact' && rule !== 'atLeast') {
 		const heightPx = Math.max(objectAscent + below, natural * ((spacingTwips ?? 240) / 240));
 		const extraBelowPx = Math.max(0, heightPx - natural);
-		return { heightPx, baselinePx: heightPx - below - extraBelowPx + lift, extraBelowPx };
+		return {
+			heightPx: heightPx + lift,
+			baselinePx: heightPx - below - extraBelowPx + lift,
+			extraBelowPx,
+			uncountedPx: lift,
+		};
 	}
 	if (rule === 'exact' && spacingTwips != null) {
 		// Word puts the baseline of an exact line at 80 % of its height, whatever the font (#419).
 		const heightPx = twipsToPx(spacingTwips);
-		return { heightPx, baselinePx: heightPx * EXACT_BASELINE_RATIO, extraBelowPx: 0 };
+		return {
+			heightPx,
+			baselinePx: heightPx * EXACT_BASELINE_RATIO,
+			extraBelowPx: 0,
+			uncountedPx: 0,
+		};
 	}
 	const heightPx =
 		rule === 'exact'
 			? natural
 			: Math.max(natural, spacingTwips != null ? twipsToPx(spacingTwips) : 0);
-	return { heightPx, baselinePx: heightPx - below + lift, extraBelowPx: 0 };
+	return {
+		heightPx: heightPx + lift,
+		baselinePx: heightPx - below + lift,
+		extraBelowPx: 0,
+		uncountedPx: lift,
+	};
 }
