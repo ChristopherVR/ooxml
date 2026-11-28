@@ -100,3 +100,16 @@ await build(
 		paragraph(onlyLeader, small('Name'), tabSmall) +
 		paragraph(onlyLeader, small('Postal address'), tabSmall),
 );
+
+// #420: text after a left tab whose first word does not fit after the last stop (margins 1417).
+const longWords = 'Extraordinarily long words follow';
+const twoStops = (first) =>
+	`<w:tabs><w:tab w:val="left" w:pos="${first}"/><w:tab w:val="left" w:pos="8000"/></w:tabs><w:spacing w:after="240"/>`;
+const stopsRows = (value) =>
+	[1134, 3000]
+		.map((first) =>
+			paragraph(twoStops(first), text(`Stops at ${first} and 8000 twips`), tab, text(value)),
+		)
+		.join('');
+await build('issue-420-left-tab-text-does-not-fit.docx', stopsRows(longWords), styles(), 1417);
+await build('issue-420-left-tab-text-fits-control.docx', stopsRows('Short'), styles(), 1417);

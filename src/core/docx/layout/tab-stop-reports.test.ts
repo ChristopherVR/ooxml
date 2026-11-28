@@ -11,11 +11,11 @@ const measurer: TextMeasurer = {
 	lineHeightOf: (font) => font.sizePx * 1.15,
 };
 
-async function lines(name: string) {
+async function lines(name: string, textMeasurer: TextMeasurer = measurer) {
 	const { model } = await loadDocx(
 		await readFile(new URL(`./fixtures/word-layout-reports/${name}.docx`, import.meta.url)),
 	);
-	const { pages } = layoutDocumentModel(model, measurer);
+	const { pages } = layoutDocumentModel(model, textMeasurer);
 	return pages.flatMap((page) =>
 		page.columns.flatMap((column) =>
 			column.blocks.flatMap((block) => (block.kind === 'paragraph' ? block.lines : [])),
@@ -92,5 +92,50 @@ describe('text after a right tab that ends at the right margin (#404)', () => {
 	it('still wraps text that overflows the margin by 1 pt', () => {
 		expect(tabbed('b'.repeat(18) + 'W')).toHaveLength(2);
 		expect(tabbed('b'.repeat(19))).toEqual(['a' + 'b'.repeat(19)]);
+	});
+});
+
+describe('a left tab whose following text does not fit (#420)', () => {
+	// 1134 and 3000 twips from the margin, 75.6 and 200 px.
+	it('moves the tab to the next line, to the first stop', async () => {
+		const bug = await lines('issue-420-left-tab-text-does-not-fit');
+		expect(texts(bug)).toEqual([
+			'Stops at 1134 and 8000 twips',
+			'Extraordinarily long words follow',
+			'Stops at 3000 and 8000 twips',
+			'Extraordinarily long words follow',
+		]);
+		const second = (line: Line) => words(line).find((word) => word.text === 'Extraordinarily')!;
+		expect(second(bug[1]!).x).toBeCloseTo(75.6, 1);
+		expect(second(bug[3]!).x).toBeCloseTo(200, 1);
+	});
+
+	it('keeps the text on the line when it fits after the last stop', async () => {
+		const control = await lines('issue-420-left-tab-text-fits-control');
+		expect(control).toHaveLength(2);
+		expect(words(control[0]!).at(-1)!.x).toBeCloseTo(533.33, 1);
+	});
+});
+
+describe('the tab after a list number stops at the hanging indent (#422)', () => {
+	// The bullet ends before 384 twips (25.6 px); the custom stops are 200, 340, 500 and 1235 twips.
+	it('uses a custom stop only when it comes before the hanging indent', async () => {
+		// A bullet of 80 twips, so that it ends at 322 twips as in Word's measurement.
+		const bullet: TextMeasurer = {
+			widthOf: (text, font) => text.length * font.sizePx * (text === '-' ? 0.3333 : 0.5),
+			lineHeightOf: measurer.lineHeightOf,
+		};
+		const bug = await lines('issue-422-list-tab-past-indent', bullet);
+		const control = await lines('issue-422-list-no-custom-tab-control', bullet);
+		const start = (line: Line) => words(line).find((word) => word.text.startsWith('Text'))!.x;
+		expect(bug).toHaveLength(4);
+		const indent = start(control[0]!);
+		expect(indent).toBeCloseTo(25.6, 1);
+		expect(bug.map(start)).toEqual([
+			expect.closeTo(indent, 1),
+			expect.closeTo(22.67, 1),
+			expect.closeTo(indent, 1),
+			expect.closeTo(indent, 1),
+		]);
 	});
 });

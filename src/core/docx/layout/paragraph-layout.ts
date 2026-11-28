@@ -591,6 +591,23 @@ function measureParagraph(
 		if (pastHole !== undefined && lineWidthPx + pastHole + advance <= availableWidth(lineIndex)) {
 			jump = { index: placed.length, shiftPx: pastHole };
 		} else if (!wouldFit && token.kind !== 'space' && !hanging) {
+			// The first word after a left tab does not fit: Word moves the tab to the next line, where
+			// it goes to the first stop after the line's start, instead of leaving it behind (#420).
+			const tabRun = placed.length > 1 ? placed.at(-1) : undefined;
+			if (
+				token.kind === 'word' &&
+				!jump &&
+				tabRun?.token.kind === 'tab' &&
+				alignedEndPx === undefined &&
+				!paragraph.runs[tabRun.token.runIndex]?.positionalTab &&
+				!paragraph.runs[tabRun.token.runIndex]?.marker?.legacy
+			) {
+				placed.pop();
+				tokenCursor = tokenIndex - 1;
+				flushLine(false, undefined);
+				tokenIndex -= 2;
+				continue;
+			}
 			if (token.kind === 'word' && !jump) {
 				const availableForWord = limit + squeezePx - lineWidthPx;
 				const gap = limit - lineUsedWidthPx(placed, lineWidthPx);
