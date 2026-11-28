@@ -338,6 +338,8 @@ export class DocxPdfText {
 		gapPx: number,
 	): void {
 		const { family, sizePx } = font;
+		text = text.replaceAll('\uFE0F', '');
+		if (!text) return;
 		// Word draws the glyphs at the size rounded to 1/600 inch, on the advances of the nominal one.
 		const drawPx = wordPdfPx(sizePx);
 		const bold = !!font.bold;

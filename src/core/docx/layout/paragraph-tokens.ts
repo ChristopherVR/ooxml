@@ -4,7 +4,7 @@ import type { LayoutFontSpec, TextMeasurer } from './measure';
 import type { LayoutFragment } from './result';
 import { hangsAtLineEnd, kinsokuSets, type KinsokuSets } from '../../text/kinsoku';
 import { AUTO_SPACE_EM, eastAsianAutoSpace } from '../../text/east-asian';
-import { stripSoftHyphens } from '../../text/hyphenation';
+import { stripEmojiSelectors, stripSoftHyphens } from '../../text/hyphenation';
 import {
 	appendBreakMarker,
 	breakAllowedBetween,
@@ -78,7 +78,7 @@ export function runTextWidth(
 	measurer: TextMeasurer,
 	font = fontOf(run),
 ): number {
-	const visible = stripSoftHyphens(text);
+	const visible = stripEmojiSelectors(stripSoftHyphens(text));
 	let characters = 0;
 	if (run.characterSpacingPx) {
 		for (const _segment of graphemes.segment(visible)) characters++;

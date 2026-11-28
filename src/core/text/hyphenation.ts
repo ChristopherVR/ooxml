@@ -42,6 +42,15 @@ export function stripSoftHyphens(text: string): string {
 	return text.includes(SOFT_HYPHEN) ? text.replaceAll(SOFT_HYPHEN, '') : text;
 }
 
+/**
+ * Removes U+FE0F (variation selector 16, "emoji presentation") from text for measuring or
+ * writing it: Word gives it no width and draws nothing for it, even where the font maps it to a
+ * glyph with an advance (Segoe UI Emoji: 2812 of 2048 units, #439).
+ */
+export function stripEmojiSelectors(text: string): string {
+	return text.includes('️') ? text.replaceAll('️', '') : text;
+}
+
 /** Returns indices of explicit soft hyphens (`\u00AD`) that have text on both sides. */
 export function softHyphenIndices(word: string): number[] {
 	if (!word.includes(SOFT_HYPHEN)) return [];

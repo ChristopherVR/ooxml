@@ -145,7 +145,8 @@ export function createFontFileMeasurer(
 		const em = units / font.unitsPerEm;
 		return missing ? em + estimate.widthOf(missing, spec) / spec.sizePx : em;
 	};
-	const measure = (text: string, spec: LayoutFontSpec): number => {
+	const measure = (raw: string, spec: LayoutFontSpec): number => {
+		const text = raw.replaceAll('\uFE0F', '');
 		const face = faceOf(spec);
 		if (!face) return estimate.widthOf(text, spec);
 		const kern = spec.kerning === 'normal';
