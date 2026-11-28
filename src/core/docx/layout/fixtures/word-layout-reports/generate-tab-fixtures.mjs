@@ -86,3 +86,17 @@ await build(
 	styles(),
 	1417,
 );
+
+// #396: 10 pt Arial lines with a dot leader to 8931 twips; the dots of all lines share one grid.
+const leaderStops =
+	'<w:tabs><w:tab w:val="left" w:pos="2835"/><w:tab w:val="left" w:leader="dot" w:pos="8931"/></w:tabs>';
+const onlyLeader = '<w:tabs><w:tab w:val="left" w:leader="dot" w:pos="8931"/></w:tabs>';
+const small = (value) => `<w:r><w:rPr><w:sz w:val="20"/></w:rPr><w:t>${value}</w:t></w:r>`;
+const tabSmall = '<w:r><w:rPr><w:sz w:val="20"/></w:rPr><w:tab/></w:r>';
+await build(
+	'issue-396-tab-leader-dots.docx',
+	paragraph(leaderStops, small('Name'), tabSmall, tabSmall) +
+		paragraph(leaderStops, small('Date and place of birth'), tabSmall, tabSmall) +
+		paragraph(onlyLeader, small('Name'), tabSmall) +
+		paragraph(onlyLeader, small('Postal address'), tabSmall),
+);

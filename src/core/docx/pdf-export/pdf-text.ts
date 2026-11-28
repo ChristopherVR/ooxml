@@ -42,6 +42,8 @@ import { wordBaselinePx, wordPdfPx } from './pdf-units';
 const DEFAULT_FAMILY = 'Calibri';
 /** The slope Word shears a face with when the font family has no italic (measured from its PDF). */
 const SYNTHETIC_ITALIC_SKEW = 1 / 3;
+/** Where Word's dot leaders stop short of their tab stop, measured on 10 pt Arial (issue #396). */
+const LEADER_END_GAP_EM = 0.122;
 const LEADERS: Record<string, string> = { dot: '.', hyphen: '-', middleDot: '\u00b7' };
 
 /** A CSS colour (or bare `RRGGBB`) as 0..1 channels; `null` for transparent or unknown. */
@@ -137,9 +139,14 @@ export class DocxPdfText {
 				page.op('f');
 			}
 		}
-		const text = fragment.leader
-			? this.#leaderText(fragment, font)
-			: fragment.text.replace(/[\t\n\r]/g, ' ');
+		// A leader's characters keep their own advance and end where the leader does, so the dots
+		// of successive lines share one grid, as in Word.
+		const leader = fragment.leader ? this.#leader(fragment, font) : undefined;
+		if (leader) {
+			x += fragment.widthPx - leader.widthPx - font.sizePx * LEADER_END_GAP_EM;
+			fragment = { ...fragment, widthPx: leader.widthPx };
+		}
+		const text = fragment.leader ? (leader?.text ?? '') : fragment.text.replace(/[\t\n\r]/g, ' ');
 		if (fragment.leader === 'underscore' || fragment.leader === 'heavy') {
 			this.#rule(
 				page,
@@ -178,10 +185,20 @@ export class DocxPdfText {
 		return Math.abs(shift) < 1e-6 ? ruled : wordPdfPx(ruled + shift);
 	}
 
-	#leaderText(fragment: LayoutFragment, font: LayoutFontSpec): string {
+	/** The leader's characters at their own advance, as many as fit in the leader's width. */
+	#leader(
+		fragment: LayoutFragment,
+		font: LayoutFontSpec,
+	): { text: string; widthPx: number } | undefined {
 		const character = LEADERS[fragment.leader!];
-		if (!character) return '';
-		return character.repeat(Math.max(0, Math.floor(fragment.widthPx / (font.sizePx * 0.28))));
+		if (!character) return undefined;
+		// Word spaces the characters on its 1/600 inch grid: a 10 pt Arial period is 2.76 pt.
+		const measured = wordPdfPx(this.measurer.widthOf(character, font));
+		const advance = measured > 0 ? measured : font.sizePx * 0.28;
+		// Word's last dot ends 1.2 pt (0.122 em at 10 pt Arial) before the stop it leads to.
+		const room = fragment.widthPx - font.sizePx * LEADER_END_GAP_EM;
+		const count = Math.max(0, Math.floor(room / advance + 0.05));
+		return { text: character.repeat(count), widthPx: count * advance };
 	}
 
 	#rule(
