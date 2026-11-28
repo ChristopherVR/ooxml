@@ -6,7 +6,6 @@ import type { LayoutBlockBox } from './result';
 import { at } from './test-helpers';
 
 const measurer = createFakeMeasurer();
-const PT = 96 / 72;
 
 async function open(name: string) {
 	const { model } = await loadDocx(

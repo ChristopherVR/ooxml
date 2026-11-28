@@ -20,7 +20,6 @@ const tables = (result: LayoutResult, page = 0): LayoutTableBox[] =>
 		(block): block is LayoutTableBox => block.kind === 'table',
 	);
 const pt = (px: number) => px * 0.75;
-const rowPitchPt = (table: LayoutTableBox) => pt(table.rows[1]!.yPx - table.rows[0]!.yPx);
 
 // Text area: A4 with 1417 twip margins is 9072 twips (453.6 pt) wide.
 it('#387: a centred or right-aligned table wider than the text area overhangs the margins', async () => {
