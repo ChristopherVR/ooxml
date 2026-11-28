@@ -26,12 +26,16 @@ export function createCanvasMeasurer(): TextMeasurer {
 		}
 		return context;
 	};
-	const referencePx = 100;
+	// The browser rounds a font's ascender, descender and line box to whole pixels. At 100 px that
+	// cost Century Gothic 0.6% of its line height (1.22 em for Word's 1.2261), enough to fit one
+	// more line on a page than Word (#383). 2048 px is exact for 2048-unit TrueType fonts and
+	// within 1/4096 em for the rest.
+	const referencePx = 2048;
 	const fontString = (font: LayoutFontSpec, sizePx = font.sizePx) =>
 		`${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${sizePx}px ${cssFontStack(font.family, font.fallback)}`;
 	const metricsOf = (c: CanvasRenderingContext2D, font: LayoutFontSpec) => {
-		// Measure a reference size once per face. At small sizes Canvas rounds the
-		// ascender and descender separately and doesn't include the font's line gap.
+		// Measure a reference size once per face. Canvas rounds the ascender and descender
+		// separately and doesn't include the font's line gap; the span's line box does.
 		const key = fontString(font, referencePx);
 		const cached = metricCache.get(key);
 		if (cached) return cached;

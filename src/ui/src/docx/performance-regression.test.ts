@@ -140,17 +140,18 @@ describe('Word performance regression coverage', () => {
 	});
 
 	it('reuses reference font metrics across sizes and includes the natural line gap', () => {
+		// The measurer reads each face once at 2048 px.
 		const measureText = vi.fn(() => ({
 			width: 20,
-			fontBoundingBoxAscent: 88,
-			fontBoundingBoxDescent: 22,
+			fontBoundingBoxAscent: 0.88 * 2048,
+			fontBoundingBoxDescent: 0.22 * 2048,
 		}));
 		const context = vi
 			.spyOn(HTMLCanvasElement.prototype, 'getContext')
 			.mockReturnValue({ measureText } as unknown as CanvasRenderingContext2D);
 		const bounds = vi
 			.spyOn(HTMLElement.prototype, 'getBoundingClientRect')
-			.mockReturnValue(new DOMRect(0, 0, 0, 115));
+			.mockReturnValue(new DOMRect(0, 0, 0, 1.15 * 2048));
 		try {
 			const measurer = createCanvasMeasurer();
 			const font = { family: 'Arial', sizePx: 16 };

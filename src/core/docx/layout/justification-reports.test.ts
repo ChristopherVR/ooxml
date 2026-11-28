@@ -2,59 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { expect, it } from 'vitest';
 import { loadDocx } from '../index';
 import { layoutDocumentModel } from './layout';
-import type { TextMeasurer } from './measure';
-
-// Relative Century Gothic advances measured with Pillow at 1000 px on Windows.
-// Store only the advances used by the fixtures so the test needs no installed font.
-const advance: Record<string, number> = {
-	' ': 0.277,
-	'.': 0.277,
-	A: 0.74,
-	C: 0.813,
-	D: 0.744,
-	E: 0.536,
-	I: 0.226,
-	L: 0.462,
-	M: 0.919,
-	O: 0.869,
-	P: 0.592,
-	R: 0.607,
-	T: 0.426,
-	V: 0.702,
-	a: 0.683,
-	b: 0.682,
-	c: 0.647,
-	d: 0.685,
-	e: 0.65,
-	f: 0.314,
-	g: 0.673,
-	h: 0.61,
-	i: 0.2,
-	l: 0.2,
-	m: 0.938,
-	n: 0.61,
-	o: 0.655,
-	p: 0.682,
-	q: 0.682,
-	r: 0.301,
-	s: 0.388,
-	t: 0.339,
-	u: 0.608,
-	v: 0.554,
-	x: 0.48,
-};
-const measurer: TextMeasurer = {
-	widthOf(text, font) {
-		return (
-			[...text].reduce((sum, char) => {
-				const width = advance[char];
-				if (width === undefined) throw new Error(`Missing fixture advance for ${char}`);
-				return sum + width;
-			}, 0) * font.sizePx
-		);
-	},
-	lineHeightOf: (font) => font.sizePx * 1.227,
-};
+import { centuryGothicMeasurer } from './test-support/century-gothic-measurer';
 
 it.each([
 	{ mode: 15, name: 'justify-compat15', pageCount: 2, endings: ['aliqua', 'aute', 'velit'] },
@@ -68,7 +16,7 @@ it.each([
 			),
 		);
 		expect(model.compatibilityMode).toBe(mode);
-		const { pages } = layoutDocumentModel(model, measurer);
+		const { pages } = layoutDocumentModel(model, centuryGothicMeasurer);
 		const lines = pages.flatMap((page) =>
 			page.columns.flatMap((column) =>
 				column.blocks.flatMap((block) =>
