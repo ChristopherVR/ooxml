@@ -412,11 +412,29 @@ function alignMergedCells(rows: LayoutTableRowBox[]): void {
 	rows.forEach((row, index) => {
 		for (const geometry of row.geometry ?? []) {
 			const count = geometry.mergeRows ?? 1;
-			if (count < 2 || !geometry.verticalAlign || geometry.verticalAlign === 'top') continue;
-			const last = rows[index + count - 1];
-			if (!last || rows.slice(index, index + count).some((item) => item.repeated !== row.repeated))
+			if (count < 2) continue;
+			const covered = rows.slice(index, index + count);
+			if (covered.length < count || covered.some((item) => item.repeated !== row.repeated))
 				continue;
+			shadeMergedContinuations(geometry, covered);
+			if (!geometry.verticalAlign || geometry.verticalAlign === 'top') continue;
+			const last = covered[count - 1]!;
 			geometry.alignmentHeightPx = last.yPx + last.heightPx - row.yPx;
 		}
 	});
+}
+
+/** The shading of a merge's restart cell covers the whole merged cell, not its first row only. */
+function shadeMergedContinuations(
+	start: NonNullable<LayoutTableRowBox['geometry']>[number],
+	covered: LayoutTableRowBox[],
+): void {
+	if (!start.shading) return;
+	for (const row of covered.slice(1)) {
+		const part = row.geometry?.find(
+			(item) =>
+				Math.abs(item.xPx - start.xPx) < 0.5 && Math.abs(item.widthPx - start.widthPx) < 0.5,
+		);
+		if (part && !part.shading) part.shading = start.shading;
+	}
 }
