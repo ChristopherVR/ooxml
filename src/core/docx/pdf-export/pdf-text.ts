@@ -25,11 +25,12 @@ import {
 	pdfTextWidth,
 } from '../../pdf/write/pdf-fonts';
 import { isSymbolEncodedFont } from '../../text/index';
+import type { SymbolMissingGlyph } from '../../text/symbol-fonts';
 
 /** The symbol-font conversions the text writer uses, loaded with the PDF export's glyph tables. */
 export type DocxPdfSymbolTables = Pick<
 	typeof import('../../text/symbol-fonts'),
-	'symbolFontBytes' | 'symbolTextToUnicode' | 'symbolFontLacksGlyph'
+	'symbolFontBytes' | 'symbolTextToUnicode' | 'symbolMissingGlyph'
 >;
 import { parseColor, type Rgba } from '../../pdf/write/pdf-svg-style';
 import type { PdfVectorPage } from '../../pdf/write/pdf-vector';
@@ -49,10 +50,6 @@ const SYNTHETIC_ITALIC_SKEW = 1 / 3;
  * 0.31543, 0.456, 0.68571 and 1.3714 pt), and the glyphs keep the regular face's advances.
  */
 const SYNTHETIC_BOLD_EM = 1 / 35;
-/** The Symbol font's missing-glyph box: 1229/2048 em advance, drawn as an outline this tall and thick. */
-const MISSING_GLYPH_ADVANCE_EM = 1229 / 2048;
-const MISSING_GLYPH_HEIGHT_EM = 0.7;
-const MISSING_GLYPH_WALL_EM = 0.05;
 /** Where Word's dot leaders stop short of their tab stop, measured on 10 pt Arial (issue #396). */
 const LEADER_END_GAP_EM = 0.122;
 const LEADERS: Record<string, string> = { dot: '.', hyphen: '-', middleDot: '\u00b7' };
@@ -270,17 +267,17 @@ export class DocxPdfText {
 		fragment: LayoutFragment,
 		gapPx: number,
 	): void {
-		const lacking = this.symbols!.symbolFontLacksGlyph;
-		const parts: { text: string; missing: boolean; width: number }[] = [];
+		const missingOf = this.symbols!.symbolMissingGlyph;
+		const parts: { text: string; missing: SymbolMissingGlyph | undefined; width: number }[] = [];
 		for (const char of text) {
-			const missing = lacking(font.family, char);
+			const missing = missingOf(font.family, char);
 			const last = parts[parts.length - 1];
 			if (last && last.missing === missing) last.text += char;
 			else parts.push({ text: char, missing, width: 0 });
 		}
 		for (const part of parts) {
 			part.width = part.missing
-				? [...part.text].length * font.sizePx * MISSING_GLYPH_ADVANCE_EM
+				? [...part.text].length * font.sizePx * part.missing.advance
 				: this.measurer.widthOf(part.text, font);
 		}
 		const natural = parts.reduce((sum, part) => sum + part.width, 0);
@@ -291,12 +288,17 @@ export class DocxPdfText {
 			if (part.missing) {
 				const count = [...part.text].length;
 				for (let at = 0; at < count; at++) {
-					const advance = widthPx / count;
-					const box = { x: left + at * advance + advance * 0.12, width: advance * 0.76 };
-					const height = font.sizePx * MISSING_GLYPH_HEIGHT_EM;
-					const wall = font.sizePx * MISSING_GLYPH_WALL_EM;
-					page.rect(box.x, y - height, box.width, height);
-					page.rect(box.x + wall, y - height + wall, box.width - 2 * wall, height - 2 * wall);
+					const shape = part.missing;
+					// The font's own proportions, stretched with the fragment to the width it was given.
+					const stretch = widthPx / count / (shape.advance * font.sizePx);
+					const em = font.sizePx;
+					const boxLeft = left + at * (widthPx / count) + shape.left * em * stretch;
+					const boxWidth = shape.width * em * stretch;
+					const height = shape.height * em;
+					const wall = shape.wall * em;
+					const wallX = wall * stretch;
+					page.rect(boxLeft, y - height, boxWidth, height);
+					page.rect(boxLeft + wallX, y - height + wall, boxWidth - 2 * wallX, height - 2 * wall);
 					page.op('f*');
 				}
 			} else {
@@ -347,12 +349,14 @@ export class DocxPdfText {
 				symbolBytes = this.symbols.symbolFontBytes(family, text);
 			text = unicode ?? text;
 		}
-		if (symbolBytes !== undefined && this.symbols) {
-			const lacking = this.symbols.symbolFontLacksGlyph;
-			if ([...text].some((char) => lacking(family, char))) {
-				this.#withMissingGlyphs(page, text, font, x, y, fragment, gapPx);
-				return;
-			}
+		if (
+			this.symbols &&
+			isSymbolEncodedFont(family) &&
+			[...text].some((char) => this.symbols!.symbolMissingGlyph(family, char)) &&
+			!this.fonts.pick(family, bold, italic, text)
+		) {
+			this.#withMissingGlyphs(page, text, font, x, y, fragment, gapPx);
+			return;
 		}
 		const ascii = symbolBytes ?? encodeWinAnsi(text);
 		const embedded =

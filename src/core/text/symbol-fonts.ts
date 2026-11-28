@@ -263,15 +263,58 @@ export function symbolFontGlyph(
 	return alias === undefined ? 0 : font.glyphFor(alias);
 }
 
+/** The missing-glyph box (.notdef) of a symbol font, in em: its advance and outlined rectangle. */
+export interface SymbolMissingGlyph {
+	advance: number;
+	left: number;
+	width: number;
+	height: number;
+	wall: number;
+}
+
 /**
- * Whether `char` has no glyph in the standard Symbol font (codes 0x7F to 0x9F, which Adobe's
- * Symbol encoding leaves empty): a renderer shows the font's missing-glyph box there, as Word does.
+ * Word 16's PDFs of Symbol and Wingdings (swept over U+F020..U+F0FF, one symbol per paragraph at
+ * 16 pt) draw glyph 0 of the font, a box outlined by two rectangles, for the codes the font has no
+ * glyph for: Symbol 0x7F to 0xA0, 0xF0 and 0xFF, Wingdings 0x7F. Units are the fonts' 2048 per em.
  */
-export function symbolFontLacksGlyph(family: string | undefined, char: string): boolean {
-	if (normaliseFamily(family) !== 'symbol') return false;
+const MISSING_GLYPHS: Readonly<
+	Record<string, { shape: SymbolMissingGlyph; codes: (byte: number) => boolean }>
+> = {
+	symbol: {
+		shape: {
+			advance: 1229 / 2048,
+			left: 103 / 2048,
+			width: 1024 / 2048,
+			height: 1280 / 2048,
+			wall: 32 / 2048,
+		},
+		codes: (byte) => (byte >= 0x7f && byte <= 0xa0) || byte === 0xf0 || byte === 0xff,
+	},
+	wingdings: {
+		shape: {
+			advance: 1024 / 2048,
+			left: 128 / 2048,
+			width: 768 / 2048,
+			height: 1480 / 2048,
+			wall: 128 / 2048,
+		},
+		codes: (byte) => byte === 0x7f,
+	},
+};
+
+/**
+ * The box Word draws for `char` in `family` when the font has no glyph for it, or `undefined` when
+ * it has one (or the font is not measured). Private-use codes U+F020..U+F0FF are read as their byte.
+ */
+export function symbolMissingGlyph(
+	family: string | undefined,
+	char: string,
+): SymbolMissingGlyph | undefined {
+	const entry = MISSING_GLYPHS[normaliseFamily(family)];
+	if (!entry) return undefined;
 	const code = char.codePointAt(0) ?? 0;
 	const byte = code >= 0xf020 && code <= 0xf0ff ? code - 0xf000 : code;
-	return byte >= 0x7f && byte <= 0x9f;
+	return entry.codes(byte) ? entry.shape : undefined;
 }
 
 /**
