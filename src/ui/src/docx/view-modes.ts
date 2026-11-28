@@ -98,6 +98,9 @@ export class ViewModes {
 			this.pending = this.active;
 			return;
 		}
+		// Only a switch made from inside the editor (its ribbon, status bar or a shortcut) hands the
+		// focus to the document; a host that changes the view in code keeps its own focus (#380).
+		const focusOwned = this.ownsFocus();
 		const toolbar = host.toolbar();
 		const previous = this.mode;
 		const focusWasActive = Boolean(this.focus);
@@ -145,7 +148,7 @@ export class ViewModes {
 		}
 		this.syncControls();
 		host.refreshControls();
-		if (host.element.isConnected) {
+		if (host.element.isConnected && focusOwned) {
 			const view = host.view();
 			if (this.mode === 'read' || !view?.editable) canvas.focus({ preventScroll: true });
 			else focusView(view);
@@ -155,6 +158,14 @@ export class ViewModes {
 			canvas.scrollTop = scroll.top;
 			canvas.scrollLeft = scroll.left;
 		}
+	}
+
+	/** Whether the keyboard focus is in the editor (its shadow tree included). */
+	private ownsFocus(): boolean {
+		const { element } = this.host;
+		const root = element.getRootNode() as Document | ShadowRoot;
+		const active = root.activeElement;
+		return Boolean(active && (active === element || element.contains(active)));
 	}
 
 	private syncControls(): void {
