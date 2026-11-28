@@ -20,6 +20,8 @@ export interface LayoutFragment {
 	smallCaps?: boolean;
 	characterSpacingPx?: number;
 	kerningThresholdPt?: number;
+	/** Part of `widthPx`: the kerning pair with the first glyph of the next fragment (a space or a word). */
+	kernAfterPx?: number;
 	/** An inline picture drawn in this fragment's box, bottom-aligned on the line. */
 	object?: import('./input').LayoutObject;
 	color?: string;

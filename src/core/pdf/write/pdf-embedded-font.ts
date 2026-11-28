@@ -12,6 +12,7 @@ import {
 	type TrueTypeFont,
 	type TrueTypeSubset,
 } from '../../text/index';
+import { pairKerning, type PairKerning } from '../../text/truetype/kerning';
 import { toUnicodeCMap, type PdfCidFont, type PdfFontParts } from './pdf-cid-font';
 import { PdfTextLayerFont } from './pdf-text-layer-font';
 
@@ -77,6 +78,15 @@ export class PdfEmbeddedFont implements PdfCidFont {
 		let total = 0;
 		for (const char of text) total += this.font.advance(this.#glyph(char)) / this.font.unitsPerEm;
 		return total;
+	}
+	#pairs: PairKerning | undefined | null = null;
+	/** The pair adjustment between two characters in em units (negative pulls them together). */
+	kern(left: string, right: string): number {
+		if (this.#pairs === null) this.#pairs = pairKerning(this.font);
+		const first = this.#glyph(left);
+		const second = this.#glyph(right);
+		if (!this.#pairs || !first || !second) return 0;
+		return this.#pairs(first, second) / this.font.unitsPerEm;
 	}
 	#glyph(char: string): number {
 		const code = char.codePointAt(0)!;

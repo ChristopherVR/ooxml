@@ -10,7 +10,15 @@ export function buildFragments(
 ): LayoutFragment[] {
 	const fragments: LayoutFragment[] = [];
 	let x = 0;
-	for (const { token, widthPx, displayText, leader, xOffsetPx, advancePx } of tokensOnLine) {
+	for (const {
+		token,
+		widthPx,
+		displayText,
+		leader,
+		xOffsetPx,
+		advancePx,
+		kernAfterPx,
+	} of tokensOnLine) {
 		const run = paragraph.runs[token.runIndex];
 		const text =
 			displayText ??
@@ -34,6 +42,7 @@ export function buildFragments(
 				characterSpacingPx: run?.characterSpacingPx,
 				kerningThresholdPt: run?.kerningThresholdPt,
 			}),
+			...(kernAfterPx ? { kernAfterPx } : {}),
 			...(leader ? { leader } : {}),
 			...(run?.script ? { script: run.script } : {}),
 			...(run?.color ? { color: run.color } : {}),

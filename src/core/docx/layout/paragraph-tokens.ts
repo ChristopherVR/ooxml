@@ -42,6 +42,34 @@ export function fontOf(run: LayoutRun): LayoutFontSpec {
 	};
 }
 
+/** Whether a run kerns: "Kerning for fonts" is on and the text is at least the threshold's size. */
+export function kerningMode(
+	thresholdPt: number | undefined,
+	sizePt: number | undefined,
+): 'normal' | 'none' | undefined {
+	if (thresholdPt === undefined) return undefined;
+	return thresholdPt > 0 && (sizePt ?? DEFAULT_FONT_SIZE_PT) >= thresholdPt ? 'normal' : 'none';
+}
+
+/**
+ * The pair adjustment between the last glyph of `left` and the first of `right` in `font`, in
+ * pixels (negative pulls them together): what measuring both together adds to measuring them apart.
+ * Zero unless the font kerns.
+ */
+export function pairKerningPx(
+	measurer: TextMeasurer,
+	font: LayoutFontSpec,
+	left: string,
+	right: string,
+): number {
+	if (font.kerning !== 'normal' || !left || !right) return 0;
+	return (
+		measurer.widthOf(left + right, font) -
+		measurer.widthOf(left, font) -
+		measurer.widthOf(right, font)
+	);
+}
+
 const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 /** Word applies additional character spacing after scaling the glyph advances. */
 export function runTextWidth(
@@ -260,5 +288,7 @@ export interface PlacedToken {
 	/** Glyph position and consumed advance differ for centered/right-aligned list markers. */
 	xOffsetPx?: number;
 	advancePx?: number;
+	/** Part of `widthPx`: the kerning pair this token's last glyph makes with the next token's first. */
+	kernAfterPx?: number;
 	leader?: LayoutFragment['leader'];
 }

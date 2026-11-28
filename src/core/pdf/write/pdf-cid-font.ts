@@ -11,6 +11,8 @@ export interface PdfCidFont {
 	readonly italic: boolean;
 	/** Advance width of `text` in em units. */
 	width(text: string): number;
+	/** The pair adjustment between two characters in em units (negative pulls them together). */
+	kern?(left: string, right: string): number;
 	/** `text` as the hex digits of 2-byte CIDs (no angle brackets); marks the glyphs as used. */
 	encode(text: string): string;
 	/** Everything the PDF needs to write the font objects. */

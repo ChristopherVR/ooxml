@@ -11,6 +11,7 @@ import { contentControlTagMetrics } from './content-control-tag-metrics';
 import { placePositionalTab, placeTab } from './tab-stops';
 import {
 	fontOf,
+	pairKerningPx,
 	runTextWidth,
 	resolveIndents,
 	tokenizeParagraph,
@@ -21,6 +22,8 @@ import {
 import { lineMetrics, tokenExtent } from './line-metrics';
 import { alignFragments, buildFragments } from './paragraph-fragments';
 import { expectDefined } from '../expect-defined';
+import { effectiveTextScalePercent } from '../simple-types';
+import { stripSoftHyphens } from '../../text/hyphenation';
 import { cachedParagraphLayout } from './paragraph-cache';
 
 // Word 16 mode 15 probes in Courier New, Times New Roman, Arial and Arial Narrow.
@@ -243,7 +246,34 @@ function measureParagraph(
 				? (paragraph.runs[token.runIndex]?.object?.widthPx ?? 0)
 				: 0;
 	};
-	const widths = tokens.map(tokenWidth);
+	/**
+	 * Word kerns a pair across a space too (Y and the space, the space and T). The pair counts
+	 * toward the width of the token on its left, as the font's pair adjustment moves the advance of
+	 * the first glyph. Only a word and a space of one run make such a pair.
+	 */
+	const kernAfter = (index: number): number => {
+		const token = tokens[index];
+		const next = tokens[index + 1];
+		if (!token || !next || token.runIndex !== next.runIndex) return 0;
+		if (
+			!(
+				(token.kind === 'word' && next.kind === 'space') ||
+				(token.kind === 'space' && next.kind === 'word')
+			)
+		)
+			return 0;
+		const run = paragraph.runs[token.runIndex];
+		const font = fonts[token.runIndex];
+		if (!run || !font || run.synthetic || run.marker || run.contentControlTag) return 0;
+		const left = [...stripSoftHyphens(token.text)].at(-1);
+		const right = [...stripSoftHyphens(next.text)][0];
+		return (
+			(pairKerningPx(measurer, font, left ?? '', right ?? '') *
+				effectiveTextScalePercent(run.textScalePercent)) /
+			100
+		);
+	};
+	const widths = tokens.map((token, index) => tokenWidth(token) + kernAfter(index));
 	const ends = new Set(['tab', 'lineBreak', 'pageBreak', 'columnBreak']);
 	const beforeStart = tokens[startIndex - 1]?.kind;
 	let keepLeadingSpaces =
@@ -290,6 +320,14 @@ function measureParagraph(
 		// but never rendered or measured, so it cannot skew alignment/justification.
 		const rendered = [...placed];
 		while (rendered.length && rendered.at(-1)!.token.kind === 'space') rendered.pop();
+		// The pair a last word makes with the token after it (consumed or on the next line) is not drawn.
+		const lastRendered = rendered.at(-1);
+		if (lastRendered?.kernAfterPx)
+			rendered[rendered.length - 1] = {
+				...lastRendered,
+				widthPx: lastRendered.widthPx - lastRendered.kernAfterPx,
+				kernAfterPx: 0,
+			};
 		const fragments = buildFragments(rendered, paragraph);
 		const [firstPlaced] = placed;
 		// The first line of a paragraph starts at its first character, even when that is an anchor or
@@ -377,7 +415,8 @@ function measureParagraph(
 		tokenCursor = wordPosition(index, wordToken, split.resumeOffset);
 		flushLine(false, undefined, split.automatic);
 		resumeWord(index, split.resumeOffset);
-		widths[index] = tokenWidth(expectDefined(tokens[index], 'resumed word token'));
+		widths[index] =
+			tokenWidth(expectDefined(tokens[index], 'resumed word token')) + kernAfter(index);
 		return true;
 	}
 
@@ -607,7 +646,7 @@ function measureParagraph(
 					tokenIndex--;
 					continue;
 				}
-				width = advance = tokenWidth(token);
+				width = advance = tokenWidth(token) + kernAfter(tokenIndex);
 				widths[tokenIndex] = width;
 			}
 		}
@@ -616,6 +655,7 @@ function measureParagraph(
 		placed.push({
 			token,
 			widthPx: width,
+			...(kernAfter(tokenIndex) ? { kernAfterPx: kernAfter(tokenIndex) } : {}),
 			...(leader ? { leader } : {}),
 			...(markerFactor ? { xOffsetPx: -width * markerFactor } : {}),
 			...(markerFactor || spacePx ? { advancePx: advance + spacePx } : {}),

@@ -77,6 +77,12 @@ export interface PdfTextSpacing {
 	 * in whole thousandths of an em that never let the error add up (Word's PDFs draw text this way).
 	 */
 	drawSize?: number;
+	/**
+	 * Embedded text only: pair kerning, in 1/1000 em added to the advance after each character
+	 * (negative pulls the next one closer). Written as `TJ` offsets in whole thousandths, each
+	 * rounding the error still left, so no horizontal scaling is needed to fit a kerned run.
+	 */
+	kerning?: readonly number[];
 }
 
 /**
@@ -93,6 +99,18 @@ export function sizeCorrections(
 	let applied = 0;
 	return widths.map((width) => {
 		wanted += width * ratio;
+		const step = Math.round(wanted - applied);
+		applied += step;
+		return step === 0 ? 0 : -step;
+	});
+}
+
+/** `TJ` offsets (whole thousandths, positive moves the next glyph left) for kerning `adjustments`. */
+function kerningOffsets(adjustments: readonly number[]): number[] {
+	let wanted = 0;
+	let applied = 0;
+	return adjustments.map((adjustment) => {
+		wanted += adjustment;
 		const step = Math.round(wanted - applied);
 		applied += step;
 		return step === 0 ? 0 : -step;
@@ -241,11 +259,13 @@ export class PdfVectorPage {
 						size,
 						drawSize,
 					);
+		const kerning = spacing.kerning ? kerningOffsets(spacing.kerning) : undefined;
 		const parts: string[] = [];
 		let run = '';
 		chars.forEach((char, index) => {
 			run += font.encode(char);
-			const offset = (corrections?.[index] ?? 0) + (char === ' ' ? word : 0);
+			const offset =
+				(corrections?.[index] ?? 0) + (kerning?.[index] ?? 0) + (char === ' ' ? word : 0);
 			if (!offset) return;
 			parts.push(`<${run}>`, num(offset));
 			run = '';

@@ -17,6 +17,7 @@ import {
 	type TextMeasurer,
 } from '../layout/index';
 import type { PdfFontSet } from '../../pdf/write/pdf-embedded-font';
+import type { PdfCidFont } from '../../pdf/write/pdf-cid-font';
 import {
 	PDF_SYMBOL_FONT,
 	encodeWinAnsi,
@@ -32,6 +33,7 @@ export type DocxPdfSymbolTables = Pick<
 >;
 import { parseColor, type Rgba } from '../../pdf/write/pdf-svg-style';
 import type { PdfVectorPage } from '../../pdf/write/pdf-vector';
+import { kerningMode } from '../layout/paragraph-tokens';
 import { paintContentControlTag } from './pdf-content-control-tag';
 import type { DocxPdfReportBuilder } from './pdf-report';
 import { SMALL_CAPS_SCALE, smallCapsParts } from '../caps-display';
@@ -64,6 +66,16 @@ export function fillWith(
 	return true;
 }
 
+/** Pair kerning after each character of `text` in 1/1000 em (the last has none), if the font has any. */
+function pairAdjustments(font: PdfCidFont, text: string): number[] | undefined {
+	if (!font.kern) return undefined;
+	const chars = [...text];
+	return chars.map((char, index) => {
+		const next = chars[index + 1];
+		return next === undefined ? 0 : font.kern!(char, next) * 1000;
+	});
+}
+
 export class DocxPdfText {
 	constructor(
 		readonly fonts: PdfFontSet,
@@ -74,6 +86,7 @@ export class DocxPdfText {
 
 	/** The font a fragment is drawn in, at its drawn size (scripts are smaller). */
 	#font(fragment: LayoutFragment): LayoutFontSpec {
+		const kerning = kerningMode(fragment.kerningThresholdPt, fragment.fontSizePt);
 		const sizePt = (fragment.fontSizePt ?? DEFAULT_FONT_SIZE_PT) * (fragment.script ? 0.65 : 1);
 		return {
 			family: fragment.fontFamily ?? DEFAULT_FAMILY,
@@ -81,6 +94,7 @@ export class DocxPdfText {
 			...(fragment.fontFallback ? { fallback: fragment.fontFallback } : {}),
 			...(fragment.bold ? { bold: true } : {}),
 			...(fragment.italic ? { italic: true } : {}),
+			...(kerning ? { kerning } : {}),
 		};
 	}
 
@@ -216,7 +230,8 @@ export class DocxPdfText {
 		const spacing = fragment.characterSpacingPx ?? 0;
 		const length = [...text].length;
 		const fit = (natural: number) => {
-			const target = fragment.widthPx - spacing * length;
+			// The pair kerning with the next fragment's first glyph is part of the width, not of this text.
+			const target = fragment.widthPx - (fragment.kernAfterPx ?? 0) - spacing * length;
 			if (!(natural > 0) || !(target > 0)) return 100;
 			return Math.min(200, Math.max(50, (target / natural) * 100));
 		};
@@ -247,9 +262,13 @@ export class DocxPdfText {
 			if (embedded.family.toLowerCase() === family.toLowerCase())
 				this.report.embedded(embedded.family);
 			else this.report.substituted(family, embedded.family);
-			const scale = fit(embedded.width(text) * sizePx);
+			// Kerned text is drawn pair by pair at the nominal widths (Word applies no scaling for it).
+			const kerning = font.kerning === 'normal' ? pairAdjustments(embedded, text) : undefined;
+			const kerned = kerning ? kerning.reduce((sum, value) => sum + value, 0) / 1000 : 0;
+			const scale = fit((embedded.width(text) + kerned) * sizePx);
 			page.embeddedText(embedded, sizePx, x, y, space ? `${text} ` : text, {
 				character: spacing,
+				...(kerning?.some(Boolean) ? { kerning } : {}),
 				scale,
 				// The family has no italic face: slant the regular one, as Word does.
 				...(italic && !embedded.italic ? { skew: SYNTHETIC_ITALIC_SKEW } : {}),
