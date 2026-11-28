@@ -110,7 +110,7 @@ it('clears the first-page header paragraphs without counting the floating letter
 	expect(pages).toHaveLength(2);
 	const first = pages[0]!;
 	// The styleless Word package inherits the Normal template's line and paragraph spacing.
-	expect(first.marginTopPx).toBeCloseTo(708 / 15 + 11 * 16 * (278 / 240) + 10 * (160 / 15));
+	expect(first.marginTopPx).toBeCloseTo(708 / 15 + 11 * 16 * (278 / 240) + 11 * (160 / 15));
 	expect(first.columns[0]?.blocks[0]?.yPx).toBe(0);
 	expect(pages[1]?.marginTopPx).toBe(96);
 

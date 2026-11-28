@@ -25,7 +25,8 @@ it('positions the footer frame from the page origin on repeated calls and pages'
 		);
 		expect(footer.x + (frame.xPx ?? 0)).toBeCloseTo(10000 / 15);
 		expect(footer.y + frame.yPx).toBeCloseTo(15900 / 15);
-		expect(footer.heightPx).toBeCloseTo(18.2, 1);
+		// 18.2 px line plus the 8 pt space after the last paragraph (#401).
+		expect(footer.heightPx).toBeCloseTo(18.2 + 160 / 15, 1);
 	}
 });
 
@@ -35,7 +36,8 @@ it('keeps the unframed footer in flow', async () => {
 	const footer = at(createPageStories(model, pages, measure)(0), 0);
 	expect(footer.blocks).toHaveLength(2);
 	expect(footer.blocks.every((box) => box.kind === 'paragraph' && !box.floating)).toBe(true);
-	expect(footer.heightPx).toBeCloseTo(47.07, 1);
+	// Two 18.2 px lines and the 8 pt space after each, the last included (#401).
+	expect(footer.heightPx).toBeCloseTo(47.07 + 160 / 15, 1);
 });
 
 it('resolves page and margin alignment against each physical page', async () => {

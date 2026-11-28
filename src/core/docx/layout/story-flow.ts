@@ -23,6 +23,7 @@ import { refreshComputedFields } from '../computed-fields';
 import { fieldName } from '../field-runs';
 import { fieldResultSpans } from '../field-result-spans';
 import { resolveRunFormatting } from '../run-formatting';
+import { twipsToPx } from './units';
 
 const DEFAULT_DISTANCE_PX = 48;
 
@@ -92,10 +93,20 @@ export function flowStory(
 				heightPx: Math.max(box.heightPx, next.yPx - box.yPx) - (box.frame.topPx ?? 0),
 			};
 	}
-	const heightPx = boxes.reduce(
-		(bottom, box) => (inFlow(box) ? Math.max(bottom, box.yPx + box.heightPx) : bottom),
-		0,
-	);
+	let heightPx = 0;
+	let lastBox: (typeof boxes)[number] | undefined;
+	for (const box of boxes) {
+		if (!inFlow(box)) continue;
+		const bottom = box.yPx + box.heightPx;
+		if (bottom >= heightPx) lastBox = box;
+		heightPx = Math.max(heightPx, bottom);
+	}
+	// Word keeps the space after the story's last paragraph inside the header or footer.
+	if (lastBox?.kind === 'paragraph') {
+		const block = story?.blocks.find((candidate) => candidate.id === lastBox.blockId);
+		if (block?.kind === 'paragraph' && block.spacingAfterTwips)
+			heightPx += twipsToPx(block.spacingAfterTwips);
+	}
 	return { input, storyPage, column, heightPx, textFrames };
 }
 

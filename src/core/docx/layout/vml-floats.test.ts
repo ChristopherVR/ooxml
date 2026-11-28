@@ -24,7 +24,8 @@ it.each([
 	expect(pages).toHaveLength(3);
 	const stories = createPageStories(model, pages, measure);
 	for (const [index, page] of pages.entries()) {
-		expect(page.marginTopPx).toBeCloseTo(1417 / 15);
+		// The header text is two lines with 8 pt after each; the last one counts (#401).
+		expect(page.marginTopPx).toBeCloseTo(708 / 15 + 2 * (18.2 + 160 / 15));
 		const header = at(stories(index), 0);
 		expect(header.kind).toBe('header');
 		expect(header.floats).toHaveLength(1);
