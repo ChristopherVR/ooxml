@@ -91,15 +91,16 @@ describe('advanced font line layout', () => {
 });
 
 it.each([
-	{ markerPt: 12, heightPx: 18.4, baselinePx: 14.88 },
-	{ markerPt: 18, heightPx: 26, baselinePx: 22.32 },
+	{ markerPt: 12, heightPx: 18.464, baselinePx: 15.008 },
+	{ markerPt: 18, heightPx: 25.968, baselinePx: 22.512 },
 ])('measures a $markerPt pt Arial list marker with 12 pt Times New Roman text', (expected) => {
-	// Word keeps the line at 13.8 pt with a 12 pt marker. A larger marker adds room
+	// Word keeps the line at about 13.8 pt with a 12 pt marker (13.85 pt from the two fonts'
+	// ascents with their leading and the larger descent, #395). A larger marker adds room
 	// above the baseline while keeping the body text's descent.
 	const mixedFonts: TextMeasurer = {
 		...measurer,
 		lineHeightOf: (font) => font.sizePx * 1.15,
-		ascentOf: (font) => font.sizePx * (font.family === 'Arial' ? 0.93 : 0.92),
+		ascentOf: (font) => font.sizePx * (font.family === 'Arial' ? 0.938 : 0.934),
 	};
 	const numbered = paragraph([
 		{
@@ -114,4 +115,27 @@ it.each([
 	const { lines } = layoutParagraph(numbered, 300, mixedFonts, () => {});
 	expect(lines[0]?.heightPx).toBeCloseTo(expected.heightPx);
 	expect(lines[0]?.baselinePx).toBeCloseTo(expected.baselinePx);
+});
+
+it('takes the larger descent of a same-size list label and its text (#395)', () => {
+	// Symbol 11 pt (ascent 11.06 pt, descent 2.42 pt) over Calibri 11 pt (10.47 pt, 2.95 pt): Word's
+	// first line is Symbol's ascent plus Calibri's descent, 14.01 pt, not 13.48 pt.
+	const fonts: TextMeasurer = {
+		...measurer,
+		lineHeightOf: (font) => font.sizePx * (font.family === 'Symbol' ? 1.2251 : 1.2207),
+		ascentOf: (font) => font.sizePx * (font.family === 'Symbol' ? 1.0054 : 0.9521),
+	};
+	const bullet = paragraph([
+		{
+			text: '\t',
+			fontFamily: 'Symbol',
+			fontSizePt: 11,
+			synthetic: true,
+			marker: { length: 1, alignment: 'left' },
+		},
+		{ text: 'Item', fontFamily: 'Calibri', fontSizePt: 11 },
+	]);
+	const { lines } = layoutParagraph(bullet, 300, fonts, () => {});
+	expect(lines[0]?.heightPx).toBeCloseTo(((11.06 + 2.95) * 4) / 3, 1);
+	expect(lines[0]?.baselinePx).toBeCloseTo((11.06 * 4) / 3, 1);
 });

@@ -83,10 +83,12 @@ export function lineMetrics(
 		above = Math.max(above, extent.above);
 		below = Math.max(below, extent.below);
 	}
-	// A list label that raises the baseline uses its own descent at the text size.
-	// An oversized label adds room above the text without increasing its descent.
+	// A list label that raises the baseline keeps the text's descent when that is deeper (#395:
+	// Word takes the larger descent of the label and the text at the same size), and an
+	// oversized label adds room above the text without increasing its descent.
 	if (marker && marker.above > above) {
-		const markerDescent = textSizePx && marker.sizePx > textSizePx ? below : marker.below;
+		const markerDescent =
+			textSizePx && marker.sizePx > textSizePx ? below : Math.max(marker.below, below);
 		below = Math.max(markerDescent, objectDescent, above + below - marker.above);
 		above = marker.above;
 	}
