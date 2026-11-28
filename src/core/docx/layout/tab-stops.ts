@@ -14,8 +14,8 @@ export interface TabPlacement {
 
 /**
  * Where a tab at `positionPx` (from the paragraph's text margin) advances to, as Word does:
- * the next custom stop after it, else the hanging indent (an implicit stop for list labels),
- * else the next default stop. `followingPx` is the width of the text after the tab up to the
+ * the next stop after it, a custom one or the hanging indent (an implicit stop that comes before
+ * any custom stop past it), else the next default stop. `followingPx` is the width of the text after the tab up to the
  * next tab or line end, used by right, center and decimal stops; `beforeDecimalPx` is the part
  * of it before the first decimal separator. A right stop past `rightEdgePx` (the line's right
  * limit) acts as if it were at that edge: Word ends the text there rather than wrapping it.
@@ -34,7 +34,12 @@ export function placeTab(
 		.filter((stop) => stop.align !== 'clear' && stop.align !== 'bar')
 		.sort((a, b) => a.posPx - b.posPx)
 		.find((stop) => stop.posPx > positionPx + epsilon);
-	if (custom) {
+	// The hanging indent is a stop of its own: a custom stop past it does not take the tab (#422).
+	const hangingFirst =
+		hangingStopPx !== undefined &&
+		hangingStopPx > positionPx + epsilon &&
+		(!custom || hangingStopPx < custom.posPx - epsilon);
+	if (custom && !hangingFirst) {
 		const rightAligned = custom.align === 'right' || custom.align === 'end';
 		const stopPx =
 			rightAligned && custom.posPx > rightEdgePx && positionPx < rightEdgePx
@@ -60,8 +65,7 @@ export function placeTab(
 			...(custom.leader && custom.leader !== 'none' ? { leader: custom.leader } : {}),
 		};
 	}
-	if (hangingStopPx !== undefined && hangingStopPx > positionPx + epsilon)
-		return { widthPx: hangingStopPx - positionPx };
+	if (hangingFirst) return { widthPx: hangingStopPx - positionPx };
 	const next = (Math.floor(positionPx / defaultStopPx) + 1) * defaultStopPx;
 	return { widthPx: next - positionPx };
 }
