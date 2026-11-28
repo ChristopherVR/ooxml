@@ -3,6 +3,8 @@ import { DEFAULT_TAB_STOP_PX } from './units';
 
 export interface TabPlacement {
 	widthPx: number;
+	/** The text after the tab is placed relative to the stop (right, centre or decimal). */
+	aligned?: true;
 	leader?: LayoutTabStop['leader'];
 }
 
@@ -11,7 +13,8 @@ export interface TabPlacement {
  * the next custom stop after it, else the hanging indent (an implicit stop for list labels),
  * else the next default stop. `followingPx` is the width of the text after the tab up to the
  * next tab or line end, used by right, center and decimal stops; `beforeDecimalPx` is the part
- * of it before the first decimal separator.
+ * of it before the first decimal separator. A right stop past `rightEdgePx` (the line's right
+ * limit) acts as if it were at that edge: Word ends the text there rather than wrapping it.
  */
 export function placeTab(
 	positionPx: number,
@@ -20,6 +23,7 @@ export function placeTab(
 	followingPx: number,
 	beforeDecimalPx: number,
 	defaultStopPx = DEFAULT_TAB_STOP_PX,
+	rightEdgePx = Infinity,
 ): TabPlacement {
 	const epsilon = 0.5;
 	const custom = stops
@@ -27,17 +31,24 @@ export function placeTab(
 		.sort((a, b) => a.posPx - b.posPx)
 		.find((stop) => stop.posPx > positionPx + epsilon);
 	if (custom) {
-		const distance = custom.posPx - positionPx;
-		const shift =
-			custom.align === 'right' || custom.align === 'end'
-				? followingPx
-				: custom.align === 'center'
-					? followingPx / 2
-					: custom.align === 'decimal'
-						? beforeDecimalPx
-						: 0;
+		const rightAligned = custom.align === 'right' || custom.align === 'end';
+		const stopPx =
+			rightAligned && custom.posPx > rightEdgePx && positionPx < rightEdgePx
+				? rightEdgePx
+				: custom.posPx;
+		const distance = stopPx - positionPx;
+		const shift = rightAligned
+			? followingPx
+			: custom.align === 'center'
+				? followingPx / 2
+				: custom.align === 'decimal'
+					? beforeDecimalPx
+					: 0;
 		return {
 			widthPx: Math.max(0, distance - shift),
+			...(rightAligned || custom.align === 'center' || custom.align === 'decimal'
+				? { aligned: true as const }
+				: {}),
 			...(custom.leader && custom.leader !== 'none' ? { leader: custom.leader } : {}),
 		};
 	}
@@ -67,6 +78,7 @@ export function placePositionalTab(
 		tab.alignment === 'right' ? followingPx : tab.alignment === 'center' ? followingPx / 2 : 0;
 	return {
 		widthPx: Math.max(0, target - shift - positionPx),
+		...(tab.alignment === 'left' ? {} : { aligned: true as const }),
 		...(tab.leader && tab.leader !== 'none' ? { leader: tab.leader } : {}),
 	};
 }

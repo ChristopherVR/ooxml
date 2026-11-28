@@ -88,6 +88,9 @@ export type LineBoxFn = (
 	hole?: { startPx: number; endPx: number };
 };
 
+/** Rounding room for text that ends at its right, centre or decimal tab stop. */
+const ALIGNED_TAB_TOLERANCE_PX = 0.2;
+
 export function layoutParagraph(
 	paragraph: LayoutParagraph,
 	contentWidthPx: number,
@@ -166,6 +169,8 @@ function measureParagraph(
 	let jump: { index: number; shiftPx: number } | undefined;
 	// How far a line holding a positional tab relative to the margins may reach: to the margin.
 	let marginReachPx = 0;
+	// A right, centre or decimal tab is on the line: the text after it ends at its stop.
+	let alignedTab = false;
 	let consecutiveHyphens = 0;
 	let tokenCursor: TokenPosition = startToken;
 	let firstToken: TokenPosition = startToken;
@@ -386,6 +391,7 @@ function measureParagraph(
 		keepLeadingSpaces = false;
 		jump = undefined;
 		marginReachPx = 0;
+		alignedTab = false;
 		consecutiveHyphens = endedWithAutoHyphen ? consecutiveHyphens + 1 : 0;
 	}
 
@@ -519,6 +525,7 @@ function measureParagraph(
 			}
 			width = tab?.widthPx ?? 0;
 			leader = tab?.leader === 'none' ? undefined : tab?.leader;
+			if (tab?.aligned) alignedTab = true;
 			if (positional.relativeTo === 'margin')
 				marginReachPx = contentWidthPx - lineStart(lines.length);
 		} else if (token.kind === 'tab' && paragraph.runs[token.runIndex]?.marker?.legacy) {
@@ -535,7 +542,9 @@ function measureParagraph(
 				followingPx,
 				beforeDecimalPx,
 				paragraph.defaultTabStopPx,
+				contentWidthPx - lineEnd(lines.length),
 			);
+			if (tab.aligned) alignedTab = true;
 			width = tab.widthPx;
 			leader = tab.leader === 'none' ? undefined : tab.leader;
 		}
