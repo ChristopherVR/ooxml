@@ -54,8 +54,8 @@ const box = (name: string) =>
 	);
 
 describe('text box layout by the page engine', () => {
-	// #314 and #386: Word keeps the last word of this Verdana line (0.51 pt over, #314) by squeezing
-	// the two spaces before it, and moves a word with no space before it down at 0.14 pt over.
+	// #314: Word keeps the last word of this Verdana line (0.51 pt over) by squeezing the two spaces
+	// before it.
 	it('keeps a fractionally oversized justified line together by squeezing its spaces', () => {
 		const label = 'SIRET : 123.456.789.000.12';
 		const shape = {
@@ -381,9 +381,12 @@ describe('the Word-saved text boxes, against Word 16’s PDF of them', () => {
 	});
 });
 
-describe('a justified paragraph in a text box moves a word that does not fit (#386)', () => {
-	// Word 16: the header box of the report is 158.25 pt wide with 7.2 pt insets and no outline; its
-	// Calibri 10 pt paragraph has an 8.55 pt right indent, 135.30 pt of room for a 135.44 pt line.
+describe('a text box moves a word that does not fit, unless a justified line squeezes (#386, #428)', () => {
+	// The header box of #386 is 158.25 pt wide with 7.2 pt insets and no outline; its Calibri 10 pt
+	// paragraph has an 8.55 pt right indent, 135.30 pt of room for a 135.44 pt line. Word 16's PDF of
+	// these boxes (built from this XML, analysis for #428): left aligned, the line breaks after the
+	// hyphen (no 0.75 pt text box tolerance); justified, Word squeezes the space after `Ref` and keeps
+	// the line whole (the colon moves 0.09 pt left), as it does in the body.
 	const widthInches = 2009775 / 914400;
 	const run = (text: string, align: string, indent: string) =>
 		`<w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/>${indent}<w:jc w:val="${align}"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`;
@@ -407,15 +410,16 @@ describe('a justified paragraph in a text box moves a word that does not fit (#3
 		return lines(layoutOf(placed[0])).map((line) => line.text.trim());
 	}
 
-	it('breaks after the hyphen at 0.14 pt over, justified or left, as Word does', async () => {
+	it('breaks after the hyphen at 0.14 pt over left aligned, and squeezes justified, as Word', async () => {
 		const indent = '<w:ind w:right="171"/>';
 		const text = 'Ref :samplemargin-bordermargin';
 		expect(await boxLines(text, 'left', indent)).toEqual(['Ref :samplemargin-', 'bordermargin']);
-		expect(await boxLines(text, 'both', indent)).toEqual(['Ref :samplemargin-', 'bordermargin']);
+		expect(await boxLines(text, 'both', indent)).toEqual([text]);
 	});
 
-	it('breaks after the hyphen at 0.24 pt over without an indent', async () => {
+	it('does the same at 0.24 pt over without an indent', async () => {
 		const text = 'Ref :sampleexample-margincolumn';
-		expect(await boxLines(text, 'both')).toEqual(['Ref :sampleexample-', 'margincolumn']);
+		expect(await boxLines(text, 'left')).toEqual(['Ref :sampleexample-', 'margincolumn']);
+		expect(await boxLines(text, 'both')).toEqual([text]);
 	});
 });

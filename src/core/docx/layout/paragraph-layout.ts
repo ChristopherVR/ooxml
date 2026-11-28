@@ -50,6 +50,25 @@ export function justifiedSqueezeBudgetPx(
 	return Math.min(spacePx * SPACE_SHRINK, wordPx * wordShrink);
 }
 
+/**
+ * The squeeze budget for the part of a word after a hyphen or dash, `partPx` wide: a quarter of
+ * the line's spaces, or 0.3325 of the part alone, with no share for the spaces (Word 16 sweeps,
+ * #428: Times New Roman 12 pt, parts of 1 to 7 letters after `-`, en and em dashes, 4 to 13
+ * spaces on the line, in the body and in text boxes, last line or not).
+ */
+export function justifiedSqueezeAfterDashPx(spacePx: number, partPx: number): number {
+	if (spacePx <= 0) return 0;
+	return Math.min(spacePx * SPACE_SHRINK, partPx * WORD_SHRINK);
+}
+
+/** A hyphen (U+002D), en dash (U+2013) and em dash (U+2014): a line may break after each. */
+const DASHES = new Set([0x2d, 0x2013, 0x2014]);
+
+/** Whether `text` ends with a hyphen or dash a line may break after. */
+function endsWithDash(text: string): boolean {
+	return DASHES.has(text.charCodeAt(text.length - 1));
+}
+
 export interface ParagraphLayoutResult {
 	/** Lines with `yPx` relative to the paragraph box's own top (0 for the first line). */
 	lines: LayoutLine[];
@@ -562,15 +581,20 @@ function measureParagraph(
 		// internal (i.e. this token fits after it); a trailing space at an actual
 		// wrap point is trimmed in flushLine instead, so it must not be
 		// pre-subtracted here.
-		// Word squeezes a line to keep a word that follows a space (measured, #386: a word after a
-		// hyphen, with no space before it, stays on the next line at 0.14 pt over).
-		const squeezePx =
+		// Word squeezes a line to keep a word that follows a space, or the part of a word after a
+		// hyphen or dash (measured, #428), with a smaller budget for the part.
+		const before =
 			effectiveAlign === 'justify' &&
 			paragraph.squeezeJustifiedSpaces !== false &&
-			token.kind === 'word' &&
-			tokenBeforeWord(tokenIndex)?.token.kind === 'space'
+			token.kind === 'word'
+				? tokenBeforeWord(tokenIndex)?.token
+				: undefined;
+		const squeezePx =
+			before?.kind === 'space'
 				? justifiedSqueezeBudgetPx(lineSpacePx, lineSpaceCount, wholeWordPx(tokenIndex, advance))
-				: 0;
+				: before?.kind === 'word' && endsWithDash(before.text)
+					? justifiedSqueezeAfterDashPx(lineSpacePx, wholeWordPx(tokenIndex, advance))
+					: 0;
 		const uncounted = paragraph.runs[token.runIndex]?.contentControlTagUncounted === true;
 		const countedWidthPx = lineWidthPx - lineUncountedPx;
 		// The tab sized the text after it to end at its stop, so that text fits when the stop does:
