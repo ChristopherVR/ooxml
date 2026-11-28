@@ -190,6 +190,15 @@ function fillFields(blocks: Block[], values: PageFieldContext, model: DocumentMo
 				changed = true;
 			}
 		}
+		// A text box's paragraphs show the page's field values too.
+		for (const [index, run] of runs.entries()) {
+			const content = run.image?.textBoxContent;
+			if (!run.image || !content) continue;
+			const blocks = fillFields(content.blocks, values, model);
+			if (blocks === content.blocks) continue;
+			runs[index] = { ...run, image: { ...run.image, textBoxContent: { ...content, blocks } } };
+			changed = true;
+		}
 		return changed ? { ...p, runs } : p;
 	};
 	let changed = false;

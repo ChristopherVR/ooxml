@@ -86,7 +86,9 @@ export function storyFieldResults(container: XmlElement): FieldResultMetadata {
 	const metadata: FieldResultMetadata = new WeakMap();
 	const trackField = createFieldTracker();
 	const visit = (element: XmlElement) => {
-		if (named(element, 'fldSimple') || named(element, 'txbxContent')) return;
+		// A text box's own story is scanned when it is parsed as the container.
+		if (named(element, 'fldSimple') || (element !== container && named(element, 'txbxContent')))
+			return;
 		if (named(element, 'r')) {
 			const run = trackField(element, { text: '' });
 			if (run.field)
