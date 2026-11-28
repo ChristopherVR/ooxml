@@ -264,6 +264,17 @@ export function symbolFontGlyph(
 }
 
 /**
+ * Whether `char` has no glyph in the standard Symbol font (codes 0x7F to 0x9F, which Adobe's
+ * Symbol encoding leaves empty): a renderer shows the font's missing-glyph box there, as Word does.
+ */
+export function symbolFontLacksGlyph(family: string | undefined, char: string): boolean {
+	if (normaliseFamily(family) !== 'symbol') return false;
+	const code = char.codePointAt(0) ?? 0;
+	const byte = code >= 0xf020 && code <= 0xf0ff ? code - 0xf000 : code;
+	return byte >= 0x7f && byte <= 0x9f;
+}
+
+/**
  * Text in Office's Symbol font as Symbol's byte codes, which are those of Adobe's standard Symbol
  * font: a private-use code U+F020..U+F0FF is its low byte, a code from 0x20 to 0xFF is itself and
  * a Unicode equivalent (a list label's minus sign or arrow) is the code of its picture. `undefined`

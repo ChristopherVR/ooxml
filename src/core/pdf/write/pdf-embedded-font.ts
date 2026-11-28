@@ -70,7 +70,12 @@ export class PdfEmbeddedFont implements PdfCidFont {
 		for (const char of text) {
 			const code = char.codePointAt(0)!;
 			if (code < 32 || code === 0xa0) continue;
-			if (!this.glyphOf(code)) return false;
+			if (!this.glyphOf(code)) {
+				// A symbol font writes a code it has no picture for as its missing-glyph box (glyph 0).
+				if (this.font.symbolEncoded && (code <= 0xff || (code >= 0xf020 && code <= 0xf0ff)))
+					continue;
+				return false;
+			}
 		}
 		return true;
 	}
