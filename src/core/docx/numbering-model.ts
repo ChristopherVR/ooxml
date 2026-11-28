@@ -50,6 +50,8 @@ export interface NumberingLevelDefinition {
 	suffix?: 'tab' | 'space' | 'none';
 	/** Explicit tab stop for the marker's tab suffix (`w:pPr/w:tabs/w:tab`, `w:val="num"`). */
 	tabStopTwips?: Twips;
+	/** `w:legacy` with `w:legacy="1"`: Word 6 style spacing, from `w:legacyIndent` and `w:legacySpace`. */
+	legacy?: { indentTwips?: Twips; spaceTwips?: Twips };
 	/** `w:lvlPicBulletId`: the `NumberingCatalog.pictureBullets` entry drawn as this level's marker. */
 	pictureBulletId?: string;
 	/** Marker formatting from `w:rPr`. */
@@ -89,6 +91,8 @@ export interface ParagraphListLabel {
 	hangingTwips?: Twips;
 	firstLineTwips?: Twips;
 	tabStopTwips?: Twips;
+	/** `w:legacy`: the marker's text starts at this indent from the margin instead of the next tab stop. */
+	legacy?: { indentTwips?: Twips; spaceTwips?: Twips };
 	markerFormat?: NumberingMarkerFormat;
 	/** Picture bullet drawn in place of the marker text. */
 	picture?: NumberingPictureBullet;

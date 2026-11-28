@@ -438,6 +438,8 @@ export function adaptDocumentModel(
 						adaptRun(paragraph.runs[0] ?? { text: '' }, paragraph.style, undefined, tableStyleRun),
 				)
 			: undefined;
+		// A legacy (`w:legacy`) level starts the text at `w:legacyIndent`, not at the next tab stop.
+		const labelTabStopTwips = label?.tabStopTwips ?? label?.legacy?.indentTwips;
 		const adapted: LayoutParagraph = {
 			kind: 'paragraph',
 			id: paragraph.id,
@@ -449,7 +451,7 @@ export function adaptDocumentModel(
 			runs: (marker ? [marker, ...taggedRuns] : taggedRuns).map(withFontFallback),
 			...(footnotes.length ? { footnotes } : {}),
 			...box,
-			...(paragraph.tabStops?.length || label?.tabStopTwips !== undefined
+			...(paragraph.tabStops?.length || labelTabStopTwips !== undefined
 				? {
 						tabStops: [
 							...(paragraph.tabStops ?? []).map((stop) => ({
@@ -457,8 +459,8 @@ export function adaptDocumentModel(
 								align: stop.align,
 								...(stop.leader ? { leader: stop.leader } : {}),
 							})),
-							...(label?.tabStopTwips !== undefined
-								? [{ posPx: twipsToPx(label.tabStopTwips), align: 'left' as const }]
+							...(labelTabStopTwips !== undefined
+								? [{ posPx: twipsToPx(labelTabStopTwips), align: 'left' as const }]
 								: []),
 						].sort((a, b) => a.posPx - b.posPx),
 					}

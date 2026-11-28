@@ -54,6 +54,15 @@ function buildLevelElement(doc: XmlDocument, def: NumberingLevelDefinition): Xml
 	lvl.appendChild(valueElement(doc, 'lvlText', def.lvlText));
 	if (def.pictureBulletId !== undefined)
 		lvl.appendChild(valueElement(doc, 'lvlPicBulletId', def.pictureBulletId));
+	if (def.legacy) {
+		const legacy = makeW(doc, 'legacy');
+		setAttribute(legacy, 'legacy', '1');
+		if (def.legacy.spaceTwips !== undefined)
+			setAttribute(legacy, 'legacySpace', String(def.legacy.spaceTwips));
+		if (def.legacy.indentTwips !== undefined)
+			setAttribute(legacy, 'legacyIndent', String(def.legacy.indentTwips));
+		lvl.appendChild(legacy);
+	}
 	if (def.lvlJc) lvl.appendChild(valueElement(doc, 'lvlJc', def.lvlJc));
 	if (
 		def.tabStopTwips !== undefined ||

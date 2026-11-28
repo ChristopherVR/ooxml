@@ -77,6 +77,15 @@ export function parseNumberingLevel(lvl: XmlElement): NumberingLevelDefinition {
 		: undefined;
 	const tabPos = tab ? parseTwips(getW(tab, 'pos')) : undefined;
 	if (tabPos !== undefined) result.tabStopTwips = tabPos;
+	const legacy = first(lvl, 'legacy');
+	if (legacy && ['1', 'true', 'on'].includes(getW(legacy, 'legacy') ?? '')) {
+		const indent = parseTwips(getW(legacy, 'legacyIndent'));
+		const space = parseTwips(getW(legacy, 'legacySpace'));
+		result.legacy = {
+			...(indent !== undefined ? { indentTwips: indent } : {}),
+			...(space !== undefined ? { spaceTwips: space } : {}),
+		};
+	}
 	if (flag(first(lvl, 'isLgl'))) result.isLgl = true;
 	const restart = getW(first(lvl, 'lvlRestart'), 'val');
 	if (restart !== undefined) result.lvlRestart = integer(restart, 0);
