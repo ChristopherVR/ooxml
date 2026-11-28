@@ -6,21 +6,13 @@
  */
 import { fontMetrics, type LayoutPageBox, type TextMeasurer } from '../layout/index';
 import { watermarkSizePt, type PictureWatermarkSpec, type WatermarkSpec } from '../index';
+import { WASHOUT_INTERCEPT, WASHOUT_SLOPE } from '../picture-watermark';
 import type { PdfImageResource } from '../../pdf/write/pdf-vector';
 import type { DocxPdfPainter } from './pdf-blocks';
 import type { DocxPdfStoryGraphics } from './pdf-story-graphics';
 
 const DEFAULT_FAMILY = 'Calibri';
 const DEFAULT_COLOR = '#c0c0c0';
-/**
- * Word's washout maps each channel x to min(1, 0.3x + 0.8) (gain 0.3, black level lifted to 0.8):
- * black becomes light grey and white stays white, as Word's PDF shows (a picture's white
- * background is not tinted). Applied to the samples when they are decoded; a JPEG, written as it
- * is, gets a lightening grey layer (max(x, 0.8)) instead.
- */
-const WASHOUT_GAIN = 0.3;
-const WASHOUT_FLOOR = 0.8;
-
 const washed = new WeakMap<PdfImageResource, PdfImageResource>();
 
 function washedOut(resource: PdfImageResource): PdfImageResource | undefined {
@@ -31,7 +23,7 @@ function washedOut(resource: PdfImageResource): PdfImageResource | undefined {
 		for (let index = 0; index < data.length; index++)
 			data[index] = Math.min(
 				255,
-				Math.round(resource.data[index]! * WASHOUT_GAIN + WASHOUT_FLOOR * 255),
+				Math.round(resource.data[index]! * WASHOUT_SLOPE + WASHOUT_INTERCEPT * 255),
 			);
 		result = { ...resource, data };
 		washed.set(resource, result);
@@ -110,11 +102,11 @@ function paintPicture(painter: DocxPdfPainter, spec: PictureWatermarkSpec, page:
 	}
 	pictures.draw(pdf, picture, x, y);
 	if (!spec.washout || !resource) return;
-	// A JPEG is written as it is: a grey layer that only lightens, so black rises to the floor and
-	// white stays white.
+	// A JPEG is written as it is: a grey layer in Screen mode gives (1 - g) x + g, with g the
+	// intercept, so black rises to it and white stays white (slope 0.2 for Word's 0.3).
 	pdf.save();
-	pdf.alpha(1, 1, 'Lighten');
-	pdf.fillColor(WASHOUT_FLOOR, WASHOUT_FLOOR, WASHOUT_FLOOR);
+	pdf.alpha(1, 1, 'Screen');
+	pdf.fillColor(WASHOUT_INTERCEPT, WASHOUT_INTERCEPT, WASHOUT_INTERCEPT);
 	pdf.rect(x, y, widthPx, heightPx);
 	pdf.op('f');
 	pdf.restore();

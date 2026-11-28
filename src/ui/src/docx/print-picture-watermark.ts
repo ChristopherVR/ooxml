@@ -1,11 +1,8 @@
-import type { PictureWatermarkSpec } from 'ooxml-core/docx';
+import { WASHOUT_CSS_FILTER, type PictureWatermarkSpec } from 'ooxml-core/docx';
 import type { LayoutPageBox } from 'ooxml-core/docx/layout';
 
-/**
- * Washout as a CSS filter: DrawingML's washout (contrast -70%, then brightness +70%) maps every
- * channel x to 0.09x + 0.805, which `contrast(0.053) brightness(1.7)` reproduces.
- */
-export const WASHOUT_FILTER = 'contrast(0.053) brightness(1.7)';
+/** Washout as a CSS filter: core's linear map, min(1, 0.3x + 0.8), white stays white. */
+export const WASHOUT_FILTER = WASHOUT_CSS_FILTER;
 
 /** The page box a watermark is drawn on; without margins a picture centres on the page. */
 export type WatermarkPage = Pick<LayoutPageBox, 'widthPx' | 'heightPx'> &

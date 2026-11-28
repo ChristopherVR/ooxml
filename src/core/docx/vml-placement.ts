@@ -1,7 +1,7 @@
 import { first, makeNS } from '../xml/index';
 import { parseCssDeclarations } from '../text/html-tokens';
 import type { InlineImage, PicturePlacement } from './inline-model';
-import { isVmlPictureWashout } from './picture-watermark';
+import { isVmlPictureWashout, WASHOUT_LUMINANCE } from './picture-watermark';
 import type { XmlElement } from './xml';
 
 const WORD10_NS = 'urn:schemas-microsoft-com:office:word';
@@ -107,10 +107,10 @@ export function vmlFloat(
 		placement,
 		...(isVmlPictureWashout(data)
 			? {
-					// Match the watermark painter's linear washout, channel x -> 0.09x + 0.805.
+					// Match the watermark painter's linear washout (`WASHOUT_SLOPE`, `WASHOUT_INTERCEPT`).
 					pictureFill: {
 						kind: 'picture',
-						effects: [{ kind: 'luminance', brightness: 70 / 109, contrast: -0.91 }],
+						effects: [{ kind: 'luminance', ...WASHOUT_LUMINANCE }],
 					},
 				}
 			: {}),

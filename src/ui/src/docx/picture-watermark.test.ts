@@ -13,6 +13,7 @@ import { createWatermarkDialog, type WatermarkHost } from './watermark-dialog';
 import { currentWatermark, withWatermark, type AnyWatermark } from './watermark-commands';
 import { watermarkElement } from './print-header-footer';
 import { WASHOUT_FILTER } from './print-picture-watermark';
+import { WASHOUT_CSS_FILTER } from 'ooxml-core/docx';
 import { DocxEditorElement, registerDocxEditor } from './index';
 
 registerDocxEditor();
@@ -245,5 +246,17 @@ describe('picture watermark in the editor', () => {
 			washout: true,
 			title: 'seal',
 		});
+	});
+});
+
+describe('washout filter', () => {
+	it('maps white to white and black to light grey, as Word does', () => {
+		expect(WASHOUT_FILTER).toBe(WASHOUT_CSS_FILTER);
+		const [contrast, brightness] = [...WASHOUT_FILTER.matchAll(/\(([\d.]+)\)/g)].map((m) =>
+			Number(m[1]),
+		);
+		const channel = (x: number) => Math.min(1, ((x - 0.5) * contrast! + 0.5) * brightness!);
+		expect(channel(1)).toBe(1);
+		expect(channel(0)).toBeCloseTo(0.8, 2);
 	});
 });

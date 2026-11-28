@@ -137,7 +137,11 @@ export {
 	type ListKind,
 } from './numbering-editing';
 export { formatNoteNumber, numberNotesInOrder } from './notes';
-export { PICTURE_WATERMARK_SCALES, pictureWatermarkSizePt } from './picture-watermark';
+export {
+	PICTURE_WATERMARK_SCALES,
+	WASHOUT_CSS_FILTER,
+	pictureWatermarkSizePt,
+} from './picture-watermark';
 export {
 	convertNoteRun,
 	convertNotes,

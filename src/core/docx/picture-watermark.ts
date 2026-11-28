@@ -14,6 +14,24 @@ const WORD10_NS = 'urn:schemas-microsoft-com:office:word';
 export const PICTURE_WATERMARK_PREFIX = 'WordPictureWatermark';
 export const WASHOUT_GAIN = '19661f';
 export const WASHOUT_BLACKLEVEL = '22938f';
+/**
+ * Word's washout as a linear channel map, x -> min(1, SLOPE x + INTERCEPT): black rises to light
+ * grey and white stays white (measured from Word's PDF of a black and white picture). The PDF
+ * painter, Print Layout's CSS filter and the model's luminance effect all derive from these.
+ */
+export const WASHOUT_SLOPE = 0.3;
+export const WASHOUT_INTERCEPT = 0.8;
+/** The same map as DrawingML luminance (the transfer is `contrast + 1` slope). */
+export const WASHOUT_LUMINANCE = (() => {
+	const half = (1 - WASHOUT_SLOPE) / 2;
+	return { brightness: (WASHOUT_INTERCEPT - half) / (1 - half), contrast: WASHOUT_SLOPE - 1 };
+})();
+/** The same map as a CSS `contrast()` then `brightness()` filter. */
+export const WASHOUT_CSS_FILTER = (() => {
+	const contrast = WASHOUT_SLOPE / (WASHOUT_SLOPE + 2 * WASHOUT_INTERCEPT);
+	const brightness = WASHOUT_SLOPE + 2 * WASHOUT_INTERCEPT;
+	return `contrast(${Number(contrast.toFixed(4))}) brightness(${Number(brightness.toFixed(4))})`;
+})();
 /** Word's Scale choices in the Printed Watermark dialog, as percentages. */
 export const PICTURE_WATERMARK_SCALES = [500, 200, 150, 100, 50] as const;
 
