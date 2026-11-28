@@ -6,6 +6,7 @@ import { loadDocx } from '../index';
 import { createFakeMeasurer, type TextMeasurer } from '../layout/index';
 import { syntheticTrueType } from '../../text/truetype/test-support/synthetic-truetype';
 import { exportDocxPdf } from './export-pdf';
+import { createFontFileMeasurer } from './font-measurer';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
@@ -96,5 +97,43 @@ describe('PDF export of a symbol code without a glyph', () => {
 		expect(pdf).not.toContain('f*');
 		// Glyph 0 (.notdef) is written with the font, where it used to be skipped.
 		expect(pdf).toMatch(/BT \/E0 [\d.]+ Tf[^\n]*\[<0001>/);
+	});
+});
+
+describe('PDF export of text a font has no glyph for (#430)', () => {
+	// The synthetic font: glyph 0 is 500 units wide, `A` 600, `B` 700, the space 300 (of 1000).
+	const font = (family: string) => ({ family, data: syntheticTrueType() });
+	const run = (family: string, text: string) =>
+		`<w:p><w:r><w:rPr><w:rFonts w:ascii="${family}" w:hAnsi="${family}"/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`;
+	/** The font a text object writes with, and how many glyphs it holds. */
+	const textObjects = (pdf: string) =>
+		[...pdf.matchAll(/BT \/(\w+) [\d.]+ Tf[^[]*\[([^\]]*)\] TJ/g)].map((match) => ({
+			font: match[1]!,
+			glyphs: (match[2]!.match(/<[0-9a-f]+>/g) ?? []).join('').replace(/[<>]/g, '').length / 4,
+		}));
+
+	it('draws a private-use character with the run font and keeps its word in that font', async () => {
+		const pdf = await content(run('Times New Roman', 'AB AB'), [font('Times New Roman')]);
+		const objects = textObjects(pdf);
+		expect(objects.length).toBeGreaterThan(0);
+		// Every word is written with the embedded font (/E0), none with a standard font.
+		expect(objects.every(({ font }) => font === 'E0')).toBe(true);
+		expect(objects.reduce((sum, { glyphs }) => sum + glyphs, 0)).toBeGreaterThanOrEqual(4);
+		expect(pdf).not.toContain('(?');
+	});
+
+	it('measures the character as the advance of the font glyph 0', () => {
+		// Glyph 0 is 500 units wide: "A" is 1100 units, as wide as "AB" less its 100.
+		const measurer = createFontFileMeasurer([font('Times New Roman')]);
+		const spec = { family: 'Times New Roman', sizePx: 100 };
+		expect(measurer.widthOf('A', spec)).toBeCloseTo(110, 3);
+		expect(measurer.widthOf('', spec)).toBeCloseTo(100, 3);
+	});
+
+	it('draws the box for a character beyond the BMP in Wingdings, which it has no glyph for', async () => {
+		const box = await content(
+			`<w:p><w:r><w:rPr><w:rFonts w:ascii="Wingdings" w:hAnsi="Wingdings"/><w:sz w:val="32"/></w:rPr><w:t>\u{1F4C2}</w:t></w:r></w:p>`,
+		);
+		expect(box).toContain('f*');
 	});
 });

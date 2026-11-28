@@ -314,7 +314,8 @@ export function symbolMissingGlyph(
 	if (!entry) return undefined;
 	const code = char.codePointAt(0) ?? 0;
 	const byte = code >= 0xf020 && code <= 0xf0ff ? code - 0xf000 : code;
-	return entry.codes(byte) ? entry.shape : undefined;
+	// Neither font maps a character outside the BMP (Word draws U+1F4C2 in Wingdings as the box).
+	return entry.codes(byte) || code > 0xffff ? entry.shape : undefined;
 }
 
 /**

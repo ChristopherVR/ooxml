@@ -62,6 +62,8 @@ const SYNTHETIC_BOLD_EM = 1 / 35;
 const LEADER_END_TOLERANCE = 0.01;
 /** A cell may start this share of an advance before the text before it ends (a tab stop's rounding). */
 const LEADER_START_TOLERANCE = 0.05;
+/** Private-use characters: no font a document names covers them unless it is a symbol font. */
+const PRIVATE_USE = /[-]/gu;
 const LEADERS: Record<string, string> = { dot: '.', hyphen: '-', middleDot: '\u00b7' };
 
 /** Sets the fill colour from a CSS colour; returns false for a transparent one. */
@@ -313,6 +315,19 @@ export class DocxPdfText {
 		}
 	}
 
+	/**
+	 * The run's own font for text with private-use characters it has no glyph for: Word draws such
+	 * a character with the font's missing-glyph glyph (glyph 0) and keeps the rest of the word in
+	 * the font (#430), where no font covering all of `text` would write it all as `?` in a standard
+	 * font. Only the family's own file counts; a character of a script falls back to another font.
+	 */
+	#withNotdef(family: string, bold: boolean, italic: boolean, text: string) {
+		const covered = text.replace(PRIVATE_USE, '');
+		if (covered.length === text.length || !this.fonts.has(family)) return undefined;
+		const font = this.fonts.pick(family, bold, italic, covered);
+		return font?.family.toLowerCase() === family.toLowerCase() ? font : undefined;
+	}
+
 	#text(
 		page: PdfVectorPage,
 		text: string,
@@ -365,7 +380,8 @@ export class DocxPdfText {
 		const ascii = symbolBytes ?? encodeWinAnsi(text);
 		const embedded =
 			symbolBytes === undefined && (this.fonts.prefers(family) || ascii === undefined)
-				? this.fonts.pick(family, bold, italic, text)
+				? (this.fonts.pick(family, bold, italic, text) ??
+					this.#withNotdef(family, bold, italic, text))
 				: undefined;
 		if (embedded) {
 			if (embedded.family.toLowerCase() === family.toLowerCase())

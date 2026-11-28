@@ -128,6 +128,12 @@ export function createFontFileMeasurer(
 				? options.symbolGlyph(font, face.family, at)
 				: font.glyphFor(at);
 			if (!glyph) {
+				// Word draws a private-use code the font has no glyph for as the font's glyph 0 (#430).
+				if (at >= 0xe000 && at <= 0xf8ff && !font.symbolEncoded) {
+					units += font.advance(0);
+					previous = 0;
+					continue;
+				}
 				missing += char;
 				previous = 0;
 				continue;
