@@ -149,6 +149,8 @@ export interface DocumentModel {
 	usesImplicitNormalStyle?: true;
 	/** Display fallback metadata from the source font table, keyed by lowercase family name. */
 	fontFallbacks?: ReadonlyMap<string, import('./font-table').FontFallback>;
+	/** Faces the package embeds (`w:embed*` in the font table); their bytes stay in the package. */
+	embeddedFonts?: readonly import('./font-table').EmbeddedFontRef[];
 	/** Parsed `word/numbering.xml`. Existing entries are read-only; new list definitions may be added. */
 	numberingCatalog?: NumberingCatalog;
 	/**

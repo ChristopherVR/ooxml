@@ -7,7 +7,7 @@ import {
 	guidToKey,
 	deobfuscateFont,
 	detectFontFormat,
-} from './font-deobfuscation';
+} from './font-obfuscation';
 
 // ---------------------------------------------------------------------------
 // extractGuidFromPartName

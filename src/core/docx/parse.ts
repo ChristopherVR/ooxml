@@ -8,7 +8,8 @@ import { resolveDocxLimits } from './package-limits';
 import type { ZipLimits } from '../opc/zip-limits';
 import type { Block, DocumentModel, DocxLoadOptions, LoadedDocument } from './model';
 import { parseTwips } from './simple-types';
-import { parseFontTable } from './font-table';
+import { parseEmbeddedFonts, parseFontTable } from './font-table';
+import { resolvePartPath } from '../opc/index';
 import { children, first, getW, parseXml, type XmlDocument } from './xml';
 import { remember, saveDocx } from './save';
 import { sourceBookmarkEnds } from './bookmarks';
@@ -167,8 +168,20 @@ export async function readPackage(
 		: 'word/fontTable.xml';
 	const fontTable = zip.file(fontTablePart);
 	if (fontTable) {
-		const fallbacks = parseFontTable(await fontTable.async('string'));
+		const fontTableXml = await fontTable.async('string');
+		const fallbacks = parseFontTable(fontTableXml);
 		if (fallbacks.size) model.fontFallbacks = fallbacks;
+		if (fontTableXml.includes('fontKey')) {
+			const relsXml = await zip
+				.file(fontTablePart.replace(/([^/]+)$/, '_rels/$1.rels'))
+				?.async('string');
+			const fontRels = parseRelationships(relsXml);
+			const embedded = parseEmbeddedFonts(fontTableXml, (id) => {
+				const rel = fontRels.get(id);
+				return rel?.mode === 'Internal' ? resolvePartPath(fontTablePart, rel.target) : undefined;
+			}).filter((ref) => zip.file(ref.partName));
+			if (embedded.length) model.embeddedFonts = embedded;
+		}
 	}
 	const themeFile = zip.file(documentPartPath(drawings.rels, 'theme', 'word/theme/theme1.xml'));
 	const settingsXml = await zip.file('word/settings.xml')?.async('string');
