@@ -22,6 +22,7 @@ async function firstPage(name: string): Promise<PdfGlyphLine[]> {
 	return lines.filter((line) => line.page === lines[0]!.page);
 }
 
+const PAGE_HEIGHT_PT = 841.92;
 const pitch = (lines: PdfGlyphLine[]) => (lines[0]!.y - lines[10]!.y) / 10;
 
 describe('line height with two fonts (#391)', () => {
@@ -45,5 +46,28 @@ describe('a space in a larger run (#393)', () => {
 			expect(lines.length).toBe(control.length);
 			expect(pitch(lines)).toBeCloseTo(pitch(control), 2);
 		}
+	});
+});
+
+describe('exact line spacing (#419)', () => {
+	it("puts the baseline at 80 % of the line height, as Word's PDF does", async () => {
+		const exact = await firstPage('exact-line-baseline');
+		const control = await firstPage('single-spacing-control');
+		const topPt = 70.85;
+		const heights = [10, 15, 20, 15, 15, 15];
+		// Lines stack at their exact heights; the first line's top is the top margin.
+		let top = topPt;
+		const offsets = exact.map((line, index) => {
+			const offset = top + heights[index]! * 0.8;
+			top += heights[index]!;
+			return [PAGE_HEIGHT_PT - line.y, offset] as const;
+		});
+		// Word's own baselines are within 0.1 pt of the 80 % rule (8.01, 12.05, 16.01, 11.97).
+		for (const [actual, expected] of offsets)
+			expect(Math.abs(actual - expected)).toBeLessThan(0.16);
+		// Word 16 reads 8.01, 12.05 and 16.01 below the top of the first three lines.
+		expect(PAGE_HEIGHT_PT - exact[0]!.y - topPt).toBeCloseTo(8.01, 1);
+		expect(exact.length).toBe(6);
+		expect(control.length).toBe(6);
 	});
 });

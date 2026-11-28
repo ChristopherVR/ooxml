@@ -67,11 +67,14 @@ export function tokenExtent(
 	return { above: ascent + shift, below: descent - shift, ascent, descent };
 }
 
+/** Where Word puts the baseline of a line with exact spacing, as a share of the line height. */
+const EXACT_BASELINE_RATIO = 0.8;
+
 /**
  * A line's height and baseline: the tallest extent above and below the baseline over its tokens
- * (inline pictures sit on the baseline), scaled by the paragraph's line spacing. Exact and
- * at-least spacing add their extra space above the text, so the baseline sits one descent above
- * the line's bottom. Multiple spacing above single (`w:lineRule="auto"`, `w:line` > 240) adds it
+ * (inline pictures sit on the baseline), scaled by the paragraph's line spacing. At-least
+ * spacing adds its extra space above the text, so the baseline sits one descent above the line's
+ * bottom; exact spacing puts the baseline at 80 % of the line height. Multiple spacing above single (`w:lineRule="auto"`, `w:line` > 240) adds it
  * below the text instead: Word keeps the baseline one ascent below the line's top and lets that
  * extra space (`extraBelowPx`) of a page's last line run past the bottom margin (#360).
  */
@@ -136,11 +139,14 @@ export function lineMetrics(
 		const extraBelowPx = Math.max(0, heightPx - natural);
 		return { heightPx, baselinePx: heightPx - below - extraBelowPx, extraBelowPx };
 	}
+	if (rule === 'exact' && spacingTwips != null) {
+		// Word puts the baseline of an exact line at 80 % of its height, whatever the font (#419).
+		const heightPx = twipsToPx(spacingTwips);
+		return { heightPx, baselinePx: heightPx * EXACT_BASELINE_RATIO, extraBelowPx: 0 };
+	}
 	const heightPx =
 		rule === 'exact'
-			? spacingTwips != null
-				? twipsToPx(spacingTwips)
-				: natural
+			? natural
 			: Math.max(natural, spacingTwips != null ? twipsToPx(spacingTwips) : 0);
 	return { heightPx, baselinePx: heightPx - below, extraBelowPx: 0 };
 }

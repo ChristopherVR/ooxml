@@ -170,3 +170,5 @@ The bounding-box probe broke at `luctus` at (45, 133.5) in COM and (45, 133.91) 
 Run the Word export again with `pwsh -File src/core/scripts/docx-layout-reports-word.ps1`.
 
 `generate-line-height-fixtures.py` writes the #391, #393 and #395 documents (`mixed-font-line-height*`, `larger-space-run*`, `symbol-bullet-line-height*`) from the XML those reports quote; the reporter's own files were not available.
+
+`generate-exact-line-and-between-fixtures.py` writes the #419 and #417 documents (`exact-line-baseline`, `single-spacing-control`, `between-mid-page`, `between-at-page-end`, `between-not-shared-control`) from the XML those reports quote; the reporter's own files were not available. Tests: `issue-419-exact-baseline.test.ts and issue-417-between-border.test.ts` and `pdf-export/export-pdf-line-height.test.ts`.
