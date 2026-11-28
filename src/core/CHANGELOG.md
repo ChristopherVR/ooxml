@@ -3,6 +3,15 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.6.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.6.1) - 2026-11-28
+
+### Bug Fixes
+
+- **docx:** Scale the justified word squeeze by the spaces on the line ([c9408a8](https://github.com/ChristopherVR/ooxml/commit/c9408a81e3686c2f8e4753ffbffbc737fcc582a6))
+- **docx:** Measure font line heights without whole-pixel rounding ([92348a4](https://github.com/ChristopherVR/ooxml/commit/92348a4dddbb081a3e0f1bda633ec5558a055d94))
+- **docx:** Draw pdf text at word's 1/600 inch sizes ([3a65d1a](https://github.com/ChristopherVR/ooxml/commit/3a65d1ae95a5ec24069fbccfec292f129814ea36))
+- **docx:** Place pdf baselines and leading as word does ([615d3ba](https://github.com/ChristopherVR/ooxml/commit/615d3bae143c7150adadc24f573be9008135ea41))
+
 ## [2.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.6.0) - 2026-11-28
 
 ### Features

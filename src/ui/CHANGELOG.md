@@ -3,6 +3,13 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.5.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.5.2) - 2026-11-28
+
+### Bug Fixes
+
+- **docx:** Keep the host focus when a view is set in code ([e5b873b](https://github.com/ChristopherVR/ooxml/commit/e5b873ba4dd2cd3cb641b98004b8d8b237726bc1))
+- **docx:** Measure font line heights without whole-pixel rounding ([92348a4](https://github.com/ChristopherVR/ooxml/commit/92348a4dddbb081a3e0f1bda633ec5558a055d94))
+
 ## [2.5.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.5.1) - 2026-11-28
 
 ### Bug Fixes
