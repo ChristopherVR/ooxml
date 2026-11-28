@@ -14,7 +14,7 @@ in `ooxml-core/text` and a generic family, in every place that measures or paint
 - **Word** (`<docx-editor>`): `cssFontStack` (`metricFontFamily`) in Print Layout, Draft and Web
   Layout runs, headers, footers and the watermark. Before the first layout, `load()` waits
   (bounded) for the faces the document draws; faces that arrive later relay the pages out.
-  Word's loader does not register embedded fonts, so none count as available.
+  The document's embedded fonts (`w:embed*`, `word/fonts/*.odttf`) are de-obfuscated from the package and registered as in-memory `FontFace`s while it is open (no request, nothing stored), and count as available.
 - **Excel** (`<xlsx-editor>`): `workbookFontFamily` (`cssFontFamily`) for cells and rich runs,
   autofit, automatic row heights, shapes and text boxes, Page Layout, print, headers and
   footers. `load()` waits before showing the workbook; faces that arrive later re-measure and

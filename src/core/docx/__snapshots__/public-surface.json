@@ -234,6 +234,7 @@
 	"eighthPoints",
 	"eighthPointsFromPoints",
 	"eighthPointsToPoints",
+	"embeddedFontFiles",
 	"emu",
 	"emuFromPixels",
 	"emuToPixels",

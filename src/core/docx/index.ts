@@ -79,6 +79,7 @@ export {
 } from './chart-edit';
 export { diagramColorTheme, resolveDiagramColor } from './diagram-theme';
 export { saveDocx } from './save';
+export { embeddedFontFiles, type EmbeddedFontFile } from './embedded-fonts';
 export {
 	assertValidDocumentModel,
 	DocxModelValidationError,

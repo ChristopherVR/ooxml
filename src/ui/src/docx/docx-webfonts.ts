@@ -2,7 +2,8 @@
  * Word's webfont fallback: the `googleFonts` option of `<docx-editor>` when the host sets it,
  * otherwise the reader's Trust Center choice (`font-downloads.ts`, off until turned on), joined by
  * the shared `effectiveFontDownloads` rule. When on, the families a document draws that the reader has neither installed nor embedded
- * (Word does not load a document's embedded fonts yet, so none count as embedded) are requested
+ * (a document's embedded fonts, `w:embed*`, are registered from its own package first and count as
+ * embedded: nothing is requested for them) are requested
  * from the Google Fonts CSS2 API, or the host's mirror, through one managed `<link>` per editor;
  * a family the catalogue does not serve under its own name ("Calibri") is requested as its
  * metric-compatible clone ("Carlito"), which Word's font stacks (`cssFontStack`) already list
@@ -30,6 +31,7 @@ import {
 	type WebfontReadiness,
 } from '../fonts/webfonts';
 import { effectiveFontDownloads, fontDownloadLock } from '../fonts/font-download-policy';
+import { DocxEmbeddedFonts } from './embedded-fonts';
 import { readerAllowsFontDownloads, setReaderAllowsFontDownloads } from './font-downloads';
 
 /** Prefix of each editor's managed `<link>` id (`docx-editor-webfonts-1`, ...). */
@@ -67,10 +69,20 @@ export class DocxWebfonts {
 	option: GoogleFontsOption | undefined;
 	readonly linkId = `${DOCX_WEBFONT_LINK_PREFIX}-${++instances}`;
 	#lastKey: string | undefined;
+	/** The faces the open document embeds, registered for as long as it is open. */
+	readonly embedded = new DocxEmbeddedFonts();
+	#embeddedFor: readonly unknown[] | undefined;
 
 	/** The CSS2 base the loader uses: the host's value, else the reader's Trust Center choice. */
 	base(): string | null {
 		return docxGoogleFontsBase(effectiveFontDownloads(this.option, readerAllowsFontDownloads()));
+	}
+
+	/** Registers the document's embedded faces once per document (its font list is the identity). */
+	async #loadEmbedded(doc: Document, model: DocumentModel): Promise<void> {
+		if (this.#embeddedFor === model.embeddedFonts && this.#embeddedFor !== undefined) return;
+		this.#embeddedFor = model.embeddedFonts ?? [];
+		await this.embedded.load(doc, model);
 	}
 
 	/**
@@ -83,6 +95,7 @@ export class DocxWebfonts {
 		wait: DocxWebfontWaitOptions = {},
 	): Promise<WebfontReadiness> {
 		if (!doc?.head) return OFF;
+		await this.#loadEmbedded(doc, model);
 		const base = this.base();
 		if (base === null) {
 			this.#lastKey = undefined;
@@ -96,7 +109,7 @@ export class DocxWebfonts {
 				document: doc,
 				linkId: this.linkId,
 				runs,
-				embedded: [],
+				embedded: this.embedded.families,
 				base,
 				...wait,
 			});
@@ -121,7 +134,7 @@ export class DocxWebfonts {
 			document: doc,
 			linkId: this.linkId,
 			runs,
-			embedded: [],
+			embedded: this.embedded.families,
 			base,
 		}).catch(() => OFF);
 	}

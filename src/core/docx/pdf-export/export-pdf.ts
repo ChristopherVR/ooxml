@@ -22,7 +22,7 @@ import {
 	type OversizedCantSplitRow,
 	type TextMeasurer,
 } from '../layout/index';
-import { embeddedFontFiles } from './embedded-fonts';
+import { embeddedFontFiles } from '../embedded-fonts';
 import { PdfFontSet, type PdfFontFile } from '../../pdf/write/pdf-embedded-font';
 import { buildVectorPdf, PdfVectorPage, type PdfVectorOptions } from '../../pdf/write/pdf-vector';
 import { DocxPdfFontFiles } from './font-files';
