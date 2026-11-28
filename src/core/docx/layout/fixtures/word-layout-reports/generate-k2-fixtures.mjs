@@ -84,6 +84,20 @@ const pageBreakBody =
 await build('issue-431-page-break-space-before-compat12', pageBreakBody, { mode: 12 });
 await build('issue-431-page-break-space-before-compat15-control', pageBreakBody, { mode: 15 });
 
+// Word measured (COM, mode 12): the kept space is the space before minus the previous paragraph's
+// space after; a page break in a paragraph of its own before the spaced one keeps none.
+const spaced = (after) =>
+	para(text('Lorem ipsum dolor sit amet.'), `<w:spacing w:before="0" w:after="${after}"/>`) +
+	para(`<w:r><w:br w:type="page"/><w:t>Consectetur adipiscing elit.</w:t></w:r>`, before);
+await build('issue-431-page-break-space-before-compat12-after-previous', spaced(160), { mode: 12 });
+await build(
+	'issue-431-page-break-own-paragraph-compat12',
+	para(text('Lorem ipsum dolor sit amet.')) +
+		para('<w:r><w:br w:type="page"/></w:r>') +
+		para(text('Consectetur adipiscing elit.'), before),
+	{ mode: 12 },
+);
+
 // #433: a bullet whose level text is a soft hyphen, and the same with a hyphen-minus.
 const bullets = (lvlText) =>
 	`<w:numbering xmlns:w="${w}"><w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="hybridMultilevel"/><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="${lvlText}"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr><w:rPr><w:rFonts w:ascii="Courier New" w:hAnsi="Courier New" w:hint="default"/></w:rPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`;

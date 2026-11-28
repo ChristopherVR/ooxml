@@ -120,6 +120,9 @@ export function placeParagraph(
 	let lineCursor = 0;
 	let nextToken: TokenPosition = 0;
 	let firstSegment = true;
+	/** Space above the segment being placed: the paragraph's own for the first, else a carried one. */
+	let carriedPx = 0;
+	const leadPx = () => (firstSegment ? spacingBeforePx : carriedPx);
 	const lineHeight = (line: LayoutLine, index: number) =>
 		placement.trimLeadingColumnBreak &&
 		layout.columnBreakAfterLine.has(index) &&
@@ -186,11 +189,8 @@ export function placeParagraph(
 			const line = expectDefined(layout.lines[i], 'paragraph line index');
 			const gap = i === lineCursor && !keepLeadingGap ? 0 : (line.gapBeforePx ?? 0);
 			const height = lineHeight(line, i) + gap;
-			hold(
-				layout.lines.slice(lineCursor, i + 1),
-				cumulative + height + (firstSegment ? spacingBeforePx : 0),
-			);
-			const budget = cursor.remainingHeightPx() - (firstSegment ? spacingBeforePx : 0);
+			hold(layout.lines.slice(lineCursor, i + 1), cumulative + height + leadPx());
+			const budget = cursor.remainingHeightPx() - leadPx();
 			// A line that does not fit waits for the next column, unless the column is empty. Multiple
 			// spacing's extra space below the text may run past the bottom margin (#360).
 			// The borders around the paragraph, with their `w:space`, must fit above the bottom
@@ -230,7 +230,7 @@ export function placeParagraph(
 		}
 		const committedNotes = hold(
 			layout.lines.slice(lineCursor, lineCursor + placedCount),
-			cumulative + (firstSegment ? spacingBeforePx : 0),
+			cumulative + leadPx(),
 		);
 		const first = expectDefined(layout.lines[lineCursor], 'first line of paragraph segment');
 		const leadingGapPx = keepLeadingGap ? (first.gapBeforePx ?? 0) : 0;
@@ -258,14 +258,20 @@ export function placeParagraph(
 			lines: segmentLines,
 			...(frame ? { frame } : {}),
 		};
-		const advance =
-			(firstSegment ? spacingBeforePx : 0) + segmentHeight + (isFinal ? spacingAfterPx : 0);
-		cursor.place(box, advance, firstSegment ? spacingBeforePx : 0);
+		const advance = leadPx() + segmentHeight + (isFinal ? spacingAfterPx : 0);
+		cursor.place(box, advance, leadPx());
 		for (const item of committedNotes) placedNotes.add(item.id);
 		const lastPlaced = layout.lines[lineCursor + placedCount - 1];
 		if (lastPlaced?.nextToken !== undefined)
 			nextToken = tokenPosition(lastPlaced.nextToken, lastPlaced.nextTokenOffset);
 		lineCursor += placedCount;
+		// Compatibility modes before 15 (measured in 11, 12 and 14) apply the space before again at the
+		// top of the page that a break opening the paragraph starts, not after other content (#431).
+		const breakOnly = first.fragments.every((fragment) => !fragment.text && !fragment.object);
+		carriedPx =
+			forced === 'page' && firstSegment && breakOnly && placement.keepSpaceBeforePageBreak
+				? placement.spacingBeforePx
+				: 0;
 		firstSegment = false;
 		if (forced === 'page') cursor.newPage();
 		else if (forced === 'column') cursor.newColumn();

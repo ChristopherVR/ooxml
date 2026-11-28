@@ -83,8 +83,8 @@ export function keepsWrappingFloatsAboveBottomMargin(profile: CompatibilityProfi
 }
 
 /**
- * A `pageBreakBefore` paragraph at the top of a page keeps its space before. Measured: kept in
- * modes 12 and 14, dropped in 15; other modes (including later numbers) keep the legacy rule
+ * A `pageBreakBefore` paragraph at the top of a page keeps its space before, and so does a
+ * paragraph that opens with a page break (#431). Measured: kept in modes 11, 12 and 14, dropped in 15; other modes (including later numbers) keep the legacy rule
  * until they are measured.
  */
 export function keepsSpaceBeforePageBreak(profile: CompatibilityProfile): boolean {
