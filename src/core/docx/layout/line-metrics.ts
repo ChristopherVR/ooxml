@@ -1,6 +1,6 @@
 import { fontMetrics, type LayoutFontSpec, type TextMeasurer } from './measure';
 import type { BreakToken } from './text-breaks';
-import type { LayoutParagraph } from './input';
+import type { LayoutParagraph, LayoutRun } from './input';
 import { DEFAULT_FONT_SIZE_PT, ptToPx, twipsToPx } from './units';
 import { fontOf, type PlacedToken } from './paragraph-tokens';
 import { contentControlTagMetrics } from './content-control-tag-metrics';
@@ -8,6 +8,22 @@ import { contentControlTagMetrics } from './content-control-tag-metrics';
 /** How far superscript text is raised and subscript lowered, as a share of the run's size. */
 const SUPER_RAISE = 0.33;
 const SUB_DROP = 0.14;
+
+/**
+ * The room a `w14:shadow` takes above and below its text: 0.34 of the blur radius, moved down by
+ * the same share of the offset's vertical part. Fits Word's measured line steps for blur radii of
+ * 0, 4 and 8 pt and distances of 0, 3 and 6 pt at 45 degrees (#397).
+ */
+function shadowRoomPx(shadow: LayoutRun['textShadow']): { above: number; below: number } {
+	if (!shadow) return { above: 0, below: 0 };
+	const emuToPx = 96 / 914400;
+	const blur = shadow.blurRad * emuToPx;
+	const drop = shadow.dist * emuToPx * Math.sin(((shadow.dir / 60000) * Math.PI) / 180);
+	return {
+		above: Math.max(0, 0.34 * (blur - drop)),
+		below: Math.max(0, 0.34 * (blur + drop)),
+	};
+}
 
 const tagExtent = {
 	above: ptToPx(contentControlTagMetrics.lineAscentPt),
@@ -22,6 +38,7 @@ export function tokenExtent(
 	paragraph: LayoutParagraph,
 	fonts: LayoutFontSpec[],
 	measurer: TextMeasurer,
+	forLine = false,
 ): { above: number; below: number; ascent: number; descent: number } {
 	const run = paragraph.runs[token.runIndex];
 	if (token.kind === 'object' && run?.object) {
@@ -35,6 +52,18 @@ export function tokenExtent(
 	const scriptShift =
 		run?.script === 'super' ? SUPER_RAISE * size : run?.script === 'sub' ? -SUB_DROP * size : 0;
 	const shift = scriptShift + (run?.positionPx ?? 0);
+	if (forLine) {
+		// A default-position script does not change the line's height in Word (#394), and a shadow
+		// takes room above and below the text (#397); neither moves where the text is drawn.
+		const lineShift = run?.positionPx ?? 0;
+		const room = shadowRoomPx(run?.textShadow);
+		return {
+			above: ascent + lineShift + room.above,
+			below: descent - lineShift + room.below,
+			ascent,
+			descent,
+		};
+	}
 	return { above: ascent + shift, below: descent - shift, ascent, descent };
 }
 
@@ -75,7 +104,7 @@ export function lineMetrics(
 			: undefined;
 		const extent = metrics
 			? { above: metrics.ascent, below: metrics.descent }
-			: tokenExtent(token, paragraph, fonts, measurer);
+			: tokenExtent(token, paragraph, fonts, measurer, true);
 		const sizePx = fonts[token.runIndex]?.sizePx ?? 0;
 		if (run?.marker) {
 			marker = { ...extent, sizePx };

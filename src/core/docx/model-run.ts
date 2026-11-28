@@ -155,6 +155,11 @@ export interface TextRun {
 	textScalePercent?: number;
 	/** Office 2010 OpenType ligature selection; undefined inherits. */
 	ligatures?: import('./ligatures').Ligatures;
+	/**
+	 * Office 2010 `w14:shadow` text effect: blur radius and distance in EMU, direction in 60000ths of
+	 * a degree. Read for the line height; the source XML keeps the effect on save.
+	 */
+	textShadow?: { blurRad: number; dist: number; dir: number };
 	/** `w:kern` minimum font size for kerning, in half-points; zero explicitly disables it. */
 	kerningHalfPoints?: HalfPoints;
 	/** `w:position` baseline displacement, in signed half-points; positive raises, negative lowers. */

@@ -319,6 +319,7 @@ export function adaptDocumentModel(
 				fontSizePt: formatting.fontSize,
 				textScalePercent: scale === 100 ? undefined : scale,
 				ligatures: formatting.ligatures,
+				textShadow: formatting.textShadow,
 				smallCaps: formatting.caps ? undefined : formatting.smallCaps,
 				background,
 				characterSpacingPx:

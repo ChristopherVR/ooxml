@@ -51,6 +51,8 @@ export interface LayoutRun {
 	};
 	/** Superscript or subscript: drawn smaller and raised or lowered (note marks are superscript). */
 	script?: 'super' | 'sub';
+	/** `w14:shadow`: the room its blur and offset take above and below the line (EMU, 60000ths of a degree). */
+	textShadow?: TextRun['textShadow'];
 	/** `#rrggbb`, display only. */
 	color?: string;
 	/** `#rrggbb` shading behind the run's text, display only (Word's form field shading). */

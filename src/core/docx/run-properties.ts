@@ -16,9 +16,22 @@ import {
 	parseTextScale,
 	parseTintShade,
 } from './simple-types';
-import { first, getW, type XmlElement } from './xml';
+import { elements, first, getW, type XmlElement } from './xml';
 import { isWordUnderlineStyle } from './underline';
-import { parseLigatures } from './ligatures';
+import { parseLigatures, WORD_2010_NS } from './ligatures';
+
+/** The run's `w14:shadow` text effect (absent attributes are zero), or undefined without one. */
+function parseTextShadow(props: XmlElement): TextRun['textShadow'] {
+	const shadow = elements(props).find(
+		(element) => element.namespaceURI === WORD_2010_NS && element.localName === 'shadow',
+	);
+	if (!shadow) return undefined;
+	const number = (name: string) => {
+		const value = Number(shadow.getAttributeNS(WORD_2010_NS, name));
+		return Number.isFinite(value) ? value : 0;
+	};
+	return { blurRad: number('blurRad'), dist: number('dist'), dir: number('dir') };
+}
 
 /** Parsed snapshots allocate fresh objects; compare values before rewriting opaque XML. */
 export function runPropertyChanged(
@@ -57,6 +70,8 @@ export function parseRunProperties(props: XmlElement | undefined): RunFormatting
 	if (!props) return result;
 	const language = getW(first(props, 'lang'), 'val');
 	if (language !== undefined) result.language = language;
+	const textShadow = parseTextShadow(props);
+	if (textShadow) result.textShadow = textShadow;
 	const ligatures = parseLigatures(props);
 	if (ligatures !== undefined) result.ligatures = ligatures;
 	// Toggles are kept when explicitly off too (`w:val="0"`): that cancels a style's value.

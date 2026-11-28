@@ -31,6 +31,7 @@ export type RunFormatting = Pick<
 	| 'characterSpacingTwips'
 	| 'textScalePercent'
 	| 'ligatures'
+	| 'textShadow'
 	| 'kerningHalfPoints'
 	| 'positionHalfPoints'
 	| 'shadingFill'

@@ -37,6 +37,7 @@ const OVERRIDE_KEYS = [
 	'characterSpacingTwips',
 	'textScalePercent',
 	'ligatures',
+	'textShadow',
 	'kerningHalfPoints',
 	'positionHalfPoints',
 	'shadingFill',
