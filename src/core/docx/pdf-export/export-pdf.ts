@@ -22,7 +22,6 @@ import {
 	type OversizedCantSplitRow,
 	type TextMeasurer,
 } from '../layout/index';
-import { embeddedFontFiles } from '../embedded-fonts';
 import { PdfFontSet, type PdfFontFile } from '../../pdf/write/pdf-embedded-font';
 import { buildVectorPdf, PdfVectorPage, type PdfVectorOptions } from '../../pdf/write/pdf-vector';
 import { DocxPdfFontFiles } from './font-files';
@@ -244,9 +243,15 @@ export async function exportDocxPdf(
 	const signal = options.signal;
 	signal?.throwIfAborted();
 	const mode: ReviewDisplayMode = options.markup === 'all' ? 'all' : 'final';
-	// The document's own embedded faces stand behind the host's files.
+	// The document's own embedded faces stand behind the host's files. Their reader loads only
+	// for a document that embeds fonts, so other exports do not download it.
 	const supplied = options.fonts ?? [];
-	const fonts = [...supplied, ...(await embeddedFontFiles(model, supplied))];
+	const fonts = model.embeddedFonts?.length
+		? [
+				...supplied,
+				...(await (await import('../embedded-fonts')).embeddedFontFiles(model, supplied)),
+			]
+		: supplied;
 	const files = new DocxPdfFontFiles(fonts, options.fontSubstitutions);
 	// The symbol fonts' glyph tables load with the export, not with the docx entry points.
 	const symbols = await import('../../text/symbol-fonts');
