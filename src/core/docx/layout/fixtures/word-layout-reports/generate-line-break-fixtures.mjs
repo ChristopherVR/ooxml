@@ -1,4 +1,4 @@
-// Regenerates the synthetic line-breaking fixtures of #406, #410, #415 and #392 from the
+// Regenerates the synthetic line-breaking fixtures of #406, #410 and #392 from the
 // paragraphs quoted in those issues (the reporter's Word files are not redistributed here).
 // Run: node generate-line-break-fixtures.mjs
 import { writeFile } from 'node:fs/promises';
@@ -70,7 +70,7 @@ await build('issue-406-two-spaces-control', nbspBody('  ').join(''), {
 	size: 12,
 });
 
-// #410 and #415: content controls shown as tags.
+// #410: content controls shown as tags.
 const tagged = (alias, id, inner) =>
 	`<w:sdt><w:sdtPr><w:alias w:val="${alias}"/><w:tag w:val="${alias}"/><w:id w:val="${id}"/><w15:appearance w15:val="tags"/></w:sdtPr><w:sdtContent>${inner}</w:sdtContent></w:sdt>`;
 const nested = (base) =>
@@ -97,17 +97,6 @@ await build('issue-410-start-tag-after-space', tagParagraphs(word410(' '), ''), 
 	font: 'Arial',
 	size: 11,
 });
-const untagged = `<w:sdt><w:sdtPr><w:alias w:val="Field"/><w:tag w:val="Field"/><w:id w:val="3000"/></w:sdtPr><w:sdtContent><w:r><w:t>Name/Field</w:t></w:r></w:sdtContent></w:sdt>`;
-const head415 = run(`${'i'.repeat(21)} lorem ipsum dolor sit amet `);
-await build('issue-415-tags-after-untagged-control', tagParagraphs(head415, untagged), {
-	font: 'Arial',
-	size: 11,
-});
-await build('issue-415-tags-after-text-control', tagParagraphs(head415, run('Name/Field')), {
-	font: 'Arial',
-	size: 11,
-});
-
 // #392: Word draws spaces in small caps at the reduced size.
 const smallCaps = (on) =>
 	para(

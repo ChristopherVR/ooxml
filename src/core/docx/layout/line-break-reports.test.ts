@@ -62,3 +62,20 @@ describe('a space next to a non-breaking space is no break opportunity (#406)', 
 		]);
 	});
 });
+
+describe('a content control start tag after a word is no break opportunity (#410)', () => {
+	it('moves the word down with the tags and their text, justified and left', async () => {
+		for (const paragraph of await lines('issue-410-start-tag-after-word', estimated)) {
+			expect(paragraph[0]?.endsWith('amet')).toBe(true);
+			expect(paragraph[1]?.startsWith('Name/Field')).toBe(true);
+			expect(paragraph[1]?.endsWith('iota')).toBe(true);
+		}
+	});
+
+	it('breaks at the space when one separates the word and the tags', async () => {
+		for (const paragraph of await lines('issue-410-start-tag-after-space', estimated)) {
+			expect(paragraph[0]?.endsWith('Name/Field')).toBe(true);
+			expect(paragraph[1]?.startsWith('Outer')).toBe(true);
+		}
+	});
+});

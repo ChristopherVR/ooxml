@@ -149,6 +149,11 @@ function glueControlTags(tokens: BreakToken[], paragraph: LayoutParagraph): void
 	for (const [index, token] of tokens.entries()) {
 		const edge = paragraph.runs[token.runIndex]?.contentControlTag;
 		if (!edge) continue;
+		// A start tag that follows a word with no space is no line break opportunity either: Word
+		// keeps the word, the tag and the content together (#410).
+		const previous = tokens[index - 1];
+		if (edge === 'start' && (previous?.kind === 'word' || previous?.kind === 'object'))
+			token.glue = 'controlTag';
 		const step = edge === 'start' ? 1 : -1;
 		let neighbor = index + step;
 		while (tokens[neighbor]?.kind === 'space') neighbor += step;
