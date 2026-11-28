@@ -78,10 +78,11 @@ export function parseNumberingLevel(lvl: XmlElement): NumberingLevelDefinition {
 	const tabPos = tab ? parseTwips(getW(tab, 'pos')) : undefined;
 	if (tabPos !== undefined) result.tabStopTwips = tabPos;
 	const legacy = first(lvl, 'legacy');
-	if (legacy && ['1', 'true', 'on'].includes(getW(legacy, 'legacy') ?? '')) {
+	if (legacy) {
 		const indent = parseTwips(getW(legacy, 'legacyIndent'));
 		const space = parseTwips(getW(legacy, 'legacySpace'));
 		result.legacy = {
+			...(['1', 'true', 'on'].includes(getW(legacy, 'legacy') ?? '') ? { enabled: true as const } : {}),
 			...(indent !== undefined ? { indentTwips: indent } : {}),
 			...(space !== undefined ? { spaceTwips: space } : {}),
 		};

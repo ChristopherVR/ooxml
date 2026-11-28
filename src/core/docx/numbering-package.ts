@@ -56,7 +56,7 @@ function buildLevelElement(doc: XmlDocument, def: NumberingLevelDefinition): Xml
 		lvl.appendChild(valueElement(doc, 'lvlPicBulletId', def.pictureBulletId));
 	if (def.legacy) {
 		const legacy = makeW(doc, 'legacy');
-		setAttribute(legacy, 'legacy', '1');
+		setAttribute(legacy, 'legacy', def.legacy.enabled ? '1' : '0');
 		if (def.legacy.spaceTwips !== undefined)
 			setAttribute(legacy, 'legacySpace', String(def.legacy.spaceTwips));
 		if (def.legacy.indentTwips !== undefined)

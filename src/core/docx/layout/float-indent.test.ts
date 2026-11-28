@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { expect, it } from 'vitest';
 import { loadDocx } from '../index';
+import { signedTwips, twips } from '../../units';
+import type { Paragraph } from '../model';
 import { createFakeMeasurer, layoutDocumentModel } from './index';
 import { at } from './test-helpers';
 
@@ -23,4 +25,37 @@ it('starts indented text at the float edge when the indent is smaller than it', 
 	expect(firstXs[1]).toBeCloseTo(indent4820);
 	expect(firstXs[2]).toBeCloseTo(edge);
 	expect(firstXs[3]).toBeCloseTo(edge);
+});
+
+// A negative indent reaches into the margin whenever no float is beside the paragraph.
+it('keeps negative indents in the margin without a float', async () => {
+	const { model } = await loadDocx(
+		await readFile(new URL('./fixtures/word-parity/issue-370-float-indent.docx', import.meta.url)),
+	);
+	const source = model.blocks[3] as Paragraph;
+	const make = (id: string, indent: Partial<Paragraph>) =>
+		({
+			...structuredClone(source),
+			id,
+			indentLeftTwips: undefined,
+			hangingTwips: undefined,
+			firstLineTwips: undefined,
+			...indent,
+		}) as Paragraph;
+	// No float: the picture's paragraph is left out.
+	model.blocks = [
+		make('neg-left', { indentLeftTwips: signedTwips(-720) }),
+		make('neg-hang', { indentLeftTwips: signedTwips(0), hangingTwips: twips(360) }),
+		make('neg-right', { indentRightTwips: signedTwips(-720) }),
+	] as never;
+	const page = at(layoutDocumentModel(model, createFakeMeasurer()).pages, 0);
+	const [a, b, c] = at(page.columns, 0).blocks.map((block) =>
+		block.kind === 'paragraph' ? at(block.lines, 0) : undefined,
+	);
+	expect(a?.fragments[0]?.xPx).toBeCloseTo(-48);
+	expect(b?.fragments[0]?.xPx).toBeCloseTo(-24);
+	expect(c?.fragments[0]?.xPx).toBeCloseTo(0);
+	// A negative right indent lets the line run past the margin (604.8px wide column).
+	const end = Math.max(...(c?.fragments ?? []).map((fragment) => fragment.xPx + fragment.widthPx));
+	expect(end).toBeGreaterThan(604.8);
 });

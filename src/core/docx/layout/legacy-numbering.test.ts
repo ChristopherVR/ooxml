@@ -27,10 +27,35 @@ it('puts the text after a legacy bullet at the legacy indent', async () => {
 	expect(text?.xPx).toBeCloseTo((283 / 20) * (96 / 72), 1);
 });
 
+const textX = (model: Awaited<ReturnType<typeof load>>) => {
+	const { pages } = layoutDocumentModel(model, createFakeMeasurer());
+	const line = at(
+		at(at(pages, 0).columns, 0).blocks.flatMap((block) =>
+			block.kind === 'paragraph' ? block.lines : [],
+		),
+		0,
+	);
+	return line.fragments.find((fragment) => fragment.text.startsWith('First'))?.xPx;
+};
+
+it('measures the legacy indent from the number start, not the margin', async () => {
+	const model = await load();
+	Object.assign(model.blocks[0] as Paragraph, { indentLeftTwips: 1440 });
+	expect(textX(model)).toBeCloseTo(96 + (283 / 20) * (96 / 72), 1);
+});
+
+it('leaves at least legacySpace between the number and the text', async () => {
+	const model = await load();
+	const level = at(Object.values(model.numberingCatalog?.abstractNums['0']?.levels ?? {}), 0);
+	level.legacy = { enabled: true, indentTwips: level.legacy?.indentTwips ?? 0, spaceTwips: 600 } as never;
+	// The bullet's own width plus 600 twips (40px) is further than the 283 twip indent.
+	expect(textX(model)).toBeGreaterThan(40);
+});
+
 it('keeps w:legacy when the document is saved, edited or not', async () => {
 	const model = await load();
 	const level = model.numberingCatalog?.abstractNums['0']?.levels[0];
-	expect(level?.legacy).toEqual({ indentTwips: 283, spaceTwips: 0 });
+	expect(level?.legacy).toEqual({ enabled: true, indentTwips: 283, spaceTwips: 0 });
 	const check = async (bytes: Uint8Array) => {
 		const zip = await JSZip.loadAsync(bytes);
 		const xml = (await zip.file('word/numbering.xml')?.async('string')) ?? '';

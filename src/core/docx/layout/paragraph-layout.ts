@@ -6,6 +6,7 @@ import { paragraphShadowInsets } from './paragraph-shadow';
 import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
 import type { LayoutParagraph } from './input';
 import { NO_TWIPS, ptToPx, twipsToPx } from './units';
+import { legacyTextStartPx } from './legacy-marker';
 import { contentControlTagMetrics } from './content-control-tag-metrics';
 import { placePositionalTab, placeTab } from './tab-stops';
 import {
@@ -187,12 +188,18 @@ function measureParagraph(
 	 * first-line offset) or the edge of a wrapped float, whichever is further in. The indent is
 	 * not added to the float's edge: Word measures it from the margin.
 	 */
-	const lineStart = (lineIndex: number) =>
-		Math.max(leftPx + (lineIndex === 0 ? firstLineExtraPx : 0), boxFor(lineIndex).leftInsetPx);
-	const availableWidth = (lineIndex: number) => {
-		const box = boxFor(lineIndex);
-		return Math.max(1, contentWidthPx - lineStart(lineIndex) - Math.max(rightPx, box.rightInsetPx));
+	const lineStart = (lineIndex: number) => {
+		const indented = leftPx + (lineIndex === 0 ? firstLineExtraPx : 0);
+		const inset = boxFor(lineIndex).leftInsetPx;
+		// Only beside a float does its edge limit the indent; negative indents stay in the margin.
+		return inset > 0 ? Math.max(indented, inset) : indented;
 	};
+	const lineEnd = (lineIndex: number) => {
+		const inset = boxFor(lineIndex).rightInsetPx;
+		return inset > 0 ? Math.max(rightPx, inset) : rightPx;
+	};
+	const availableWidth = (lineIndex: number) =>
+		Math.max(1, contentWidthPx - lineStart(lineIndex) - lineEnd(lineIndex));
 	const tokenWidth = (token: BreakToken): number => {
 		const run = token.kind === 'word' ? paragraph.runs[token.runIndex] : undefined;
 		const font = fonts[token.runIndex];
@@ -453,6 +460,14 @@ function measureParagraph(
 			leader = tab?.leader === 'none' ? undefined : tab?.leader;
 			if (positional.relativeTo === 'margin')
 				marginReachPx = contentWidthPx - lineStart(lines.length);
+		} else if (token.kind === 'tab' && paragraph.runs[token.runIndex]?.marker?.legacy) {
+			// The text after a legacy marker starts at its legacy indent, not at a tab stop.
+			const legacy = expectDefined(paragraph.runs[token.runIndex]?.marker?.legacy, 'legacy');
+			const here = lineStart(lines.length) + lineWidthPx;
+			width = Math.max(
+				0,
+				legacyTextStartPx(lineStart(lines.length), here, legacy) - here,
+			);
 		} else if (token.kind === 'tab') {
 			const { followingPx, beforeDecimalPx } = segmentAfter(tokenIndex);
 			const tab = placeTab(

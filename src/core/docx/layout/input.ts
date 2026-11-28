@@ -46,6 +46,8 @@ export interface LayoutRun {
 		alignment: 'left' | 'center' | 'right';
 		/** Picture bullet: the marker occupies this width instead of its fallback glyph's. */
 		widthPx?: number;
+		/** Enabled `w:legacy`: the separator ends `indentPx` after the number's start, and `spacePx` at least after its end. */
+		legacy?: { indentPx: number; spacePx: number };
 	};
 	/** Superscript or subscript: drawn smaller and raised or lowered (note marks are superscript). */
 	script?: 'super' | 'sub';

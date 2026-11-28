@@ -33,6 +33,7 @@ export { positionFloats } from './position-floats';
 export { paragraphBorderBands } from './adapt-paragraph-box';
 export { paragraphShadowRects, type ParagraphShadowRect } from './paragraph-shadow';
 export { cssFontStack } from './fonts';
+export { legacyTextStartPx } from './legacy-marker';
 export { createPageStories, type PlacedStory } from './story-flow';
 export { collectDocxWebfontRuns } from './webfont-runs';
 export { placeTab, type TabPlacement } from './tab-stops';

@@ -23,6 +23,14 @@ export interface NumberingPictureBullet {
 	heightPt?: number;
 }
 /** A single `w:lvl` definition, fully resolved from an abstractNum (and any lvlOverride). */
+/** `w:legacy`: Word 6 style spacing. It applies only when `enabled` (`w:legacy` is on). */
+export interface NumberingLegacySpacing {
+	enabled?: true;
+	/** `w:legacyIndent`: the text starts this far after the start of the number. */
+	indentTwips?: Twips;
+	/** `w:legacySpace`: the least space between the end of the number and the text. */
+	spaceTwips?: Twips;
+}
 export interface NumberingLevelDefinition {
 	/** 0-based `w:ilvl`. */
 	level: number;
@@ -50,8 +58,8 @@ export interface NumberingLevelDefinition {
 	suffix?: 'tab' | 'space' | 'none';
 	/** Explicit tab stop for the marker's tab suffix (`w:pPr/w:tabs/w:tab`, `w:val="num"`). */
 	tabStopTwips?: Twips;
-	/** `w:legacy` with `w:legacy="1"`: Word 6 style spacing, from `w:legacyIndent` and `w:legacySpace`. */
-	legacy?: { indentTwips?: Twips; spaceTwips?: Twips };
+	/** `w:legacy` element, kept whether or not it is switched on. */
+	legacy?: NumberingLegacySpacing;
 	/** `w:lvlPicBulletId`: the `NumberingCatalog.pictureBullets` entry drawn as this level's marker. */
 	pictureBulletId?: string;
 	/** Marker formatting from `w:rPr`. */
@@ -91,8 +99,8 @@ export interface ParagraphListLabel {
 	hangingTwips?: Twips;
 	firstLineTwips?: Twips;
 	tabStopTwips?: Twips;
-	/** `w:legacy`: the marker's text starts at this indent from the margin instead of the next tab stop. */
-	legacy?: { indentTwips?: Twips; spaceTwips?: Twips };
+	/** Set only for an enabled `w:legacy` level: the text starts by these rules, not at a tab stop. */
+	legacy?: NumberingLegacySpacing;
 	markerFormat?: NumberingMarkerFormat;
 	/** Picture bullet drawn in place of the marker text. */
 	picture?: NumberingPictureBullet;

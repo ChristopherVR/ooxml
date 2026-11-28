@@ -26,7 +26,7 @@ import { floatsOf } from './adapt-floats';
 import { equationObject } from './equation-object';
 import { shapePaint } from './shape-paint';
 import type { TextBoxLayouts } from './text-box-layout';
-import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
+import { DEFAULT_FONT_SIZE_PT, NO_TWIPS, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { inkPaint } from './ink-paint';
 import { drawingOuterShadow } from '../shape-svg';
@@ -371,6 +371,14 @@ export function adaptDocumentModel(
 				length: displayListLabel(label.text, markerFont).length,
 				alignment: label.alignment ?? 'left',
 				...(pictureWidthPx !== undefined ? { widthPx: pictureWidthPx } : {}),
+				...(label.legacy && label.suffix === 'tab'
+					? {
+							legacy: {
+								indentPx: twipsToPx(label.legacy.indentTwips ?? NO_TWIPS),
+								spacePx: twipsToPx(label.legacy.spaceTwips ?? NO_TWIPS),
+							},
+						}
+					: {}),
 			},
 			...definedProps({
 				bold: marker?.bold ?? base.bold,
@@ -438,8 +446,6 @@ export function adaptDocumentModel(
 						adaptRun(paragraph.runs[0] ?? { text: '' }, paragraph.style, undefined, tableStyleRun),
 				)
 			: undefined;
-		// A legacy (`w:legacy`) level starts the text at `w:legacyIndent`, not at the next tab stop.
-		const labelTabStopTwips = label?.tabStopTwips ?? label?.legacy?.indentTwips;
 		const adapted: LayoutParagraph = {
 			kind: 'paragraph',
 			id: paragraph.id,
@@ -451,7 +457,7 @@ export function adaptDocumentModel(
 			runs: (marker ? [marker, ...taggedRuns] : taggedRuns).map(withFontFallback),
 			...(footnotes.length ? { footnotes } : {}),
 			...box,
-			...(paragraph.tabStops?.length || labelTabStopTwips !== undefined
+			...(paragraph.tabStops?.length || label?.tabStopTwips !== undefined
 				? {
 						tabStops: [
 							...(paragraph.tabStops ?? []).map((stop) => ({
@@ -459,8 +465,8 @@ export function adaptDocumentModel(
 								align: stop.align,
 								...(stop.leader ? { leader: stop.leader } : {}),
 							})),
-							...(labelTabStopTwips !== undefined
-								? [{ posPx: twipsToPx(labelTabStopTwips), align: 'left' as const }]
+							...(label?.tabStopTwips !== undefined
+								? [{ posPx: twipsToPx(label.tabStopTwips), align: 'left' as const }]
 								: []),
 						].sort((a, b) => a.posPx - b.posPx),
 					}

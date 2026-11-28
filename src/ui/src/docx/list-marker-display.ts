@@ -8,7 +8,7 @@ import {
 	type ParagraphListLabel,
 	type TextRun,
 } from 'ooxml-core/docx';
-import { cssFontStack, type TextMeasurer } from 'ooxml-core/docx/layout';
+import { cssFontStack, legacyTextStartPx, type TextMeasurer } from 'ooxml-core/docx/layout';
 import { paragraphMarkRun } from 'ooxml-core/docx/ui';
 import type { Node } from 'prosemirror-model';
 import { appendInlineNode } from './run-adapter';
@@ -65,7 +65,12 @@ export function listMarkerDisplay(
 	const end = anchor + width * (1 - factor);
 	let body = end;
 	if (label.suffix === 'space') body += measurer.widthOf(' ', font);
-	if (label.suffix === 'tab') {
+	if (label.suffix === 'tab' && label.legacy) {
+		body = legacyTextStartPx(anchor, end, {
+			indentPx: (label.legacy.indentTwips ?? 0) / 15,
+			spacePx: (label.legacy.spaceTwips ?? 0) / 15,
+		});
+	} else if (label.suffix === 'tab') {
 		const custom = [
 			...(paragraph.tabStops ?? []),
 			...(label.tabStopTwips !== undefined

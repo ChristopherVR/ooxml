@@ -145,7 +145,7 @@ function paragraphLabel(
 			firstLineTwips: def.firstLineTwips,
 			markerFormat: def.markerFormat,
 			tabStopTwips: def.tabStopTwips,
-			legacy: def.legacy,
+			legacy: def.legacy?.enabled ? def.legacy : undefined,
 			picture,
 		}),
 	};
