@@ -95,6 +95,7 @@ export function createContext(options: ContextOptions): CompareContext {
 			delete run.formatRevision;
 			delete run.commentIds;
 			delete run.contentControl;
+			delete run.outerContentControls;
 			delete run.restoredRunPropertiesXml;
 			if (run.style && !characterStyles[run.style]) delete run.style;
 			return run;

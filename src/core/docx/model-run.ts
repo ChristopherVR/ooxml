@@ -169,6 +169,11 @@ export interface TextRun {
 	image?: InlineImage;
 	/** The inline content control (`w:sdt`) this run sits in; every run of one control shares its `id`. */
 	contentControl?: ContentControl;
+	/**
+	 * The inline controls around `contentControl`, outermost first. Read-only: layout draws a tag
+	 * for each level, but saving writes only the control each run keeps in `contentControl`.
+	 */
+	outerContentControls?: ContentControl[];
 	/** Hyperlink target for this run, from `w:hyperlink` (or a simple `HYPERLINK` field). */
 	link?: HyperlinkInfo;
 }

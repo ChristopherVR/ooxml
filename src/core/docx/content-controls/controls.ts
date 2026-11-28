@@ -17,7 +17,15 @@ function mapChain<T extends Parameters<typeof chainOf>[0] & object>(
 
 const mapRuns = (runs: TextRun[], fn: ControlMapper): TextRun[] =>
 	runs.map((run) =>
-		run.contentControl ? { ...run, contentControl: fn(run.contentControl) } : run,
+		run.contentControl
+			? {
+					...run,
+					contentControl: fn(run.contentControl),
+					...(run.outerContentControls && {
+						outerContentControls: run.outerContentControls.map(fn),
+					}),
+				}
+			: run,
 	);
 
 export const mapParagraphControls = (paragraph: Paragraph, fn: ControlMapper): Paragraph =>

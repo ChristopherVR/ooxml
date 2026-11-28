@@ -28,29 +28,42 @@ export function adaptBlockContentControlTags(
 	];
 }
 
+/** The tagged controls around a run, outermost first. */
+const taggedChain = (run: TextRun): ContentControl[] =>
+	[...(run.outerContentControls ?? []), ...(run.contentControl ? [run.contentControl] : [])].filter(
+		(control) => control.appearance === 'tags',
+	);
+
 /** A span can include several source runs and each can produce several font runs. */
 export function adaptContentControlTags(
 	runs: readonly TextRun[],
 	adapt: (run: TextRun) => LayoutRun[],
 ): LayoutRun[] {
 	const result: LayoutRun[] = [];
-	let active: ContentControl | undefined;
-	let hasVisibleContent = false;
-	for (const run of runs) {
-		const control = run.contentControl?.appearance === 'tags' ? run.contentControl : undefined;
-		if (active && control?.id !== active.id) {
-			if (hasVisibleContent) result.push(tag(active, 'end'));
-			hasVisibleContent = false;
+	const open: { control: ContentControl; visible: boolean }[] = [];
+	const closeFrom = (keep: number) => {
+		while (open.length > keep) {
+			const { control, visible } = open.pop()!;
+			if (visible) result.push(tag(control, 'end'));
 		}
-		active = control;
+	};
+	for (const run of runs) {
+		const chain = taggedChain(run);
+		let keep = 0;
+		while (keep < open.length && keep < chain.length && open[keep]!.control.id === chain[keep]!.id)
+			keep++;
+		closeFrom(keep);
+		for (const control of chain.slice(keep)) open.push({ control, visible: false });
 		for (const part of adapt(run)) {
-			if (control && !part.hidden) {
-				if (!hasVisibleContent) result.push(tag(control, 'start'));
-				hasVisibleContent = true;
-			}
+			if (!part.hidden)
+				for (const entry of open)
+					if (!entry.visible) {
+						entry.visible = true;
+						result.push(tag(entry.control, 'start'));
+					}
 			result.push(part);
 		}
 	}
-	if (active && hasVisibleContent) result.push(tag(active, 'end'));
+	closeFrom(0);
 	return result;
 }

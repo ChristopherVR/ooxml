@@ -21,7 +21,11 @@ export function parseInlineControl(
 		? collectParagraphRuns(content, parseRun, parseOther, resolveLink, comments, moves).runs
 		: [];
 	if (!runs.length) return [{ text: '', contentControl: control }];
-	for (const run of runs) run.contentControl ??= control;
+	for (const run of runs) {
+		if (!run.contentControl) run.contentControl = control;
+		else if (run.contentControl.id !== control.id)
+			run.outerContentControls = [control, ...(run.outerContentControls ?? [])];
+	}
 	return runs;
 }
 

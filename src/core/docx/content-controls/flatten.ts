@@ -11,7 +11,7 @@ import type { FlattenContentControlsOptions } from './types';
 
 const plainRun = (run: TextRun): TextRun => {
 	if (!run.contentControl) return run;
-	const { contentControl: _control, ...rest } = run;
+	const { contentControl: _control, outerContentControls: _outer, ...rest } = run;
 	return rest;
 };
 

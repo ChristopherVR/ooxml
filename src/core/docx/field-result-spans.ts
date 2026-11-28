@@ -155,6 +155,7 @@ const NOT_FORMATTING = [
 	'commentIds',
 	'link',
 	'contentControl',
+	'outerContentControls',
 ] as const;
 
 /**

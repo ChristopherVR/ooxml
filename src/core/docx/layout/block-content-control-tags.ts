@@ -1,4 +1,5 @@
 import { cellSourceBlocks } from '../cell-blocks';
+import { chainOf } from '../content-controls/chains';
 import type { Block, ContentControl, Paragraph } from '../model';
 
 export interface BlockContentControlTags {
@@ -21,55 +22,60 @@ export function blockContentControlTags(
 		return edges;
 	};
 
+	/**
+	 * Groups adjacent items that share a tagged control. `controlsOf` lists the controls around an
+	 * item, outermost first, so every nesting level gets its own start and end tag.
+	 */
 	function visitGroups<T>(
 		items: readonly T[],
-		controlOf: (item: T, index: number) => ContentControl | undefined,
+		controlsOf: (item: T, index: number) => readonly ContentControl[],
 		visit: (item: T) => void,
 	) {
-		let active: ContentControl | undefined;
-		let start = paragraphs.length;
-		const close = () => {
-			const first = paragraphs[start];
-			const last = paragraphs.at(-1);
-			if (!active || !first || !last) return;
-			// The inner control was recorded first. The outer tags enclose it.
-			tagsOf(first).start.unshift(active);
-			tagsOf(last).end.push(active);
+		const active: { control: ContentControl; start: number }[] = [];
+		const closeFrom = (keep: number) => {
+			while (active.length > keep) {
+				const { control, start } = active.pop()!;
+				const first = paragraphs[start];
+				const last = paragraphs.at(-1);
+				if (!first || !last) continue;
+				// Inner controls close first (and deeper groups before them), so outer tags enclose them.
+				tagsOf(first).start.unshift(control);
+				tagsOf(last).end.push(control);
+			}
 		};
 		for (const [index, item] of items.entries()) {
-			const control = controlOf(item, index);
-			const tagged = control?.appearance === 'tags' ? control : undefined;
-			if (tagged?.id !== active?.id) {
-				close();
-				active = tagged;
-				start = paragraphs.length;
-			}
+			const chain = controlsOf(item, index).filter((control) => control.appearance === 'tags');
+			let keep = 0;
+			while (
+				keep < active.length &&
+				keep < chain.length &&
+				active[keep]!.control.id === chain[keep]!.id
+			)
+				keep++;
+			closeFrom(keep);
+			for (const control of chain.slice(keep)) active.push({ control, start: paragraphs.length });
 			visit(item);
 		}
-		close();
+		closeFrom(0);
 	}
 
 	function visitBlocks(blocks: readonly Block[]) {
-		visitGroups(
-			blocks,
-			(block) => block.contentControl,
-			(block) => {
-				if (block.type === 'paragraph') {
-					paragraphs.push(block);
-					return;
-				}
-				visitGroups(
-					block.rows,
-					(_, index) => block.rowProperties?.[index]?.contentControl,
-					(row) =>
-						visitGroups(
-							row,
-							(cell) => cell.contentControl,
-							(cell) => visitBlocks(cellSourceBlocks(cell)),
-						),
-				);
-			},
-		);
+		visitGroups(blocks, chainOf, (block) => {
+			if (block.type === 'paragraph') {
+				paragraphs.push(block);
+				return;
+			}
+			visitGroups(
+				block.rows,
+				(_, index) => chainOf(block.rowProperties?.[index]),
+				(row) =>
+					visitGroups(
+						row,
+						(cell) => (cell.contentControl ? [cell.contentControl] : []),
+						(cell) => visitBlocks(cellSourceBlocks(cell)),
+					),
+			);
+		});
 	}
 
 	for (const blocks of stories) {
