@@ -11,35 +11,11 @@
  * the ascent before the box is scaled to the pitch: Gabriola (gap 0.70 em)
  * puts its baseline at 0.977 em, where ascent and descent alone say 0.82 em.
  * Canvas `fontBoundingBox*` metrics already follow the same typo ascent and
- * descent but leave the gap out, so the gaps of the flagged fonts that have one
- * are listed here (em of `sTypoLineGap`, read from the font files).
+ * descent but leave the gap out.
  *
- * The table of Windows and Office fonts (`officeFontVerticalMetrics`) carries
- * the gap of every such font it knows (Liberation Sans Narrow among them); the
- * list below adds the ones the Windows font folder does not hold.
+ * The gaps live in `ooxml-core/text` (`typoLineGapEm`), which Word's canvas
+ * measurer reads too; this module keeps the renderer's import path.
  *
  * @module render/font-line-gap
  */
-import { officeFontVerticalMetrics } from 'ooxml-core/text';
-
-/** `sTypoLineGap` (em) of the installed and Office fonts with `USE_TYPO_METRICS` and a gap. */
-const TYPO_LINE_GAP: ReadonlyMap<string, number> = new Map([
-	['bahnschrift', 0.2],
-	['cambria math', 0.172],
-	['dejavu math tex gyre', 0.2],
-	['gabriola', 0.7],
-	['nirmala text', 0.862],
-	['nirmala text semilight', 0.862],
-	['sitka text', 0.25],
-	['sitka heading', 0.25],
-	['sitka subheading', 0.25],
-	['sitka small', 0.25],
-	['sitka banner', 0.25],
-	['sitka display', 0.25],
-]);
-
-/** The line gap (em) PowerPoint adds above the ascent of `family`, or 0. */
-export function typoLineGapEm(family: string | undefined): number {
-	const own = family ? TYPO_LINE_GAP.get(family.trim().toLowerCase()) : undefined;
-	return own ?? officeFontVerticalMetrics(family)?.lineGap ?? 0;
-}
+export { typoLineGapEm } from 'ooxml-core/text';

@@ -134,6 +134,7 @@ export function createPrintLayoutController(
 		handle = renderPrintLayout(result, pictureUrl, {
 			virtual: pages.length > 10,
 			model,
+			baselineShiftOf: measurer.baselineShiftOf,
 			onPageRender: createPageDecorator(model, pages, new Date(), pictureUrl, mode, measurer),
 			lineNumbers: (model.sections ?? []).map((section) => section.lineNumberSettings),
 			pageBorders: (model.sections ?? []).map((section) => section.pageBorders),

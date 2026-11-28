@@ -156,7 +156,8 @@ describe('Word performance regression coverage', () => {
 			const measurer = createCanvasMeasurer();
 			const font = { family: 'Arial', sizePx: 16 };
 			for (let i = 0; i < 100; i++) {
-				expect(measurer.ascentOf!(font)).toBeCloseTo(14.48);
+				// Arial's 0.05 em of leading sits wholly above its ascent, as Word places it (#382).
+				expect(measurer.ascentOf!(font)).toBeCloseTo(14.88);
 				expect(measurer.lineHeightOf(font)).toBeCloseTo(18.4);
 			}
 			expect(measureText).toHaveBeenCalledTimes(1);

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { namedFontVerticalMetrics, officeFontVerticalMetrics } from './vertical-metrics';
+import {
+	namedFontVerticalMetrics,
+	officeFontVerticalMetrics,
+	typoLineGapEm,
+} from './vertical-metrics';
 
 describe('namedFontVerticalMetrics', () => {
 	it.each([
@@ -41,5 +45,17 @@ describe('officeFontVerticalMetrics', () => {
 	it('knows no other font', () => {
 		expect(officeFontVerticalMetrics('Foo Sans')).toBeUndefined();
 		expect(officeFontVerticalMetrics(undefined)).toBeUndefined();
+	});
+});
+
+describe('typoLineGapEm', () => {
+	it('knows the USE_TYPO_METRICS fonts that have a gap and nothing else', () => {
+		expect(typoLineGapEm('Gabriola')).toBe(0.7);
+		expect(typoLineGapEm(' SITKA TEXT ')).toBe(0.25);
+		expect(typoLineGapEm('Liberation Sans Narrow')).toBeCloseTo(0.131, 3);
+		// Windows-metrics fonts: their browser line gap is hhea leading, not a typographic gap.
+		for (const family of ['Times New Roman', 'Arial', 'Calibri', 'Century Gothic'])
+			expect(typoLineGapEm(family)).toBe(0);
+		expect(typoLineGapEm(undefined)).toBe(0);
 	});
 });

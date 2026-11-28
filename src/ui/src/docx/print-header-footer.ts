@@ -13,7 +13,7 @@ import {
 	type TextMeasurer,
 } from 'ooxml-core/docx/layout';
 import { printPicture, renderStoryBlocks, type PictureUrl } from './print-layout';
-import { createCanvasMeasurer } from './canvas-measurer';
+import { createCanvasMeasurer, type CanvasMeasurer } from './canvas-measurer';
 import { pictureWatermarkElement, type WatermarkPage } from './print-picture-watermark';
 
 export { pageNumbers, headerFooterForPage, fieldDisplayText } from 'ooxml-core/docx/layout';
@@ -89,7 +89,7 @@ export function createPageDecorator(
 	now: Date,
 	pictureUrl: PictureUrl | undefined,
 	reviewDisplayMode: ReviewDisplayMode,
-	measurer: TextMeasurer,
+	measurer: TextMeasurer & Partial<Pick<CanvasMeasurer, 'baselineShiftOf'>>,
 ) {
 	const numbers = pageNumberValues(model, pages);
 	const stories = createPageStories(model, pages, measurer, { reviewDisplayMode }, undefined, now);
@@ -107,7 +107,7 @@ export function createPageDecorator(
 			headerDistance: String((section?.headerDistanceTwips ?? 720) / 15),
 			footerDistance: String((section?.footerDistanceTwips ?? 720) / 15),
 		});
-		const media = { model, pictureUrl };
+		const media = { model, pictureUrl, baselineShiftOf: measurer.baselineShiftOf };
 		for (const story of stories(index)) {
 			const element = headerFooterElement(story.kind);
 			element.style.left = `${story.x}px`;

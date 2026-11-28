@@ -7,6 +7,7 @@ import {
 	paragraphShadowRects,
 	DEFAULT_FONT_SIZE_PT,
 	type LayoutBlockBox,
+	type LayoutFontSpec,
 	type LayoutLine,
 	type LayoutParagraphFrame,
 	type LayoutResult,
@@ -55,9 +56,9 @@ export interface PrintLayoutHandle {
 const LEADER_CHARACTERS: Record<string, string> = { dot: '.', hyphen: '-', middleDot: '·' };
 
 /** A tab's leader: repeated characters (dots, hyphens) or a rule (underscore, heavy) across its width. */
-function leaderElement(fragment: LayoutLine['fragments'][number]): HTMLElement {
+function leaderElement(fragment: LayoutLine['fragments'][number], media: PrintMedia): HTMLElement {
 	const el = document.createElement('span');
-	styleFragment(el, { ...fragment, text: '' });
+	styleFragment(el, { ...fragment, text: '' }, media);
 	el.classList.add('dve-print-leader');
 	const scale = effectiveTextScalePercent(fragment.textScalePercent) / 100;
 	el.style.width = `${fragment.widthPx / scale}px`;
@@ -70,13 +71,18 @@ function leaderElement(fragment: LayoutLine['fragments'][number]): HTMLElement {
 		el.textContent = character.repeat(Math.ceil(fragment.widthPx / (scale * sizePx * 0.25)) + 1);
 		el.style.direction = 'rtl';
 	} else {
+		el.style.paddingTop = '';
 		el.style.height = '1em';
 		el.style.borderBottom = `${fragment.leader === 'heavy' ? 2 : 1}px solid currentColor`;
 	}
 	return el;
 }
 
-function styleFragment(el: HTMLSpanElement, fragment: LayoutLine['fragments'][number]) {
+function styleFragment(
+	el: HTMLSpanElement,
+	fragment: LayoutLine['fragments'][number],
+	media: PrintMedia,
+) {
 	el.style.position = 'absolute';
 	el.style.left = `${fragment.xPx}px`;
 	el.style.whiteSpace = 'pre';
@@ -101,7 +107,13 @@ function styleFragment(el: HTMLSpanElement, fragment: LayoutLine['fragments'][nu
 				: 'none';
 	// The layout places each fragment's box so its baseline sits on the line's baseline.
 	if (fragment.topPx !== undefined) el.style.top = `${fragment.topPx}px`;
-	if (fragment.boxHeightPx !== undefined) el.style.lineHeight = `${fragment.boxHeightPx}px`;
+	if (fragment.boxHeightPx !== undefined) {
+		// CSS splits the box's leading above and below the text; padding moves it down to the
+		// baseline the layout measured (all of a Windows-metrics font's leading above, #382).
+		const shift = fragment.contentControlTag ? 0 : baselineShift(fragment, media);
+		el.style.lineHeight = `${fragment.boxHeightPx - 2 * shift}px`;
+		if (shift > 0) el.style.paddingTop = `${2 * shift}px`;
+	}
 	if (fragment.color) el.style.color = fragment.color;
 	if (fragment.background) el.style.backgroundColor = fragment.background;
 	if (fragment.mergeField) el.dataset.mergeField = '';
@@ -113,6 +125,20 @@ function styleFragment(el: HTMLSpanElement, fragment: LayoutLine['fragments'][nu
 	);
 	if (lines.length) el.style.textDecorationLine = lines.join(' ');
 	el.textContent = fragment.text;
+}
+
+/** How far below the CSS-centred baseline the layout puts `fragment`'s, at its drawn size. */
+function baselineShift(fragment: LayoutLine['fragments'][number], media: PrintMedia): number {
+	if (!media.baselineShiftOf || !fragment.fontFamily) return 0;
+	const sizePt = (fragment.fontSizePt ?? DEFAULT_FONT_SIZE_PT) * (fragment.script ? 0.65 : 1);
+	const font: LayoutFontSpec = {
+		family: fragment.fontFamily,
+		sizePx: (sizePt * 96) / 72,
+		...(fragment.fontFallback ? { fallback: fragment.fontFallback } : {}),
+		...(fragment.bold ? { bold: true } : {}),
+		...(fragment.italic ? { italic: true } : {}),
+	};
+	return media.baselineShiftOf(font);
 }
 
 function renderLine(
@@ -142,7 +168,7 @@ function renderLine(
 			continue;
 		}
 		if (fragment.leader) {
-			const leader = leaderElement(fragment);
+			const leader = leaderElement(fragment, media);
 			leader.dataset.sourceStart = String(fragment.sourceStart ?? 0);
 			leader.dataset.sourceEnd = String(fragment.sourceEnd ?? 0);
 			lineEl.append(leader);
@@ -151,7 +177,7 @@ function renderLine(
 		}
 		if (!fragment.text && fragment.widthPx === 0) continue;
 		const span = document.createElement('span');
-		styleFragment(span, fragment);
+		styleFragment(span, fragment, media);
 		if (fragment.contentControlTag) {
 			span.className = 'dve-print-content-control-tag';
 			span.dataset.tagEdge = fragment.contentControlTag;
@@ -358,12 +384,15 @@ export interface PrintLayoutOptions {
 	suppressedLineNumberParagraphs?: ReadonlySet<string>;
 	/** The laid-out document, whose styles the paragraphs of shapes' text boxes are drawn with. */
 	model?: DocumentModel;
+	/** The layout measurer's `baselineShiftOf` (`CanvasMeasurer`), so text sits on its baselines. */
+	baselineShiftOf?: (font: LayoutFontSpec) => number;
 }
 
-/** What pictures on a page are drawn with. */
+/** What pictures and text on a page are drawn with. */
 export interface PrintMedia {
 	pictureUrl: PictureUrl | undefined;
 	model: DocumentModel | undefined;
+	baselineShiftOf?: ((font: LayoutFontSpec) => number) | undefined;
 }
 
 /** A picture, chart or shape on a page, a text box's lines drawn as the engine laid them out. */
@@ -382,7 +411,11 @@ export function renderPrintLayout(
 	pictureUrl?: PictureUrl,
 	options: PrintLayoutOptions = {},
 ): PrintLayoutHandle {
-	const media: PrintMedia = { pictureUrl, model: options.model };
+	const media: PrintMedia = {
+		pictureUrl,
+		model: options.model,
+		baselineShiftOf: options.baselineShiftOf,
+	};
 	const container = document.createElement('div');
 	container.className = 'dve-print-pages';
 	const hits = new Map<Element, LineHitBox>();

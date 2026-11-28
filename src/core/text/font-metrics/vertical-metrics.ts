@@ -54,3 +54,33 @@ export function officeFontVerticalMetrics(family: string | undefined): VerticalM
 	const [ascent, descent, lineGap] = known;
 	return lineGap > 0 ? { ascent, descent, lineGap } : { ascent, descent };
 }
+
+/** `sTypoLineGap` (em) of fonts with `USE_TYPO_METRICS` and a gap that the Windows table lacks. */
+const TYPO_LINE_GAP: ReadonlyMap<string, number> = new Map([
+	['bahnschrift', 0.2],
+	['cambria math', 0.172],
+	['dejavu math tex gyre', 0.2],
+	['gabriola', 0.7],
+	['nirmala text', 0.862],
+	['nirmala text semilight', 0.862],
+	['sitka text', 0.25],
+	['sitka heading', 0.25],
+	['sitka subheading', 0.25],
+	['sitka small', 0.25],
+	['sitka banner', 0.25],
+	['sitka display', 0.25],
+]);
+
+/**
+ * The typographic line gap (em of `sTypoLineGap`) of `family` when it sets `USE_TYPO_METRICS`
+ * (`OS/2.fsSelection` bit 7) and has a gap, else 0. A browser exposes neither the bit nor the gap:
+ * canvas `fontBoundingBox*` follows the typo ascent and descent and leaves the gap out. It is the
+ * only case where the font's line gap is the typographic one; any other gap a browser reports is
+ * the `hhea` leading the Windows metrics leave out, which Word places above the ascent (#382).
+ * Covers the Windows and Office table (`officeFontVerticalMetrics`) and a few flagged fonts the
+ * Windows font folder does not hold. Matching ignores case.
+ */
+export function typoLineGapEm(family: string | undefined): number {
+	const own = family ? TYPO_LINE_GAP.get(family.trim().toLowerCase()) : undefined;
+	return own ?? officeFontVerticalMetrics(family)?.lineGap ?? 0;
+}

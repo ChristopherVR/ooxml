@@ -208,6 +208,29 @@ describe('renderPrintLayout', () => {
 		expect(span.style.top).toBe('4px');
 		expect(span.style.lineHeight).toBe('20px');
 	});
+	it('moves text down to the baseline the measurer placed in its box (#382)', () => {
+		const result = sampleResult();
+		const block = result.pages[0]!.columns[0]!.blocks[0]!;
+		if (block.kind !== 'paragraph') throw new Error('Expected paragraph');
+		Object.assign(block.lines[0]!.fragments[0]!, {
+			fontFamily: 'Times New Roman',
+			fontSizePt: 72,
+			topPx: 0,
+			boxHeightPx: 110,
+		});
+		const sizes: number[] = [];
+		const rendered = renderPrintLayout(result, undefined, {
+			baselineShiftOf: (font) => {
+				sizes.push(font.sizePx);
+				return font.family === 'Times New Roman' ? 2 : 0;
+			},
+		});
+		const span = rendered.element.querySelector('.dve-print-line span') as HTMLElement;
+		// The box keeps its height; the text inside it sits 2 px lower.
+		expect(span.style.paddingTop).toBe('4px');
+		expect(span.style.lineHeight).toBe('106px');
+		expect(sizes).toEqual([96]);
+	});
 	it('draws a column separator halfway across the gap', () => {
 		const result = sampleResult();
 		const page = result.pages[0]!;

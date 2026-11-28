@@ -5,16 +5,27 @@ import {
 	type LayoutFontSpec,
 	type TextMeasurer,
 } from 'ooxml-core/docx/layout';
+import { typoLineGapEm } from 'ooxml-core/text';
+
+/** The canvas measurer, plus where Print Layout must move each font's text to match its ascent. */
+export interface CanvasMeasurer extends TextMeasurer {
+	/**
+	 * How far (CSS px) below the baseline the browser draws in a box of the font's line height
+	 * (half the leading above) the measured ascent puts it: half the leading for a font without
+	 * `USE_TYPO_METRICS`, whose leading Word places wholly above the text, else 0.
+	 */
+	baselineShiftOf(font: LayoutFontSpec): number;
+}
 
 /**
  * Browser measurer backed by an offscreen `<canvas>` 2D context. Falls back to
  * the fake measurer's formula if no canvas is available (SSR, jsdom without
  * canvas support), so callers never need to branch on environment.
  */
-export function createCanvasMeasurer(): TextMeasurer {
+export function createCanvasMeasurer(): CanvasMeasurer {
 	let context: CanvasRenderingContext2D | null | undefined;
 	const widthCache = new Map<string, number>();
-	const metricCache = new Map<string, { ascent: number; height: number }>();
+	const metricCache = new Map<string, { ascent: number; height: number; shift: number }>();
 	const fallback = createFakeMeasurer();
 	const ctx = (): CanvasRenderingContext2D | null => {
 		if (context !== undefined) return context;
@@ -35,7 +46,10 @@ export function createCanvasMeasurer(): TextMeasurer {
 		`${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${sizePx}px ${cssFontStack(font.family, font.fallback)}`;
 	const metricsOf = (c: CanvasRenderingContext2D, font: LayoutFontSpec) => {
 		// Measure a reference size once per face. Canvas rounds the ascender and descender
-		// separately and doesn't include the font's line gap; the span's line box does.
+		// separately and doesn't include the font's line gap; the span's line box does. That gap is
+		// the typographic one for a font with USE_TYPO_METRICS, split above and below the text, and
+		// otherwise the hhea leading the Windows metrics leave out, which Word puts all above the
+		// ascent (#382: Times New Roman and Arial first lines sat up to 1.6 pt high with it split).
 		const key = fontString(font, referencePx);
 		const cached = metricCache.get(key);
 		if (cached) return cached;
@@ -56,9 +70,12 @@ export function createCanvasMeasurer(): TextMeasurer {
 		} finally {
 			span.remove();
 		}
+		const gap = height - fontBox;
+		const above = typoLineGapEm(font.family) > 0 ? gap / 2 : gap;
 		const metrics = {
-			ascent: (ascent + (height - fontBox) / 2) / referencePx,
+			ascent: (ascent + above) / referencePx,
 			height: height / referencePx,
+			shift: (above - gap / 2) / referencePx,
 		};
 		if (metricCache.size >= 256) metricCache.delete(metricCache.keys().next().value!);
 		metricCache.set(key, metrics);
@@ -106,6 +123,10 @@ export function createCanvasMeasurer(): TextMeasurer {
 			const c = ctx();
 			if (!c) return fallback.lineHeightOf(font);
 			return metricsOf(c, font).height * font.sizePx;
+		},
+		baselineShiftOf(font) {
+			const c = ctx();
+			return c ? metricsOf(c, font).shift * font.sizePx : 0;
 		},
 	};
 }
