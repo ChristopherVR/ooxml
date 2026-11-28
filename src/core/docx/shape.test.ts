@@ -239,3 +239,26 @@ describe('shape drawing', () => {
 			expect(shapeSvg(newShape(preset), 80, 60), preset).toContain('<path');
 	});
 });
+
+describe('shape svg of a zero-extent line', () => {
+	it('keeps the line level and gives an effect filter a region in user space', () => {
+		const spec = {
+			...newShape('line'),
+			effects: {
+				effects: [
+					{
+						kind: 'outerShadow' as const,
+						blurRadiusEmu: 38100,
+						distanceEmu: 38100,
+						directionAngle: 2700000,
+						color: { kind: 'srgb' as const, value: '000000', transforms: [] },
+					},
+				],
+			},
+		};
+		const svg = shapeSvg(spec as never, 100, 0)!;
+		expect(svg).toContain('filterUnits="userSpaceOnUse"');
+		expect(svg).toMatch(/<filter [^>]*height="400"/);
+		expect(shapeSvg(newShape('line'), 100, 0)).not.toContain('filterUnits');
+	});
+});

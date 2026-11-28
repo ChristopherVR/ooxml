@@ -31,7 +31,7 @@ import { capCompensatedDashArray, dashPatternUnits } from '../drawingml/dash-pat
 import { appendSvg, createSvg, setSvgAttributes } from '../drawingml/svg-elements';
 import { appendShapeEffectFilter } from '../drawingml/shape-effect-filter';
 import { appendShapeReflection } from '../drawingml/shape-reflection';
-import { buildXml, parseXml } from '../xml/index';
+import { buildXml, parseXml, type XmlElement } from '../xml/index';
 import { EMU_PER_PIXEL } from './units';
 
 const round = (value: number) => Math.round(value * 100) / 100;
@@ -132,6 +132,9 @@ export function drawingOuterShadow(
 		: undefined;
 }
 
+/** Room around a zero-extent shape for its blurred shadow or glow, in pixels. */
+const EFFECT_PAD = 200;
+
 /** The preset's geometry at its true size, or at a pixel minimum when a zero extent breaks it. */
 function presetGeometry(spec: ShapeSpec, w: number, h: number) {
 	const exact = evaluatePresetShape(spec.preset, w, h, spec.adjustments);
@@ -218,6 +221,20 @@ function appendShapeContent(
 	const filterId = `${idPrefix}-shadow`;
 	const hasEffects =
 		effects && appendShapeEffectFilter(defs, filterId, effects, diagramColorTheme(theme));
+	if (hasEffects && (w < 1 || h < 1)) {
+		// A level line has an empty bounding box, so its filter region is set in user space.
+		const filter = [...defs.childNodes].find(
+			(node) => (node as XmlElement).getAttribute?.('id') === filterId,
+		) as XmlElement | undefined;
+		if (filter)
+			setSvgAttributes(filter, {
+				filterUnits: 'userSpaceOnUse',
+				x: -EFFECT_PAD,
+				y: -EFFECT_PAD,
+				width: round(w + 2 * EFFECT_PAD),
+				height: round(h + 2 * EFFECT_PAD),
+			});
+	}
 	const placement = transform ? appendSvg(parent, 'g', { transform }) : parent;
 	const group = appendSvg(placement, 'g', hasEffects ? { filter: `url(#${filterId})` } : {});
 	const look = shapeAppearance(spec, theme);
