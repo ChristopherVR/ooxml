@@ -328,8 +328,15 @@ export function placeTable(
 				continue;
 			}
 			const previousWidth = cursor.columnWidthPx;
-			if (before.cells.some((cell) => cell.length)) fragmentRows.push(toRowBox(before, false));
+			const placedPart = before.cells.some((cell) => cell.length);
+			if (placedPart) fragmentRows.push(toRowBox(before, false));
 			startNewFragment();
+			// A row that moves whole to the next page is that row again, not a continuation: it keeps
+			// its minimum height and the space before its first paragraphs (#407).
+			if (!placedPart && remainingRow === initial) {
+				remainingRow = layoutRow(row, cursor.columnWidthPx, measurer, note);
+				continue;
+			}
 			remainingRow =
 				after &&
 				(paragraphCuts || previousWidth !== cursor.columnWidthPx || nativeFragments.get(row))

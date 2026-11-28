@@ -64,3 +64,14 @@ it('#413: thin borders in a table without insideV take their width too', async (
 	const [table] = tables(await layout('table-borders-no-insidev-thin'));
 	expect(table!.heightPx).toBeCloseTo(32 + 1 + 1, 6);
 });
+
+it('#407: a row moved whole to a new page keeps the space before its first paragraph', async () => {
+	const withSpace = await layout('row-at-page-top-space-before');
+	const control = await layout('row-at-page-top-no-space-before');
+	const first = (result: LayoutResult) => tables(result, 1)[0]!.rows[0]!.cells[0]![0]!.yPx;
+	// 100 twips = 5 pt of space before, kept at the top of page two as on page one.
+	expect(pt(first(withSpace) - first(control))).toBeCloseTo(5, 3);
+	expect(first(withSpace)).toBe(tables(withSpace)[0]!.rows[0]!.cells[0]![0]!.yPx);
+	// The row keeps its minimum height (4600 twips = 230 pt plus the border) on the new page.
+	expect(pt(tables(withSpace, 1)[0]!.rows[0]!.heightPx)).toBeGreaterThanOrEqual(230);
+});
