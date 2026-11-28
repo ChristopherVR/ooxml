@@ -10,6 +10,9 @@ const equal = (a: LayoutBorder | undefined, b: LayoutBorder | undefined) =>
 	a.style === b.style &&
 	a.color === b.color &&
 	Math.abs(a.widthPx - b.widthPx) < 1e-6;
+/** Two shared edges agree when both are absent or both are the same stroke. */
+const same = (a: LayoutBorder | undefined, b: LayoutBorder | undefined) =>
+	(a === undefined && b === undefined) || equal(a, b);
 /**
  * A vertical merge removes the edge it covers: the continuing cell has no top, the cell above it no
  * bottom. Those absent edges are not conflicts, so the comparisons below skip them.
@@ -49,7 +52,29 @@ export function nestedFrameProfile(
 		),
 	);
 	if (sides.every((side) => !side)) return { leftPx: 0, rightPx: 0, bottomPx: 0 };
-	if (!sides.every((side) => side?.style === 'solid' && side.widthPx > 0)) return undefined;
+	// Top and bottom edges are complete; a table may have no vertical edges (inside, or outer ones).
+	const solid = (side: LayoutBorder | undefined) => side?.style === 'solid' && side.widthPx > 0;
+	if (
+		!table.rows.every((row) =>
+			row.cells.every(
+				(cell) =>
+					(!cell.borders?.left || solid(cell.borders.left)) &&
+					(!cell.borders?.right || solid(cell.borders.right)),
+			),
+		)
+	)
+		return undefined;
+	if (
+		!table.rows.every((row, rowIndex) =>
+			row.cells.every((cell, column) =>
+				(['top', 'bottom'] as const).every(
+					(side) =>
+						mergedAway(table, rowIndex, column, side, merges) || solid(cell.borders?.[side]),
+				),
+			),
+		)
+	)
+		return undefined;
 	// With grid positions on every cell, rows may be merged differently (a cell over several columns).
 	const gridKnown =
 		merges &&
@@ -57,13 +82,13 @@ export function nestedFrameProfile(
 			row.cells.every((cell) => cell.xPx !== undefined && cell.widthPx !== undefined),
 		);
 	const first = table.rows[0]!,
-		left = first.cells[0]!.borders!.left!,
-		right = first.cells.at(-1)!.borders!.right!;
+		left = first.cells[0]!.borders?.left,
+		right = first.cells.at(-1)!.borders?.right;
 	for (const [index, row] of table.rows.entries()) {
 		if (
 			(!gridKnown && row.cells.length !== first.cells.length) ||
-			!equal(row.cells[0]?.borders?.left, left) ||
-			!equal(row.cells.at(-1)?.borders?.right, right)
+			!same(row.cells[0]?.borders?.left, left) ||
+			!same(row.cells.at(-1)?.borders?.right, right)
 		)
 			return undefined;
 		for (const [column, cell] of row.cells.entries()) {
@@ -73,8 +98,8 @@ export function nestedFrameProfile(
 				sourceWidth === undefined
 					? undefined
 					: sourceWidth +
-						(cell.borders!.left!.widthPx - cell.borders!.right!.widthPx) / 2 +
-						(column === row.cells.length - 1 ? cell.borders!.right!.widthPx : 0);
+						((cell.borders?.left?.widthPx ?? 0) - (cell.borders?.right?.widthPx ?? 0)) / 2 +
+						(column === row.cells.length - 1 ? (cell.borders?.right?.widthPx ?? 0) : 0);
 			if (paintWidth !== undefined && paintWidth <= 0) return undefined;
 
 			const topAway = mergedAway(table, index, column, 'top', merges);
@@ -87,7 +112,7 @@ export function nestedFrameProfile(
 				(!bottomAway && !equal(cell.borders?.bottom, reference('bottom')))
 			)
 				return undefined;
-			if (column && !equal(row.cells[column - 1]?.borders?.right, cell.borders?.left))
+			if (column && !same(row.cells[column - 1]?.borders?.right, cell.borders?.left))
 				return undefined;
 			if (index) {
 				const above = table.rows[index - 1]!;
@@ -109,8 +134,8 @@ export function nestedFrameProfile(
 		}
 	}
 	return {
-		leftPx: left.widthPx,
-		rightPx: right.widthPx,
+		leftPx: left?.widthPx ?? 0,
+		rightPx: right?.widthPx ?? 0,
 		bottomPx: table.rows.at(-1)!.cells[0]!.borders!.bottom!.widthPx,
 	};
 }

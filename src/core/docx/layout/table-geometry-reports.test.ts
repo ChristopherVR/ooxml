@@ -49,3 +49,18 @@ it.each([
 			name + ' row ' + index,
 		).toBeCloseTo(pitch, 0);
 });
+
+it.each(['table-borders-no-insidev', 'cell-borders-top-bottom', 'table-borders-with-insidev'])(
+	'#413: %s makes room for the horizontal borders like the insideV control',
+	async (name) => {
+		const [table] = tables(await layout(name));
+		// 3 pt borders: each row holds its top border, the table also holds the bottom one.
+		expect(table!.rows.map((row) => row.heightPx)).toEqual([20, 24]);
+		expect(table!.heightPx).toBe(44);
+	},
+);
+
+it('#413: thin borders in a table without insideV take their width too', async () => {
+	const [table] = tables(await layout('table-borders-no-insidev-thin'));
+	expect(table!.heightPx).toBeCloseTo(32 + 1 + 1, 6);
+});
